@@ -1,0 +1,124 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 200px;
+    height: 100vh;
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px 0;
+    z-index: 1000;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-logo {
+    margin-bottom: 35px;
+    padding: 10px;
+}
+
+.sidebar-logo img {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+}
+
+.sidebar-menu {
+    list-style: none;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    width: 100%;
+}
+
+.sidebar-menu a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 16px 12px;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    min-height: 60px;
+    gap: 10px;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+    color: var(--text-on-dark);
+    background-color: rgba(255, 255, 255, 0.08);
+    border-left-color: transparent;
+}
+
+.icon-box {
+    width: 42px;
+    height: 42px;
+    background-color: var(--grey-lines);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-on-dark);
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.sidebar-menu .menu-text {
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap;
+    line-height: 1;
+    margin: 0;
+    font-weight: bold;
+}
+
+.sidebar-footer {
+    width: 100%;
+    padding: 8px;
+    margin-top: auto;
+}
+
+.sign-out-btn {
+    width: 100%;
+    padding: 14px 12px;
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--grey-lines);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.sign-out-btn .menu-text {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.sign-out-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-on-dark);
+    border-color: var(--grey-lines);
+}

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses</title>
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/Syllabus/css/syllabus.css">
+    <link rel="stylesheet" href="/Syllabus/css/courseOverview.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <%- include('../partials/sideMenuBar') %>
+
+            <main class="main-content" style="background: #ffffff !important;">
+
+                <section class="content-panel">
+                    <div class="overview-panel">
+
+                        <div class="courses-header">
+                            <div class="header-left">
+                                <h1>Courses</h1>
+                                <div class="view-toggles">
+                                    <button class="toggle-btn list-view"><i class="fas fa-bars"></i></button>
+                                    <button class="toggle-btn grid-view active"><i class="fas fa-th-large"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="header-center">
+                                <div class="search-container"
+                                    data-userid="<%= typeof userId !== 'undefined' ? userId : '' %>">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="searchInput" placeholder="Search your Courses"
+                                        autocomplete="off">
+                                </div>
+
+                                <div class="control-group terms-group"><label>Terms</label><select>
+                                        <option>A.Y. 2025-2026 | COLLEGE | 2nd Trimester</option>
+                                    </select></div>
+                                <div class="control-group filters-group"><label>Filters</label><select>
+                                        <option>All Courses</option>
+                                    </select></div>
+                            </div>
+
+                            <div class="header-right">
+                                <div class="control-group items-per-page"><label>Items per Page</label><select>
+                                        <option>25</option>
+                                    </select></div>
+
+                                <!-- Actions Dropdown -->
+                                <div class="actions-dropdown-wrapper" id="actionsDropdownWrapper">
+                                    <button class="actions-trigger-btn" id="actionsToggleBtn">
+                                        <i class="fas fa-ellipsis-h"></i> Actions
+                                        <i class="fas fa-chevron-down actions-chevron"></i>
+                                    </button>
+                                    <div class="actions-dropdown-menu" id="actionsDropdownMenu">
+                                        <button class="actions-item" id="openAddModalBtn">
+                                            <i class="fas fa-plus"></i> Add Course
+                                        </button>
+                                        <button class="actions-item actions-item--delete" id="enterDeleteMode">
+                                            <i class="fas fa-trash"></i> Delete Course
+                                        </button>
+                                        <button class="actions-item actions-item--approve"
+                                            onclick="window.location.href='/syllabus/approve'">
+                                            <i class="fas fa-clipboard-check"></i> Approve Syllabus
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="deleteToolbar" class="delete-toolbar" style="display: none;">
+                                    <button id="cancelDeleteBtn" class="cancel-delete-btn">Cancel</button>
+                                    <button id="confirmDeleteBtn" class="confirm-delete-btn" disabled>Confirm
+                                        Delete</button>
+                                    <span id="selectedCount" class="selected-count">0 selected</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="results-bar">
+                            <span class="result-count" id="resultCount">
+                                <%= typeof courses !=='undefined' ? courses.length : 0 %> Results
+                            </span>
+                        </div>
+
+                        <div class="course-grid">
+                            <% if (typeof courses !=='undefined' && courses.length> 0) { %>
+                                <% courses.forEach(course=> { %>
+                                    <div class="course-card" data-id="<%= course.id %>"
+                                        data-hasdraft="<%= course.hasDraft %>">
+                                        <div class="card-image">
+                                            <img src="<%= course.img || 'https://picsum.photos/400/200?random=' + course.id %>"
+                                                alt="Course Image">
+                                        </div>
+                                        <div class="card-content">
+                                            <span class="course-code">
+                                                <%= course.code %>
+                                            </span>
+                                            <h3 class="course-title">
+                                                <%= course.title %>
+                                            </h3>
+                                            <p class="course-status">
+                                                <%= course.status || 'No Syllabus Draft' %>
+                                            </p>
+                                        </div>
+                                        <div class="card-footer">
+                                            <span class="instructor">
+                                                <%= course.instructor %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <p
+                                                style="text-align: center; color: #777; grid-column: 1 / -1; padding: 40px 0;">
+                                                No courses found.</p>
+                                            <% } %>
+                        </div>
+                    </div>
+                </section>
+            </main>
+    </div>
+
+    <div id="addCourseModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon"><i class="fas fa-book-open"></i></span>
+                    <h2>Add New Course</h2>
+                </div>
+                <span class="close-modal" id="closeModalBtn">&times;</span>
+            </div>
+            <p class="modal-subtitle">Fill in the details below to create a new course entry.</p>
+
+            <form action="/syllabus/<%= typeof userId !== 'undefined' ? userId : '' %>/add" method="POST"
+                enctype="multipart/form-data" class="add-course-form" id="addCourseForm">
+
+                <div class="form-group">
+                    <label>Course Image</label>
+                    <div class="image-upload-zone" id="imageUploadZone">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop an image here</p>
+                            <span>or click to browse</span>
+                            <span class="upload-hint">JPG, PNG, GIF, WEBP — Max 5MB</span>
+                        </div>
+                        <div class="upload-preview" id="uploadPreview" style="display: none;">
+                            <img id="previewImage" src="" alt="Preview">
+                            <button type="button" class="remove-image-btn" id="removeImageBtn" title="Remove image">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <input type="file" name="courseImage" id="courseImageInput"
+                            accept="image/jpeg,image/png,image/gif,image/webp" hidden>
+                    </div>
+                    <span class="form-hint">Optional — a random image will be used if none is uploaded</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="courseTitle">Course Name</label>
+                    <input type="text" id="courseTitle" name="courseTitle" placeholder="e.g. Software Design" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="courseCode">Course ID</label>
+                    <input type="text" id="courseCode" name="courseCode" placeholder="e.g. CPE107L-1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="assignedInstructor">Assigned Instructor</label>
+                    <div class="select-wrapper">
+                        <select id="assignedInstructor" name="assignedInstructor">
+                            <option value="">— Select an Instructor —</option>
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                    <span class="form-hint" id="instructorHint">Loading instructors from database...</span>
+                </div>
+
+                <div class="form-error" id="formError" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="formErrorText"></span>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelModalBtn">Cancel</button>
+                    <button type="submit" class="submit-btn">Save Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="draftModal">
+        <div class="modal-content" style="width: 460px; text-align: center;">
+            <div class="modal-header" style="justify-content: space-between;">
+                <div class="modal-title-group">
+                    <div class="modal-icon"><i class="fas fa-file-alt"></i></div>
+                    <h2>Syllabus Draft</h2>
+                </div>
+                <span class="close-modal" onclick="closeDraftModal()">&times;</span>
+            </div>
+
+            <div style="padding: 30px 20px; text-align: center;">
+                <p id="draftMessage" style="font-size: 16px; font-weight: 600; color: #444; margin: 0;"></p>
+            </div>
+
+            <div class="modal-actions" style="justify-content: center;">
+                <button id="draftActionBtn" class="submit-btn" style="width: 100%; justify-content: center;">
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/Syllabus/js/courseOverview.js"></script>
+</body>
+
+</html>

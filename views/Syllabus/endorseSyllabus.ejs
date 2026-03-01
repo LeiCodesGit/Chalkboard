@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endorse Syllabus — Program Chair</title>
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/Syllabus/css/syllabus.css">
+    <link rel="stylesheet" href="/Syllabus/css/endorseSyllabus.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <%- include('../partials/sideMenuBar') %>
+
+            <main class="main-content" style="background:#f7f8fa !important;">
+
+                <!-- Top Banner (Course Details) -->
+                <div class="review-top-banner">
+                    <div class="banner-content">
+                        <div class="banner-logo">
+                            <img src="/common/logo/MAPUA_LOGO.png" alt="Logo"
+                                onerror="this.src='https://upload.wikimedia.org/wikipedia/en/thumb/3/36/Map%C3%BAa_University_logo.svg/1200px-Map%C3%BAa_University_logo.svg.png'">
+                        </div>
+                        <div class="banner-text">
+                            <h1>
+                                <%= courseName %>
+                            </h1>
+                            <p>
+                                <%= courseCode %>
+                            </p>
+                            <p>
+                                <%= courseSection %>
+                            </p>
+                            <p>
+                                <%= academicYear %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page Content Card -->
+                <div class="review-card-container">
+                    <!-- Page Header (Back & File Type) -->
+                    <div class="review-page-header">
+                        <button class="review-back-btn" onclick="window.history.back()">
+                            <i class="fas fa-chevron-left"></i> BACK
+                        </button>
+                        <div class="file-type-title">
+                            <h2>
+                                <%= fileType %>
+                            </h2>
+                        </div>
+                    </div>
+                    <!-- Separator Line -->
+                    <hr class="review-page-divider">
+
+                    <!-- Main Split Layout -->
+                    <div class="review-content-layout">
+
+                        <!-- Left Panel: Document -->
+                        <div class="review-left-panel">
+                            <h3>Basic Information</h3>
+                            <div class="document-placeholder">
+                                <p>[FORMS FROM THE RESPECTIVE<br>GROUPS (EX. TLA FORMS,<br>SYLLABUS FORMS)]</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Endorsement Card -->
+                        <div class="review-right-panel">
+                            <div class="permission-card">
+                                <h3>Endorsement Status</h3>
+
+                                <!-- Progress Tracker -->
+                                <div class="progress-tracker">
+                                    <div class="step completed">
+                                        <div class="step-circle"></div>
+                                        <span>Faculty<br>Submitted</span>
+                                    </div>
+                                    <div class="step-line completed"></div>
+
+                                    <div class="step completed">
+                                        <div class="step-circle"></div>
+                                        <span>TA<br>Reviewed</span>
+                                    </div>
+                                    <div class="step-line ongoing"></div>
+
+                                    <div class="step ongoing">
+                                        <div class="step-circle"></div>
+                                        <span>Program<br>Chair<br>On-Going</span>
+                                    </div>
+                                    <div class="step-line"></div>
+
+                                    <div class="step">
+                                        <div class="step-circle"></div>
+                                        <span>Dean<br>Pending</span>
+                                    </div>
+                                    <div class="step-line"></div>
+
+                                    <div class="step">
+                                        <div class="step-circle"></div>
+                                        <span>HR<br>Pending</span>
+                                    </div>
+                                </div>
+
+                                <!-- Comments -->
+                                <div class="comments-section">
+                                    <label>Comments</label>
+                                    <textarea id="endorseComments" placeholder="Add endorsement remarks..."></textarea>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="status-section">
+                                    <label>Status</label>
+                                    <div class="styled-select-container">
+                                        <span class="status-dot"></span>
+                                        <select id="statusSelect" onchange="updateStatusDot()">
+                                            <option value="endorsed">Endorse</option>
+                                            <option value="revision">Return for Revision</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <button class="btn-red"><i class="fas fa-file-pdf"></i> Save as PDF</button>
+                                    <button class="btn-dark"><i class="fas fa-folder"></i> Save as Draft</button>
+                                    <button class="btn-endorse" onclick="submitEndorsement()">
+                                        <i class="fas fa-stamp"></i> Submit Endorsement
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+    </div>
+
+    <script>
+        function updateStatusDot() {
+            const select = document.getElementById('statusSelect');
+            const dot = document.querySelector('.status-dot');
+            if (select.value === 'endorsed') {
+                dot.style.backgroundColor = '#16a34a'; // Green
+            } else {
+                dot.style.backgroundColor = '#ea580c'; // Orange
+            }
+        }
+        // Initialize dot color
+        updateStatusDot();
+
+        function submitEndorsement() {
+            const status = document.getElementById('statusSelect').value;
+            const comments = document.getElementById('endorseComments').value;
+            alert(`Endorsement submitted!\nStatus: ${status}\nComments: ${comments || '(none)'}`);
+            // TODO: wire to backend POST /syllabus/prog-chair/endorse/:id/submit
+        }
+    </script>
+</body>
+
+</html>

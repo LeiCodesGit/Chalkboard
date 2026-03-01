@@ -1,0 +1,378 @@
+/* ============================================================
+   TLA Courses Page Styles
+   File: public/TLA/css/tlaCourses.css
+   ============================================================ */
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--page-bg);
+}
+
+/* ============================================================
+   MAIN CONTENT (with sidebar offset)
+   ============================================================ */
+
+.main-content {
+    margin-left: 260px;
+    min-height: 100vh;
+    padding: 28px 36px 40px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+.courses-topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.courses-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-on-light);
+    letter-spacing: -0.5px;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+/* ── View toggle buttons ── */
+
+.view-toggle {
+    display: flex;
+    border: 1.5px solid var(--color-charcoal);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: var(--color-white);
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    color: var(--text-muted);
+}
+
+.toggle-btn + .toggle-btn {
+    border-left: 1.5px solid var(--color-charcoal);
+}
+
+.toggle-btn.active,
+.toggle-btn:hover {
+    background: var(--color-charcoal);
+    color: var(--color-white);
+}
+
+.toggle-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+/* ── Search box ── */
+
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 340px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-box input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px 0 36px;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--color-charcoal);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    border-color: #555;
+}
+
+/* ── Term dropdown ── */
+
+.term-dropdown-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dropdown-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.4px;
+}
+
+.term-select {
+    height: 38px;
+    min-width: 280px;
+    padding: 0 32px 0 12px;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--color-charcoal);
+    background: var(--color-white) url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23555' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+}
+
+.term-select:focus {
+    border-color: #555;
+}
+
+/* ============================================================
+   RESULTS BAR
+   ============================================================ */
+
+.courses-results-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    min-height: 28px;
+}
+
+.results-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* active filter chip */
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e8e8e8;
+    border: 1px solid #ccc;
+    border-radius: 16px;
+    padding: 4px 10px 4px 12px;
+    font-size: 12px;
+    color: var(--color-charcoal);
+    white-space: nowrap;
+}
+
+.chip-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+}
+
+.chip-remove .material-symbols-outlined {
+    font-size: 15px;
+}
+
+.chip-remove:hover {
+    color: var(--accent-primary);
+}
+
+/* ============================================================
+   COURSE CARDS GRID
+   ============================================================ */
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+/* Grid view: keep 3 cols */
+.courses-grid.grid-view {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* List view: single column */
+.courses-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
+.courses-grid.list-view .course-card {
+    flex-direction: row;
+    height: auto;
+    min-height: 90px;
+}
+
+.courses-grid.list-view .card-banner {
+    width: 160px;
+    min-height: 90px;
+    border-radius: 12px 0 0 12px;
+    flex-shrink: 0;
+}
+
+.courses-grid.list-view .card-body {
+    padding: 14px 20px;
+}
+
+/* ── Individual card ── */
+
+.course-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-white);
+    border-radius: 14px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s, transform 0.15s;
+    cursor: pointer;
+}
+
+.course-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+    transform: translateY(-2px);
+}
+
+/* Card banner area */
+.card-banner {
+    width: 100%;
+    height: 130px;
+    background: #e9ecef;
+    overflow: hidden;
+}
+
+.card-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-banner-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+/* Card body */
+.card-body {
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card-course-code {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    letter-spacing: 0.2px;
+}
+
+.card-course-title {
+    font-size: 13px;
+    color: var(--text-on-light);
+    line-height: 1.35;
+}
+
+.card-course-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.meta-sep {
+    color: #bbb;
+}
+
+/* Hidden card (filtered out) */
+.course-card.hidden {
+    display: none;
+}
+
+/* ============================================================
+   NO COURSES STATE
+   ============================================================ */
+
+.no-courses {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.no-courses-icon {
+    font-size: 56px;
+    color: #ccc;
+    margin-bottom: 12px;
+}
+
+.no-courses p {
+    font-size: 15px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+    .courses-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+    }
+
+    .courses-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .courses-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-box {
+        max-width: 100%;
+    }
+
+    .term-select {
+        min-width: 100%;
+    }
+}

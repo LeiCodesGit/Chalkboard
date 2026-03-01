@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Syllabus Schedule</title>
+    <link rel="stylesheet" href="/Syllabus/css/infoSyllabus.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet" href="/Syllabus/css/outcomesTable.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet" href="/Syllabus/css/scheduleSyllabus.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+<body>
+    <div class="dashboard">
+
+        <main class="main-content">
+            <div class="syllabus-top-bar">
+                <button type="button" class="back-btn" onclick="window.history.back()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>Back</span>
+                </button>
+            </div>
+
+            <div class="syllabus-scroll-area">
+                <div class="syllabus-banner">
+                    <span class="syllabus-banner-title">SYLLABUS FORM</span>
+                </div>
+
+                <div class="syllabus-content-section" style="max-width: 1400px; margin: 0 auto;">
+                    <h2 class="college-header-outside">COURSE SCHEDULE</h2>
+
+                    <!-- Toolbar Pill -->
+                    <div class="outcomes-toolbar no-pdf">
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('bold')" title="Bold">
+                                <span class="material-symbols-outlined">format_bold</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('insertOrderedList')"
+                                title="Numbering">
+                                <span class="material-symbols-outlined">format_list_numbered</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('insertUnorderedList')"
+                                title="Bullets">
+                                <span class="material-symbols-outlined">format_list_bulleted</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyLeft')"
+                                title="Align Left">
+                                <span class="material-symbols-outlined">format_align_left</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyCenter')"
+                                title="Align Center">
+                                <span class="material-symbols-outlined">format_align_center</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyRight')"
+                                title="Align Right">
+                                <span class="material-symbols-outlined">format_align_right</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="addScheduleRow()" title="Add Row">
+                                <span class="material-symbols-outlined">add_box</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="deleteScheduleRow()" title="Delete Row">
+                                <span class="material-symbols-outlined">indeterminate_check_box</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="toggleMerge()" title="Merge Cells">
+                                <span class="material-symbols-outlined">cell_merge</span>
+                            </button>
+                            <div class="color-picker-dropdown">
+                                <button type="button" class="toolbar-btn split-btn-main" onclick="applyActiveColor()"
+                                    title="Fill Color">
+                                    <span class="material-symbols-outlined icon-with-color">
+                                        format_color_fill
+                                        <span class="active-color-bar" id="active-color-bar"></span>
+                                    </span>
+                                </button>
+                                <button type="button" class="toolbar-btn split-btn-arrow"
+                                    onclick="toggleColorPalette(event)" title="More Colors">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size: 16px;">arrow_drop_down</span>
+                                </button>
+
+                                <div id="color-palette-menu" class="color-palette-menu">
+                                    <div class="palette-section">
+                                        <div class="palette-label">Theme Colors</div>
+                                        <div class="palette-grid" id="theme-colors-grid"></div>
+                                    </div>
+                                    <div class="palette-section">
+                                        <div class="palette-label">Standard Colors</div>
+                                        <div class="palette-grid" id="standard-colors-grid"></div>
+                                    </div>
+                                    <div class="palette-divider"></div>
+                                    <button class="palette-option-btn" onclick="selectPaletteColor('transparent')">
+                                        <span class="material-symbols-outlined">format_color_reset</span>
+                                        No Fill
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Schedule Table -->
+                    <div class="outcomes-table-container">
+                        <table class="schedule-editor-table">
+                            <thead>
+                                <tr>
+                                    <th colspan="12" class="schedule-header-main">COURSE SCHEDULE</th>
+                                </tr>
+                                <tr>
+                                    <th rowspan="2" class="col-week">Week</th>
+                                    <th colspan="3">Outcomes</th>
+                                    <th rowspan="2" class="col-day">Day</th>
+                                    <th rowspan="2" class="col-coverage">Coverage Topic/s</th>
+                                    <th colspan="2">Teaching Learning Activities</th>
+                                    <th colspan="2">Assessment Tasks</th>
+                                    <th rowspan="2" class="col-textbook">Textbook Chapters</th>
+                                    <th rowspan="2" class="col-date">Date Covered</th>
+                                </tr>
+                                <tr>
+                                    <th class="col-outcomes">CO</th>
+                                    <th class="col-outcomes">MO</th>
+                                    <th class="col-outcomes">ILO</th>
+                                    <th class="col-tla-mode">Mode</th>
+                                    <th class="col-tla-activities">Activities</th>
+                                    <th class="col-at-mode">Mode</th>
+                                    <th class="col-at-task">T</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-editor-body">
+                                <!-- Rows added by JS -->
+                            </tbody>
+                        </table>
+                        <div id="table-selection-box">
+                            <div class="selection-handle"></div>
+                        </div>
+                    </div>
+
+                    <h2 class="college-header-outside">COURSE EVALUATION</h2>
+                    <p class="evaluation-instruction">The final grade of the student is based on the following
+                        components:</p>
+
+                    <!-- Evaluation Toolbar -->
+                    <div class="outcomes-toolbar no-pdf">
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('bold')" title="Bold">
+                                <span class="material-symbols-outlined">format_bold</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('insertOrderedList')"
+                                title="Numbered List">
+                                <span class="material-symbols-outlined">format_list_numbered</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('insertUnorderedList')"
+                                title="Bulleted List">
+                                <span class="material-symbols-outlined">format_list_bulleted</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyLeft')"
+                                title="Align Left">
+                                <span class="material-symbols-outlined">format_align_left</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyCenter')"
+                                title="Align Center">
+                                <span class="material-symbols-outlined">format_align_center</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyRight')"
+                                title="Align Right">
+                                <span class="material-symbols-outlined">format_align_right</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="addEvaluationRow()" title="Add Row">
+                                <span class="material-symbols-outlined">add_box</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="deleteEvaluationRow()"
+                                title="Delete Row">
+                                <span class="material-symbols-outlined">indeterminate_check_box</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="toggleMerge()" title="Merge Cells">
+                                <span class="material-symbols-outlined">cell_merge</span>
+                            </button>
+                            <div class="color-picker-dropdown">
+                                <button type="button" class="toolbar-btn split-btn-main" onclick="applyActiveColor()"
+                                    title="Fill Color">
+                                    <span class="material-symbols-outlined icon-with-color">
+                                        format_color_fill
+                                        <span class="active-color-bar" id="active-color-bar"></span>
+                                    </span>
+                                </button>
+                                <button type="button" class="toolbar-btn split-btn-arrow"
+                                    onclick="toggleColorPalette(event)" title="More Colors">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size: 16px;">arrow_drop_down</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="outcomes-table-container" id="evaluation-table-container" style="margin-bottom: 40px;">
+                        <table class="schedule-editor-table evaluation-editor-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="col-module-code">Module Code</th>
+                                    <th rowspan="2" class="col-co-small">CO</th>
+                                    <th rowspan="2" class="col-mediating-large">Mediating Outcomes / Laboratory Tasks
+                                    </th>
+                                    <th class="col-weight">Assessment Weight (%)</th>
+                                    <th class="col-weight">Modular Weight, %</th>
+                                    <th rowspan="2" class="col-weight">Final Weight, %</th>
+                                </tr>
+                                <tr>
+                                    <th class="col-sub">LT</th>
+                                    <th class="col-sub">PE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="evaluation-editor-body">
+                                <!-- Rows added by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p style="margin-top: 40px; margin-bottom: 10px;"><b>Course Outcomes Assessment</b></p>
+                    <p style="margin-bottom: 20px; font-size: 14px;">Achievement of course outcomes is based on the
+                        following:</p>
+
+                    <!-- Assessment Toolbar -->
+                    <div class="outcomes-toolbar no-pdf">
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('bold')" title="Bold">
+                                <span class="material-symbols-outlined">format_bold</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('insertOrderedList')"
+                                title="Numbered List">
+                                <span class="material-symbols-outlined">format_list_numbered</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('insertUnorderedList')"
+                                title="Bulleted List">
+                                <span class="material-symbols-outlined">format_list_bulleted</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyLeft')"
+                                title="Align Left">
+                                <span class="material-symbols-outlined">format_align_left</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyCenter')"
+                                title="Align Center">
+                                <span class="material-symbols-outlined">format_align_center</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="execCmd('justifyRight')"
+                                title="Align Right">
+                                <span class="material-symbols-outlined">format_align_right</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="addAssessmentRow()" title="Add Row">
+                                <span class="material-symbols-outlined">add_box</span>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="deleteAssessmentRow()"
+                                title="Delete Row">
+                                <span class="material-symbols-outlined">indeterminate_check_box</span>
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <button type="button" class="toolbar-btn" onclick="toggleMerge()" title="Merge Cells">
+                                <span class="material-symbols-outlined">cell_merge</span>
+                            </button>
+                            <div class="color-picker-dropdown">
+                                <button type="button" class="toolbar-btn split-btn-main" onclick="applyActiveColor()"
+                                    title="Fill Color">
+                                    <span class="material-symbols-outlined icon-with-color">
+                                        format_color_fill
+                                        <span class="active-color-bar" id="active-color-bar"></span>
+                                    </span>
+                                </button>
+                                <button type="button" class="toolbar-btn split-btn-arrow"
+                                    onclick="toggleColorPalette(event)" title="More Colors">
+                                    <span class="material-symbols-outlined"
+                                        style="font-size: 16px;">arrow_drop_down</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="outcomes-table-container" id="assessment-table-container" style="margin-bottom: 60px;">
+                        <table class="schedule-editor-table assessment-editor-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-assessment-co">COURSE OUTCOMES</th>
+                                    <th class="col-assessment-tasks">ASSESSMENT TASKS</th>
+                                    <th class="col-assessment-msp">MINIMUM SATISFACTORY PERFORMANCE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assessment-editor-body">
+                                <!-- Rows added by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="button-footer-outer">
+                <button class="next-btn-rect" onclick="window.history.back()" type="button">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>BACK</span>
+                </button>
+
+                <button class="next-btn-rect" onclick="window.location.href='/syllabus/approval'" type="button">
+                    <span>NEXT</span>
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="/Syllabus/js/scheduleSyllabus.js?v=<%= new Date().getTime() %>"></script>
+</body>
+
+</html>

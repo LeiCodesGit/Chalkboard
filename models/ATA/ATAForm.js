@@ -1,81 +1,100 @@
 import mongoose from 'mongoose';
 
 // ==========================================
-// 1. EMBEDDED SUBDOCUMENTS (The Arrays)
+// 1. EMBEDDED SUBDOCUMENTS (Mapping to the PDF Sections)
 // ==========================================
-
-// Handles Regular, Practicum, Remedial, and Section C (Other Colleges)
-const courseAssignmentSchema = new mongoose.Schema({
-    courseCode: { type: String, required: true },
-    section: { type: String, required: true },
-    units: { type: Number, required: true },
-    effectiveUnits: { type: Number, default: 0 }, // Calculated by Math Engine
-    numberOfStudents: { type: Number, default: 0 },
-    
-    // Flags
-    isPracticum: { type: Boolean, default: false },
-    isRemedial: { type: Boolean, default: false },
-    
-    // For Section C (Other Colleges)
-    originatingCollegeId: { type: String }, // Changed to String for Test Mode
-    originatingDeanName: { type: String } 
+const sectionB_Schema = new mongoose.Schema({
+    courseCode: String,
+    section: String,
+    units: Number,
+    effectiveDate: String
 });
 
-// Handles Sections A & D (Administrative/Research Deloading)
-const adminRoleSchema = new mongoose.Schema({
-    roleName: { type: String, required: true },
-    deloadingUnits: { type: Number, required: true },
-    effectDate: { type: Date }
+const sectionC_Schema = new mongoose.Schema({
+    courseCode: String,
+    section: String,
+    units: Number,
+    effectiveDate: String
 });
 
-// Handles Section F (Outside Employment)
-const outsideEmploymentSchema = new mongoose.Schema({
-    companyName: { type: String, required: true },
-    position: { type: String, required: true },
-    workHours: { type: Number, required: true }
+const sectionD_Schema = new mongoose.Schema({
+    workDescription: String,
+    units: Number,
+    effectiveDate: String
+});
+
+const sectionE_Schema = new mongoose.Schema({
+    courseCode: String,
+    numberOfStudents: Number,
+    coordinator: String
+});
+
+const sectionF_Schema = new mongoose.Schema({
+    employer: String,
+    position: String,
+    courseOrUnits: String,
+    hoursPerWeek: Number
+});
+
+const sectionG_Schema = new mongoose.Schema({
+    courseId: String,
+    moduleCode: String,
+    section: String,
+    units: Number,
+    numberOfStudents: Number,
+    type: { 
+        type: String, 
+        enum: ['lecture', 'lab'], 
+        required: true 
+    }
 });
 
 // Handles State Machine Audit Trail
 const approvalHistorySchema = new mongoose.Schema({
-    approverRole: { type: String, enum: ['CHAIR', 'DEAN', 'VPAA', 'HRMO'], required: true },
-    approvalStatus: { type: String, enum: ['ENDORSED', 'APPROVED', 'RETURNED'], required: true },
-    remarks: { type: String }, 
-    date: { type: Date, default: Date.now }
+    // 👇 Updated the enum list to match your actual User roles 👇
+    approverRole: { 
+        type: String, 
+        enum: ['Program-Chair', 'Practicum-Coordinator', 'Dean', 'VPAA', 'HRMO'] 
+    },
+    approvalStatus: { type: String, enum: ['ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED'] },
+    remarks: String, 
+    date: { type: Date, default: Date.now } 
 });
-
 // ==========================================
 // 2. MAIN ATA FORM SCHEMA
 // ==========================================
 const ataFormSchema = new mongoose.Schema({
-    // TEST MODE: We use String so you can type "TEST_USER_001"
-    // Later, when merging to MainDB, we will change this back to ObjectId
     userID: { type: String, required: true },
+    
+    // Personal Details
+    facultyName: String,
+    position: String,
+    college: String,
+    employmentType: String,
+    address: String,
     
     // Form Metadata
     term: { type: String, default: "2nd Term 2025-2026" },
     academicYear: { type: String, default: "2025-2026" },
-    submissionDate: { type: Date, default: Date.now },
-    
-    // State Machine Status
-    status: { 
-        type: String, 
-        enum: ['DRAFT', 'PENDING_CHAIR', 'PENDING_DEAN', 'APPROVED', 'ARCHIVED'], 
-        default: 'DRAFT' 
-    },
-    digitalSignature: { type: String },
+    status: { type: String, default: 'DRAFT' },
     
     // Math Engine Totals
     totalTeachingUnits: { type: Number, default: 0 },
     totalEffectiveUnits: { type: Number, default: 0 },
+    totalRemedialUnits: { type: Number, default: 0 },
 
-    // The Embedded Arrays
-    courseAssignments: [courseAssignmentSchema],
-    administrativeRoles: [adminRoleSchema],
-    outsideEmployment: [outsideEmploymentSchema],
-    approvalHistory: [approvalHistorySchema]
+    // THE EXACT FORM SECTIONS
+    sectionA_AdminUnits: { type: Number, default: 0 },
+    sectionB_WithinCollege: [sectionB_Schema],
+    sectionC_OtherCollege: [sectionC_Schema],
+    sectionD_AdminWork: [sectionD_Schema],
+    sectionE_Practicum: [sectionE_Schema],
+    sectionF_OutsideEmployment: [sectionF_Schema],
+    sectionG_Remedial: [sectionG_Schema],
+    
+    approvalHistory: [approvalHistorySchema]            
 
 }, { timestamps: true });
 
-// Export as ES Module
 const ATAForm = mongoose.model('ATAForm', ataFormSchema);
 export default ATAForm;

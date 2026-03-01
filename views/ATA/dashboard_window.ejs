@@ -8,7 +8,9 @@
     <link rel="stylesheet" href="/common/css/variables.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-role="<%= typeof role !== 'undefined' ? role : '' %>" 
+      data-employment="<%= typeof employmentType !== 'undefined' ? employmentType : '' %>"
+      data-practicum="<%= typeof isPracticumCoordinator !== 'undefined' ? isPracticumCoordinator : 'false' %>">
 
     <!-- HAMBURGER MENU -->
     <div class="hamburger-menu" id="hamburgerMenu">
@@ -31,10 +33,9 @@
         <div class="dashboard-title">DASHBOARD</div>
 
         <div class="welcome-box">
-            <h2>Welcome, [Faculty Name] | [Employment Status] | [College]</h2>
+            <h2>Welcome, <%= user.name %> | <%= role %> | <%= user.program %></h2>
         </div>
 
-        <!-- Action cards - with clickable links -->
         <div class="action-cards">
             <a href="/ata/new" class="action-card-link-wrapper">
                 <div class="action-card">
@@ -42,20 +43,28 @@
                 </div>
             </a>
 
-            <a href="/admin/courses" id="adminCourseBtn" class="action-card-link-wrapper" style="display: none;">
-                <div class="action-card" style="background-color: #721c24;">
-                    <div class="action-card-title"><i class="fas fa-database"></i> Manage Courses</div>
-                </div>
-            </a>
+            <% if (role === 'Program-Chair' || role === 'Dean' || role === 'Admin') { %>
+                <a href="/admin/courses" id="adminCourseBtn" class="action-card-link-wrapper">
+                    <div class="action-card" style="background-color: #721c24;">
+                        <div class="action-card-title"><i class="fas fa-database"></i> Manage Courses</div>
+                    </div>
+                </a>
 
+                <a href="/ata/pending" id="adminApprovalCard" class="action-card-link-wrapper">
+                    <div class="action-card" style="background-color: #d39e00; color: #333;">
+                        <div class="action-card-title"><i class="fas fa-inbox"></i> Forms to Approve</div>
+                        <div class="action-card-link">Review Faculty Submissions →</div>
+                    </div>
+                </a>
+            <% } %>
             <div class="action-card pending-card">
-                <div class="action-card-title">Pending (0)</div>
-                <div class="action-card-link">View →</div>
+                <div class="action-card-title">My Pending Forms (<span id="myPendingCount">0</span>)</div>
+                <div class="action-card-link">View My Forms →</div>
             </div>
 
             <div class="action-card approved-card">
-                <div class="action-card-title">Approved (0)</div>
-                <div class="action-card-link">View →</div>
+                <div class="action-card-title">My Approved Forms (<span id="myApprovedCount">0</span>)</div>
+                <div class="action-card-link">View My Forms →</div>
             </div>
         </div>
 
@@ -70,11 +79,15 @@
 
         <a href="/" class="back-button">Back</a>
     </main>
+<<<<<<< HEAD:views/ATA/dashboard_window.ejs
 
     <script src="/ATA/js/ata_client.js"></script>
 
     <script src="/ATA/js/ata_client.js"></script>
     
     <%- include('partials/dev_toolbar') %>
+=======
+    <script src="/js/ata_client.js"></script>
+>>>>>>> ATA:ATA/views/dashboard_window.ejs
 </body>
 </html>

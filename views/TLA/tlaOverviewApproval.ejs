@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMCM Chalkboard | TLA Approval Overview</title>
+
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- Global colour variables -->
+    <link rel="stylesheet" href="/common/css/variables.css">
+
+    <!-- Page styles (reuse the overview CSS) -->
+    <link rel="stylesheet" href="/TLA/css/tlaOverview.css">
+</head>
+<body>
+
+    <main class="main-content">
+
+        <!-- ================================================ -->
+        <!--  COURSE BANNER                                   -->
+        <!-- ================================================ -->
+        <div class="course-banner">
+            <button class="back-btn" onclick="window.location.href='/tla/courses'">
+                <span class="material-symbols-outlined">arrow_back_ios</span>
+                Back
+            </button>
+            <div class="banner-overlay"></div>
+            <h2 class="banner-course-title"><%= locals.courseInfo ? courseInfo.courseTitle.toUpperCase() : 'LIFE AND WORKS OF MAMBO' %></h2>
+        </div>
+
+        <!-- ================================================ -->
+        <!--  MAIN GRID (modules left | info panel right)    -->
+        <!-- ================================================ -->
+        <div class="overview-grid">
+
+            <!-- ============ LEFT: MODULE CARDS ============ -->
+            <div class="modules-column">
+
+                <!-- ---- SYLLABUS ACCORDION CARD ---- -->
+                <div class="module-card">
+                    <div class="module-card-header" onclick="toggleModule('syllabus')">
+                        <div class="module-icon-wrap">
+                            <img
+                                src="/TLA/images/syllabus_bk.png"
+                                alt="Syllabus"
+                                class="module-icon"
+                                onerror="this.onerror=null;this.style.display='none';this.parentElement.style.background='#5b7a9f';"
+                            >
+                        </div>
+                        <div class="module-info">
+                            <h3 class="module-title">SYLLABUS</h3>
+                            <p class="module-desc">Review syllabus submissions</p>
+                            <span class="module-start-link">Review &#x2192;</span>
+                        </div>
+                        <div class="module-header-status">
+                            STATUS:&nbsp;<span class="sts-label sts-not-started">NOT GETTING STARTED</span>
+                        </div>
+                        <span class="module-chevron material-symbols-outlined" id="syllabus-chevron">expand_more</span>
+                    </div>
+
+                    <div class="module-body" id="syllabus-body">
+                        <a class="form-item" href="#">
+                            <span class="form-dot dot-gray"></span>
+                            <span class="material-symbols-outlined fi-folder">folder</span>
+                            <span class="fi-name">SYLLABUS FORM</span>
+                            <span class="fi-status sts-not-started">STATUS:&nbsp;<strong>NOT GETTING STARTED</strong></span>
+                        </a>
+                    </div>
+                </div><!-- end syllabus card -->
+
+                <!-- ---- TLA ACCORDION CARD ---- -->
+                <div class="module-card">
+                    <div class="module-card-header" onclick="toggleModule('tla')">
+                        <div class="module-icon-wrap">
+                            <img
+                                src="/TLA/images/tla_bk.png"
+                                alt="TLA"
+                                class="module-icon"
+                                onerror="this.onerror=null;this.style.display='none';this.parentElement.style.background='#c0547c';"
+                            >
+                        </div>
+                        <div class="module-info">
+                            <h3 class="module-title">TLA</h3>
+                            <p class="module-desc">Review TLA submissions</p>
+                            <span class="module-start-link">Review &#x2192;</span>
+                        </div>
+                        <div class="module-header-status">
+                            STATUS:&nbsp;<span class="sts-label sts-not-started">NOT GETTING STARTED</span>
+                        </div>
+                        <span class="module-chevron material-symbols-outlined" id="tla-chevron">expand_more</span>
+                    </div>
+
+                    <div class="module-body" id="tla-body">
+                        <%
+                            const dotClassMap = {
+                                'Approved':      'dot-green',
+                                'Archived':      'dot-green',
+                                'Pending':       'dot-orange',
+                                'Returned':      'dot-red',
+                                'Draft':         'dot-gray',
+                                'Not Submitted': 'dot-gray'
+                            };
+                            const stsClassMap = {
+                                'Approved':      'sts-approved',
+                                'Archived':      'sts-approved',
+                                'Pending':       'sts-pending',
+                                'Returned':      'sts-rejected',
+                                'Draft':         'sts-not-started',
+                                'Not Submitted': 'sts-not-started'
+                            };
+                            const stsTextMap = {
+                                'Approved':      'APPROVED',
+                                'Archived':      'ARCHIVED',
+                                'Pending':       'PENDING',
+                                'Returned':      'RETURNED',
+                                'Draft':         'DRAFT',
+                                'Not Submitted': 'NOT GETTING STARTED'
+                            };
+                        %>
+                        <% weeks.forEach(function(week) { %>
+                        <%
+                            const wStatus = week.status || 'Not Submitted';
+                            const wDot    = dotClassMap[wStatus]  || 'dot-gray';
+                            const wSts    = stsClassMap[wStatus]  || 'sts-not-started';
+                            const wText   = stsTextMap[wStatus]   || 'NOT GETTING STARTED';
+                            // Approver roles → go to approval page; no TLA yet → nothing to review
+                            const wLink   = week._id ? '/tla/approval/' + week._id : '#';
+                        %>
+                        <a class="form-item <%= !week._id ? 'form-item-disabled' : '' %>" href="<%= wLink %>">
+                            <span class="form-dot <%= wDot %>"></span>
+                            <span class="material-symbols-outlined fi-folder">folder</span>
+                            <span class="fi-name">Week <%= week.weekNumber %> &mdash; TLA Review</span>
+                            <span class="fi-status <%= wSts %>">STATUS:&nbsp;<strong><%= wText %></strong></span>
+                        </a>
+                        <% }); %>
+                    </div>
+                </div><!-- end tla card -->
+
+            </div><!-- end .modules-column -->
+
+            <!-- ============ RIGHT: INFO PANEL ============ -->
+            <div class="info-panel">
+
+                <div class="panel-avatar-wrap">
+                    <img
+                        src="/common/img/default-avatar.jpg"
+                        alt="User Avatar"
+                        class="panel-avatar"
+                        onerror="this.onerror=null;this.style.display='none';this.parentElement.style.background='#ccc';"
+                    >
+                </div>
+
+                <p class="panel-username">
+                    <%= locals.user ? user.firstName + ' ' + user.lastName : 'Guest User' %>
+                </p>
+
+                <!-- Role Badge -->
+                <p class="panel-role-badge"><%= locals.user ? user.role : '—' %></p>
+
+                <!-- INFORMATION -->
+                <div class="panel-section">
+                    <h4 class="panel-section-title">INFORMATION</h4>
+                    <div class="panel-info-row"><span class="pi-key">COURSE CODE:</span> <%= locals.courseInfo ? courseInfo.courseCode : 'SS067' %></div>
+                    <div class="panel-info-row"><span class="pi-key">COURSE NAME:</span> <%= locals.courseInfo ? courseInfo.courseTitle : 'Life and Works of Mambo' %></div>
+                    <div class="panel-info-row"><span class="pi-key">COURSE SECTION:</span> <%= locals.courseInfo ? (courseInfo.section || 'A301') : 'A301' %></div>
+                    <div class="panel-info-row"><span class="pi-key">ACADEMIC YEAR:</span> <%= locals.courseInfo ? courseInfo.schoolYear : '2025-2026' %></div>
+                    <div class="panel-info-row"><span class="pi-key">ACADEMIC TERM:</span> <%= locals.courseInfo ? courseInfo.term : '2nd Semestral' %></div>
+                </div>
+
+                <!-- COURSE SCHEDULE -->
+                <div class="panel-section">
+                    <h4 class="panel-section-title">COURSE SCHEDULE</h4>
+                    <div class="schedule-card">
+                        <span class="material-symbols-outlined sched-icon">schedule</span>
+                        <div class="sched-details">
+                            <p class="sched-primary">9:00 AM &ndash; 11:25 AM</p>
+                            <p class="sched-sub">Monday / Wednesday / Friday</p>
+                            <p class="sched-sub">7:00 AM &ndash; 9:11 AM</p>
+                        </div>
+                        <span class="material-symbols-outlined sched-arrow">chevron_right</span>
+                    </div>
+                </div>
+
+            </div><!-- end .info-panel -->
+
+        </div><!-- end .overview-grid -->
+
+    </main>
+
+    <script src="/TLA/js/tlaOverview.js"></script>
+</body>
+</html>

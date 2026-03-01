@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Syllabus Archive</title>
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/Syllabus/css/syllabus.css">
+    <link rel="stylesheet" href="/Syllabus/css/adminOverview.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <%- include('../partials/sideMenuBar') %>
+
+            <main class="main-content">
+                <section class="content-panel">
+                    <div class="hr-panel">
+
+                        <!-- Header -->
+                        <div class="hr-header">
+                            <div class="hr-header-left">
+
+                                <div>
+                                    <h1>HR Syllabus Archive</h1>
+                                    <p class="hr-subtitle">View approved syllabuses and manage archives</p>
+                                </div>
+                            </div>
+                            <div class="hr-header-right">
+                                <div class="hr-stats">
+                                    <div class="stat-pill approved">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>
+                                            <%= approvedCount %> Approved
+                                        </span>
+                                    </div>
+                                    <div class="stat-pill archived">
+                                        <i class="fas fa-archive"></i>
+                                        <span>
+                                            <%= archivedCount %> Archived
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Tabs -->
+                        <div class="filter-tabs">
+                            <button class="tab-btn active" data-filter="all">All</button>
+                            <button class="tab-btn" data-filter="Approved">Approved</button>
+                            <button class="tab-btn" data-filter="Archived">Archived</button>
+                        </div>
+
+                        <!-- Search Bar -->
+                        <div class="hr-search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="hrSearch" placeholder="Search by course title or code...">
+                        </div>
+
+                        <!-- Item List -->
+                        <div class="item-list" id="itemList">
+
+                            <% if (!items || items.length===0) { %>
+                                <div class="empty-state">
+                                    <div class="empty-icon"><i class="fas fa-archive"></i></div>
+                                    <h3>No Syllabuses Found</h3>
+                                    <p>There are no approved or archived syllabuses to display.</p>
+                                </div>
+                                <% } %>
+
+                                    <% for (var i=0; i < items.length; i++) { %>
+                                        <% var d=items[i]; %>
+                                            <div class="item-row" data-status="<%= d.status %>"
+                                                data-title="<%= (d.courseTitle || '').toLowerCase() %>"
+                                                data-code="<%= (d.courseCode || '').toLowerCase() %>"
+                                                data-id="<%= d.syllabusId %>">
+
+                                                <div class="item-thumb">
+                                                    <img src="<%= d.img %>" alt="Course Image">
+                                                </div>
+
+                                                <div class="item-info">
+                                                    <span class="item-code">
+                                                        <%= d.courseCode %>
+                                                    </span>
+                                                    <h3 class="item-title">
+                                                        <%= d.courseTitle %>
+                                                    </h3>
+                                                    <div class="item-meta">
+                                                        <span><i class="fas fa-user-tie"></i>
+                                                            <%= d.instructor %>
+                                                        </span>
+                                                        <% if (d.approvalDate) { %>
+                                                            <span><i class="fas fa-check"></i> Approved: <%=
+                                                                    d.approvalDate %></span>
+                                                            <% } %>
+                                                                <% if (d.approvedBy) { %>
+                                                                    <span><i class="fas fa-user-shield"></i> By: <%=
+                                                                            d.approvedBy %></span>
+                                                                    <% } %>
+                                                                        <% if (d.status==='Archived' && d.archivedDate)
+                                                                            { %>
+                                                                            <span><i class="fas fa-archive"></i>
+                                                                                Archived: <%= d.archivedDate %></span>
+                                                                            <% } %>
+                                                                                <% if (d.status==='Archived' &&
+                                                                                    d.archivedBy) { %>
+                                                                                    <span><i
+                                                                                            class="fas fa-user-cog"></i>
+                                                                                        By: <%= d.archivedBy %></span>
+                                                                                    <% } %>
+                                                    </div>
+                                                </div>
+
+                                                <div class="item-actions">
+                                                    <% if (d.status==='Approved' ) { %>
+                                                        <span class="status-badge status-approved">
+                                                            <i class="fas fa-check-circle"></i> Approved
+                                                        </span>
+                                                        <button class="review-btn"
+                                                            onclick="window.location.href='/syllabus/hr/review/<%= d.syllabusId %>'"
+                                                            title="Review this syllabus"
+                                                            style="display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; background: #3949ab; color: #fff; transition: all 0.2s ease;">
+                                                            <i class="fas fa-file-signature"></i> Review
+                                                        </button>
+                                                        <% } else if (d.status==='Archived' ) { %>
+                                                            <span class="status-badge status-archived">
+                                                                <i class="fas fa-box"></i> Archived
+                                                            </span>
+                                                            <button class="unarchive-btn" data-id="<%= d.syllabusId %>"
+                                                                title="Restore this syllabus">
+                                                                <i class="fas fa-undo"></i> Unarchive
+                                                            </button>
+                                                            <% } %>
+                                                </div>
+                                            </div>
+                                            <% } %>
+
+                        </div>
+                    </div>
+                </section>
+            </main>
+    </div>
+
+    <script src="/Syllabus/js/adminOverview.js"></script>
+</body>
+
+</html>

@@ -8,7 +8,9 @@
     <link rel="stylesheet" href="/common/css/variables.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-role="<%= typeof role !== 'undefined' ? role : '' %>" 
+      data-employment="<%= typeof employmentType !== 'undefined' ? employmentType : '' %>"
+      data-practicum="<%= typeof isPracticumCoordinator !== 'undefined' ? isPracticumCoordinator : 'false' %>">
 
     <div class="hamburger-menu" id="hamburgerMenu">
         <span></span>
@@ -55,14 +57,38 @@
                     <div class="form-row">
                         <div class="form-label">POSITION:</div>
                         <div class="form-field">
-                            <input type="text" class="form-input" placeholder="" id="position">
+                            <select class="form-input" id="position" style="background-color: rgba(255,255,255,0.1); color: white;">
+                                <option value="" disabled selected>Select your position</option>
+                                <option value="Professor">Professor</option>
+                                <option value="Assistant Professor">Assistant Professor</option>
+                                <option value="Associate Professor">Associate Professor</option>
+                                <option value="Program-Chair">Program Chair</option>
+                                <option value="Dean">Dean</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-row">
-                        <div class="form-label">COLLEGE:</div>
+                        <div class="form-label">COLLEGE/PROGRAM:</div>
                         <div class="form-field">
-                            <input type="text" class="form-input" placeholder="" id="college">
+                            <select class="form-input" id="college" style="background-color: rgba(255,255,255,0.1); color: white;">
+                                <option value="" disabled selected>Select your College or Program</option>
+                                <optgroup label="College of Engineering & Architecture (CEA)">
+                                    <option value="CpE">Computer Engineering (CpE)</option>
+                                    <option value="CE">Civil Engineering (CE)</option>
+                                    <option value="EE">Electrical Engineering (EE)</option>
+                                    <option value="ECE">Electronics Engineering (ECE)</option>
+                                    <option value="IE">Industrial Engineering (IE)</option> 
+                                    <option value="ME">Mechanical Engineering (ME)</option>
+                                    <option value="AR">Architecture (AR)</option>
+                                </optgroup>
+                                <optgroup label="Other Colleges">
+                                    <option value="CCIS">College of Computing and Information Sciences (CCIS)</option>
+                                    <option value="CAS">College of Arts and Sciences (CAS)</option>
+                                    <option value="ETYCB">E.T. Yuchengco College of Business (ETYCB)</option>
+                                    <option value="CHS">College of Health Sciences (CHS)</option>
+                                </optgroup>
+                            </select>
                         </div>
                     </div>
 
@@ -70,10 +96,10 @@
                         <div class="form-label">EMPLOYMENT STATUS:</div>
                         <div class="form-field radio-group">
                             <label class="radio-label">
-                                <input type="radio" name="employment" value="fulltime"> FULL TIME
+                                <input type="radio" name="employment" value="Full-Time" id="radioFullTime"> FULL TIME
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="employment" value="parttime"> PART TIME
+                                <input type="radio" name="employment" value="Part-Time" id="radioPartTime"> PART TIME
                             </label>
                         </div>
                     </div>
@@ -351,6 +377,13 @@
                         <div class="remedial-col">
                             <input type="text" class="table-input" placeholder="#">
                         </div>
+                        <div class="remedial-col">
+                            <select class="table-input type-select" required style="cursor: pointer; background: transparent; border: 1px solid #ccc; padding: 5px; border-radius: 4px; width: 100%;">
+                                <option value="" disabled selected>Type...</option>
+                                <option value="lecture">Lecture</option>
+                                <option value="lab">Lab</option>
+                            </select>
+                        </div>
                         <div class="remedial-col action-col">
                             <button class="action-btn remove-btn"><i class="fas fa-trash"></i></button>
                         </div>
@@ -585,7 +618,6 @@
                     const stepNumber = index + 1;
                     dot.classList.remove('filled', 'active');
                     
-                    // Grey out forbidden dots visually
                     if (window.isStepVisible && !window.isStepVisible(stepNumber)) {
                         dot.style.opacity = "0.3"; 
                         dot.style.cursor = "not-allowed";
@@ -603,12 +635,21 @@
                     }
                 });
 
-                // 5. Update Buttons
+                // 5. Update Buttons dynamically based on roles
                 if (backBtn) backBtn.textContent = (window.currentStep === 1) ? 'Return to Dashboard' : 'Back';
-                if (nextBtn) nextBtn.textContent = (window.currentStep === totalSteps) ? 'Finish' : 'Next';
+
+                let lastVisibleStep = 7;
+                while(lastVisibleStep > 0 && window.isStepVisible && !window.isStepVisible(lastVisibleStep)) {
+                    lastVisibleStep--;
+                }
+
+                if (nextBtn) {
+                    nextBtn.textContent = (window.currentStep === lastVisibleStep) ? 'Submit' : 'Next';
+                }
+
                 if (step7Buttons) step7Buttons.style.display = (window.currentStep === 7) ? 'block' : 'none';
 
-                // 6. Force Section Visibility Check (Important!)
+                // 6. Force Section Visibility Check
                 if (window.handleInnerSectionVisibility) window.handleInnerSectionVisibility();
 
                 // 7. Scroll top
@@ -616,19 +657,21 @@
                 if (container) container.scrollTop = 0;
             };
 
-            // --- DOT CLICK LISTENER (FIXED) ---
+            // --- DOT CLICK LISTENER ---
             stepDots.forEach((dot, index) => {
                 dot.addEventListener('click', () => {
                     const targetStep = index + 1;
-
-                    // SECURITY CHECK: Is the user allowed to go here?
                     if (window.isStepVisible && !window.isStepVisible(targetStep)) {
                         alert("⚠️ This section is not applicable to your current role.");
-                        return; // Stop! Do not switch pages.
+                        return; 
                     }
-
                     window.currentStep = targetStep;
                     updateFormDisplay();
+                    
+                    // Trigger math calculation if jumping directly to Review Page
+                    if (window.currentStep === 6 && window.calculateSummary) {
+                        window.calculateSummary();
+                    }
                 });
             });
 
@@ -638,10 +681,9 @@
                     if (window.currentStep === 1) {
                         window.location.href = '/dashboard/window';
                     } else {
-                        // Simple decrement is okay for back, or you can use "smart skip" in reverse
                         let prevStep = window.currentStep - 1;
                         while (prevStep > 0 && window.isStepVisible && !window.isStepVisible(prevStep)) {
-                            prevStep--; // Skip backwards over hidden steps
+                            prevStep--; 
                         }
                         if (prevStep > 0) {
                             window.currentStep = prevStep;
@@ -656,9 +698,14 @@
         });
     </script>
 
+<<<<<<< HEAD:views/ATA/new-ata.ejs
    <script src="/ATA/js/ata_client.js"></script>
 <script src="/ATA/js/ata_autocomplete.js"></script>
     <%- include('partials/dev_toolbar') %>
+=======
+    <script src="/js/ata_client.js"></script>
+
+>>>>>>> ATA:ATA/views/new-ata.ejs
 
 </body>
 </html>

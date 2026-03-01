@@ -4,6 +4,7 @@
   "description": "This will be the final project for the Foxtrot Batch...",
   "main": "index.js",
   "type": "module",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon TLA/tlaServer.js",
@@ -24,12 +25,20 @@
   "author": "A361 - Foxtrot Batch - Computer Engineering",
   "license": "ISC",
   "dependencies": {
+    "docx-preview": "^0.3.7",
+    "docxtemplater": "^3.68.3",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.3.1",
     "ejs": "^4.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.0",
-    "mongoose": "^9.2.3"
+    "mongoose": "^9.2.1",
+    "pdf-lib": "^1.17.1",
+    "pizzip": "^3.2.0",
+    "puppeteer": "^24.37.5",
+    "multer": "^2.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

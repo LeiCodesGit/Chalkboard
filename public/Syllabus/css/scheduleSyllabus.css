@@ -1,0 +1,399 @@
+/* Table Container */
+.schedule-table-container {
+    width: 98%;
+    margin: 20px auto;
+    background: var(--color-white);
+    border: 1px solid #e0e0e0;
+    overflow-x: auto;
+    font-family: Arial, sans-serif;
+}
+
+.schedule-editor-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* Headers */
+.schedule-editor-table thead th {
+    border: 1px solid #e0e0e0;
+    padding: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    background-color: var(--color-white) !important;
+    color: #000;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.schedule-header-main {
+    background-color: var(--color-white) !important;
+    font-size: 13px !important;
+    letter-spacing: 1px;
+}
+
+.schedule-header-blue {
+    background-color: var(--color-white) !important;
+    text-align: left !important;
+    padding-left: 10px !important;
+    font-weight: bold;
+}
+
+/* Row and Cell Styling */
+.schedule-editor-table tbody td {
+    padding: 0;
+    border: 1px solid #e0e0e0;
+    position: relative;
+    vertical-align: top;
+}
+
+.editable-cell {
+    min-height: 24px;
+    height: 100%;
+    width: 100%;
+    padding: 4px 8px;
+    outline: none;
+    font-size: 14px;
+    color: var(--color-charcoal);
+    box-sizing: border-box;
+    display: block;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.editable-cell:focus {
+    background-color: rgba(0, 36, 85, 0.02);
+}
+
+/* Column Widths */
+.col-week {
+    width: 60px;
+}
+
+.col-outcomes {
+    width: 45px;
+}
+
+.col-day {
+    width: 45px;
+}
+
+.col-coverage {
+    width: 250px;
+}
+
+.col-tla-mode {
+    width: 70px;
+}
+
+.col-tla-activities {
+    width: 200px;
+}
+
+.col-at-mode {
+    width: 70px;
+}
+
+.col-at-task {
+    width: 150px;
+}
+
+.col-textbook {
+    width: 80px;
+}
+
+.col-date {
+    width: 80px;
+}
+
+/* Centered content columns */
+.center-text {
+    text-align: center;
+}
+
+/* Excel-like labels */
+/* Selection & Highlighting */
+.highlighted-cell {
+    background-color: transparent !important;
+}
+
+.editable-cell:focus {
+    background-color: transparent !important;
+}
+
+#table-selection-box {
+    position: absolute;
+    border: 2px solid var(--color-mapua-blue);
+    background-color: transparent !important;
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+    box-sizing: border-box;
+    /* Create white inner gap */
+    box-shadow: inset 0 0 0 1px white;
+}
+
+.selection-handle {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 6px;
+    height: 6px;
+    background-color: var(--color-mapua-blue);
+    border: 1px solid white;
+    pointer-events: auto;
+    border-radius: 1px;
+}
+
+#table-selection-box.dragging {
+    border-style: solid;
+}
+
+/* Toolbar Styling (similar to outcomesTable.css) */
+.schedule-toolbar {
+    display: flex;
+    align-items: center;
+    background: var(--color-white);
+    border-radius: 50px;
+    padding: 8px 24px;
+    gap: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: fit-content;
+    margin: 20px auto;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    padding-right: 12px;
+}
+
+.toolbar-group:last-child {
+    border-right: none;
+    padding-right: 0;
+}
+
+.toolbar-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-charcoal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.toolbar-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.toolbar-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+/* Bullet list in cells */
+.editable-cell ul {
+    margin: 0;
+    padding-left: 15px;
+}
+
+.editable-cell li {
+    margin-bottom: 4px;
+}
+
+/* Advanced Color Picker */
+.color-picker-dropdown {
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-radius: 4px;
+    background: transparent;
+}
+
+.split-btn-main {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    padding-right: 2px !important;
+}
+
+.split-btn-arrow {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    padding-left: 0 !important;
+    min-width: 16px !important;
+}
+
+.icon-with-color {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: visible;
+}
+
+.active-color-bar {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #FFFF00;
+    /* Default yellow */
+    border-radius: 1px;
+}
+
+.color-palette-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 2000;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    width: 240px;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+    border-radius: 4px;
+}
+
+.color-palette-menu.active {
+    display: flex;
+}
+
+.palette-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.palette-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+}
+
+.palette-swatch {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #eee;
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-sizing: border-box;
+}
+
+.palette-swatch:hover {
+    transform: scale(1.3);
+    border-color: #000;
+    z-index: 2;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.palette-divider {
+    height: 1px;
+    background: #eee;
+    margin: 4px 0;
+}
+
+.palette-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #333;
+    border-radius: 4px;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.palette-option-btn:hover {
+    background: #f5f5f5;
+}
+
+.palette-option-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+/* Evaluation Table Columns */
+#evaluation-table-container {
+    width: fit-content;
+    margin: 0 auto 60px auto !important;
+}
+
+.evaluation-editor-table {
+    margin: 0 !important;
+    width: auto;
+}
+
+.evaluation-editor-table .col-module-code {
+    width: 120px;
+}
+
+.evaluation-editor-table .col-co-small {
+    width: 50px;
+}
+
+.evaluation-editor-table .col-mediating-large {
+    width: 350px;
+}
+
+.evaluation-editor-table .col-weight {
+    width: 80px;
+    text-align: center;
+}
+
+.evaluation-editor-table .col-sub {
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+}
+
+.evaluation-instruction {
+    font-size: 14px;
+    color: var(--color-charcoal);
+    margin: 10px 0 20px 0;
+    font-style: normal;
+}
+
+/* Assessment Table Columns */
+#assessment-table-container {
+    width: fit-content;
+    margin: 0 auto 60px auto !important;
+}
+
+.assessment-editor-table {
+    margin: 0 !important;
+    width: auto;
+}
+
+.assessment-editor-table .col-assessment-co {
+    width: 500px;
+}
+
+.assessment-editor-table .col-assessment-tasks {
+    width: 160px;
+}
+
+.assessment-editor-table .col-assessment-msp {
+    width: 120px;
+}

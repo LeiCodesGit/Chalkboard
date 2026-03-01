@@ -1,0 +1,450 @@
+/* ============================================================
+   TLA Overview Page Styles
+   File: public/TLA/css/overview.css
+   ============================================================ */
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--page-bg);
+}
+
+/* ============================================================
+   MAIN CONTENT WRAPPER
+   ============================================================ */
+
+.main-content {
+    margin-left: 0;
+    min-height: 100vh;
+    background-color: var(--page-bg);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================================
+   COURSE BANNER
+   ============================================================ */
+
+.course-banner {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    background: url('/TLA/images/background_overview.jpg') center center / cover no-repeat;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.30);
+    z-index: 1;
+}
+
+.back-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.40);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    color: var(--text-on-dark);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.20);
+}
+
+.back-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.banner-course-title {
+    position: absolute;
+    bottom: 20px;
+    left: 24px;
+    z-index: 10;
+    color: var(--text-on-dark);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* ============================================================
+   OVERVIEW GRID (2-column layout)
+   ============================================================ */
+
+.overview-grid {
+    display: flex;
+    gap: 20px;
+    padding: 20px 24px;
+    align-items: flex-start;
+    flex: 1;
+}
+
+/* ============================================================
+   LEFT: MODULES COLUMN
+   ============================================================ */
+
+.modules-column {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ============================================================
+   MODULE CARD (Accordion)
+   ============================================================ */
+
+.module-card {
+    background: var(--color-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid #e8e8e8;
+}
+
+.module-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.module-card-header:hover {
+    background: #fafafa;
+}
+
+/* Module icon image */
+.module-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.module-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Module text info */
+.module-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.module-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    margin-bottom: 2px;
+}
+
+.module-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.module-start-link {
+    font-size: 12px;
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.module-start-link:hover {
+    text-decoration: underline;
+}
+
+/* Header status badge */
+.module-header-status {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-on-light);
+    white-space: nowrap;
+    margin-right: 8px;
+}
+
+/* Chevron rotate toggle */
+.module-chevron {
+    font-size: 22px;
+    color: #666;
+    transition: transform 0.55s ease;
+    flex-shrink: 0;
+}
+
+.module-chevron.rotated {
+    transform: rotate(180deg);
+}
+
+/* Accordion body – collapsed by default */
+.module-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.65s ease;
+}
+
+.module-body.expanded {
+    max-height: 1400px;
+    border-top: 1px solid #eee;
+    transition: max-height 0.65s ease;
+}
+
+/* ============================================================
+   FORM ITEMS (rows inside the accordion body)
+   ============================================================ */
+
+.form-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 18px;
+    border-bottom: 1px solid #f2f2f2;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+}
+
+.form-item:last-child {
+    border-bottom: none;
+}
+
+.form-item:hover {
+    background: #f7f7f7;
+}
+
+/* Disabled week row (no TLA submitted yet — nothing to review) */
+.form-item-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    cursor: default;
+}
+
+/* Coloured status dot */
+.form-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dot-gray   { background: #b0b0b0; }
+.dot-orange { background: #f97316; }
+.dot-green  { background: #22c55e; }
+.dot-red    { background: #ef4444; }
+
+/* Folder icon */
+.fi-folder {
+    font-size: 20px;
+    color: #8a8a8a;
+    flex-shrink: 0;
+}
+
+/* Form item name */
+.fi-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-on-light);
+}
+
+/* Form item status text */
+.fi-status {
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   STATUS COLOUR MAP
+   ============================================================ */
+
+.sts-not-started { color: var(--accent-primary); }  /* red – needs action  */
+.sts-pending     { color: #f97316; }                  /* orange              */
+.sts-approved    { color: #16a34a; }                  /* green               */
+.sts-rejected    { color: var(--accent-primary); }    /* red                 */
+
+/* ============================================================
+   RIGHT: INFO PANEL
+   ============================================================ */
+
+.info-panel {
+    width: 280px;
+    min-width: 260px;
+    max-width: 300px;
+    background: var(--color-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8e8e8;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
+
+/* User avatar circle */
+.panel-avatar-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #ddd;
+    border: 2px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.panel-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.panel-username {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    text-align: center;
+}
+
+/* Role badge shown under approver name */
+.panel-role-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: var(--color-mapua-red, #c0392b);
+    padding: 3px 14px;
+    border-radius: 12px;
+    text-align: center;
+    margin: 4px auto 8px;
+}
+
+/* Info / Schedule sections */
+.panel-section {
+    width: 100%;
+    border-top: 1px solid #ebebeb;
+    padding-top: 12px;
+}
+
+.panel-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #555;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.panel-info-row {
+    font-size: 11px;
+    color: var(--text-on-light);
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+.pi-key {
+    font-weight: 700;
+    color: var(--color-charcoal);
+}
+
+/* Course schedule card */
+.schedule-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #f7f8fc;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.sched-icon {
+    font-size: 18px;
+    color: var(--accent-secondary);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.sched-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.sched-primary {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    margin-bottom: 2px;
+}
+
+.sched-sub {
+    font-size: 11px;
+    color: #666;
+}
+
+.sched-arrow {
+    font-size: 20px;
+    color: #aaa;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .overview-grid {
+        flex-direction: column;
+    }
+
+    .info-panel {
+        width: 100%;
+        max-width: 100%;
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+    .main-content {
+        margin-left: 0;
+    }
+
+    .course-banner {
+        height: 130px;
+    }
+}

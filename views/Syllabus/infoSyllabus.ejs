@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Syllabus Form</title>
+    <link rel="stylesheet" href="/Syllabus/css/infoSyllabus.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet" href="/Syllabus/css/outcomesTable.css?v=<%= new Date().getTime() %>" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+
+<body>
+    <div class="dashboard">
+
+        <main class="main-content">
+            <div class="syllabus-top-bar">
+                <button type="button" class="back-btn" onclick="window.history.back()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>Back</span>
+                </button>
+            </div>
+
+            <div class="syllabus-scroll-area">
+                <div class="syllabus-banner">
+                    <span class="syllabus-banner-title">SYLLABUS FORM</span>
+                </div>
+
+                <div class="syllabus-content-section">
+                    <h2 class="college-header-outside">COURSE SYLLABUS</h2>
+
+                    <!-- Course Information Section -->
+                    <section class="content-panel-transparent">
+                        <div class="course-info-container">
+                            <div class="info-row">
+                                <div class="info-item small">
+                                    <label>COURSE CODE</label>
+                                    <div class="course-editable-text" contenteditable="true"
+                                        data-placeholder="e.g. CPE144L"></div>
+                                </div>
+                                <div class="info-item large">
+                                    <label>COURSE TITLE</label>
+                                    <div class="course-editable-text" contenteditable="true"
+                                        data-placeholder="Enter course title..."></div>
+                                </div>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <label>PRE-REQUISITE</label>
+                                    <div class="course-editable-text" contenteditable="true" data-placeholder="None">
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <label>CO-REQUISITE</label>
+                                    <div class="course-editable-text" contenteditable="true" data-placeholder="None">
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <label>CREDIT UNIT(S)</label>
+                                    <div class="course-editable-text" contenteditable="true"
+                                        data-placeholder="e.g. 2 units"></div>
+                                </div>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <label>CLASS SCHEDULE</label>
+                                    <div class="course-editable-text" contenteditable="true"
+                                        data-placeholder="Enter schedule..."></div>
+                                </div>
+                                <div class="info-item">
+                                    <label>COURSE DESIGN</label>
+                                    <div class="course-editable-text" contenteditable="true"
+                                        data-placeholder="Enter design..."></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Course Description Section -->
+                    <section class="content-panel-transparent">
+                        <div class="info-item">
+                            <label>COURSE DESCRIPTION</label>
+                            <div class="course-editable-text multiline" contenteditable="true"
+                                data-placeholder="Enter the full course description here..."></div>
+                        </div>
+                    </section>
+
+                    <!-- Course Outcomes Section -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">COURSE OUTCOMES</div>
+
+                            <div class="outcomes-grid-container" id="outcomes-container">
+                                <div class="outcomes-top-header">
+                                    <p class="outcomes-intro">Upon completion of the course, the student will be
+                                        able
+                                        to:</p>
+                                    <div class="skills-column-header">
+                                        <span class="skills-main-text">THINKING SKILLS</span>
+                                    </div>
+                                </div>
+
+                                <div class="outcomes-row">
+                                    <div class="outcomes-statement">
+                                        <span class="outcomes-number">CO1.</span>
+                                        <div class="outcomes-editable-text" contenteditable="true"
+                                            data-placeholder="Edit text"></div>
+                                    </div>
+                                    <div class="outcomes-skills-side">
+                                        <div class="outcomes-editable-text" contenteditable="true"
+                                            data-placeholder="e.g. Creating"></div>
+                                    </div>
+                                    <button class="btn-delete-row" onclick="deleteCoRow(this)" title="Delete row">
+                                        <span class="material-symbols-outlined">remove</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="add-row-wrapper">
+                                <button type="button" class="btn-add-outcomes" onclick="addCoRow()">
+                                    <span class="material-symbols-outlined add-row-icon">add</span> Add Row
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Course Mapping -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">COURSE MAPPING</div>
+                        </div>
+                        <div class="course-mapping-container">
+                            <table class="mapping-table">
+                                <thead>
+                                    <tr>
+                                        <th>COURSE OUTCOMES</th>
+                                        <th>PROGRAM</th>
+                                        <th>a</th>
+                                        <th>b</th>
+                                        <th>c</th>
+                                        <th>d</th>
+                                        <th>e</th>
+                                        <th>f</th>
+                                        <th>g</th>
+                                        <th>h</th>
+                                        <th>i</th>
+                                        <th>j</th>
+                                        <th>k</th>
+                                        <th>l</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mapping-body">
+                                </tbody>
+                            </table>
+
+                            <div class="legend">
+                                <strong>Legend:</strong>
+                                <span><span class="legend-letter">I</span> - Introductory</span>,
+                                <span><span class="legend-letter">E</span> - Enabling</span>,
+                                <span><span class="legend-letter">D</span> - Demonstrative</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Concept Map -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">CONCEPT MAP</div>
+                        </div>
+                        <div class="course-mapping-container">
+                            <p class="concept-map-instructions">Please attach an image of the course concept
+                                map.</p>
+
+                            <input type="file" id="concept-map-input" accept="image/*" style="display:none"
+                                onchange="previewConceptMap(this)">
+
+                            <button class="btn-attach-file" type="button"
+                                onclick="document.getElementById('concept-map-input').click()">
+                                <span class="material-symbols-outlined">attach_file</span>
+                                Attach File
+                            </button>
+
+                            <div id="concept-map-wrapper" class="concept-map-image-wrapper">
+                                <img id="concept-map-preview" class="concept-map-preview" alt="Concept map preview">
+                                <button class="btn-delete-preview" type="button" onclick="deleteConceptMap()"
+                                    title="Remove image">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Course Outcomes Table -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">COURSE OUTCOMES</div>
+
+                            <!-- Toolbar Pill -->
+                            <div class="outcomes-toolbar">
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="execCmd('bold')" title="Bold">
+                                        <span class="material-symbols-outlined">format_bold</span>
+                                    </button>
+                                </div>
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="execCmd('insertOrderedList')"
+                                        title="Numbering">
+                                        <span class="material-symbols-outlined">format_list_numbered</span>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="execCmd('insertUnorderedList')"
+                                        title="Bullets">
+                                        <span class="material-symbols-outlined">format_list_bulleted</span>
+                                    </button>
+                                </div>
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="execCmd('justifyLeft')"
+                                        title="Align Left">
+                                        <span class="material-symbols-outlined">format_align_left</span>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="execCmd('justifyCenter')"
+                                        title="Align Center">
+                                        <span class="material-symbols-outlined">format_align_center</span>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="execCmd('justifyRight')"
+                                        title="Align Right">
+                                        <span class="material-symbols-outlined">format_align_right</span>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="execCmd('justifyFull')"
+                                        title="Justify">
+                                        <span class="material-symbols-outlined">format_align_justify</span>
+                                    </button>
+                                </div>
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="addEditorRow()" title="Add Row">
+                                        <span class="material-symbols-outlined">add_box</span>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="deleteEditorRow()"
+                                        title="Delete Row">
+                                        <span class="material-symbols-outlined">indeterminate_check_box</span>
+                                    </button>
+                                </div>
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="toggleMerge()"
+                                        title="Merge Cells">
+                                        <span class="material-symbols-outlined">cell_merge</span>
+                                    </button>
+                                    <div class="color-picker-dropdown">
+                                        <button type="button" class="toolbar-btn split-btn-main"
+                                            onclick="applyActiveColor()" title="Fill Color">
+                                            <span class="material-symbols-outlined icon-with-color">
+                                                format_color_fill
+                                                <span class="active-color-bar" id="active-color-bar"></span>
+                                            </span>
+                                        </button>
+                                        <button type="button" class="toolbar-btn split-btn-arrow"
+                                            onclick="toggleColorPalette(event)" title="More Colors">
+                                            <span class="material-symbols-outlined"
+                                                style="font-size: 16px;">arrow_drop_down</span>
+                                        </button>
+
+                                        <div id="color-palette-menu" class="color-palette-menu">
+                                            <div class="palette-section">
+                                                <div class="palette-label">Theme Colors</div>
+                                                <div class="palette-grid" id="theme-colors-grid"></div>
+                                            </div>
+                                            <div class="palette-section">
+                                                <div class="palette-label">Standard Colors</div>
+                                                <div class="palette-grid" id="standard-colors-grid"></div>
+                                            </div>
+                                            <div class="palette-divider"></div>
+                                            <div class="palette-footer">
+                                                <button type="button" class="palette-option-btn"
+                                                    onclick="selectPaletteColor('transparent')">
+                                                    <span class="material-symbols-outlined">format_color_reset</span>
+                                                    No Fill
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Editor Table -->
+                            <div class="outcomes-table-container">
+                                <div id="table-selection-box">
+                                    <div class="selection-handle"></div>
+                                </div>
+                                <table class="outcomes-editor-table" id="outcomes-editor-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-co">CO</th>
+                                            <th class="col-mediating">MEDIATING OUTCOMES</th>
+                                            <th class="col-intended">INTENDED LEARNING OUTCOMES</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="outcomes-editor-body">
+                                        <!-- Rows added by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="content-panel-transparent">
+                        <div class="info-item">
+                            <label>TEXTBOOK</label>
+                            <div class="course-editable-text multiline" contenteditable="true"
+                                data-placeholder="Enter textbook name here..."></div>
+                        </div>
+                        </br>
+                        <div class="info-item">
+                            <label>REFERENCES</label>
+                            <div class="course-editable-text multiline" contenteditable="true"
+                                data-placeholder="Enter references here..."></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div class="button-footer-outer">
+                <button class="next-btn-rect" onclick="window.history.back()" type="button">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>BACK</span>
+                </button>
+
+                <button class="next-btn-rect" onclick="window.location.href='/syllabus/schedule'" type="button">
+                    <span>NEXT</span>
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="/Syllabus/js/infoSyllabus.js?v=<%= new Date().getTime() %>"></script>
+</body>
+
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Syllabus Form</title>
+    <link rel="stylesheet" href="/Syllabus/css/newSyllabus.css?v=<%= new Date().getTime() %>" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+<body>
+    <div class="dashboard">
+
+        <main class="main-content">
+            <div class="syllabus-top-bar">
+                <button type="button" class="back-btn" onclick="window.history.back()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>Back</span>
+                </button>
+            </div>
+
+            <div class="syllabus-scroll-area">
+                <div class="syllabus-banner">
+                    <span class="syllabus-banner-title">SYLLABUS FORM</span>
+                </div>
+
+                <div class="syllabus-content-section">
+                    <h2 class="college-header-outside">COLLEGE OF ENGINEERING AND ARCHITECTURE</h2>
+
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">Vision</div>
+                            <div class="content-body-simple">
+                                <p>Malayan Colleges Mindanao shall be a school of global standards and of great
+                                    significance locally and beyond.</p>
+                            </div>
+                            <br />
+                            <div class="content-label-simple">Mission</div>
+                            <div class="content-body-simple">
+                                <p>
+                                    A. The institute shall provide a learning environment in order for its students to
+                                    acquire the attributes that will make them globally competitive & locally
+                                    in-demand.<br />
+                                    B. The institute shall engage in cutting edge and economically viable research,
+                                    development and innovation that is relevant locally and beyond.<br />
+                                    C. The institute shall provide state-of-the-art solutions to problems of industries
+                                    and communities locally and beyond.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">PROGRAM EDUCATIONAL OBJECTIVES (PEO)</div>
+
+                            <div class="peo-grid-container" id="peo-container">
+                                <div class="peo-top-header">
+                                    <p class="peo-intro">Three years after graduation, graduates of the Engineering
+                                        Program shall:</p>
+                                    <div class="mission-column-header">
+                                        <span class="mission-main-text">MISSION</span>
+                                        <div class="mission-labels">
+                                            <span>A</span><span>B</span><span>C</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="peo-row">
+                                    <div class="peo-text-side">
+                                        <span class="peo-number">1.</span>
+                                        <div class="peo-editable-text" contenteditable="true"
+                                            data-placeholder="Edit text"></div>
+                                    </div>
+                                    <div class="peo-checkbox-side">
+                                        <input type="checkbox"><input type="checkbox"><input type="checkbox">
+                                    </div>
+                                    <button class="btn-delete-row" onclick="deletePeoRow(this)" title="Delete row">
+                                        <span class="material-symbols-outlined">remove</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="add-row-wrapper">
+                                <button type="button" class="btn-add-peo" onclick="addPeoRow()">
+                                    <span class="material-symbols-outlined add-row-icon">add</span> Add Row
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">STUDENT OUTCOMES (SO)</div>
+
+                            <div class="peo-grid-container" id="so-container">
+                                <div class="peo-top-header">
+                                    <p class="peo-intro">By the time of graduation, the students of the program shall
+                                        have the ability to:</p>
+                                    <div class="mission-column-header">
+                                        <span class="mission-main-text">PEO</span>
+                                        <div class="mission-labels">
+                                            <span>1</span><span>2</span><span>3</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="peo-row">
+                                    <div class="peo-text-side">
+                                        <span class="peo-number">a.</span>
+                                        <div class="peo-editable-text" contenteditable="true"
+                                            data-placeholder="Edit text"></div>
+                                    </div>
+                                    <div class="peo-checkbox-side">
+                                        <input type="checkbox"><input type="checkbox"><input type="checkbox">
+                                    </div>
+                                    <button class="btn-delete-row" onclick="deleteSoRow(this)" title="Delete row">
+                                        <span class="material-symbols-outlined">remove</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="add-row-wrapper">
+                                <button type="button" class="btn-add-peo" onclick="addSoRow()">
+                                    <span class="material-symbols-outlined add-row-icon">add</span> Add Row
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="button-footer-outer">
+                <button class="next-btn-rect" onclick="window.location.href='/syllabus/info'" type="button">
+                    <span>NEXT</span>
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="/Syllabus/js/newSyllabus.js?v=<%= new Date().getTime() %>"></script>
+</body>
+
+</html>
