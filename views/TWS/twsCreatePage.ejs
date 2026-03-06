@@ -18,20 +18,15 @@
     <main class="tws-app-main">
       <div class="tws-app-center">
 
-        <!-- Header pill -->
         <div class="tws-app-title-pill">
           <h1>TWS: Teaching Workload Sheet</h1>
         </div>
 
-        <!-- Big glass wrapper -->
         <div class="tws-app-glass">
 
-          <!-- Card 1: My Teaching Workload Sheets -->
           <section class="tws-card tws-card-wide">
             <div class="tws-card-header">
               <div class="tws-card-title">My Teaching Workload Sheets</div>
-
-              <!-- Create button (top right) -->
               <a class="tws-create-pill" href="/tws/create">+ Create New TWS</a>
             </div>
 
@@ -56,7 +51,7 @@
                   <div><%= tws.faculty?.term || "—" %></div>
 
                   <div>
-                    <% 
+                    <%
                       const d = new Date(tws.createdAt || Date.now());
                       const mm = String(d.getMonth()+1).padStart(2,"0");
                       const dd = String(d.getDate()).padStart(2,"0");
@@ -67,16 +62,19 @@
 
                   <div><%= tws.status || "Draft" %></div>
 
-                  <div class="tws-btns">
+                  <div class="tws-btns" style="display:flex; gap:8px; flex-wrap:wrap;">
                     <a class="tws-btn-white" href="/tws/summary/<%= tws.id %>">View</a>
                     <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Edit</a>
+
+                    <form method="POST" action="/tws/<%= tws.id %>/delete" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this TWS? This cannot be undone.');">
+                      <button class="tws-btn-white" type="submit" style="cursor:pointer;">Delete</button>
+                    </form>
                   </div>
                 </div>
               <% }) %>
             </div>
           </section>
 
-          <!-- Card 2: Guidelines -->
           <section class="tws-card tws-card-guidelines">
             <div class="tws-card-title">TWS Guidelines</div>
             <ul class="tws-guidelines">
@@ -85,11 +83,8 @@
             </ul>
           </section>
 
-          <!-- Next button bottom-right -->
           <div class="tws-next-wrap">
-            <a class="tws-next" href="/tws/faculty/<%= (list && list[0] && list[0].id) ? list[0].id : '' %>">
-              Next
-            </a>
+            <a class="tws-next" href="/tws/dashboard">Refresh</a>
           </div>
 
         </div>

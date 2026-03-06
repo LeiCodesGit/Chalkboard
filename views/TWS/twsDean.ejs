@@ -23,7 +23,6 @@
 
         <div class="twsd-glass">
 
-          <!-- Pending Teaching Workload Sheets -->
           <section class="twsd-card twsd-card-wide">
             <div class="twsd-card-header">
               <div class="twsd-card-title">Pending Teaching Workload Sheets</div>
@@ -57,22 +56,15 @@
                   <div><%= tws.faculty?.acadYear || "—" %></div>
                   <div><%= tws.faculty?.term || "—" %></div>
 
-                  <% 
-                    const st = (tws.approval?.status || "").toLowerCase();
-                    const isReturned = st.includes("returned");
-                    const statusText = tws.approval?.status || "Under Review (Chair Approved)";
-                  %>
-
-                  <div class="twsd-status <%= isReturned ? 'twsd-red' : 'twsd-yellow' %>">
-                    <%= statusText %>
+                  <div class="twsd-status twsd-yellow">
+                    <%= tws.approval?.status || "Pending" %>
                   </div>
 
                   <div class="twsd-btns">
                     <a class="twsd-btn twsd-white" href="/tws/summary/<%= tws.id %>">View</a>
                     <a class="twsd-btn twsd-white" href="/tws/approval/<%= tws.id %>">Approve</a>
 
-                    <form method="post" action="/tws/program-chair/action" style="display:inline;">
-                      <input type="hidden" name="id" value="<%= tws.id %>" />
+                    <form method="POST" action="/tws/approval/<%= tws.id %>" style="display:inline;">
                       <input type="hidden" name="action" value="return" />
                       <button class="twsd-btn twsd-white" type="submit">Return</button>
                     </form>
@@ -82,9 +74,8 @@
             </div>
           </section>
 
-          <!-- Approval Details -->
           <section class="twsd-card twsd-card-mid">
-            <div class="twsd-card-title">TWS - APPROVAL DETAILS</div>
+            <div class="twsd-card-title">Approved TWS - Ready for HR Archive</div>
 
             <div class="twsd-table">
               <div class="twsd-row twsd-head twsd-row-4">
@@ -96,7 +87,7 @@
 
               <% if (!details || details.length === 0) { %>
                 <div class="twsd-row twsd-empty">
-                  <div style="grid-column: 1 / -1;">No items yet.</div>
+                  <div style="grid-column: 1 / -1;">No approved items yet.</div>
                 </div>
               <% } %>
 
@@ -108,12 +99,9 @@
 
                   <div class="twsd-btns">
                     <a class="twsd-btn twsd-white" href="/tws/summary/<%= tws.id %>">View</a>
-                    <a class="twsd-btn twsd-white" href="/tws/approval/<%= tws.id %>">Approve</a>
 
-                    <form method="post" action="/tws/program-chair/action" style="display:inline;">
-                      <input type="hidden" name="id" value="<%= tws.id %>" />
-                      <input type="hidden" name="action" value="return" />
-                      <button class="twsd-btn twsd-white" type="submit">Return</button>
+                    <form method="POST" action="/tws/send-to-hr/<%= tws.id %>" style="display:inline;">
+                      <button class="twsd-btn twsd-white" type="submit">Send to HR</button>
                     </form>
                   </div>
                 </div>

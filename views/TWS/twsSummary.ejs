@@ -18,7 +18,6 @@
     <main class="tws-app-main">
       <div class="tws-app-center">
 
-        <!-- Header pill -->
         <div class="tws-app-title-pill">
           <h1>TWS - Summary And Preview</h1>
         </div>
@@ -27,10 +26,8 @@
           <form method="POST" action="/tws/summary/<%= tws.id %>">
 
             <div style="display:flex; gap:18px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
-              
-              <!-- LEFT: info -->
               <div style="flex: 1; min-width: 520px;">
-                
+
                 <div class="tws-card-title" style="margin-bottom:10px;">Faculty Information</div>
 
                 <div style="display:grid; grid-template-columns: 180px 1fr; gap:10px 14px; font-size:12px;">
@@ -40,6 +37,7 @@
                   <div style="font-weight:800;">Academic Year:</div><div><%= tws.faculty?.acadYear || "—" %></div>
                   <div style="font-weight:800;">Term:</div><div><%= tws.faculty?.term || "—" %></div>
                   <div style="font-weight:800;">Employment Status:</div><div><%= tws.faculty?.empStatus || "—" %></div>
+                  <div style="font-weight:800;">Current Status:</div><div><%= tws.status || "Draft" %></div>
                 </div>
 
                 <div class="tws-card-title" style="margin-top:18px;">Teaching Load Summary</div>
@@ -49,33 +47,57 @@
                   <div style="font-weight:800;">Total Hours (Lec/Lab):</div><div><%= tws.totals?.totalHours ?? 0 %></div>
 
                   <div style="font-weight:800;">Equivalent Load:</div><div><%= tws.totals?.equivLoad ?? 0 %></div>
-                  <div style="font-weight:800;">Equivalent Non-Teaching Load:</div><div>0</div>
+                  <div style="font-weight:800;">Approval Status:</div><div><%= tws.approval?.status || "Not Submitted" %></div>
                 </div>
-
               </div>
 
-              <!-- RIGHT: actions -->
-              <div style="width: 220px; display:flex; flex-direction:column; gap:12px; align-items:flex-end;">
-                <button
-                  type="submit"
-                  name="action"
-                  value="submit"
-                  style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900;"
-                >
-                  Submit to Dean
-                </button>
+              <div style="width: 260px; display:flex; flex-direction:column; gap:12px; align-items:flex-end;">
+
+                <% if (user && user.role === "Program-Chair") { %>
+                  <button
+                    type="submit"
+                    name="action"
+                    value="sendToFaculty"
+                    style="border:none; cursor:pointer; background: #3b82f6; color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send to Faculty
+                  </button>
+
+                  <button
+                    type="submit"
+                    name="action"
+                    value="sendToDean"
+                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send to Dean
+                  </button>
+                <% } %>
+
+                <% if (user && user.role === "Dean" && tws.status === "Approved") { %>
+                  <button
+                    type="submit"
+                    formaction="/tws/send-to-hr/<%= tws.id %>"
+                    formmethod="POST"
+                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send Approved TWS to HR Archive
+                  </button>
+                <% } %>
 
                 <button
                   type="submit"
                   name="action"
                   value="edit"
                   class="tws-btn-white"
-                  style="cursor:pointer;"
+                  style="cursor:pointer; width:100%;"
                 >
                   Edit
                 </button>
-              </div>
 
+                <a href="/tws/dashboard" class="tws-btn-white" style="text-decoration:none; text-align:center; width:100%;">
+                  Back to Dashboard
+                </a>
+              </div>
             </div>
 
           </form>

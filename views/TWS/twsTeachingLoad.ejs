@@ -18,26 +18,28 @@
     <main class="tws-app-main">
       <div class="tws-app-center">
 
-        <!-- Header pill -->
         <div class="tws-app-title-pill">
           <h1>TWS - Teaching Load Details</h1>
         </div>
 
-        <!-- Card -->
         <section class="tws-card">
           <form method="POST" action="/tws/teaching-load/<%= tws.id %>">
 
             <div class="tws-card-header">
               <div class="tws-card-title">My Teaching Workload Sheets</div>
 
-              <!-- (button label same as PDF vibe) -->
               <button class="tws-create-pill" type="submit" name="action" value="save"
                 style="border:none; cursor:pointer;">
-                + Create New TWS
+                Save Draft
               </button>
             </div>
 
-            <!-- Table header -->
+            <%
+              const rows = (tws.loads && tws.loads.length > 0)
+                ? tws.loads
+                : [{ courseCode: "", courseTitle: "", units: 0, lec: 0, lab: 0, sections: 1 }];
+            %>
+
             <div class="tws-table">
               <div class="tws-row tws-head" style="grid-template-columns: 0.9fr 1.2fr 0.5fr 0.8fr 0.8fr 0.9fr;">
                 <div>Course Code</div>
@@ -48,44 +50,68 @@
                 <div>No. of Sections</div>
               </div>
 
-              <% if (!tws.loads || tws.loads.length === 0) { %>
-                <div class="tws-row" style="grid-template-columns: 1fr;">
-                  <div style="opacity:.9;">No rows yet. Click “+ Add Row”.</div>
-                </div>
-              <% } %>
-
-              <% (tws.loads || []).forEach((r, idx) => { %>
+              <% rows.forEach((r, idx) => { %>
                 <div class="tws-row" style="grid-template-columns: 0.9fr 1.2fr 0.5fr 0.8fr 0.8fr 0.9fr;">
                   <div>
-                    <input name="courseCode" value="<%= r.courseCode || '' %>"
-                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                    <input
+                      name="loads[<%= idx %>][courseCode]"
+                      value="<%= r.courseCode || '' %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;"
+                    />
                   </div>
+
                   <div>
-                    <input name="section" value="<%= r.section || '' %>"
+                    <input
+                      name="loads[<%= idx %>][courseTitle]"
+                      value="<%= r.courseTitle || '' %>"
                       placeholder="Course Title"
-                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;"
+                    />
                   </div>
+
                   <div>
-                    <input name="units" type="number" min="0" value="<%= r.units || '' %>"
-                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                    <input
+                      name="loads[<%= idx %>][units]"
+                      type="number"
+                      min="0"
+                      value="<%= r.units || 0 %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;"
+                    />
                   </div>
+
                   <div>
-                    <input name="lec" type="number" min="0" value="<%= r.lec || '' %>"
-                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                    <input
+                      name="loads[<%= idx %>][lec]"
+                      type="number"
+                      min="0"
+                      value="<%= r.lec || 0 %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;"
+                    />
                   </div>
+
                   <div>
-                    <input name="lab" type="number" min="0" value="<%= r.lab || '' %>"
-                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                    <input
+                      name="loads[<%= idx %>][lab]"
+                      type="number"
+                      min="0"
+                      value="<%= r.lab || 0 %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;"
+                    />
                   </div>
+
                   <div>
-                    <input name="sections" type="number" min="1" value="<%= r.sections || '1' %>"
-                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                    <input
+                      name="loads[<%= idx %>][sections]"
+                      type="number"
+                      min="1"
+                      value="<%= r.sections || 1 %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;"
+                    />
                   </div>
                 </div>
               <% }) %>
             </div>
 
-            <!-- Mid actions like PDF (+ Add Row / Remove Row) -->
             <div style="display:flex; justify-content:center; gap:14px; margin-top:14px;">
               <button class="tws-btn-white" type="submit" name="action" value="addRow" style="cursor:pointer;">
                 + Add Row
@@ -95,7 +121,6 @@
               </button>
             </div>
 
-            <!-- Bottom buttons -->
             <div class="tws-next-wrap" style="margin-top: 16px;">
               <button class="tws-btn-white" type="submit" name="action" value="back" style="cursor:pointer;">
                 Back
