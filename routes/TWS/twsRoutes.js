@@ -93,7 +93,8 @@ function normalizeCourseForView(c) {
     title: c.courseTitle || c.description || "",
     units: Number(c.units || 0),
     timeSlot: c.timeSlot || c.time || "",
-    sectionRoom: c.sectionRoom || [c.section, c.designatedRoom].filter(Boolean).join(" | "),
+    sectionRoom:
+      c.sectionRoom || [c.section, c.designatedRoom].filter(Boolean).join(" | "),
   };
 }
 
@@ -115,6 +116,13 @@ function asyncHandler(fn) {
   return function (req, res, next) {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
+}
+
+function requireLoggedIn(req, res, next) {
+  const user = getSessionUser(req);
+  if (!user) return res.redirect("/login");
+  req.twsUser = user;
+  next();
 }
 
 function requireProgramChairOrDean(req, res, next) {
@@ -202,12 +210,50 @@ router.get("/", (req, res) => {
 
 /* ======================================================
    DASHBOARD
+   - Program Chair / Dean => TWS create page
+   - Professor => Faculty dashboard
 ====================================================== */
 router.get(
   "/dashboard",
-  requireProgramChairOrDean,
+  requireLoggedIn,
   asyncHandler(async (req, res) => {
+    const role = getSessionUserRole(req.twsUser);
     const userId = getSessionUserId(req.twsUser);
+
+    if (role === "Professor") {
+      const facultyName = buildFacultyName(req.twsUser);
+      const employeeId = req.twsUser?.employeeId || "";
+
+      const docs = await TWS.find({
+        $or: [
+          { assignedFacultyId: employeeId },
+          { assignedFacultyName: facultyName },
+          { "faculty.empId": employeeId },
+          { "faculty.name": facultyName },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const list = docs.map((tws) => ({
+        ...tws,
+        id: String(tws._id),
+        faculty: tws.faculty || {},
+        status: tws.status || "Draft",
+      }));
+
+      return res.render("TWS/twsFacultyDashboard", {
+        list,
+        currentPageCategory: "tws",
+        user: req.twsUser,
+      });
+    }
+
+    if (!["Program-Chair", "Dean"].includes(role)) {
+      return res
+        .status(403)
+        .send("Forbidden: only Program Chair, Dean, or Professor can access TWS dashboard.");
+    }
 
     const docs = await TWS.find({ userID: userId }).sort({ createdAt: -1 }).lean();
 
@@ -218,7 +264,7 @@ router.get(
       status: tws.status || "Draft",
     }));
 
-    res.render("TWS/twsCreatePage", {
+    return res.render("TWS/twsCreatePage", {
       list,
       currentPageCategory: "tws",
       user: req.twsUser,
@@ -460,9 +506,20 @@ router.post(
 ====================================================== */
 router.get(
   "/summary/:id",
-  requireProgramChairOrDean,
+  requireLoggedIn,
   asyncHandler(async (req, res) => {
-    const tws = await getAccessibleTwsOr404(req, res);
+    const role = getSessionUserRole(req.twsUser);
+
+    let tws = null;
+
+    if (role === "Dean") {
+      tws = await getAnyTwsOr404(req, res);
+    } else if (role === "Professor") {
+      tws = await getAnyTwsOr404(req, res);
+    } else {
+      tws = await getOwnedTwsOr404(req, res);
+    }
+
     if (!tws) return;
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
@@ -530,6 +587,38 @@ router.post(
     }
 
     return res.redirect(`/tws/summary/${tws._id}`);
+  })
+);
+
+/* ======================================================
+   FACULTY SIGNATURE
+====================================================== */
+router.post(
+  "/signature",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const { id } = req.body;
+    if (!id) return res.redirect("/tws/dashboard");
+
+    const tws = await TWS.findById(id);
+    if (!tws) return res.redirect("/tws/dashboard");
+
+    tws.status = "Sent to Dean";
+    tws.sentToDeanAt = new Date();
+    await tws.save();
+
+    await TWSApprovalStatus.findOneAndUpdate(
+      { twsID: tws._id },
+      {
+        status: "Pending",
+        remarks: "Faculty signed and sent to Dean",
+        approvedBy: "",
+        approvalDate: null,
+      },
+      { upsert: true, new: true }
+    );
+
+    return res.redirect("/tws/dashboard");
   })
 );
 
@@ -713,9 +802,9 @@ router.post(
 ====================================================== */
 router.get(
   "/status/:id",
-  requireProgramChairOrDean,
+  requireLoggedIn,
   asyncHandler(async (req, res) => {
-    const tws = await getAccessibleTwsOr404(req, res);
+    const tws = await getAnyTwsOr404(req, res);
     if (!tws) return;
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
@@ -752,7 +841,7 @@ router.post(
 ====================================================== */
 router.get(
   "/archived",
-  requireProgramChairOrDean,
+  requireLoggedIn,
   asyncHandler(async (req, res) => {
     const role = getSessionUserRole(req.twsUser);
     const userId = getSessionUserId(req.twsUser);
@@ -760,6 +849,14 @@ router.get(
     const filter =
       role === "Dean"
         ? { archived: true }
+        : role === "Professor"
+        ? {
+            archived: true,
+            $or: [
+              { assignedFacultyId: req.twsUser?.employeeId || "" },
+              { assignedFacultyName: buildFacultyName(req.twsUser) },
+            ],
+          }
         : { userID: userId, archived: true };
 
     const docs = await TWS.find(filter).sort({ createdAt: -1 }).lean();
@@ -771,6 +868,49 @@ router.get(
     }));
 
     res.render("TWS/twsArchived", {
+      list,
+      currentPageCategory: "tws",
+      user: req.twsUser,
+    });
+  })
+);
+
+/* ======================================================
+   TA / HR ARCHIVES
+====================================================== */
+router.get(
+  "/ta-archive",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const docs = await TWS.find({ archived: true }).sort({ createdAt: -1 }).lean();
+
+    const list = docs.map((tws) => ({
+      ...tws,
+      id: String(tws._id),
+      faculty: tws.faculty || {},
+    }));
+
+    return res.render("TWS/twsTAArchive", {
+      list,
+      currentPageCategory: "tws",
+      user: req.twsUser,
+    });
+  })
+);
+
+router.get(
+  "/hr-archive",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const docs = await TWS.find({ archived: true }).sort({ createdAt: -1 }).lean();
+
+    const list = docs.map((tws) => ({
+      ...tws,
+      id: String(tws._id),
+      faculty: tws.faculty || {},
+    }));
+
+    return res.render("TWS/twsHRArchive", {
       list,
       currentPageCategory: "tws",
       user: req.twsUser,
@@ -797,7 +937,9 @@ router.get(
   requireDean,
   asyncHandler(async (req, res) => {
     const docs = await TWS.find({
-      status: { $in: ["Sent to Dean", "Approved", "Rejected", "Returned to Program Chair"] },
+      status: {
+        $in: ["Sent to Dean", "Approved", "Rejected", "Returned to Program Chair"],
+      },
     })
       .sort({ createdAt: -1 })
       .lean();

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS - Faculty</title>
+  <link rel="stylesheet" href="/TWS/css/twsstyles.css" />
+</head>
+<body>
+  <%- include('../partials/sideMenuBar') %>
+
+  <div class="main">
+    <div class="shell">
+
+      <div class="page-title">TWS - Faculty</div>
+
+      <!-- ===== Teaching Workload Sheets ===== -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Teaching Workload Sheets</div>
+          <div class="panel-actions">
+            <button class="btn btn-purple" type="button">&#9965; Filter by Department</button>
+            <a class="btn" href="/tws/dashboard">Refresh</a>
+            <a class="btn btn-green" href="/tws/create">+ Create New TWS</a>
+          </div>
+        </div>
+
+        <div class="tws-table col-faculty">
+          <div class="trow thead">
+            <div>Academic Year</div>
+            <div>Term</div>
+            <div>Date Created</div>
+            <div>Status</div>
+            <div class="tcell-right">Action</div>
+          </div>
+
+          <% if (!list || !list.length) { %>
+            <div class="trow">
+              <div style="grid-column:1/-1; opacity:.7; padding:10px 0;">
+                No TWS records yet. Click "+ Create New TWS" to start.
+              </div>
+            </div>
+          <% } %>
+
+          <% (list || []).forEach(function(t) {
+               var d   = new Date(t.createdAt || Date.now());
+               var mm  = String(d.getMonth() + 1).padStart(2, '0');
+               var dd  = String(d.getDate()).padStart(2, '0');
+               var yy  = d.getFullYear();
+               var dateStr = mm + '/' + dd + '/' + yy;
+
+               var st = (t.status || 'Draft').toLowerCase();
+               var badge = 's-draft';
+               if (st === 'approved')                        badge = 's-approved';
+               else if (st === 'submitted')                  badge = 's-submitted';
+               else if (st.includes('chair') || st.includes('review')) badge = 's-for-review';
+               else if (st.includes('returned'))             badge = 's-returned';
+          %>
+            <div class="trow">
+              <div><%= (t.faculty && t.faculty.acadYear) ? t.faculty.acadYear : '—' %></div>
+              <div><%= (t.faculty && t.faculty.term) ? t.faculty.term : '—' %></div>
+              <div><%= dateStr %></div>
+              <div>
+                <span class="status-badge <%= badge %>"><%= t.status || 'Draft' %></span>
+              </div>
+              <div class="tcell-right">
+                <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>
+                <a class="pill pill-edit" href="/tws/faculty/<%= t.id %>">Edit</a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- ===== Faculty Signature ===== -->
+      <div class="panel">
+        <div class="panel-title" style="margin-bottom:14px;">TWS - Faculty Signature</div>
+        <hr class="divider" />
+        <form id="sigForm" method="POST" action="/tws/signature">
+          <div class="sig-section">
+            <div class="sig-field">
+              <div class="sig-label">Prepared by</div>
+              <input
+                class="sig-input"
+                type="text"
+                name="preparedBy"
+                placeholder="Enter faculty name"
+                value="<%= (typeof user !== 'undefined' && user && user.name) ? user.name : '' %>"
+              />
+              <div class="sig-date" id="sigDate"></div>
+            </div>
+            <button class="sig-update-btn" type="submit">Update Signature</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ===== Submit Teaching Workload Sheet ===== -->
+      <div class="panel">
+        <div class="panel-title" style="margin-bottom:10px;">Submit Teaching Workload Sheet</div>
+        <hr class="divider" />
+        <p class="submit-desc">
+          Once submitted, your Teaching Workload Sheet will be routed for review and approval.
+          Make sure all information is complete and correct before submitting.
+        </p>
+        <div class="bottom-btns">
+          <% var draft = (list || []).find(function(t){ return (t.status || 'Draft') === 'Draft'; }); %>
+          <% if (draft) { %>
+            <a class="btn btn-green" href="/tws/summary/<%= draft.id %>">Submit Latest Draft</a>
+          <% } else { %>
+            <button class="btn" type="button" disabled style="opacity:.5; cursor:not-allowed;">
+              No Draft Available
+            </button>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var el = document.getElementById('sigDate');
+      if (el) {
+        var opts = { year: 'numeric', month: 'long', day: 'numeric' };
+        el.textContent = new Date().toLocaleDateString('en-US', opts);
+      }
+    })();
+  </script>
+</body>
+</html>
