@@ -853,6 +853,10 @@ Status / Approval / Archived
 .tws-timetable .highlight-purple{ background: #7a4aa8; color: #111; }
 .tws-timetable .highlight-green{ background: #00c26a; color: #111; }
 
+/* Semantic schedule coloring */
+.tws-timetable .tws-block-assigned{ background: #00c26a; color: #111; }
+.tws-timetable .tws-block-conflict{ background: #d93a2f; color: #fff; }
+
 /* Responsive: slightly smaller */
 @media (max-width: 520px){
   .tws-timetable{

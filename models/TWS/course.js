@@ -10,8 +10,8 @@ const courseSchema = new Schema(
     section: { type: String, default: "" },
     isLecture: { type: Boolean, default: true },
 
-    lectureHours: { type: String, default: "" },
-    labHours: { type: String, default: "" },
+    lectureHours: { type: Number, default: 0 },
+    labHours: { type: Number, default: 0 },
     units: { type: Number, default: 0 },
 
     designatedRoom: { type: String, default: "" },
@@ -26,6 +26,8 @@ const courseSchema = new Schema(
   },
   { timestamps: true }
 );
+
+courseSchema.index({ twsID: 1, courseCode: 1, section: 1 }, { unique: true });
 
 const Course = mongoose.models.Course || model("Course", courseSchema);
 export default Course;

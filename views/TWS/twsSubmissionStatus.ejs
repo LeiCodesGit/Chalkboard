@@ -27,33 +27,23 @@
             Your Teaching Workload Sheet has been <b><%= tws.status || "Submitted" %></b>.
           </div>
 
-          <!-- Stepper -->
+          <!-- Stepper (dynamic from stepperState) -->
           <div class="tws-stepper">
-            <div class="tws-step tws-step-done">
-              <div class="tws-dot">✔</div>
-              <div class="tws-step-text">Submitted</div>
-            </div>
-
-            <div class="tws-line"></div>
-
-            <div class="tws-step tws-step-pending">
-              <div class="tws-dot"></div>
-              <div class="tws-step-text">Secretary Review</div>
-            </div>
-
-            <div class="tws-line"></div>
-
-            <div class="tws-step tws-step-pending">
-              <div class="tws-dot"></div>
-              <div class="tws-step-text">Chair Endorsement</div>
-            </div>
-
-            <div class="tws-line"></div>
-
-            <div class="tws-step tws-step-wait">
-              <div class="tws-dot"></div>
-              <div class="tws-step-text">Dean Approval</div>
-            </div>
+            <%
+              const steps = (tws.stepperState && tws.stepperState.steps) || [
+                { label: "Submitted", state: "done" },
+                { label: "Secretary Review", state: "pending" },
+                { label: "Chair Endorsement", state: "pending" },
+                { label: "Dean Approval", state: "wait" },
+              ];
+            %>
+            <% steps.forEach((step, idx) => { %>
+              <% if (idx > 0) { %><div class="tws-line"></div><% } %>
+              <div class="tws-step tws-step-<%= step.state %>">
+                <div class="tws-dot"><%= step.state === "done" ? "✔" : "" %></div>
+                <div class="tws-step-text"><%= step.label %></div>
+              </div>
+            <% }) %>
           </div>
 
           <!-- Metrics -->

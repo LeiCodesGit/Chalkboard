@@ -122,6 +122,14 @@
         </span>
     </div>
 
+    <%
+        const userRole = (locals.user && user.role) ? user.role : '';
+        const isProf = userRole === 'Professor';
+        const isChair = userRole === 'Program-Chair';
+        const isDean = userRole === 'Dean';
+        const isHR = userRole === 'HR';
+        const isAdmin = userRole === 'Admin' || userRole === 'Super-Admin';
+    %>
     <ul class="sidebar-menu">
         <li>
             <a href="/institution" class="<%= (locals.currentPageCategory === 'institution') ? 'active' : '' %>">
@@ -135,24 +143,30 @@
                 <span class="menu-text">TWS</span>
             </a>
         </li>
+        <% if (isProf || isChair || isAdmin) { %>
         <li>
             <a href="/ata" class="<%= (locals.currentPageCategory === 'ata') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">fact_check</span>
                 <span class="menu-text">ATA</span>
             </a>
         </li>
+        <% } %>
+        <% if (isProf || isChair || isDean || isAdmin) { %>
         <li>
             <a href="/syllabus" class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">book_4</span>
                 <span class="menu-text">Syllabus</span>
             </a>
         </li>
+        <% } %>
+        <% if (isProf || isChair || isAdmin) { %>
         <li>
             <a href="/tla" class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">assignment</span>
                 <span class="menu-text">TLA</span>
             </a>
         </li>
+        <% } %>
     </ul>
 
     <div class="sidebar-footer">

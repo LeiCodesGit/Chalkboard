@@ -4,7 +4,6 @@
   "description": "This will be the final project for the Foxtrot Batch...",
   "main": "index.js",
   "type": "module",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js",

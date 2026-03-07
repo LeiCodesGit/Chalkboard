@@ -53,14 +53,83 @@
                 <% } %>
               <% }) %>
 
-              <!-- NOTE:
-                Schedule blocks are still sample (not yet auto-placed).
-                Leader comment is about missing SUBJECT display, which is fixed in Load Details panel.
-              -->
-              <div class="tws-block highlight-yellow" style="grid-column: 3; grid-row: 2;">
-                <div class="tws-block-code">GE104A</div>
-                <div class="tws-block-sub">R603</div>
+              <!-- Dynamic schedule blocks from course data -->
+              <%
+                const dayMap = { "Mon": 2, "Tue": 3, "Wed": 4, "Thu": 5, "Fri": 6, "Sat": 7, "Sun": 8 };
+                const timeMap = {};
+                times.forEach((t, i) => { timeMap[t] = i + 2; });
+
+                function toMinutes(timeStr) {
+                  if (!timeStr) return null;
+                  const m = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+                  if (!m) return null;
+                  let hour = Number(m[1]);
+                  const minute = Number(m[2]);
+                  const ampm = m[3].toUpperCase();
+                  if (ampm === "PM" && hour !== 12) hour += 12;
+                  if (ampm === "AM" && hour === 12) hour = 0;
+                  return hour * 60 + minute;
+                }
+
+                function parseSchedule(workloadItem) {
+                  const rawDay = String(workloadItem.day || "").trim();
+                  const rawSlot = String(workloadItem.timeSlot || "").trim();
+
+                  // Supports:
+                  // 1) "Mon 7:00 AM - 8:15 AM"
+                  // 2) day="Mon" and timeSlot="7:00 AM - 8:15 AM"
+                  const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+                  if (!slotMatch) return null;
+
+                  const day = rawDay || slotMatch[1] || "";
+                  const startStr = (slotMatch[2] || "").trim();
+                  const endStr = (slotMatch[3] || "").trim();
+                  const startMin = toMinutes(startStr);
+                  const endMin = toMinutes(endStr);
+
+                  if (!dayMap[day] || startMin === null || endMin === null) return null;
+                  return { day, startStr, endStr, startMin, endMin };
+                }
+
+                const parsedBlocks = (tws?.createdWorkload || []).map((item) => {
+                  const parsed = parseSchedule(item);
+                  return {
+                    item,
+                    parsed,
+                    isConflict: false,
+                  };
+                });
+
+                // Mark overlaps on same day as conflict.
+                for (let i = 0; i < parsedBlocks.length; i++) {
+                  for (let j = i + 1; j < parsedBlocks.length; j++) {
+                    const a = parsedBlocks[i].parsed;
+                    const b = parsedBlocks[j].parsed;
+                    if (!a || !b) continue;
+                    if (a.day !== b.day) continue;
+                    const overlaps = a.startMin < b.endMin && b.startMin < a.endMin;
+                    if (overlaps) {
+                      parsedBlocks[i].isConflict = true;
+                      parsedBlocks[j].isConflict = true;
+                    }
+                  }
+                }
+
+                parsedBlocks.forEach((block) => {
+                  const s = block.item;
+                  const p = block.parsed;
+                  if (!p) return;
+                  const col = dayMap[p.day];
+                  const row = timeMap[p.startStr] || 2;
+                  const colorClass = block.isConflict ? "tws-block-conflict" : "tws-block-assigned";
+              %>
+              <div class="tws-block <%= colorClass %>" style="grid-column: <%= col %>; grid-row: <%= row %>;">
+                <div class="tws-block-code"><%= s.code %></div>
+                <div class="tws-block-sub"><%= s.sectionRoom || "" %></div>
               </div>
+              <%
+                });
+              %>
             </div>
 
             <!-- LOAD DETAILS -->

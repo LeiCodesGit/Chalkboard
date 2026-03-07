@@ -23,6 +23,18 @@
         </div>
 
         <section class="tws-card">
+          <% const currentStatus = tws.status || "Draft"; %>
+          <% const isChair = !!canManageAsChair; %>
+          <% const canSendToFaculty = isChair && ["Draft", "Returned to Program Chair"].includes(currentStatus); %>
+          <% const canSendToDean = isChair && ["Draft", "Returned to Program Chair"].includes(currentStatus); %>
+          <% const canEdit = isChair && ["Draft", "Returned to Program Chair", "Rejected"].includes(currentStatus); %>
+
+          <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+            <div style="margin-bottom:12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+              <b>Action blocked:</b> <%= errorMessage %>
+            </div>
+          <% } %>
+
           <form method="POST" action="/tws/summary/<%= tws.id %>">
 
             <div style="display:flex; gap:18px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
@@ -53,7 +65,7 @@
 
               <div style="width: 260px; display:flex; flex-direction:column; gap:12px; align-items:flex-end;">
 
-                <% if (user && user.role === "Program-Chair") { %>
+                <% if (canSendToFaculty) { %>
                   <button
                     type="submit"
                     name="action"
@@ -71,6 +83,19 @@
                   >
                     Send to Dean
                   </button>
+                <% } else if (canSendToDean) { %>
+                  <button
+                    type="submit"
+                    name="action"
+                    value="sendToDean"
+                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send to Dean
+                  </button>
+                <% } else if (isChair) { %>
+                  <div style="width:100%; border-radius:12px; background: rgba(255,255,255,0.12); color:#fff; padding:10px 12px; font-size:12px; text-align:left;">
+                    Current status is <b><%= currentStatus %></b>. This record cannot be re-sent from this page.
+                  </div>
                 <% } %>
 
                 <% if (user && user.role === "Dean" && tws.status === "Approved") { %>
@@ -84,6 +109,7 @@
                   </button>
                 <% } %>
 
+                <% if (canEdit) { %>
                 <button
                   type="submit"
                   name="action"
@@ -93,6 +119,7 @@
                 >
                   Edit
                 </button>
+                <% } %>
 
                 <a href="/tws/dashboard" class="tws-btn-white" style="text-decoration:none; text-align:center; width:100%;">
                   Back to Dashboard

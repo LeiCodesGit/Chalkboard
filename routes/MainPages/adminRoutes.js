@@ -7,7 +7,7 @@ const adminRoutes = express.Router();
 
 const MainUser = mainDB.model("User", userSchema);
 
-adminRoutes.get("/institution", isAuthenticated, authorizeRoles("Admin", "HR"), async (req, res) => {
+adminRoutes.get("/institution", isAuthenticated, authorizeRoles("Admin", "HR", "Super-Admin"), async (req, res) => {
     res.render("MainPages/admin/adminDashboard", {
         currentPageCategory: "institution",
         announcements: [],

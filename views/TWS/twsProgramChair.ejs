@@ -22,6 +22,12 @@
           <h1>TWS - Program Chair</h1>
         </div>
 
+        <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+          <div style="margin: 0 0 12px 0; background: rgba(220,38,38,0.18); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+            <b>Action blocked:</b> <%= errorMessage %>
+          </div>
+        <% } %>
+
         <!-- BIG GLASS WRAPPER (matches screenshot) -->
         <div class="pc-glass">
 
@@ -76,17 +82,28 @@
                   <div class="pc-btns">
                     <a class="pc-btn pc-white" href="/tws/summary/<%= tws.id %>">View</a>
 
+                    <% const canChairSendToDean = ["Sent to Faculty", "Returned to Program Chair", "Draft"].includes(tws.status || ""); %>
+                    <% const canChairReturnDraft = ["Returned to Program Chair", "Rejected"].includes(tws.status || ""); %>
+
+                    <% if (canChairSendToDean) { %>
                     <form method="post" action="/tws/program-chair/action" class="pc-form-inline">
                       <input type="hidden" name="id" value="<%= tws.id %>" />
-                      <input type="hidden" name="action" value="send" />
-                      <button class="pc-btn pc-white" type="submit">Send</button>
+                      <input type="hidden" name="action" value="sendToDean" />
+                      <button class="pc-btn pc-white" type="submit">Send to Dean</button>
                     </form>
+                    <% } %>
 
+                    <% if (canChairReturnDraft) { %>
                     <form method="post" action="/tws/program-chair/action" class="pc-form-inline">
                       <input type="hidden" name="id" value="<%= tws.id %>" />
                       <input type="hidden" name="action" value="return" />
-                      <button class="pc-btn pc-white" type="submit">Return</button>
+                      <button class="pc-btn pc-white" type="submit">Return to Draft</button>
                     </form>
+                    <% } %>
+
+                    <% if (!canChairSendToDean && !canChairReturnDraft) { %>
+                      <span class="pc-btn pc-white" style="opacity:.7; pointer-events:none;">No action</span>
+                    <% } %>
                   </div>
                 </div>
               <% }) %>
@@ -122,11 +139,16 @@
                   <div class="pc-btns pc-btns-right">
                     <a class="pc-btn pc-white" href="/tws/summary/<%= tws.id %>">View</a>
 
+                    <% const canPersonalSendToDean = ["Draft", "Returned to Program Chair"].includes(tws.status || ""); %>
+                    <% if (canPersonalSendToDean) { %>
                     <form method="post" action="/tws/program-chair/action" class="pc-form-inline">
                       <input type="hidden" name="id" value="<%= tws.id %>" />
                       <input type="hidden" name="action" value="sendToDean" />
                       <button class="pc-btn pc-blue" type="submit">✉ Send to Dean</button>
                     </form>
+                    <% } else { %>
+                      <span class="pc-btn pc-white" style="opacity:.7; pointer-events:none;"><%= tws.status || "No action" %></span>
+                    <% } %>
                   </div>
                 </div>
               <% }) %>

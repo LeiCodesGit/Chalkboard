@@ -21,7 +21,6 @@
           <div class="panel-actions">
             <button class="btn btn-purple" type="button">&#9965; Filter by Department</button>
             <a class="btn" href="/tws/dashboard">Refresh</a>
-            <a class="btn btn-green" href="/tws/create">+ Create New TWS</a>
           </div>
         </div>
 
@@ -37,7 +36,7 @@
           <% if (!list || !list.length) { %>
             <div class="trow">
               <div style="grid-column:1/-1; opacity:.7; padding:10px 0;">
-                No TWS records yet. Click "+ Create New TWS" to start.
+                No TWS assigned to you yet. Please wait for your Program Chair to assign one.
               </div>
             </div>
           <% } %>
@@ -50,22 +49,30 @@
                var dateStr = mm + '/' + dd + '/' + yy;
 
                var st = (t.status || 'Draft').toLowerCase();
+               var statusLabel = t.status || 'Draft';
                var badge = 's-draft';
                if (st === 'approved')                        badge = 's-approved';
-               else if (st === 'submitted')                  badge = 's-submitted';
+               else if (st === 'submitted' || st === 'sent to dean') badge = 's-submitted';
+               else if (st === 'sent to faculty') { badge = 's-for-review'; statusLabel = 'For Signing'; }
                else if (st.includes('chair') || st.includes('review')) badge = 's-for-review';
                else if (st.includes('returned'))             badge = 's-returned';
+               var canSignNow = st === 'sent to faculty';
           %>
             <div class="trow">
               <div><%= (t.faculty && t.faculty.acadYear) ? t.faculty.acadYear : '—' %></div>
               <div><%= (t.faculty && t.faculty.term) ? t.faculty.term : '—' %></div>
               <div><%= dateStr %></div>
               <div>
-                <span class="status-badge <%= badge %>"><%= t.status || 'Draft' %></span>
+                <span class="status-badge <%= badge %>"><%= statusLabel %></span>
               </div>
               <div class="tcell-right">
                 <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>
-                <a class="pill pill-edit" href="/tws/faculty/<%= t.id %>">Edit</a>
+                <% if (canSignNow) { %>
+                  <form method="POST" action="/tws/signature" style="display:inline;">
+                    <input type="hidden" name="id" value="<%= t.id %>" />
+                    <button class="pill pill-edit" type="submit" style="cursor:pointer;">Sign</button>
+                  </form>
+                <% } %>
               </div>
             </div>
           <% }) %>
@@ -76,6 +83,7 @@
       <div class="panel">
         <div class="panel-title" style="margin-bottom:14px;">TWS - Faculty Signature</div>
         <hr class="divider" />
+        <% const signable = (list || []).filter(function(t){ return (t.status || '').toLowerCase() === 'sent to faculty'; }); %>
         <form id="sigForm" method="POST" action="/tws/signature">
           <div class="sig-section">
             <div class="sig-field">
@@ -85,30 +93,38 @@
                 type="text"
                 name="preparedBy"
                 placeholder="Enter faculty name"
-                value="<%= (typeof user !== 'undefined' && user && user.name) ? user.name : '' %>"
+                value="<%= (typeof user !== 'undefined' && user) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '' %>"
+                readonly
               />
+              <div class="sig-label" style="margin-top:10px;">TWS For Signing</div>
+              <select class="sig-input" name="id" style="height:auto; padding:10px;" <%= signable.length ? '' : 'disabled' %>>
+                <% if (!signable.length) { %>
+                  <option value="">No TWS pending signature</option>
+                <% } %>
+                <% signable.forEach(function(t){ %>
+                  <option value="<%= t.id %>"><%= t.faculty?.name || 'Faculty' %> - <%= t.faculty?.term || 'Term' %> - <%= t.faculty?.acadYear || 'SY' %></option>
+                <% }) %>
+              </select>
               <div class="sig-date" id="sigDate"></div>
             </div>
-            <button class="sig-update-btn" type="submit">Update Signature</button>
+            <button class="sig-update-btn" type="submit" <%= signable.length ? '' : 'disabled style="opacity:.6; cursor:not-allowed;"' %>>Sign Selected TWS</button>
           </div>
         </form>
       </div>
 
-      <!-- ===== Submit Teaching Workload Sheet ===== -->
+      <!-- ===== Faculty Queue ===== -->
       <div class="panel">
-        <div class="panel-title" style="margin-bottom:10px;">Submit Teaching Workload Sheet</div>
+        <div class="panel-title" style="margin-bottom:10px;">Faculty Queue</div>
         <hr class="divider" />
         <p class="submit-desc">
-          Once submitted, your Teaching Workload Sheet will be routed for review and approval.
-          Make sure all information is complete and correct before submitting.
+          You can sign only records marked as <b>For Signing</b>. Signed records are forwarded to the Dean for approval.
         </p>
         <div class="bottom-btns">
-          <% var draft = (list || []).find(function(t){ return (t.status || 'Draft') === 'Draft'; }); %>
-          <% if (draft) { %>
-            <a class="btn btn-green" href="/tws/summary/<%= draft.id %>">Submit Latest Draft</a>
+          <% if (signable.length) { %>
+            <a class="btn btn-green" href="/tws/summary/<%= signable[0].id %>">Open First For-Signing TWS</a>
           <% } else { %>
             <button class="btn" type="button" disabled style="opacity:.5; cursor:not-allowed;">
-              No Draft Available
+              No TWS Waiting For Signature
             </button>
           <% } %>
         </div>

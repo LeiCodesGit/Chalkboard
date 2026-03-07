@@ -15,6 +15,8 @@ const twsApprovalStatusSchema = new Schema(
   { timestamps: true }
 );
 
+twsApprovalStatusSchema.index({ twsID: 1 }, { unique: true });
+
 const TWSApprovalStatus =
   mongoose.models.TWSApprovalStatus || model("TWSApprovalStatus", twsApprovalStatusSchema);
 

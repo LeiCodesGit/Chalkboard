@@ -2,122 +2,28 @@ import express from "express";
 import TWS from "../../models/TWS/tws.js";
 import Course from "../../models/TWS/course.js";
 import TWSApprovalStatus from "../../models/TWS/twsApprovalStatus.js";
+import User from "../../models/user.js";
+import mongoose from "mongoose";
+import SUBJECTS from "../../config/twsSubjects.js";
+import {
+  getSessionUser, getSessionUserId, getSessionUserRole,
+  buildFacultyName, defaultFacultyFromUser, computeTotals,
+  normalizeLoads, normalizeTwsForView, approverLabel, asyncHandler,
+} from "../../utils/twsHelpers.js";
+import {
+  validateFacultyInfo, validateLoadRows, validateCourseAdd,
+  validateApprovalAction, validateChairAction,
+} from "../../utils/twsValidation.js";
+import { transitionOrThrow, canTransition, getStepperState } from "../../utils/twsStateMachine.js";
 
 const router = express.Router();
 
-/* ======================================================
-   STATIC SUBJECTS
-====================================================== */
-const SUBJECTS = [
-  { code: "ELT1011", title: "Circuits 1", units: 3.0 },
-  { code: "CN1014", title: "Construction", units: 3.0 },
-  { code: "CPET2114", title: "Microprocessor Systems", units: 3.0 },
-  { code: "GE1110", title: "UTS (Understanding the Self)", units: 1.5 },
-  { code: "GE1081", title: "Ethics", units: 3.0 },
-  { code: "GE1053", title: "Numerical Methods", units: 3.0 },
-  { code: "MG1210", title: "Entrepreneurship", units: 3.0 },
-  { code: "ELT1016", title: "Electronic Devices", units: 3.0 },
-  { code: "ELT1021", title: "Digital Design", units: 3.0 },
-  { code: "ME1123", title: "Thermodynamics", units: 3.0 },
-];
+/* ── User model — user.js exports a schema, not a model ── */
+const UserModel = mongoose.models.User || mongoose.model("User", User);
 
 /* ======================================================
-   HELPERS
+   MIDDLEWARE
 ====================================================== */
-function getSessionUser(req) {
-  return req.session?.user || req.session?.account || req.user || null;
-}
-
-function getSessionUserId(user) {
-  return user?._id || user?.id || user?.userId || null;
-}
-
-function getSessionUserRole(user) {
-  return user?.role || user?.userRole || null;
-}
-
-function buildFacultyName(user) {
-  const parts = [user?.firstName, user?.middleName, user?.lastName].filter(Boolean);
-  return parts.join(" ").trim();
-}
-
-function defaultFacultyFromUser(user) {
-  return {
-    name: buildFacultyName(user),
-    empId: user?.employeeId || "",
-    dept: user?.department || "",
-    acadYear: "",
-    term: "",
-    empStatus: user?.employmentType || "",
-  };
-}
-
-function computeTotals(loads = []) {
-  let totalUnits = 0;
-  let totalHours = 0;
-
-  loads.forEach((r) => {
-    const units = Number(r.units || 0);
-    const lec = Number(r.lec || 0);
-    const lab = Number(r.lab || 0);
-    const sections = Number(r.sections || 1);
-
-    totalUnits += units;
-    totalHours += (lec + lab) * sections;
-  });
-
-  return {
-    totalUnits,
-    totalHours,
-    equivLoad: totalHours,
-  };
-}
-
-function normalizeLoads(loads) {
-  if (!loads) return [];
-  const rows = Array.isArray(loads) ? loads : Object.values(loads);
-
-  return rows.map((r) => ({
-    courseCode: r.courseCode || "",
-    courseTitle: r.courseTitle || "",
-    units: Number(r.units || 0),
-    lec: Number(r.lec || 0),
-    lab: Number(r.lab || 0),
-    sections: Number(r.sections || 1),
-  }));
-}
-
-function normalizeCourseForView(c) {
-  return {
-    code: c.courseCode || "",
-    title: c.courseTitle || c.description || "",
-    units: Number(c.units || 0),
-    timeSlot: c.timeSlot || c.time || "",
-    sectionRoom:
-      c.sectionRoom || [c.section, c.designatedRoom].filter(Boolean).join(" | "),
-  };
-}
-
-function normalizeTwsForView(twsDoc, courses = [], approval = null) {
-  const tws = typeof twsDoc.toObject === "function" ? twsDoc.toObject() : twsDoc;
-
-  return {
-    ...tws,
-    id: String(tws._id),
-    faculty: tws.faculty || {},
-    loads: Array.isArray(tws.loads) ? tws.loads : [],
-    totals: tws.totals || { totalUnits: 0, totalHours: 0, equivLoad: 0 },
-    createdWorkload: courses.map(normalizeCourseForView),
-    approval: approval || { status: "Not Submitted" },
-  };
-}
-
-function asyncHandler(fn) {
-  return function (req, res, next) {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-}
-
 function requireLoggedIn(req, res, next) {
   const user = getSessionUser(req);
   if (!user) return res.redirect("/login");
@@ -155,6 +61,28 @@ function requireDean(req, res, next) {
   next();
 }
 
+function requireProgramChair(req, res, next) {
+  const user = getSessionUser(req);
+  const role = getSessionUserRole(user);
+  if (!user) return res.redirect("/login");
+  if (role !== "Program-Chair") {
+    return res.status(403).send("Forbidden: Program Chair access only.");
+  }
+  req.twsUser = user;
+  next();
+}
+
+function requireHROrAdmin(req, res, next) {
+  const user = getSessionUser(req);
+  const role = getSessionUserRole(user);
+  if (!user) return res.redirect("/login");
+  if (!["HR", "Admin", "Super-Admin"].includes(role)) {
+    return res.status(403).send("Forbidden: HR or Admin access only.");
+  }
+  req.twsUser = user;
+  next();
+}
+
 async function getOwnedTwsOr404(req, res) {
   const userId = getSessionUserId(req.twsUser);
 
@@ -184,33 +112,94 @@ async function getAnyTwsOr404(req, res) {
 
 async function getAccessibleTwsOr404(req, res) {
   const role = getSessionUserRole(req.twsUser);
+  const viewerId = String(getSessionUserId(req.twsUser) || "");
 
+  // Dean can view any TWS
   if (role === "Dean") {
     return getAnyTwsOr404(req, res);
   }
 
+  // HR/Admin can view archived records and details
+  if (["HR", "Admin", "Super-Admin"].includes(role)) {
+    return getAnyTwsOr404(req, res);
+  }
+
+  // Professor can view TWS assigned to them
+  if (role === "Professor") {
+    const tws = await TWS.findById(req.params.id);
+    if (!tws) {
+      res.status(404).send("TWS not found");
+      return null;
+    }
+    const empId = req.twsUser?.employeeId || "";
+    const name = buildFacultyName(req.twsUser);
+    const isAssigned =
+      tws.assignedFacultyId === empId ||
+      tws.assignedFacultyName === name ||
+      tws.faculty?.empId === empId ||
+      tws.faculty?.name === name;
+    if (!isAssigned) {
+      res.status(403).send("Forbidden: this TWS is not assigned to you.");
+      return null;
+    }
+    return tws;
+  }
+
+  // Program Chair can view own TWS and records in their department.
+  if (role === "Program-Chair") {
+    const tws = await TWS.findById(req.params.id);
+    if (!tws) {
+      res.status(404).send("TWS not found");
+      return null;
+    }
+
+    const ownerId = String(tws.userID || "");
+    const chairDept = req.twsUser?.department || "";
+    const twsDept = tws.faculty?.dept || "";
+    const canView = ownerId === viewerId || (chairDept && twsDept && chairDept === twsDept);
+
+    if (!canView) {
+      res.status(403).send("Forbidden: this TWS is outside your scope.");
+      return null;
+    }
+
+    return tws;
+  }
+
+  // Everyone else falls back to owned records only.
   return getOwnedTwsOr404(req, res);
 }
 
-async function getApprovalForTws(twsId) {
-  return TWSApprovalStatus.findOne({ twsID: twsId }).lean();
-}
-
-function approverLabel(user) {
-  const name = buildFacultyName(user);
-  return name || user?.email || "Dean";
+/**
+ * Batch-fetch approvals for an array of TWS docs, avoiding N+1.
+ */
+async function batchApprovals(twsDocs) {
+  const ids = twsDocs.map((t) => t._id);
+  const approvals = await TWSApprovalStatus.find({ twsID: { $in: ids } }).lean();
+  const map = {};
+  approvals.forEach((a) => { map[String(a.twsID)] = a; });
+  return map;
 }
 
 /* ======================================================
    LANDING
 ====================================================== */
-router.get("/", (req, res) => {
+router.get("/", requireLoggedIn, (req, res) => {
+  const role = getSessionUserRole(req.twsUser);
+
+  // Auto-redirect each role to their proper TWS page
+  if (role === "Dean") return res.redirect("/tws/dean");
+  if (role === "Program-Chair") return res.redirect("/tws/program-chair");
+  if (role === "Professor") return res.redirect("/tws/dashboard");
+  if (role === "HR" || role === "Admin" || role === "Super-Admin") return res.redirect("/tws/hr-archive");
+
   res.render("TWS/twsLandingWelcome", { currentPageCategory: "tws" });
 });
 
 /* ======================================================
    DASHBOARD
-   - Program Chair / Dean => TWS create page
+   - Dean => redirect to /tws/dean
+   - Program Chair => TWS create page
    - Professor => Faculty dashboard
 ====================================================== */
 router.get(
@@ -220,6 +209,17 @@ router.get(
     const role = getSessionUserRole(req.twsUser);
     const userId = getSessionUserId(req.twsUser);
 
+    // Dean goes to their own approval dashboard
+    if (role === "Dean") {
+      return res.redirect("/tws/dean");
+    }
+
+    // HR/Admin go to archive
+    if (["HR", "Admin", "Super-Admin"].includes(role)) {
+      return res.redirect("/tws/hr-archive");
+    }
+
+    // Professor => Faculty dashboard
     if (role === "Professor") {
       const facultyName = buildFacultyName(req.twsUser);
       const employeeId = req.twsUser?.employeeId || "";
@@ -249,7 +249,8 @@ router.get(
       });
     }
 
-    if (!["Program-Chair", "Dean"].includes(role)) {
+    // Program Chair => Create page
+    if (role !== "Program-Chair") {
       return res
         .status(403)
         .send("Forbidden: only Program Chair, Dean, or Professor can access TWS dashboard.");
@@ -277,7 +278,7 @@ router.get(
 ====================================================== */
 router.get(
   "/create",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const userId = getSessionUserId(req.twsUser);
     const role = getSessionUserRole(req.twsUser);
@@ -310,7 +311,7 @@ router.get(
 ====================================================== */
 router.get(
   "/faculty/:id",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -325,12 +326,25 @@ router.get(
 
 router.post(
   "/faculty/:id",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
 
     const action = req.body.action || "next";
+
+    // Validate (skip on save-as-draft)
+    if (action !== "save") {
+      const { valid, errors } = validateFacultyInfo(req.body);
+      if (!valid) {
+        return res.status(400).render("TWS/twsFacultyInfo", {
+          tws: normalizeTwsForView(tws),
+          currentPageCategory: "tws",
+          user: req.twsUser,
+          validationErrors: errors,
+        });
+      }
+    }
 
     tws.faculty = {
       name: req.body.name || "",
@@ -361,7 +375,7 @@ router.post(
 ====================================================== */
 router.get(
   "/create-teaching-workload/:id",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -379,12 +393,22 @@ router.get(
 
 router.post(
   "/create-teaching-workload/:id/add",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
 
-    const { code, title, units, timeSlot, sectionRoom } = req.body;
+    const { valid, errors } = validateCourseAdd(req.body);
+    if (!valid) {
+      return res.status(400).send(`Validation failed: ${errors.join(" ")}`);
+    }
+
+    const { code, title, units, day, timeSlot, sectionRoom } = req.body;
+    const normalizedDay = String(day || "").trim();
+    const normalizedTimeRange = String(timeSlot || "").trim();
+    const normalizedTimeSlot = normalizedDay
+      ? `${normalizedDay} ${normalizedTimeRange}`
+      : normalizedTimeRange;
 
     const exists = await Course.findOne({
       twsID: tws._id,
@@ -402,9 +426,10 @@ router.post(
         courseTitle: title || "",
         description: title || "",
         units: Number(units || 0),
-        timeSlot: timeSlot || "",
+        day: normalizedDay,
+        timeSlot: normalizedTimeSlot,
         sectionRoom: sectionRoom || "",
-        time: timeSlot || "",
+        time: normalizedTimeRange,
         section,
         designatedRoom,
         department: tws.faculty?.dept || "",
@@ -420,16 +445,34 @@ router.post(
 ====================================================== */
 router.get(
   "/created-teaching-workload/:id",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
-    const approval = await getApprovalForTws(tws._id);
+    const approval = await TWSApprovalStatus.findOne({ twsID: tws._id }).lean();
+
+    // Fetch Dean + Program Chair names for signatures
+    const dept = tws.faculty?.dept || "";
+    let deanName = "";
+    let programChairName = "";
+
+    if (dept) {
+      const [deanUser, chairUser] = await Promise.all([
+        UserModel.findOne({ role: "Dean", department: dept }).lean(),
+        UserModel.findOne({ role: "Program-Chair", department: dept }).lean(),
+      ]);
+      if (deanUser) deanName = buildFacultyName(deanUser);
+      if (chairUser) programChairName = buildFacultyName(chairUser);
+    }
+
+    const twsView = normalizeTwsForView(tws, courses, approval);
+    twsView.deanName = deanName;
+    twsView.programChairName = programChairName;
 
     res.render("TWS/twsCreatedTeachingWorkload", {
-      tws: normalizeTwsForView(tws, courses, approval),
+      tws: twsView,
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -441,7 +484,7 @@ router.get(
 ====================================================== */
 router.get(
   "/teaching-load/:id",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -456,7 +499,7 @@ router.get(
 
 router.post(
   "/teaching-load/:id",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -477,6 +520,19 @@ router.post(
 
     if (action === "removeRow" && loads.length > 0) {
       loads.pop();
+    }
+
+    // Validate load rows when moving forward
+    if (action === "next") {
+      const { valid, errors } = validateLoadRows(loads);
+      if (!valid) {
+        return res.status(400).render("TWS/twsTeachingLoad", {
+          tws: { ...normalizeTwsForView(tws), loads },
+          currentPageCategory: "tws",
+          user: req.twsUser,
+          validationErrors: errors,
+        });
+      }
     }
 
     tws.loads = loads;
@@ -508,34 +564,30 @@ router.get(
   "/summary/:id",
   requireLoggedIn,
   asyncHandler(async (req, res) => {
-    const role = getSessionUserRole(req.twsUser);
-
-    let tws = null;
-
-    if (role === "Dean") {
-      tws = await getAnyTwsOr404(req, res);
-    } else if (role === "Professor") {
-      tws = await getAnyTwsOr404(req, res);
-    } else {
-      tws = await getOwnedTwsOr404(req, res);
-    }
-
+    const tws = await getAccessibleTwsOr404(req, res);
     if (!tws) return;
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
-    const approval = await getApprovalForTws(tws._id);
+    const approval = await TWSApprovalStatus.findOne({ twsID: tws._id }).lean();
+    const errorMessage = req.query?.error ? String(req.query.error) : "";
+    const viewerRole = getSessionUserRole(req.twsUser);
+    const viewerId = String(getSessionUserId(req.twsUser) || "");
+    const ownerId = String(tws.userID || "");
+    const canManageAsChair = viewerRole === "Program-Chair" && viewerId && ownerId && viewerId === ownerId;
 
     res.render("TWS/twsSummary", {
       tws: normalizeTwsForView(tws, courses, approval),
       currentPageCategory: "tws",
       user: req.twsUser,
+      errorMessage,
+      canManageAsChair,
     });
   })
 );
 
 router.post(
   "/summary/:id",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -547,6 +599,9 @@ router.post(
     }
 
     if (action === "sendToFaculty") {
+      try { transitionOrThrow(tws.status, "Sent to Faculty"); } catch (e) {
+        return res.redirect(`/tws/summary/${tws._id}?error=${encodeURIComponent(e.message)}`);
+      }
       tws.status = "Sent to Faculty";
       tws.sentToFacultyAt = new Date();
       tws.assignedFacultyId = tws.faculty?.empId || "";
@@ -568,6 +623,9 @@ router.post(
     }
 
     if (action === "sendToDean") {
+      try { transitionOrThrow(tws.status, "Sent to Dean"); } catch (e) {
+        return res.redirect(`/tws/summary/${tws._id}?error=${encodeURIComponent(e.message)}`);
+      }
       tws.status = "Sent to Dean";
       tws.sentToDeanAt = new Date();
       await tws.save();
@@ -603,6 +661,21 @@ router.post(
     const tws = await TWS.findById(id);
     if (!tws) return res.redirect("/tws/dashboard");
 
+    const role = getSessionUserRole(req.twsUser);
+    if (role !== "Professor") {
+      return res.status(403).send("Forbidden: only Faculty/Professor can sign TWS.");
+    }
+
+    // Object-level auth: only the assigned faculty can sign
+    const empId = req.twsUser?.employeeId || "";
+    const name = buildFacultyName(req.twsUser);
+    const isAssigned = tws.assignedFacultyId === empId || tws.assignedFacultyName === name;
+    if (!isAssigned) return res.status(403).send("Forbidden: this TWS is not assigned to you.");
+
+    try { transitionOrThrow(tws.status, "Sent to Dean"); } catch (e) {
+      return res.redirect(`/tws/summary/${tws._id}?error=${encodeURIComponent(e.message)}`);
+    }
+
     tws.status = "Sent to Dean";
     tws.sentToDeanAt = new Date();
     await tws.save();
@@ -632,12 +705,11 @@ router.post(
     const tws = await getAnyTwsOr404(req, res);
     if (!tws) return;
 
-    if (tws.status !== "Approved") {
-      return res.status(400).send("Only approved TWS can be sent to HR archive.");
+    try { transitionOrThrow(tws.status, "Archived"); } catch (e) {
+      return res.status(400).send(e.message);
     }
 
     tws.status = "Archived";
-    tws.archived = true;
     tws.archivedAt = new Date();
     await tws.save();
 
@@ -662,45 +734,30 @@ router.get(
   asyncHandler(async (req, res) => {
     const pendingDocs = await TWS.find({
       status: "Sent to Dean",
-      archived: false,
     })
       .sort({ createdAt: -1 })
       .lean();
 
     const approvedDocs = await TWS.find({
       status: "Approved",
-      archived: false,
     })
       .sort({ updatedAt: -1 })
       .lean();
 
-    const pending = await Promise.all(
-      pendingDocs.map(async (tws) => {
-        const approval = await getApprovalForTws(tws._id);
-        return {
-          ...tws,
-          id: String(tws._id),
-          faculty: tws.faculty || {},
-          approval: approval || { status: "Pending" },
-        };
-      })
-    );
+    // Batch approval lookup (N+1 fix)
+    const allDocs = [...pendingDocs, ...approvedDocs];
+    const approvalMap = await batchApprovals(allDocs);
 
-    const details = await Promise.all(
-      approvedDocs.map(async (tws) => {
-        const approval = await getApprovalForTws(tws._id);
-        return {
-          ...tws,
-          id: String(tws._id),
-          faculty: tws.faculty || {},
-          approval: approval || { status: "Approved" },
-        };
-      })
-    );
+    const mapTws = (defaultStatus) => (tws) => ({
+      ...tws,
+      id: String(tws._id),
+      faculty: tws.faculty || {},
+      approval: approvalMap[String(tws._id)] || { status: defaultStatus },
+    });
 
     res.render("TWS/twsDean", {
-      pending,
-      details,
+      pending: pendingDocs.map(mapTws("Pending")),
+      details: approvedDocs.map(mapTws("Approved")),
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -718,7 +775,7 @@ router.get(
     if (!tws) return;
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
-    const approval = await getApprovalForTws(tws._id);
+    const approval = await TWSApprovalStatus.findOne({ twsID: tws._id }).lean();
 
     res.render("TWS/twsApprovalRouting_dean", {
       tws: normalizeTwsForView(tws, courses, approval),
@@ -735,10 +792,16 @@ router.post(
     const tws = await getAnyTwsOr404(req, res);
     if (!tws) return;
 
+    const { valid, errors } = validateApprovalAction(req.body);
+    if (!valid) return res.status(400).send(`Validation failed: ${errors.join(" ")}`);
+
     const action = req.body.action || "approve";
     const remarks = req.body.remarks || "";
 
     if (action === "approve") {
+      try { transitionOrThrow(tws.status, "Approved"); } catch (e) {
+        return res.status(400).send(e.message);
+      }
       tws.status = "Approved";
       tws.approvedAt = new Date();
       await tws.save();
@@ -758,6 +821,9 @@ router.post(
     }
 
     if (action === "reject") {
+      try { transitionOrThrow(tws.status, "Rejected"); } catch (e) {
+        return res.status(400).send(e.message);
+      }
       tws.status = "Rejected";
       await tws.save();
 
@@ -776,6 +842,9 @@ router.post(
     }
 
     if (action === "return") {
+      try { transitionOrThrow(tws.status, "Returned to Program Chair"); } catch (e) {
+        return res.status(400).send(e.message);
+      }
       tws.status = "Returned to Program Chair";
       await tws.save();
 
@@ -804,14 +873,17 @@ router.get(
   "/status/:id",
   requireLoggedIn,
   asyncHandler(async (req, res) => {
-    const tws = await getAnyTwsOr404(req, res);
+    const tws = await getAccessibleTwsOr404(req, res);
     if (!tws) return;
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
-    const approval = await getApprovalForTws(tws._id);
+    const approval = await TWSApprovalStatus.findOne({ twsID: tws._id }).lean();
+
+    const twsView = normalizeTwsForView(tws, courses, approval);
+    twsView.stepperState = getStepperState(tws.status);
 
     res.render("TWS/twsSubmissionStatus", {
-      tws: normalizeTwsForView(tws, courses, approval),
+      tws: twsView,
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -823,7 +895,7 @@ router.get(
 ====================================================== */
 router.post(
   "/:id/delete",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -848,16 +920,16 @@ router.get(
 
     const filter =
       role === "Dean"
-        ? { archived: true }
+        ? { status: "Archived" }
         : role === "Professor"
         ? {
-            archived: true,
+            status: "Archived",
             $or: [
               { assignedFacultyId: req.twsUser?.employeeId || "" },
               { assignedFacultyName: buildFacultyName(req.twsUser) },
             ],
           }
-        : { userID: userId, archived: true };
+        : { userID: userId, status: "Archived" };
 
     const docs = await TWS.find(filter).sort({ createdAt: -1 }).lean();
 
@@ -880,9 +952,9 @@ router.get(
 ====================================================== */
 router.get(
   "/ta-archive",
-  requireLoggedIn,
+  requireHROrAdmin,
   asyncHandler(async (req, res) => {
-    const docs = await TWS.find({ archived: true }).sort({ createdAt: -1 }).lean();
+    const docs = await TWS.find({ status: "Archived" }).sort({ createdAt: -1 }).lean();
 
     const list = docs.map((tws) => ({
       ...tws,
@@ -900,9 +972,9 @@ router.get(
 
 router.get(
   "/hr-archive",
-  requireLoggedIn,
+  requireHROrAdmin,
   asyncHandler(async (req, res) => {
-    const docs = await TWS.find({ archived: true }).sort({ createdAt: -1 }).lean();
+    const docs = await TWS.find({ status: "Archived" }).sort({ createdAt: -1 }).lean();
 
     const list = docs.map((tws) => ({
       ...tws,
@@ -919,13 +991,95 @@ router.get(
 );
 
 /* ======================================================
-   PROGRAM CHAIR PAGE
+   PROGRAM CHAIR PAGE (Phase 3)
 ====================================================== */
 router.get(
   "/program-chair",
-  requireProgramChairOrDean,
+  requireProgramChair,
   asyncHandler(async (req, res) => {
-    return res.redirect("/tws/dashboard");
+    const userId = getSessionUserId(req.twsUser);
+    const dept = req.twsUser?.department || "";
+
+    // Submitted TWS in the chair's department that need review
+    const submittedDocs = await TWS.find({
+      status: { $in: ["Sent to Faculty", "Sent to Dean", "Returned to Program Chair"] },
+      "faculty.dept": dept,
+    }).sort({ createdAt: -1 }).lean();
+
+    // Personal TWS created by this Program Chair
+    const personalDocs = await TWS.find({ userID: userId }).sort({ createdAt: -1 }).lean();
+
+    // Batch approval lookups (N+1 fix)
+    const allDocs = [...submittedDocs, ...personalDocs];
+    const approvalMap = await batchApprovals(allDocs);
+
+    const mapTws = (tws) => ({
+      ...tws,
+      id: String(tws._id),
+      faculty: tws.faculty || {},
+      status: tws.status || "Draft",
+      approval: approvalMap[String(tws._id)] || { status: "Not Submitted" },
+    });
+
+    res.render("TWS/twsProgramChair", {
+      submitted: submittedDocs.map(mapTws),
+      personal: personalDocs.map(mapTws),
+      currentPageCategory: "tws",
+      user: req.twsUser,
+      errorMessage: req.query?.error ? String(req.query.error) : "",
+    });
+  })
+);
+
+/* ======================================================
+   PROGRAM CHAIR ACTION (Phase 3)
+====================================================== */
+router.post(
+  "/program-chair/action",
+  requireProgramChair,
+  asyncHandler(async (req, res) => {
+    const { valid, errors } = validateChairAction(req.body);
+    if (!valid) return res.status(400).send(`Validation failed: ${errors.join(" ")}`);
+
+    const twsId = req.body.id;
+    const action = req.body.action;
+    const tws = await TWS.findById(twsId);
+    if (!tws) return res.status(404).send("TWS not found");
+
+    if (action === "send" || action === "sendToDean") {
+      if (!canTransition(tws.status, "Sent to Dean")) {
+        const msg = `Cannot send to Dean from status "${tws.status}".`;
+        return res.redirect(`/tws/program-chair?error=${encodeURIComponent(msg)}`);
+      }
+      tws.status = "Sent to Dean";
+      tws.sentToDeanAt = new Date();
+      await tws.save();
+
+      await TWSApprovalStatus.findOneAndUpdate(
+        { twsID: tws._id },
+        { status: "Pending", remarks: "Endorsed by Program Chair", approvedBy: approverLabel(req.twsUser), approvalDate: new Date() },
+        { upsert: true, new: true }
+      );
+      return res.redirect("/tws/program-chair");
+    }
+
+    if (action === "return") {
+      if (!canTransition(tws.status, "Draft")) {
+        const msg = `Cannot return to Draft from status "${tws.status}".`;
+        return res.redirect(`/tws/program-chair?error=${encodeURIComponent(msg)}`);
+      }
+      tws.status = "Draft";
+      await tws.save();
+
+      await TWSApprovalStatus.findOneAndUpdate(
+        { twsID: tws._id },
+        { status: "Returned", remarks: "Returned by Program Chair", approvedBy: approverLabel(req.twsUser), approvalDate: new Date() },
+        { upsert: true, new: true }
+      );
+      return res.redirect("/tws/program-chair");
+    }
+
+    return res.redirect("/tws/program-chair");
   })
 );
 
@@ -963,6 +1117,11 @@ router.get(
 ====================================================== */
 router.use((err, req, res, next) => {
   console.error("TWS Route Error:", err);
+
+  if (err.message && err.message.startsWith("Invalid status transition")) {
+    return res.status(400).send(err.message);
+  }
+
   res.status(500).send("TWS server error");
 });
 
