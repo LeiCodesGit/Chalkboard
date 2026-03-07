@@ -1,6 +1,5 @@
 import express from "express";
 import { requireAuth } from "../../middleware/ata_authMiddleware.js";
-import { mockUsers } from "./authRoutes.js"; 
 import ATAForm from "../../models/ATA/ATAForm.js";
 
 const router = express.Router();
@@ -16,13 +15,20 @@ const getSafeUser = (reqUser) => {
     };
 };
 
-// Main ATA landing page
+// ==========================================
+// 🏠 MAIN ATA ENTRY POINT (Smart Redirect)
+// ==========================================
 router.get("/", (req, res) => {
+    // 1. Is there a real session from the MainDB?
     if (req.session && req.session.user) {
-        return res.render("ATA/AtaMain", { user: req.session.user, currentPageCategory: 'ata' }); 
+        return res.redirect("/ata/dashboard/window"); 
     }
-    res.render("ATA/AtaMain", { mockUsers, currentPageCategory: 'ata' }); 
+    
+    // 2. No session? Kick them immediately to the official login page!
+    // (Note: If your group's main login page is '/auth' instead of '/login', change this line)
+    return res.redirect("/login"); 
 });
+
 // ATA Form page
 router.get("/new", requireAuth, (req, res) => {
     const safeUser = getSafeUser(req.user);
@@ -65,7 +71,8 @@ router.get("/dashboard/window", requireAuth, async (req, res) => {
             employmentType: safeUser.employmentType,
             isPracticumCoordinator: safeUser.isPracticumCoordinator,
             myPendingCount: myPendingCount,     // 👈 Pass to EJS
-            myApprovedCount: myApprovedCount    // 👈 Pass to EJS
+            myApprovedCount: myApprovedCount,   // 👈 Pass to EJS
+            currentPageCategory: 'ata'
         });
 
     } catch (error) {
@@ -75,7 +82,30 @@ router.get("/dashboard/window", requireAuth, async (req, res) => {
 });
 
 // Other pages
-router.get("/submissions", requireAuth, (req, res) => res.render("ATA/submissions"));
+// 📄 VIEW MY SUBMISSIONS
+router.get("/submissions", requireAuth, async (req, res) => {
+    try {
+        // 1. Get the logged-in user's ID safely
+        let userID = "unknown";
+        if (req.user) {
+            if (req.user._id && req.user._id.$oid) userID = req.user._id.$oid;
+            else if (req.user._id) userID = req.user._id.toString();
+            else if (req.user.id) userID = req.user.id;
+            else if (req.user.employeeId) userID = req.user.employeeId;
+        }
+
+        // 2. Find ONLY the forms belonging to this user, newest first
+        const myForms = await ATAForm.find({ userID: userID }).sort({ createdAt: -1 });
+
+        // 3. Render the new page and pass the forms to the HTML table!
+        res.render("ATA/submissions", { forms: myForms });
+
+    } catch (error) {
+        console.error("Error loading submissions:", error);
+        res.status(500).send("Error loading submissions page.");
+    }
+});
+
 router.get("/reports", requireAuth, (req, res) => res.render("ATA/reports"));
 router.get("/profile", requireAuth, (req, res) => res.render("ATA/profile"));
 router.get("/admin/courses", requireAuth, (req, res) => res.render("ATA/admin-courses"));

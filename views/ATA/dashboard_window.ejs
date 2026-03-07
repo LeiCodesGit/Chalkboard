@@ -10,11 +10,11 @@
 <body data-role="<%= typeof role !== 'undefined' ? role : '' %>" 
       data-employment="<%= typeof employmentType !== 'undefined' ? employmentType : '' %>"
       data-practicum="<%= typeof isPracticumCoordinator !== 'undefined' ? isPracticumCoordinator : 'false' %>">
-
+    <%- include('../partials/sideMenuBar') %>
     <!-- DASHBOARD CONTENT -->
-    <main class="dashboard-bg">
+    <main class="dashboard-bg" style="margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-top: 6vh;">
 
-        <div class="dashboard-title">DASHBOARD</div>
+        <div class="dashboard-title">ACCEPTANCE OF TEACHING ASSIGNMENT</div>
 
         <div class="welcome-box">
             <h2>Welcome, <%= user.name %> | <%= role %> | <%= user.program %></h2>
@@ -41,17 +41,21 @@
                     </div>
                 </a>
             <% } %>
-            <div class="action-card pending-card">
-                <div class="action-card-title">My Pending Forms (<span id="myPendingCount"><%= myPendingCount %></span>)</div>
-                <div class="action-card-link">View My Forms →</div>
-            </div>
+            <a href="/ata/submissions" class="action-card-link-wrapper">
+                <div class="action-card pending-card">
+                    <div class="action-card-title">My Pending Forms (<span id="myPendingCount"><%= myPendingCount %></span>)</div>
+                    <div class="action-card-link">View My Forms →</div>
+                </div>
+            </a>
 
-            <div class="action-card approved-card">
-                <div class="action-card-title">My Approved Forms (<span id="myApprovedCount"><%= myApprovedCount %></span>)</div>
-                <div class="action-card-link">View My Forms →</div>
-            </div>
+            <a href="/ata/submissions" class="action-card-link-wrapper">
+                <div class="action-card approved-card">
+                    <div class="action-card-title">My Approved Forms (<span id="myApprovedCount"><%= myApprovedCount %></span>)</div>
+                    <div class="action-card-link">View My Forms →</div>
+                </div>
+            </a>
         </div>
-
+<!-- 
         <div class="active-term">
             Active Term: [Term Selection]
         </div>
@@ -61,7 +65,7 @@
             <div class="info-row">Total Units: 0 | Effective Units: 0</div>
         </div>
 
-        <a href="/ata" class="back-button">Back</a>
+       <a href="/institution" class="back-button">Back</a> -->
     </main>
     <script src="/ATA/js/ata_client.js"></script>
 </body>

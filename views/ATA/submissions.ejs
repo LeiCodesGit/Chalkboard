@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pending Approvals</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapúa MCM - My Submissions</title>
     <link rel="stylesheet" href="/ATA/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="dashboard-bg">
-    <main class="main-content" style="padding: 40px;">
+
+    <main class="main-content" style="padding: 40px; width: 100vw; margin-left: 0;">
         
         <div class="dashboard-title">
-            Forms to Approve (<%= role %> - <%= college %>)
+            My Form Submissions
         </div>
 
         <div class="form-cards-container" style="margin-top: 20px;">
@@ -19,30 +21,29 @@
                 <table style="width: 100%; text-align: left; border-collapse: collapse; color: white;">
                     <thead style="border-bottom: 2px solid #555;">
                         <tr>
-                            <th style="padding: 10px;">Faculty Name</th>
-                            <th style="padding: 10px;">College</th>
+                            <th style="padding: 10px;">Date Submitted</th>
                             <th style="padding: 10px;">Term</th>
-                            <th style="padding: 10px;">Teaching Units</th>
+                            <th style="padding: 10px;">Total Units</th>
                             <th style="padding: 10px;">Status</th>
                             <th style="padding: 10px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (forms.length === 0) { %>
+                        <% if (!forms || forms.length === 0) { %>
                             <tr>
-                                <td colspan="6" style="padding: 20px; text-align: center;">No pending forms for your department!</td>
+                                <td colspan="5" style="padding: 20px; text-align: center;">You haven't submitted any ATA forms yet!</td>
                             </tr>
                         <% } else { %>
                             <% forms.forEach(form => { %>
-                               <tr style="border-bottom: 1px solid #444;">
-                                    <td style="padding: 10px;"><%= form.facultyName %></td>
-                                    <td style="padding: 10px;"><%= form.college %></td>
+                                <tr style="border-bottom: 1px solid #444;">
+                                    <td style="padding: 10px;"><%= new Date(form.createdAt).toLocaleDateString() %></td>
                                     <td style="padding: 10px;"><%= form.term %> <%= form.academicYear %></td>
-                                    <td style="padding: 10px;"><%= form.totalTeachingUnits %></td>
+                                    <td style="padding: 10px;"><%= form.totalEffectiveUnits %></td>
                                     <td style="padding: 10px;"><span class="pending-badge"><%= form.status %></span></td>
                                     <td style="padding: 10px;">
-                                        <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none;">Review</a>
+                                        <a href="/ata/pdf/<%= form._id %>" target="_blank" class="form-btn primary-btn" style="text-decoration: none;">View PDF</a>
                                     </td>
+                                    
                                 </tr>
                             <% }) %>
                         <% } %>

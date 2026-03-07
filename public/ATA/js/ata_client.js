@@ -275,13 +275,11 @@ if (nextBtn) {
             });
 
             try {
-                const token = localStorage.getItem('jwtToken') || 'dummy_test_token_123'; 
                 
                 const response = await fetch('/ata/submit', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
@@ -327,4 +325,85 @@ if (nextBtn) {
             alert("End of form.");
         }
     });
+}
+// ==========================================
+// 6. REVIEW & APPROVAL LOGIC (For review-ata.ejs)
+// ==========================================
+const btnReturn = document.getElementById('btnReturn');
+const btnApprove = document.getElementById('btnApprove');
+
+if (btnReturn && btnApprove) {
+    const remarksInput = document.getElementById('adminRemarks');
+    const pathParts = window.location.pathname.split('/');
+    const formId = pathParts[pathParts.length - 1]; 
+
+    // Read the secret form data from the body tag
+    const formStatus = document.body.getAttribute('data-status');
+    const formHasPracticum = document.body.getAttribute('data-has-practicum') === 'true';
+
+    // Set the default words
+    let actionWord = 'APPROVE';
+    let displayMessage = 'Approve Form';
+
+    // 👇 DYNAMIC BUTTON TEXT LOGIC 👇
+    if (window.currentUser.role === 'Program-Chair') {
+        actionWord = 'ENDORSE';
+        displayMessage = formHasPracticum ? 'Endorse to Practicum' : 'Endorse to Dean';
+    } else if (window.currentUser.role === 'Practicum-Coordinator') {
+        actionWord = 'VALIDATE';
+        displayMessage = 'Validate for Dean';
+    } else if (window.currentUser.role === 'Dean') {
+        actionWord = 'APPROVE';
+        displayMessage = 'Approve to VPAA';
+    } else if (window.currentUser.role === 'VPAA') {
+        actionWord = 'NOTE';
+        displayMessage = 'Note & Finalize';
+    }
+
+    // Instantly update the green button on the screen to show the right text!
+    btnApprove.innerHTML = `<i class="fas fa-check"></i> ${displayMessage}`;
+
+    const processAction = async (actionType) => {
+        const remarks = remarksInput ? remarksInput.value : '';
+        
+        if (actionType === 'RETURN' && (!remarks || remarks.trim() === '')) {
+            alert("⚠️ Remarks are strictly required when returning a form to the faculty.");
+            return;
+        }
+
+        // Make the pop-up alert match the button text!
+        const confirmText = actionType === 'RETURN' ? 'RETURN this form to the faculty' : displayMessage;
+
+        if (confirm(`Are you sure you want to ${confirmText}?`)) {
+            try {
+                btnApprove.disabled = true;
+                btnReturn.disabled = true;
+
+                const response = await fetch(`/ata/approve/${formId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: actionType, remarks: remarks })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    window.location.href = '/ata/pending'; 
+                } else {
+                    alert("Error: " + result.error);
+                    btnApprove.disabled = false;
+                    btnReturn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert("A network error occurred. Please try again.");
+                btnApprove.disabled = false;
+                btnReturn.disabled = false;
+            }
+        }
+    };
+
+    btnReturn.addEventListener('click', () => processAction('RETURN'));
+    btnApprove.addEventListener('click', () => processAction(actionWord));
 }

@@ -1,5 +1,5 @@
 import express from 'express';
-import { submitATA, approveATA, getPendingApprovals, viewATAForm } from '../../controllers/ataController.js';
+import { submitATA, approveATA, getPendingApprovals, viewATAForm, viewAtaPdf } from '../../controllers/ataController.js';
 import { requireAuth, checkRole } from '../../middleware/ata_authMiddleware.js';
 
 const router = express.Router();
@@ -22,5 +22,8 @@ router.get('/pending', requireAuth, checkRole(...adminRoles), getPendingApproval
 
 // Read-only view for the admin
 router.get('/view/:id', requireAuth, checkRole(...adminRoles), viewATAForm);
+
+//testing route for PDF generation
+router.get('/pdf/:id', requireAuth, viewAtaPdf);
 
 export default router;
