@@ -6,7 +6,9 @@
   <link rel="stylesheet" href="/TWS/css/twsstyles.css" />
 </head>
 <body>
-  <%- include('../partials/sideMenuBar') %>
+  <aside class="tws-sidebar">
+    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+  </aside>
 
   <div class="main">
     <div class="shell">
@@ -50,7 +52,7 @@
           %>
             <div class="trow hr-row"
                 data-name="<%= (t.faculty.name || '').toLowerCase() %>"
-                 onclick="showDetail('<%= t.faculty.name || '(Name)' %>', '<%= t.id %>', '<%= t.faculty.acadYear || '2025 - 2026' %>')"
+                 onclick="showDetail(`<%= t.faculty.name || '(Name)' %>`, `<%= t.id %>`, `<%= t.faculty.acadYear || '2025 - 2026' %>`)"
                  style="cursor:pointer;">
               <div class="arch-name"><%= t.faculty.name || '—' %></div>
               <div><%= t.faculty.dept || '—' %></div>

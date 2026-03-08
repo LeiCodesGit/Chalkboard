@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="/TWS/css/twsstyles.css" />
 </head>
 <body>
-  <%- include('../partials/sideMenuBar') %>
+  <aside class="tws-sidebar">
+    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+  </aside>
 
   <div class="main">
     <div class="shell">

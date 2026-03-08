@@ -185,15 +185,23 @@ async function batchApprovals(twsDocs) {
    LANDING
 ====================================================== */
 router.get("/", requireLoggedIn, (req, res) => {
+  res.render("TWS/twsLandingWelcome", {
+    currentPageCategory: "tws",
+    user: req.twsUser,
+  });
+});
+
+router.get("/get-started", requireLoggedIn, (req, res) => {
   const role = getSessionUserRole(req.twsUser);
 
-  // Auto-redirect each role to their proper TWS page
   if (role === "Dean") return res.redirect("/tws/dean");
   if (role === "Program-Chair") return res.redirect("/tws/program-chair");
   if (role === "Professor") return res.redirect("/tws/dashboard");
-  if (role === "HR" || role === "Admin" || role === "Super-Admin") return res.redirect("/tws/hr-archive");
+  if (role === "HR" || role === "Admin" || role === "Super-Admin") {
+    return res.redirect("/tws/hr-archive");
+  }
 
-  res.render("TWS/twsLandingWelcome", { currentPageCategory: "tws" });
+  return res.redirect("/tws");
 });
 
 /* ======================================================
