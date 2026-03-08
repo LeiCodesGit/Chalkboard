@@ -11,7 +11,11 @@
     <main class="main-content" style="padding: 40px; margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh;">
         
         <div class="dashboard-title">
-            Forms to Approve (<%= role %> - <%= college %>)
+            <% if (typeof isHistory !== 'undefined' && isHistory) { %>
+                <i class="fas fa-history"></i> Processed & Approved Forms (<%= role %> - <%= college %>)
+            <% } else { %>
+                Forms to Approve (<%= role %> - <%= college %>)
+            <% } %>
         </div>
 
         <div class="form-cards-container" style="margin-top: 20px;">
@@ -23,26 +27,74 @@
                             <th style="padding: 10px;">Faculty Name</th>
                             <th style="padding: 10px;">College</th>
                             <th style="padding: 10px;">Term</th>
-                            <th style="padding: 10px;">Teaching Units</th>
-                            <th style="padding: 10px;">Status</th>
+                            <th style="padding: 10px;">Approval Progress</th>
+                            <th style="padding: 10px;">
+                                <%= (typeof isHistory !== 'undefined' && isHistory) ? 'Current Status' : 'Awaiting Action From' %>
+                            </th>
                             <th style="padding: 10px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% if (forms.length === 0) { %>
                             <tr>
-                                <td colspan="6" style="padding: 20px; text-align: center;">No pending forms for your department!</td>
+                                <td colspan="6" style="padding: 40px; text-align: center; color: #a0a0a0; font-style: italic;">
+                                    <% if (typeof isHistory !== 'undefined' && isHistory) { %>
+                                        <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                        Your approved history is currently empty.
+                                    <% } else { %>
+                                        <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                        No pending forms require your attention!
+                                    <% } %>
+                                </td>
                             </tr>
                         <% } else { %>
                             <% forms.forEach(form => { %>
-                               <tr style="border-bottom: 1px solid #444;">
-                                    <td style="padding: 10px;"><%= form.facultyName %></td>
-                                    <td style="padding: 10px;"><%= form.college %></td>
-                                    <td style="padding: 10px;"><%= form.term %> <%= form.academicYear %></td>
-                                    <td style="padding: 10px;"><%= form.totalTeachingUnits %></td>
-                                    <td style="padding: 10px;"><span class="pending-badge"><%= form.status %></span></td>
-                                    <td style="padding: 10px;">
-                                        <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none;">Review</a>
+                                <tr style="border-bottom: 1px solid #333;">
+                                    <td style="padding: 15px 10px;"><%= form.facultyName %></td>
+                                    <td style="padding: 15px 10px;"><%= form.college %></td>
+                                    <td style="padding: 15px 10px;"><%= form.term %> <%= form.academicYear %></td>
+                                    
+                                    <td style="padding: 15px 10px; font-size: 0.85rem; max-width: 250px;">
+                                        <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
+                                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                <% form.approvalHistory.forEach(log => { %>
+                                                    <div style="color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                        <i class="fas fa-check-circle" style="color: #28a745; margin-right: 4px;"></i>
+                                                        <strong style="color: #ddd;"><%= log.approverName || log.approverRole %></strong> 
+                                                        <span style="font-size: 0.75rem;">(<%= log.approvalStatus %>)</span>
+                                                    </div>
+                                                <% }) %>
+                                            </div>
+                                        <% } else { %>
+                                            <span style="color: #777; font-style: italic;">No signatures yet</span>
+                                        <% } %>
+                                    </td>
+
+                                    <td style="padding: 15px 10px;">
+                                        <% 
+                                            let displayStatus = form.status.replace('PENDING_', 'Awaiting ');
+                                            if (displayStatus === 'Awaiting PRACTICUM') displayStatus = 'Awaiting Practicum';
+                                            if (displayStatus === 'Awaiting CHAIR') displayStatus = 'Awaiting Chair';
+                                            if (displayStatus === 'Awaiting DEAN') displayStatus = 'Awaiting Dean';
+                                            
+                                            let badgeColor = (form.status === 'FINALIZED') ? '#28a745' : '#ffc107';
+                                            let textColor = (form.status === 'FINALIZED') ? '#fff' : '#000';
+                                        %>
+                                        <span class="pending-badge" style="background-color: <%= badgeColor %>; color: <%= textColor %>; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">
+                                            <% if (form.status === 'FINALIZED') { %>
+                                                <i class="fas fa-check-double"></i> Finalized
+                                            <% } else { %>
+                                                <i class="fas fa-clock"></i> <%= displayStatus %>
+                                            <% } %>
+                                        </span>
+                                    </td>
+
+                                    <td style="padding: 15px 10px;">
+                                        <% if (typeof isHistory !== 'undefined' && isHistory) { %>
+                                            <a href="/ata/view-submission/<%= form._id %>" class="form-btn secondary-btn" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">View Form</a>
+                                        <% } else { %>
+                                            <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">Review</a>
+                                        <% } %>
                                     </td>
                                 </tr>
                             <% }) %>

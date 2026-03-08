@@ -69,7 +69,12 @@ const userSchema = new Schema({
 	employeeId: {
 		type: String,
 		unique: true
-	}
+	},
+	
+  isPracticumCoordinator: {
+    type: Boolean,
+    default: false
+  }
 
 	}, { timestamps: true });
 

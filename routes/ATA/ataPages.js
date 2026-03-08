@@ -2,16 +2,14 @@ import express from "express";
 import { requireAuth } from "../../middleware/ata_authMiddleware.js";
 import ATAForm from "../../models/ATA/ATAForm.js";
 
+// 👇 FIX: We import mainDB to access the compiled User model to get Coordinator names!
+import { mainDB } from '../../database/mongo-dbconnect.js';
+
 const router = express.Router();
 
 const getSafeUser = (reqUser) => {
-    // 1. Grab whatever program data they have, or default to an empty string
     let rawProgram = reqUser.program || reqUser.department || reqUser.college || "";
-    
-    // 2. If the database literally says "N/A", clear it out so the UI ignores it
-    if (rawProgram === "N/A") {
-        rawProgram = "";
-    }
+    if (rawProgram === "N/A") rawProgram = "";
 
     return {
         ...reqUser,
@@ -19,67 +17,119 @@ const getSafeUser = (reqUser) => {
         role: reqUser.role || "Professor",
         employmentType: reqUser.employmentType || "Full-Time",
         isPracticumCoordinator: reqUser.isPracticumCoordinator || false,
-        program: rawProgram // 👈 Now safely passes the cleaned data
+        program: rawProgram 
     };
 };
 
 // ==========================================
-// 🏠 MAIN ATA ENTRY POINT (Smart Redirect)
+// 🏠 MAIN ATA ENTRY POINT
 // ==========================================
 router.get("/", (req, res) => {
-    // 1. Is there a real session from the MainDB?
     if (req.session && req.session.user) {
         return res.redirect("/ata/dashboard/window"); 
     }
-    
-    // 2. No session? Kick them immediately to the official login page!
-    // (Note: If your group's main login page is '/auth' instead of '/login', change this line)
     return res.redirect("/login"); 
 });
 
-// ATA Form page
-router.get("/new", requireAuth, (req, res) => {
-    const safeUser = getSafeUser(req.user);
-    res.render("ATA/new-ata", {
-        user: safeUser,
-        role: safeUser.role,
-        employmentType: safeUser.employmentType,
-        isPracticumCoordinator: safeUser.isPracticumCoordinator
-    });
-});
-
-// 2. DYNAMIC DASHBOARD ROUTE
-router.get("/dashboard/window", requireAuth, async (req, res) => {
+// ==========================================
+// 📄 RENDER NEW ATA FORM (SECURED)
+// ==========================================
+router.get("/new", requireAuth, async (req, res) => {
     try {
-        const safeUser = getSafeUser(req.user);
-        
-        let userID = "unknown";
-        if (req.user) {
-            if (req.user._id && req.user._id.$oid) userID = req.user._id.$oid;
-            else if (req.user._id) userID = req.user._id.toString();
-            else if (req.user.id) userID = req.user.id;
-            else if (req.user.employeeId) userID = req.user.employeeId;
+        // 👇 SECURITY BLOCK: Kick executives out if they type the URL
+        const userRole = req.user.role || "";
+        if (['VPAA', 'HR', 'HRMO'].includes(userRole)) {
+            return res.redirect('/ata/dashboard/window');
         }
 
-        const myPendingCount = await ATAForm.countDocuments({ 
-            userID: userID, 
-            status: { $regex: '^PENDING' } 
-        });
+        const safeUser = getSafeUser(req.user);
+        const User = mainDB.model('User'); 
+        const coordinators = await User.find({ isPracticumCoordinator: true });
+        const coordinatorNames = coordinators.map(c => `${c.firstName} ${c.lastName}`.trim());
 
-        // This looks for fully approved forms
-        const myApprovedCount = await ATAForm.countDocuments({ 
-            userID: userID, 
-            status: 'FINALIZED' 
-        });
-
-        // Pass the live counts to the HTML!
-        res.render("ATA/dashboard_window", {
+        res.render("ATA/new-ata", {
             user: safeUser,
             role: safeUser.role,
             employmentType: safeUser.employmentType,
             isPracticumCoordinator: safeUser.isPracticumCoordinator,
-            myPendingCount: myPendingCount,     // 👈 Pass to EJS
-            myApprovedCount: myApprovedCount,   // 👈 Pass to EJS
+            coordinators: coordinatorNames,
+            currentPageCategory: 'ata'
+        });
+    } catch (error) {
+        console.error("Error loading new ATA page:", error);
+        res.status(500).send("Server Error");
+    }
+});
+
+// ==========================================
+// 📊 DYNAMIC DASHBOARD ROUTE (Live DB Fetch Fix)
+// ==========================================
+router.get("/dashboard/window", requireAuth, async (req, res) => {
+    try {
+        let sessionUserID = "unknown";
+        if (req.user) {
+            if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
+            else if (req.user._id) sessionUserID = req.user._id.toString();
+            else if (req.user.id) sessionUserID = req.user.id;
+            else if (req.user.employeeId) sessionUserID = req.user.employeeId;
+        }
+
+        const User = mainDB.model('User');
+        const liveUser = await User.findById(sessionUserID);
+
+        if (!liveUser) {
+             return res.status(404).send("User not found.");
+        }
+
+        // Extract the exact boolean directly from the database!
+        const isPracticumCoordinator = liveUser.isPracticumCoordinator === true;
+
+        // Create the safeUser object using the live data
+        const safeUser = {
+            ...liveUser._doc, // Spreads the actual MongoDB document data
+            name: `${liveUser.firstName || ''} ${liveUser.lastName || ''}`.trim() || "Faculty",
+            role: liveUser.role || "Professor",
+            program: liveUser.program || liveUser.department || "",
+            isPracticumCoordinator: isPracticumCoordinator
+        };
+
+        const myPendingCount = await ATAForm.countDocuments({ 
+            userID: sessionUserID, 
+            status: { $regex: '^PENDING' } 
+        });
+
+        const myApprovedCount = await ATAForm.countDocuments({ 
+            userID: sessionUserID, 
+            status: 'FINALIZED' 
+        });
+
+        const latestForm = await ATAForm.findOne({ userID: sessionUserID }).sort({ createdAt: -1 });
+
+        let lastSubmissionDate = "None";
+        let lastStatus = "None";
+        let totalUnits = 0;
+        let effectiveUnits = 0;
+
+        if (latestForm) {
+            lastSubmissionDate = new Date(latestForm.createdAt).toLocaleDateString('en-US', { 
+                month: 'short', day: 'numeric', year: 'numeric' 
+            });
+            lastStatus = latestForm.status.replace('_', ' '); 
+            totalUnits = latestForm.totalTeachingUnits || 0;
+            effectiveUnits = (latestForm.totalEffectiveUnits || 0) + (latestForm.totalRemedialUnits || 0);
+        }
+
+        res.render("ATA/dashboard_window", {
+            user: safeUser,
+            role: safeUser.role,
+            employmentType: safeUser.employmentType || "Full-Time",
+            isPracticumCoordinator: isPracticumCoordinator, // 👈 Safely passed to EJS!
+            myPendingCount: myPendingCount,  
+            myApprovedCount: myApprovedCount,
+            lastSubmissionDate: lastSubmissionDate, 
+            lastStatus: lastStatus,                 
+            totalUnits: totalUnits,                 
+            effectiveUnits: effectiveUnits,         
             currentPageCategory: 'ata'
         });
 
@@ -88,12 +138,17 @@ router.get("/dashboard/window", requireAuth, async (req, res) => {
         res.status(500).send("Server Error loading dashboard.");
     }
 });
-
-// Other pages
-// 📄 VIEW MY SUBMISSIONS
-// 📄 VIEW MY SUBMISSIONS (With Smart Filtering)
+// ==========================================
+// 📄 VIEW MY SUBMISSIONS (SECURED)
+// ==========================================
 router.get("/submissions", requireAuth, async (req, res) => {
     try {
+        // 👇 SECURITY BLOCK: Kick executives out if they type the URL
+        const userRole = req.user.role || "";
+        if (['VPAA', 'HR', 'HRMO'].includes(userRole)) {
+            return res.redirect('/ata/dashboard/window');
+        }
+
         let userID = "unknown";
         if (req.user) {
             if (req.user._id && req.user._id.$oid) userID = req.user._id.$oid;
@@ -102,23 +157,20 @@ router.get("/submissions", requireAuth, async (req, res) => {
             else if (req.user.employeeId) userID = req.user.employeeId;
         }
 
-        // 1. Check the URL to see what the user clicked
         const filterType = req.query.filter || 'all';
         let dbQuery = { userID: userID };
 
-        // 2. Adjust the database search based on the filter
         if (filterType === 'approved') {
             dbQuery.status = 'FINALIZED'; 
         } else if (filterType === 'pending') {
             dbQuery.status = { $ne: 'FINALIZED' };
         }
 
-        // 3. Fetch the filtered forms
         const myForms = await ATAForm.find(dbQuery).sort({ createdAt: -1 });
 
         res.render("ATA/submissions", { 
             forms: myForms,
-            user: req.user,                 
+            user: req.user,                
             currentPageCategory: 'ata',
             filterType: filterType 
         });
@@ -128,7 +180,10 @@ router.get("/submissions", requireAuth, async (req, res) => {
         res.status(500).send("Error loading submissions page.");
     }
 });
-// 📄 VIEW MY SUBMISSION (Read-Only UI Viewer)
+
+// ==========================================
+// 📄 VIEW SINGLE SUBMISSION
+// ==========================================
 router.get("/view-submission/:id", requireAuth, async (req, res) => {
     try {
         const form = await ATAForm.findById(req.params.id);
