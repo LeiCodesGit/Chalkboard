@@ -45,10 +45,23 @@
             </div>
           <% } %>
 
+          <%
+            function formatDatePH(value) {
+              var date = value ? new Date(value) : null;
+              if (!date || isNaN(date.getTime())) return "—";
+              return date.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                timeZone: "Asia/Manila",
+              });
+            }
+          %>
+
           <% (list || []).forEach(function(t) {
                var approvedDate = t.approval && t.approval.approvedAt
-                 ? new Date(t.approval.approvedAt).toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})
-                 : new Date(t.createdAt).toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+                 ? formatDatePH(t.approval.approvedAt)
+                 : formatDatePH(t.createdAt);
           %>
             <div class="trow hr-row"
                 data-name="<%= (t.faculty.name || '').toLowerCase() %>"
@@ -56,8 +69,8 @@
                  style="cursor:pointer;">
               <div class="arch-name"><%= t.faculty.name || '—' %></div>
               <div><%= t.faculty.dept || '—' %></div>
-              <div><%= t.faculty.acadYear || '2025- 2026' %></div>
-              <div><%= t.faculty.term || '—' %></div>
+              <div><%= t.faculty.acadYear || t.schoolYear || '—' %></div>
+              <div><%= t.faculty.term || t.term || '—' %></div>
               <div><%= approvedDate %></div>
               <div class="tcell-right">
                 <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>

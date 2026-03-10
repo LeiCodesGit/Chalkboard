@@ -136,9 +136,11 @@
             <div class="tws-load-details">
               <div class="ld-title" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Load Details</span>
+                <% if (!isViewOnly) { %>
                 <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>" style="text-decoration:none;">
                   + Add Subject
                 </a>
+                <% } %>
               </div>
 
               <div class="ld-row">
@@ -150,7 +152,7 @@
 
               <% if (!tws?.createdWorkload || tws.createdWorkload.length === 0) { %>
                 <div style="opacity:.9; font-size:12px; padding: 10px 0;">
-                  No subjects yet. Click “+ Add Subject”.
+                  No subjects yet.
                 </div>
               <% } %>
 
@@ -161,7 +163,7 @@
                     <div style="max-width: 220px;">
                       <b><%= s.code %></b> - <%= s.title %>
                       <div style="opacity:.9; font-size:11px; margin-top:2px;">
-                        <%= s.timeSlot || "— time" %> • <%= s.sectionRoom || "— room" %>
+                        <%= (String(s.timeSlot || "").trim() ? String(s.timeSlot || "").trim() + " (PHT)" : "No schedule (PHT)") %> • <%= s.sectionRoom || "— room" %>
                       </div>
                     </div>
                     <span><%= Number(s.units || 0).toFixed(2) %></span>
@@ -197,9 +199,13 @@
         </section>
 
         <div class="tws-footer-actions">
-  <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>">Back</a>
-  <a class="tws-next" href="/tws/teaching-load/<%= tws.id %>">Next</a>
-</div>
+          <% if (isViewOnly) { %>
+            <a class="tws-btn-white" href="<%= viewBackUrl || '/tws/dashboard' %>">Back</a>
+          <% } else { %>
+            <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>">Back</a>
+            <a class="tws-next" href="/tws/teaching-load/<%= tws.id %>">Next</a>
+          <% } %>
+        </div>
 
       </div>
     </main>

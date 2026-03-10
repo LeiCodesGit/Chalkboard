@@ -286,7 +286,7 @@ router.get(
 ====================================================== */
 router.get(
   "/create",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const userId = getSessionUserId(req.twsUser);
     const role = getSessionUserRole(req.twsUser);
@@ -319,7 +319,7 @@ router.get(
 ====================================================== */
 router.get(
   "/faculty/:id",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -334,7 +334,7 @@ router.get(
 
 router.post(
   "/faculty/:id",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -383,7 +383,7 @@ router.post(
 ====================================================== */
 router.get(
   "/create-teaching-workload/:id",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -401,7 +401,7 @@ router.get(
 
 router.post(
   "/create-teaching-workload/:id/add",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -448,15 +448,43 @@ router.post(
   })
 );
 
+router.post(
+  "/create-teaching-workload/:id/remove",
+  requireProgramChairOrDean,
+  asyncHandler(async (req, res) => {
+    const tws = await getOwnedTwsOr404(req, res);
+    if (!tws) return;
+
+    const code = String(req.body?.code || "").trim();
+    if (!code) {
+      return res.redirect(`/tws/create-teaching-workload/${tws._id}`);
+    }
+
+    await Course.deleteOne({
+      twsID: tws._id,
+      courseCode: code,
+    });
+
+    return res.redirect(`/tws/create-teaching-workload/${tws._id}`);
+  })
+);
+
 /* ======================================================
    STEP 3 — CREATED TEACHING WORKLOAD
 ====================================================== */
 router.get(
   "/created-teaching-workload/:id",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
+    const isViewOnly = String(req.query?.mode || "").toLowerCase() === "view";
+    const from = String(req.query?.from || "").toLowerCase();
+    const role = getSessionUserRole(req.twsUser);
+    const viewBackUrl =
+      from === "dean" || role === "Dean"
+        ? "/tws/dean"
+        : "/tws/dashboard";
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
     const approval = await TWSApprovalStatus.findOne({ twsID: tws._id }).lean();
@@ -481,6 +509,8 @@ router.get(
 
     res.render("TWS/twsCreatedTeachingWorkload", {
       tws: twsView,
+      isViewOnly,
+      viewBackUrl,
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -492,7 +522,7 @@ router.get(
 ====================================================== */
 router.get(
   "/teaching-load/:id",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -507,7 +537,7 @@ router.get(
 
 router.post(
   "/teaching-load/:id",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -581,7 +611,11 @@ router.get(
     const viewerRole = getSessionUserRole(req.twsUser);
     const viewerId = String(getSessionUserId(req.twsUser) || "");
     const ownerId = String(tws.userID || "");
-    const canManageAsChair = viewerRole === "Program-Chair" && viewerId && ownerId && viewerId === ownerId;
+    const canManageAsChair =
+      ["Program-Chair", "Dean"].includes(viewerRole) &&
+      viewerId &&
+      ownerId &&
+      viewerId === ownerId;
 
     res.render("TWS/twsSummary", {
       tws: normalizeTwsForView(tws, courses, approval),
@@ -595,7 +629,7 @@ router.get(
 
 router.post(
   "/summary/:id",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;
@@ -703,6 +737,50 @@ router.post(
   })
 );
 
+router.post(
+  "/faculty-return/:id",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const tws = await getAnyTwsOr404(req, res);
+    if (!tws) return;
+
+    const role = getSessionUserRole(req.twsUser);
+    if (role !== "Professor") {
+      return res.status(403).send("Forbidden: only Faculty/Professor can return TWS for revision.");
+    }
+
+    const empId = req.twsUser?.employeeId || "";
+    const name = buildFacultyName(req.twsUser);
+    const isAssigned =
+      tws.assignedFacultyId === empId ||
+      tws.assignedFacultyName === name ||
+      tws.faculty?.empId === empId ||
+      tws.faculty?.name === name;
+    if (!isAssigned) return res.status(403).send("Forbidden: this TWS is not assigned to you.");
+
+    try { transitionOrThrow(tws.status, "Returned to Program Chair"); } catch (e) {
+      return res.redirect(`/tws/summary/${tws._id}?error=${encodeURIComponent(e.message)}`);
+    }
+
+    tws.status = "Returned to Program Chair";
+    await tws.save();
+
+    const remarks = String(req.body?.remarks || "").trim();
+    await TWSApprovalStatus.findOneAndUpdate(
+      { twsID: tws._id },
+      {
+        status: "Returned",
+        remarks: remarks || "Returned for revision by Faculty",
+        approvedBy: buildFacultyName(req.twsUser) || "Faculty",
+        approvalDate: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    return res.redirect("/tws/dashboard");
+  })
+);
+
 /* ======================================================
    SEND APPROVED TWS TO HR ARCHIVE
 ====================================================== */
@@ -740,6 +818,8 @@ router.get(
   "/dean",
   requireDean,
   asyncHandler(async (req, res) => {
+    const userId = getSessionUserId(req.twsUser);
+
     const pendingDocs = await TWS.find({
       status: "Sent to Dean",
     })
@@ -752,8 +832,10 @@ router.get(
       .sort({ updatedAt: -1 })
       .lean();
 
+    const personalDocs = await TWS.find({ userID: userId }).sort({ createdAt: -1 }).lean();
+
     // Batch approval lookup (N+1 fix)
-    const allDocs = [...pendingDocs, ...approvedDocs];
+    const allDocs = [...pendingDocs, ...approvedDocs, ...personalDocs];
     const approvalMap = await batchApprovals(allDocs);
 
     const mapTws = (defaultStatus) => (tws) => ({
@@ -766,6 +848,7 @@ router.get(
     res.render("TWS/twsDean", {
       pending: pendingDocs.map(mapTws("Pending")),
       details: approvedDocs.map(mapTws("Approved")),
+      personal: personalDocs.map(mapTws("Draft")),
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -903,7 +986,7 @@ router.get(
 ====================================================== */
 router.post(
   "/:id/delete",
-  requireProgramChair,
+  requireProgramChairOrDean,
   asyncHandler(async (req, res) => {
     const tws = await getOwnedTwsOr404(req, res);
     if (!tws) return;

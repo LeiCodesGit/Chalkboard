@@ -137,7 +137,7 @@
                   <div><%= tws.faculty?.term || "—" %></div>
 
                   <div class="pc-btns pc-btns-right">
-                    <a class="pc-btn pc-white" href="/tws/summary/<%= tws.id %>">View</a>
+                    <a class="pc-btn pc-white" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view">View</a>
 
                     <% const canPersonalSendToDean = ["Draft", "Returned to Program Chair"].includes(tws.status || ""); %>
                     <% if (canPersonalSendToDean) { %>

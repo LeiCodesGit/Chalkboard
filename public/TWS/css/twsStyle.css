@@ -331,6 +331,35 @@ button, input, select{ font-family: inherit; }
   border: 1px solid rgba(255,255,255,0.6);
 }
 
+.pc-glass{
+  width: min(1000px, 100%);
+  margin: 0 auto;
+}
+
+.pc-card-wide,
+.pc-card-small{
+  max-width: 980px;
+}
+
+.pc-action-col{
+  text-align: right;
+}
+
+.pc-form-inline{
+  display: inline-flex;
+}
+
+.pc-btns-right{
+  justify-content: flex-end;
+}
+
+.pc-status-text{
+  font-weight: 800;
+}
+
+.pc-yellow{ color: #ffd66b; }
+.pc-red{ color: #ff8b8b; }
+
 
 /* ======================================================
    APP PAGES (dashboard, faculty, load, summary)
@@ -400,6 +429,20 @@ button, input, select{ font-family: inherit; }
   max-width: 980px;
 }
 
+.tws-app-glass{
+  width: min(1000px, 100%);
+  margin: 0 auto;
+}
+
+.tws-card-wide,
+.tws-card-guidelines{
+  max-width: 980px;
+}
+
+.tws-action-col{
+  text-align: right;
+}
+
 .tws-card-header{
   display: flex;
   align-items: center;
@@ -448,6 +491,9 @@ button, input, select{ font-family: inherit; }
 }
 
 .tws-btn-white{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--tws-white);
   color: var(--tws-text-dark);
   border-radius: 999px;
@@ -455,6 +501,38 @@ button, input, select{ font-family: inherit; }
   font-size: 12px;
   font-weight: 900;
   border: 1px solid rgba(255,255,255,0.65);
+  line-height: 1;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.tws-btn-danger{
+  background: #b91c1c;
+  color: #fff;
+  border-color: rgba(255,255,255,0.35);
+}
+
+.tws-workload-row{
+  grid-template-columns: 1fr 1.2fr 0.55fr 0.55fr 0.75fr;
+}
+
+.tws-workload-col-head{
+  text-align: center;
+}
+
+.tws-workload-action-cell{
+  justify-content: center;
+}
+
+.tws-workload-action-cell form{
+  display: inline-flex;
+}
+
+.pc-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
 }
 
 .tws-guidelines{

@@ -5,7 +5,7 @@
 
 const VALID_TRANSITIONS = {
   "Draft":                      ["Sent to Faculty", "Sent to Dean"],
-  "Sent to Faculty":            ["Sent to Dean"],
+  "Sent to Faculty":            ["Sent to Dean", "Returned to Program Chair"],
   "Sent to Dean":               ["Approved", "Rejected", "Returned to Program Chair"],
   "Approved":                   ["Archived"],
   "Rejected":                   ["Draft"],

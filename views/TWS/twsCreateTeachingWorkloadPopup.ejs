@@ -34,32 +34,45 @@
       </div>
 
       <!-- SUBJECT TABLE -->
-      <div class="tws-table">
-        <div class="tws-row tws-head">
+      <div class="tws-table tws-workload-table">
+        <div class="tws-row tws-head tws-workload-row">
           <div>Course Code</div>
           <div>Course Title</div>
           <div>Units</div>
-          <div>Actions</div>
+          <div class="tws-workload-col-head">Add</div>
+          <div class="tws-workload-col-head">Remove</div>
         </div>
 
         <% (subjects || []).forEach(s => { 
             const alreadyAdded = (tws.createdWorkload || []).some(x => x.code === s.code);
         %>
-          <div class="tws-row">
+          <div class="tws-row tws-workload-row">
             <div><%= s.code %></div>
             <div><%= s.title %></div>
             <div><%= Number(s.units).toFixed(2) %></div>
 
-            <div class="tws-btns">
+            <div class="tws-btns tws-workload-action-cell">
               <button
                 class="tws-btn-white"
                 type="button"
                 <%= alreadyAdded ? "disabled" : "" %>
                 onclick="openModal('<%= s.code %>', '<%= s.title.replace(/'/g, "\\'") %>', '<%= Number(s.units).toFixed(2) %>')"
-                style="<%= alreadyAdded ? 'opacity:.55; cursor:not-allowed;' : '' %>"
               >
                 <%= alreadyAdded ? "Added" : "Add" %>
               </button>
+            </div>
+
+            <div class="tws-btns tws-workload-action-cell">
+              <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/remove" style="display:inline;" onsubmit="return confirm('Remove this subject from the workload?');">
+                <input type="hidden" name="code" value="<%= s.code %>" />
+                <button
+                  class="tws-btn-white tws-btn-danger"
+                  type="submit"
+                  <%= alreadyAdded ? "" : "disabled" %>
+                >
+                  Remove
+                </button>
+              </form>
             </div>
           </div>
         <% }) %>

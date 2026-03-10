@@ -43,12 +43,21 @@
             </div>
           <% } %>
 
+          <%
+            function formatDatePH(value) {
+              var date = value ? new Date(value) : new Date();
+              if (isNaN(date.getTime())) return "—";
+              return date.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                timeZone: "Asia/Manila",
+              });
+            }
+          %>
+
           <% (list || []).forEach(function(t) {
-               var d   = new Date(t.createdAt || Date.now());
-               var mm  = String(d.getMonth() + 1).padStart(2, '0');
-               var dd  = String(d.getDate()).padStart(2, '0');
-               var yy  = d.getFullYear();
-               var dateStr = mm + '/' + dd + '/' + yy;
+               var dateStr = formatDatePH(t.createdAt);
 
                var st = (t.status || 'Draft').toLowerCase();
                var statusLabel = t.status || 'Draft';
@@ -61,8 +70,8 @@
                var canSignNow = st === 'sent to faculty';
           %>
             <div class="trow">
-              <div><%= (t.faculty && t.faculty.acadYear) ? t.faculty.acadYear : '—' %></div>
-              <div><%= (t.faculty && t.faculty.term) ? t.faculty.term : '—' %></div>
+              <div><%= (t.faculty && t.faculty.acadYear) ? t.faculty.acadYear : (t.schoolYear || '—') %></div>
+              <div><%= (t.faculty && t.faculty.term) ? t.faculty.term : (t.term || '—') %></div>
               <div><%= dateStr %></div>
               <div>
                 <span class="status-badge <%= badge %>"><%= statusLabel %></span>
@@ -139,8 +148,8 @@
     (function () {
       var el = document.getElementById('sigDate');
       if (el) {
-        var opts = { year: 'numeric', month: 'long', day: 'numeric' };
-        el.textContent = new Date().toLocaleDateString('en-US', opts);
+        var opts = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' };
+        el.textContent = new Date().toLocaleDateString('en-US', opts) + ' (PHT)';
       }
     })();
   </script>
