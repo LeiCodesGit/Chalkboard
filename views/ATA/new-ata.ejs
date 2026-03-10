@@ -123,6 +123,20 @@
 
                     <div class="form-row">
                         <div class="form-label">EMPLOYMENT STATUS:</div>
+                        <div class="form-field">
+                            <select class="form-input" id="employmentStatus" style="background-color: rgba(255,255,255,0.1); color: white;">
+                                <option value="" disabled selected>Select Status...</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Probationary">Probationary</option>
+                                <option value="Fixed-Term">Fixed-Term</option>
+                                <option value="Contractual">Contractual</option>
+                                <option value="Guest Lecturer">Guest Lecturer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">EMPLOYMENT TYPE:</div>
                         <div class="form-field radio-group">
                             <label class="radio-label">
                                 <input type="radio" name="employment" value="Full-Time" id="radioFullTime"> FULL TIME
@@ -149,8 +163,7 @@
                         <div class="form-row units-row">
                             <div class="form-label"></div>
                             <div class="form-field units-field">
-                                <input type="text" class="form-input units-input" placeholder="" id="teachingUnits1">
-                                <input type="text" class="form-input units-input" placeholder="" id="teachingUnits2">
+                                <input type="number" class="form-input units-input" placeholder="Enter total units..." id="teachingUnits1">
                             </div>
                         </div>
                     </div>
@@ -479,6 +492,9 @@
                     <div class="remedial-note">
                         Note: Remedial units are not included in bonus/summer pay
                     </div>
+                    <div id="remedialErrorDiv" style="color: #dc3545; font-weight: bold; margin-top: 15px; padding: 10px; border: 1px solid #dc3545; border-radius: 5px; background: rgba(220, 53, 69, 0.1); display: none;">
+                        <i class="fas fa-exclamation-triangle"></i> ERROR: Maximum limit of 6 effective units exceeded. Please reduce your remedial load.
+                    </div>
 
                 </div>
             </div>
@@ -495,42 +511,43 @@
                             <div class="summary-col effective">EFFECTIVE UNITS</div>
                         </div>
 
+                        <div class="summary-row" id="sumRowA" style="display: none;">
+                            <div class="summary-col section">(A) Admin Served Units</div>
+                            <div class="summary-col units">0</div>
+                            <div class="summary-col effective">N/A</div>
+                        </div>
+
                         <div class="summary-row">
                             <div class="summary-col section">(B) Courses Within College</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
+                            <div class="summary-col units" id="sumUnitsB">0</div>
+                            <div class="summary-col effective" id="sumEffB">0</div>
                         </div>
 
                         <div class="summary-row">
                             <div class="summary-col section">(C) Courses Other Colleges</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
+                            <div class="summary-col units" id="sumUnitsC">0</div>
+                            <div class="summary-col effective" id="sumEffC">0</div>
                         </div>
 
-                        <div class="summary-row">
+                        <div class="summary-row" id="sumRowD" style="display: none;">
                             <div class="summary-col section">(D) Administrative Work</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-
-                        <div class="summary-row">
-                            <div class="summary-col section">(E) Practicum Advising</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-
-                        <div class="summary-row">
-                            <div class="summary-col section">(G) Remedial Modules</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
+                            <div class="summary-col units" id="sumUnitsD">0</div>
+                            <div class="summary-col effective" id="sumEffD">0</div>
                         </div>
 
                         <div class="summary-total">
-                            <div class="summary-col section">TOTAL</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
+                            <div class="summary-col section">TOTAL REGULAR LOAD</div>
+                            <div class="summary-col units" id="grandTotalUnits">0</div>
+                            <div class="summary-col effective" id="grandTotalEff">0</div>
                         </div>
-                    </div> <div class="pdf-preview-row" style="display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px;">
+
+                        <div class="summary-row" style="border-top: 2px solid #444; margin-top: 10px; padding-top: 10px;">
+                            <div class="summary-col section">(G) Remedial Modules</div>
+                            <div class="summary-col units" id="sumUnitsG">0</div>
+                            <div class="summary-col effective" id="sumEffG">0</div>
+                        </div>
+                    </div>
+                    <div class="pdf-preview-row" style="display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px;">
                         <button type="button" id="previewPdfBtn" class="form-btn secondary-btn" style="background-color: #17a2b8; color: white; display: flex; align-items: center; gap: 8px; padding: 10px 20px;">
                             <i class="fas fa-file-pdf"></i> View Form (PDF Preview)
                         </button>
@@ -572,7 +589,7 @@
                     <div class="justification-row">
                         <div class="justification-label">Justification for overload (if applicable):</div>
                         <div class="justification-field">
-                            <textarea class="form-input justification-input" rows="3" placeholder="Enter justification..."></textarea>
+                            <textarea class="form-input justification-input" id="justificationText" name="justification" rows="3" placeholder="Enter justification..."></textarea>
                         </div>
                     </div>
 

@@ -1,5 +1,5 @@
 import ATAForm from '../models/ATA/ATAForm.js';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFName } from 'pdf-lib';
 import { mainDB } from '../database/mongo-dbconnect.js';
 import fs from 'fs';
 import path from 'path';
@@ -12,21 +12,20 @@ const __dirname = path.dirname(__filename);
 // 🧠 1. THE MATH ENGINE (Restored Mapúa Logic)
 // ==========================================
 const calculateUnits = (formData) => {
-    let totalTeachingUnits = 0;
-    
     const sumUnits = (array) => {
         if (!array || !array.length) return 0;
         return array.reduce((sum, item) => sum + (Number(item.units) || 0), 0);
     };
 
-    totalTeachingUnits += Number(formData.sectionA_AdminUnits) || 0; 
-    totalTeachingUnits += sumUnits(formData.sectionB_WithinCollege);
-    totalTeachingUnits += sumUnits(formData.sectionC_OtherCollege);
-    totalTeachingUnits += sumUnits(formData.sectionD_AdminWork);
+    // Calculate individual sums
+    const sumB = sumUnits(formData.sectionB_WithinCollege);
+    const sumC = sumUnits(formData.sectionC_OtherCollege);
+    const sumD = sumUnits(formData.sectionD_AdminWork);
 
-    let totalEffectiveUnits = totalTeachingUnits; 
+    // Rule #7 strictly adds B + C + D (Section A is excluded)
+    const totalTeachingUnits = sumB + sumC + sumD; 
+    const totalEffectiveUnits = totalTeachingUnits; 
 
-    // 🚨 RESTORED: Mapúa Section G Remedial Formula (students/40)
     let totalRemedialUnits = 0;
     if (formData.sectionG_Remedial && formData.sectionG_Remedial.length > 0) {
         for (const course of formData.sectionG_Remedial) {
@@ -42,28 +41,25 @@ const calculateUnits = (formData) => {
         }
     }
     
-    return { totalTeachingUnits, totalEffectiveUnits, totalRemedialUnits };
+    return { sumB, sumC, sumD, totalTeachingUnits, totalEffectiveUnits, totalRemedialUnits };
 };
+
 // ==========================================
 // 📄 RENDER NEW ATA FORM (With Coordinators)
 // ==========================================
 export const renderNewATA = async (req, res) => {
     try {
-        // 1. QUERY THE DATABASE FOR ALL PRACTICUM COORDINATORS
-        // This looks for anyone where you set isPracticumCoordinator to true in MongoDB!
+        const User = mainDB.model('User');
         const coordinators = await User.find({ isPracticumCoordinator: true });
-        
-        // 2. EXTRACT THEIR FULL NAMES
-        // Combines firstName and lastName into a clean array of strings
         const coordinatorNames = coordinators.map(c => `${c.firstName} ${c.lastName}`.trim());
 
-        // 3. RENDER THE PAGE AND PASS THE DATA
         res.render('ATA/new-ata', { 
             user: req.user, 
             role: req.user.role, 
             employmentType: req.user.employmentType,
             isPracticumCoordinator: req.user.isPracticumCoordinator,
-            coordinators: coordinatorNames // 👈 Passes the names to the EJS dropdown!
+            coordinators: coordinatorNames,
+            currentPageCategory: 'ata'
         });
     } catch (error) {
         console.error("Error loading new ATA page:", error);
@@ -72,87 +68,13 @@ export const renderNewATA = async (req, res) => {
 };
 
 // ==========================================
-// 📝 2. CREATE / SUBMIT ATA 
+// 📝 2. CREATE / SUBMIT ATA (Bulletproof Version)
 // ==========================================
 export const submitATA = async (req, res) => { 
     try {
         const formData = req.body; 
         
-        // 👇 The Ultimate ID Catcher: It tries the MongoDB _id first, then id, then the employeeId!
-        const userID = req.user._id || req.user.id || req.user.employeeId;
-
-        if (!userID) {
-            return res.status(400).json({ error: "Could not detect your User ID from the session." });
-        }
-
-        const totals = calculateUnits(formData);
-
-        // 🚨 RESTORED: ENFORCE MAX 6 REMEDIAL UNITS RULE
-        if (totals.totalRemedialUnits > 6) {
-            return res.status(400).json({ 
-                error: `Remedial limit exceeded. You have ${totals.totalRemedialUnits.toFixed(2)} effective units, max is 6.` 
-            });
-        }
-
-        let newStatus = 'DRAFT';
-        
-        if (formData.action === 'SUBMIT') {
-            const routingRole = req.user.role; 
-            const hasPracticum = formData.sectionE_Practicum && formData.sectionE_Practicum.length > 0;
-            // 🧠 HIERARCHY ROUTING LOGIC
-            if (routingRole === 'Dean') {
-                newStatus = 'PENDING_VPAA'; 
-            } 
-            else if (routingRole === 'Program-Chair') {
-                newStatus = hasPracticum ? 'PENDING_PRACTICUM' : 'PENDING_DEAN';
-            } 
-            else {
-                newStatus = 'PENDING_CHAIR';
-            }
-        }
-
-        const newForm = new ATAForm({
-            userID: userID,
-            facultyName: formData.facultyName, 
-            position: formData.position,
-            college: formData.college,
-            employmentType: formData.employmentType,
-            sectionA_AdminUnits: formData.sectionA_AdminUnits || 0,
-            address: formData.address,
-            term: formData.term,
-            academicYear: formData.academicYear,
-            
-            sectionB_WithinCollege: formData.sectionB_WithinCollege,
-            sectionC_OtherCollege: formData.sectionC_OtherCollege,
-            sectionD_AdminWork: formData.sectionD_AdminWork,
-            sectionE_Practicum: formData.sectionE_Practicum,
-            sectionF_OutsideEmployment: formData.sectionF_OutsideEmployment,
-            sectionG_Remedial: formData.sectionG_Remedial,
-
-            totalTeachingUnits: totals.totalTeachingUnits,
-            totalEffectiveUnits: totals.totalEffectiveUnits,
-            totalRemedialUnits: totals.totalRemedialUnits,
-            status: newStatus
-        });
-
-        await newForm.save(); 
-        res.status(201).json({ message: "ATA Form saved successfully!", data: newForm });
-
-    } catch (error) {
-        console.error("Error submitting ATA:", error);
-        res.status(500).json({ error: "Failed to submit ATA Form" });
-    }
-};
-
-// ==========================================
-// 🚦 3. ENDORSE / APPROVE / RETURN (Live DB Fetch Fix)
-// ==========================================
-export const approveATA = async (req, res) => {
-    try {
-        const { action, remarks } = req.body;
-        const formId = req.params.id;
-        
-        // 👇 1. GRAB THE ID FROM THE SESSION
+        // 1. Foolproof Session ID Grabber
         let sessionUserID = "unknown";
         if (req.user) {
             if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
@@ -161,13 +83,108 @@ export const approveATA = async (req, res) => {
             else if (req.user.employeeId) sessionUserID = req.user.employeeId;
         }
 
-        // 👇 2. FETCH THE LIVE USER DATA FROM MONGODB
+        // 2. Fetch LIVE User Data to guarantee Admin Roles & Names exist
+        const User = mainDB.model('User');
+        const liveUser = await User.findById(sessionUserID);
+        if (!liveUser) return res.status(404).json({ error: "User not found in database." });
+
+        const totals = calculateUnits(formData);
+
+        if (totals.totalRemedialUnits > 6) {
+            return res.status(400).json({ error: `Remedial limit exceeded. You have ${totals.totalRemedialUnits.toFixed(2)} units.` });
+        }
+
+        let newStatus = 'DRAFT';
+        let initialHistory = []; 
+        
+        if (formData.action === 'SUBMIT') {
+            const routingRole = liveUser.role || "Professor"; 
+            const hasPracticum = formData.sectionE_Practicum && formData.sectionE_Practicum.length > 0;
+            const adminFullName = `${liveUser.firstName || ''} ${liveUser.lastName || ''}`.trim();
+            
+            // 🧠 MAGIC ADMIN AUTO-ENDORSE LOGIC
+            if (routingRole === 'Dean') {
+                newStatus = 'PENDING_VPAA'; 
+                initialHistory.push({
+                    approverRole: 'Dean',
+                    approverName: adminFullName,
+                    approvalStatus: 'APPROVED',
+                    remarks: formData.justification || "Approved by Dean upon submission.",
+                    date: Date.now()
+                });
+            } 
+            else if (routingRole === 'Program-Chair') {
+                newStatus = hasPracticum ? 'PENDING_PRACTICUM' : 'PENDING_DEAN';
+                initialHistory.push({
+                    approverRole: 'Program-Chair',
+                    approverName: adminFullName,
+                    approvalStatus: 'ENDORSED',
+                    remarks: formData.justification || "Endorsed by Program Chair upon submission.",
+                    date: Date.now()
+                });
+            } 
+            else {
+                newStatus = 'PENDING_CHAIR'; // Normal Faculty
+            }
+        }
+
+        const newForm = new ATAForm({
+            userID: sessionUserID, 
+            facultyName: formData.facultyName, 
+            position: formData.position,
+            college: formData.college,
+            employmentStatus: formData.employmentStatus,
+            employmentType: formData.employmentType,
+            sectionA_AdminUnits: formData.sectionA_AdminUnits || 0,
+            address: formData.address,
+            term: formData.term || "2nd Term 2025-2026", 
+            academicYear: formData.academicYear || "2025-2026",
+            
+            sectionB_WithinCollege: formData.sectionB_WithinCollege || [],
+            sectionC_OtherCollege: formData.sectionC_OtherCollege || [],
+            sectionD_AdminWork: formData.sectionD_AdminWork || [],
+            sectionE_Practicum: formData.sectionE_Practicum || [],
+            sectionF_OutsideEmployment: formData.sectionF_OutsideEmployment || [],
+            sectionG_Remedial: formData.sectionG_Remedial || [],
+
+            totalTeachingUnits: totals.totalTeachingUnits,
+            totalEffectiveUnits: totals.totalEffectiveUnits,
+            totalRemedialUnits: totals.totalRemedialUnits,
+            status: newStatus,
+            approvalHistory: initialHistory 
+        });
+
+        await newForm.save(); 
+        res.status(201).json({ message: "ATA Form saved successfully!", data: newForm });
+
+    } catch (error) {
+        console.error("Error submitting ATA:", error);
+        // 👇 Diagnostic fix: Tells the UI EXACTLY what failed in the database!
+        res.status(500).json({ error: "Failed to submit ATA Form: " + error.message });
+    }
+};
+
+// ==========================================
+// 🚦 3. ENDORSE / APPROVE / RETURN 
+// ==========================================
+export const approveATA = async (req, res) => {
+    try {
+        const { action, remarks } = req.body;
+        const formId = req.params.id;
+        
+        let sessionUserID = "unknown";
+        if (req.user) {
+            if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
+            else if (req.user._id) sessionUserID = req.user._id.toString();
+            else if (req.user.id) sessionUserID = req.user.id;
+            else if (req.user.employeeId) sessionUserID = req.user.employeeId;
+        }
+
         const User = mainDB.model('User');
         const liveUser = await User.findById(sessionUserID);
         
         if (!liveUser) return res.status(404).json({ error: "User not found." });
 
-        // Now we use the completely fresh MongoDB data!
         const primaryRole = liveUser.role; 
         const isPracticumCoord = liveUser.isPracticumCoordinator === true;
         const adminFullName = `${liveUser.firstName || ''} ${liveUser.lastName || ''}`.trim();
@@ -179,7 +196,6 @@ export const approveATA = async (req, res) => {
         let historyStatus = '';
         let appliedRole = primaryRole; 
 
-        // ⏪ DRAFT RECOVERY & REMARKS LOGIC
         if (action === 'RETURN') {
             if (!remarks || remarks.trim() === '') {
                 return res.status(400).json({ error: "Remarks are strictly required when returning a form." });
@@ -187,7 +203,6 @@ export const approveATA = async (req, res) => {
             newStatus = 'DRAFT';
             historyStatus = 'RETURNED';
         } 
-        // ⏩ FORWARD PROGRESSION
         else {
             switch (form.status) {
                 case 'PENDING_CHAIR':
@@ -199,11 +214,10 @@ export const approveATA = async (req, res) => {
                     break;
 
                 case 'PENDING_PRACTICUM':
-                    // 👇 Because we use liveUser, this boolean will perfectly read "true"!
                     if ((primaryRole === 'Practicum-Coordinator' || isPracticumCoord) && action === 'VALIDATE') {
                         newStatus = 'PENDING_DEAN';
                         historyStatus = 'VALIDATED';
-                        appliedRole = 'Practicum-Coordinator'; // Force the history log to show she acted as Coordinator
+                        appliedRole = 'Practicum-Coordinator'; 
                     } else return res.status(403).json({ error: "Invalid action for Practicum Coordinator." });
                     break;
 
@@ -216,12 +230,11 @@ export const approveATA = async (req, res) => {
 
                 case 'PENDING_VPAA':
                     if (primaryRole === 'VPAA' && action === 'NOTE') {
-                        newStatus = 'PENDING_HR'; // 👈 Sends it to HR!
+                        newStatus = 'PENDING_HR'; 
                         historyStatus = 'NOTED';
                     } else return res.status(403).json({ error: "Invalid action for VPAA." });
                     break;
 
-                // 👇 NEW: HR receives it, notes it, and finalizes the whole process!
                 case 'PENDING_HR':
                     if (['HR', 'HRMO'].includes(primaryRole) && action === 'NOTE') {
                         newStatus = 'FINALIZED'; 
@@ -251,12 +264,12 @@ export const approveATA = async (req, res) => {
         res.status(500).json({ error: error.message }); 
     }
 };
+
 // ==========================================
-// 📥 4. GET PENDING APPROVALS (Live DB Fetch Fix)
+// 📥 4. GET PENDING APPROVALS 
 // ==========================================
 export const getPendingApprovals = async (req, res) => {
     try {
-        // 1. GET THE USER ID FROM SESSION
         let sessionUserID = "unknown";
         if (req.user) {
             if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
@@ -265,24 +278,16 @@ export const getPendingApprovals = async (req, res) => {
             else if (req.user.employeeId) sessionUserID = req.user.employeeId;
         }
 
-        // 👇 THE FIX: Grab the compiled database engine for Users!
         const User = mainDB.model('User');
-        
-        // Now it can search perfectly!
         const liveUser = await User.findById(sessionUserID);
         
         if (!liveUser) {
             return res.status(404).send("User not found in database.");
         }
 
-        // Extract properties directly from the fresh MongoDB document
         const userRole = liveUser.role || "Professor"; 
         const userProgram = liveUser.program || liveUser.department || "CpE"; 
-        
-        // Build the exact name to perfectly match the dropdown (e.g., "Marites Tabanao")
         const fullName = `${liveUser.firstName || ''} ${liveUser.lastName || ''}`.trim();
-        
-        // Grab the boolean directly from the live database document
         const isPracticumCoordinator = liveUser.isPracticumCoordinator === true;
 
         let queryConditions = [];
@@ -299,19 +304,14 @@ export const getPendingApprovals = async (req, res) => {
         if (userRole === 'Dean') {
             queryConditions.push({ status: 'PENDING_DEAN' });
         } 
-        
-        // 👇 STRICT RULE 1: VPAA Inbox ONLY shows Pending VPAA forms
         if (userRole === 'VPAA') {
             queryConditions.push({ status: 'PENDING_VPAA' }); 
         }
-
-        // 👇 STRICT RULE 2: HR Inbox ONLY shows Pending HR forms
         if (userRole === 'HR' || userRole === 'HRMO') {
             queryConditions.push({ status: 'PENDING_HR' }); 
         }
 
         let query = {};
-        
         if (queryConditions.length > 1) {
             query = { $or: queryConditions };
         } else if (queryConditions.length === 1) {
@@ -335,6 +335,7 @@ export const getPendingApprovals = async (req, res) => {
         res.status(500).send("Failed to load pending forms.");
     }
 };
+
 // ==========================================
 // 📚 5.1 GET ADMIN HISTORY (The Archive)
 // ==========================================
@@ -359,7 +360,6 @@ export const getAdminHistory = async (req, res) => {
 
         let queryConditions = [];
 
-        // 1. Chairs & Deans see forms they personally signed
         if (userRole === 'Program-Chair') {
             queryConditions.push({ college: userProgram, 'approvalHistory.approverRole': 'Program-Chair' });
         }
@@ -372,8 +372,6 @@ export const getAdminHistory = async (req, res) => {
         if (userRole === 'Dean') {
             queryConditions.push({ 'approvalHistory.approverRole': 'Dean' });
         }
-
-        // 👇 2. THE FIX: VPAA sees anything they signed, OR anything that moved past them to HR!
         if (userRole === 'VPAA') {
             queryConditions.push({
                 $or: [
@@ -382,8 +380,6 @@ export const getAdminHistory = async (req, res) => {
                 ]
             });
         }
-
-        // 👇 3. THE FIX: HR sees anything they signed, OR anything that is fully Finalized!
         if (userRole === 'HR' || userRole === 'HRMO') {
             queryConditions.push({
                 $or: [
@@ -399,10 +395,9 @@ export const getAdminHistory = async (req, res) => {
         } else if (queryConditions.length === 1) {
             query = queryConditions[0];
         } else {
-            query = { _id: null }; // Failsafe if user has no roles
+            query = { _id: null }; 
         }
 
-        // Sort so the most recently touched forms appear at the very top!
         const approvedForms = await ATAForm.find(query).sort({ updatedAt: -1 });
 
         res.render('ATA/pending-approvals', {
@@ -419,29 +414,33 @@ export const getAdminHistory = async (req, res) => {
         res.status(500).send("Failed to load history.");
     }
 };
-// 📄 5.2 VIEW SPECIFIC FORM (Read-Only)
+
+// 📄 5.2 VIEW SPECIFIC FORM (Read-Only with Smart Overload Check)
 export const viewATAForm = async (req, res) => {
     try {
         const form = await ATAForm.findById(req.params.id);
         if (!form) return res.status(404).send("Form not found");
         
-        // 👇 Check if Section E has data
         const hasPracticum = form.sectionE_Practicum && form.sectionE_Practicum.length > 0;
         
+        // 👇 NEW: Pass the total load and employment type so the UI can detect overloads!
         res.render('ATA/review-ata', { 
             form: form, 
             role: req.user.role,
             user: req.user,              
             currentPageCategory: 'ata',
-            hasPracticum: hasPracticum
+            hasPracticum: hasPracticum,
+            totalRegularLoad: form.totalEffectiveUnits || 0,
+            employmentType: form.employmentType || "Full-Time"
         });
     } catch (error) {
         console.error("Error fetching form:", error);
         res.status(500).send("Failed to load form.");
     }
 };
+
 // ==========================================
-// 🖨️ 6. GENERATE FILLED PDF (FINAL COMPLETE VERSION)
+// 🖨️ 6. GENERATE FILLED PDF (FINAL VERSION)
 // ==========================================
 export const viewAtaPdf = async (req, res) => {
     try {
@@ -453,27 +452,35 @@ export const viewAtaPdf = async (req, res) => {
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
         const pdfForm = pdfDoc.getForm();
 
-        // Helper function to safely fill a text field AND set the font size
         const fillText = (fieldName, value) => {
             try { 
-                if (value) {
+                if (value !== undefined && value !== null) {
                     const field = pdfForm.getTextField(fieldName);
                     field.setText(value.toString());
                     field.setFontSize(7); 
                 } 
-            } 
-            catch (err) { /* Ignore if field doesn't exist */ }
+            } catch (err) {}
         };
 
-        // ==========================================
-        // 1. TOP SECTION (Personal Details)
-        // ==========================================
+        const getSum = (arr) => {
+            if(!arr || !arr.length) return 0;
+            return arr.reduce((sum, item) => sum + (Number(item.units) || 0), 0);
+        };
+
         fillText('text_1tvhi', form.facultyName);
         fillText('text_5jvwx', form.position);
         fillText('COLLEGE', form.college);
-        fillText('text_2beim', form.employmentType);
+        
+        // 👇 FIXED: Changed formData to form
+        fillText('text_2beim', form.employmentStatus);
+        
         fillText('text_4wesx', form.address);
-        fillText('text_36xvyn', form.sectionA_AdminUnits); 
+        
+        // 👇 FIXED: Changed formData to form
+        const adminUnits = Number(form.sectionA_AdminUnits) || 0;
+        if (adminUnits > 0) {
+            fillText('text_36xvyn', adminUnits); 
+        }
         
         fillText('TERM', form.term.split(' ')[0]); 
         try { pdfForm.getDropdown('dropdown_87etxp').select(form.academicYear); } 
@@ -484,158 +491,170 @@ export const viewAtaPdf = async (req, res) => {
             if (form.employmentType === 'Part-Time') pdfForm.getCheckBox('checkbox_8omuk').check();
         } catch (e) {}
 
-        // ==========================================
-        // 2. THE SCALABLE TABLE LOOPS
-        // ==========================================
-        
-        // (B) COURSES WITHIN ASSIGNED COLLEGES
-        const sectionB_Cols = {
-            course:  ['text_10kmln', 'text_11ywye', 'text_12funt', 'text_13cbrv', 'text_14oddx', 'text_15vwye', 'text_16zhiz', 'text_17arqj', 'text_18yeyt', 'text_19usez'],
+        const safeForEach = (array, mappingCols, limit) => {
+            if (!array || !Array.isArray(array)) return;
+            array.forEach((row, i) => {
+                if (i < limit) {
+                    Object.keys(mappingCols).forEach(key => fillText(mappingCols[key][i], row[key]));
+                }
+            });
+        };
+
+        safeForEach(form.sectionB_WithinCollege, {
+            courseCode: ['text_10kmln', 'text_11ywye', 'text_12funt', 'text_13cbrv', 'text_14oddx', 'text_15vwye', 'text_16zhiz', 'text_17arqj', 'text_18yeyt', 'text_19usez'],
             section: ['text_60olqb', 'text_61lnlx', 'text_62qqva', 'text_63scfz', 'text_64yecq', 'text_65guog', 'text_66qocy', 'text_67vs', 'text_68hldf', 'text_69pugt'],
             units:   ['text_70cmcr', 'text_71yakp', 'text_72gwrs', 'text_73lgtb', 'text_74hsiw', 'text_75oeti', 'text_76gklh', 'text_88yf',  'text_89wumx', 'text_90gzrv'],
-            date:    ['text_91nlsp', 'text_92akoo', 'text_93paai', 'text_95sxfz', 'text_96erde', 'text_97xhu',  'text_98nlys', 'text_99teyw', 'text_100vjjp','text_101dvuo']
-        };
-        form.sectionB_WithinCollege.forEach((row, i) => {
-            if (i < 10) { 
-                fillText(sectionB_Cols.course[i], row.courseCode);
-                fillText(sectionB_Cols.section[i], row.section);
-                fillText(sectionB_Cols.units[i], row.units);
-                fillText(sectionB_Cols.date[i], row.effectiveDate);
-            }
-        });
-        fillText('text_57cmig', form.totalTeachingUnits); 
+            effectiveDate: ['text_91nlsp', 'text_92akoo', 'text_93paai', 'text_95sxfz', 'text_96erde', 'text_97xhu',  'text_98nlys', 'text_99teyw', 'text_100vjjp','text_101dvuo']
+        }, 10);
+        fillText('text_57cmig', getSum(form.sectionB_WithinCollege)); 
 
-        // (C) COURSES FROM OTHER COLLEGES
-        const sectionC_Cols = {
-            course:  ['text_47rebo', 'text_48qzlp', 'text_49jhlb', 'text_50tsch', 'text_51hunk', 'text_52yzee', 'text_53upjj', 'text_54prkk', 'text_55qvgs', 'text_56krii'],
+        safeForEach(form.sectionC_OtherCollege, {
+            courseCode: ['text_47rebo', 'text_48qzlp', 'text_49jhlb', 'text_50tsch', 'text_51hunk', 'text_52yzee', 'text_53upjj', 'text_54prkk', 'text_55qvgs', 'text_56krii'],
             section: ['text_102lvno','text_103vhsh','text_104slei','text_105slnh','text_106ybso','text_107vcxk','text_108akar','text_109bggl','text_110qjji','text_111lbn'],
             units:   ['text_112udtm','text_113dznl','text_114ls',  'text_115lgxa','text_116faud','text_117jugg','text_118mlep','text_119nrkb','text_120kvok','text_121xhpk'],
-            date:    ['text_122aymw','text_123wfov','text_124mqbu','text_125brsh','text_126soxx','text_127fsch','text_128nioh','text_129bo',  'text_130bcsd','text_131uwop']
-        };
-        form.sectionC_OtherCollege.forEach((row, i) => {
-            if (i < 10) {
-                fillText(sectionC_Cols.course[i], row.courseCode);
-                fillText(sectionC_Cols.section[i], row.section);
-                fillText(sectionC_Cols.units[i], row.units);
-                fillText(sectionC_Cols.date[i], row.effectiveDate);
-            }
-        });
-        fillText('text_58ltsz', form.totalEffectiveUnits); 
+            effectiveDate: ['text_122aymw','text_123wfov','text_124mqbu','text_125brsh','text_126soxx','text_127fsch','text_128nioh','text_129bo',  'text_130bcsd','text_131uwop']
+        }, 10);
+        fillText('text_58ltsz', getSum(form.sectionC_OtherCollege)); 
+        fillText('text_59oaji', form.totalEffectiveUnits); 
 
-        // (D) ADMINISTRATIVE / RESEARCH WORK
-        const sectionD_Cols = {
-            work:  ['text_20guwb', 'text_21mcrd', 'text_22cvxd', 'text_23wmjb', 'text_24klgl', 'text_25qlo',  'text_26rjfo', 'text_27yhai', 'text_28zdmg', 'text_29pzoo'],
+        safeForEach(form.sectionD_AdminWork, {
+            workDescription: ['text_20guwb', 'text_21mcrd', 'text_22cvxd', 'text_23wmjb', 'text_24klgl', 'text_25qlo',  'text_26rjfo', 'text_27yhai', 'text_28zdmg', 'text_29pzoo'],
             units: ['text_145jwbs','text_146wauh','text_147ehza','text_148bmno','text_149doip','text_150vtzu','text_151bojp','text_152hqsk','text_153hzhi','text_154rarc'],
-            date:  ['text_156wiqa','text_157mlzt','text_158huzn','text_159evta','text_160kjvt','text_161vlsi','text_162taez','text_163jzvw','text_164xnnl','text_165tghd']
-        };
-        form.sectionD_AdminWork.forEach((row, i) => {
-            if (i < 10) {
-                fillText(sectionD_Cols.work[i], row.workDescription);
-                fillText(sectionD_Cols.units[i], row.units);
-                fillText(sectionD_Cols.date[i], row.effectiveDate);
-            }
-        });
+            effectiveDate: ['text_156wiqa','text_157mlzt','text_158huzn','text_159evta','text_160kjvt','text_161vlsi','text_162taez','text_163jzvw','text_164xnnl','text_165tghd']
+        }, 10);
 
-        // (E) PRACTICUM ADVISING
-        const sectionE_Cols = {
-            course:      ['text_33orrs', 'text_34wipa', 'text_35oa',   'text_40ebhe', 'text_41pvju', 'text_42sfft', 'text_43aaxp', 'text_44pkqs', 'text_45oyci', 'text_46sba'],
-            students:    ['text_166lylu','text_167pzwu','text_168petn','text_169nzbj','text_170iphf','text_171zthi','text_172uhtp','text_173kvtu','text_174iafc','text_175wnlh'],
+        safeForEach(form.sectionE_Practicum, {
+            courseCode: ['text_33orrs', 'text_34wipa', 'text_35oa',   'text_40ebhe', 'text_41pvju', 'text_42sfft', 'text_43aaxp', 'text_44pkqs', 'text_45oyci', 'text_46sba'],
+            numberOfStudents: ['text_166lylu','text_167pzwu','text_168petn','text_169nzbj','text_170iphf','text_171zthi','text_172uhtp','text_173kvtu','text_174iafc','text_175wnlh'],
             coordinator: ['text_176plma','text_177kwyx','text_178bleo','text_179hjnh','text_180znjo','text_181jcgm','text_182hixs','text_183eow', 'text_184ccue','text_185nzmw']
-        };
-        form.sectionE_Practicum.forEach((row, i) => {
-            if (i < 10) {
-                fillText(sectionE_Cols.course[i], row.courseCode);
-                fillText(sectionE_Cols.students[i], row.numberOfStudents);
-                fillText(sectionE_Cols.coordinator[i], row.coordinator);
-            }
-        });
+        }, 10);
 
-        // 👇 NEW: (F) EMPLOYMENT OUTSIDE MAPUA MCM
-        const sectionF_Cols = {
-            employer: ['text_204yxyb', 'text_205gtyr', 'text_206ssz'],
-            position: ['text_207zztq', 'text_208zctd', 'text_209lcrw'],
-            course:   ['text_210naxn', 'text_211hmtw', 'text_212xchm'],
-            hours:    ['text_213qeyx', 'text_214cslh', 'text_215fzzw']
-        };
-        form.sectionF_OutsideEmployment.forEach((row, i) => {
-            if (i < 3) { // Section F only has 3 rows in the PDF!
-                fillText(sectionF_Cols.employer[i], row.employer);
-                fillText(sectionF_Cols.position[i], row.position);
-                fillText(sectionF_Cols.course[i], row.courseOrUnits);
-                fillText(sectionF_Cols.hours[i], row.hoursPerWeek);
-            }
-        });
+        safeForEach(form.sectionF_OutsideEmployment, {
+            employer: ['text_30zgdb', 'text_31svix', 'text_32swnc'],
+            position: ['text_132vcas', 'text_133fnhe', 'text_134zdas'],
+            courseOrUnits: ['text_186xbfm', 'text_187ovcx', 'text_188mvam'],
+            hoursPerWeek: ['text_189wqci', 'text_190bgcl', 'text_191vbow']
+        }, 3);
 
-        // 👇 NEW: (G) REMEDIAL MODULES
         const sectionG_Cols = {
-            courseId: ['text_216nuzb', 'text_217psw', 'text_218nwni', 'text_219qckh', 'text_220gohx'],
-            module:   ['text_221qfye', 'text_222jghp', 'text_223yrcy', 'text_224bmbn', 'text_225xqqd'],
-            section:  ['text_226zoxr', 'text_227kivx', 'text_228cnyy', 'text_229rwwc', 'text_230pntn'],
-            units:    ['text_231hngj', 'text_232zzti', 'text_233rqqk', 'text_234tqso', 'text_235mbtu'],
-            students: ['text_236szcx', 'text_237fvyk', 'text_238tcyf', 'text_239qjld', 'text_240lntt'],
-            type:     ['dropdown_241pzwm', 'dropdown_242uavp', 'dropdown_243vcvz', 'dropdown_244cnyf', 'dropdown_245vvwk']
+            courseId: ['text_192hjls', 'text_193wxqe', 'text_194yhdr', 'text_195fnhw', 'text_196lkcn', 'text_197fbom'],
+            moduleCode: ['text_198qwfc', 'text_199rrkq', 'text_200qtaf', 'text_201kfpr', 'text_202clmr', 'text_203ixre'],
+            section: ['text_204koex', 'text_205fpjg', 'text_206vilo', 'text_207ycmc', 'text_208ct', 'text_209yyje'],
+            units: ['text_210hcgg', 'text_211vjtw', 'text_212aiiv', 'text_213hris', 'text_214rxes', 'text_215glxf'],
+            numberOfStudents: ['text_216libu', 'text_217ppog', 'text_218xytr', 'text_219rsjy', 'text_220nnsl', 'text_221plmo'],
+            effectiveUnits: ['text_223ralg', 'text_224jzoz', 'text_225ywjn', 'text_226dtgn', 'text_227hemq', 'text_228hoxb']
         };
-        form.sectionG_Remedial.forEach((row, i) => {
-            if (i < 5) { // Section G only has 5 rows in the PDF!
+
+        const sectionG = form.sectionG_Remedial || [];
+        sectionG.forEach((row, i) => {
+            if (i < 6) {
                 fillText(sectionG_Cols.courseId[i], row.courseId);
-                fillText(sectionG_Cols.module[i], row.moduleCode);
+                fillText(sectionG_Cols.moduleCode[i], row.moduleCode);
                 fillText(sectionG_Cols.section[i], row.section);
                 fillText(sectionG_Cols.units[i], row.units);
-                fillText(sectionG_Cols.students[i], row.numberOfStudents);
+                fillText(sectionG_Cols.numberOfStudents[i], row.numberOfStudents);
                 
-                // Type is a dropdown on the PDF
-                try {
-                    const drop = pdfForm.getDropdown(sectionG_Cols.type[i]);
-                    if(row.type === 'lecture') drop.select('Lecture');
-                    if(row.type === 'lab') drop.select('Lab');
-                } catch(e) { }
+                let effUnits = (Number(row.units) || 0) * ((Number(row.numberOfStudents) || 0) / 40);
+                if (row.type === 'lab') effUnits *= 2;
+                if (effUnits > 0) fillText(sectionG_Cols.effectiveUnits[i], effUnits.toFixed(2));
             }
         });
-
-        // ==========================================
-        // 3. SIGNATURES & AUDIT TRAIL DATA
-        // ==========================================
         
-        // A. The Faculty Member's Signature
-        fillText('text_186puxz', form.facultyName); // Faculty prints name
-        fillText('text_187swky', new Date(form.createdAt).toLocaleDateString()); // Faculty date
+        fillText('text_222pgqw', form.totalRemedialUnits); 
 
-        // B. Recommending Approval (Chair & Dean)
+        // 3. Official Signatures!
+        const formattedCreationDate = new Date(form.createdAt).toLocaleDateString('en-US');
+        fillText('text_84skhw', `${form.facultyName} | ${formattedCreationDate}`); 
+
         const getSignature = (role) => form.approvalHistory.find(log => log.approverRole === role);
         
         const chairLog = getSignature('Program-Chair');
-        if (chairLog) {
-            fillText('text_192pysd', chairLog.approverName); 
-            fillText('text_193qylu', new Date(chairLog.date).toLocaleDateString());
-            try { pdfForm.getCheckBox('checkbox_191hnhv').check(); } catch(e){} // Overload check
-        }
+        if (chairLog) fillText('text_83xjqp', `${chairLog.approverName} | ${new Date(chairLog.date).toLocaleDateString('en-US')}`);
 
         const deanLog = getSignature('Dean');
-        if (deanLog) {
-            fillText('text_197wtyh', deanLog.approverName);
-            fillText('text_198bqqb', new Date(deanLog.date).toLocaleDateString());
-        }
+        if (deanLog) fillText('text_80trhj', `${deanLog.approverName} | ${new Date(deanLog.date).toLocaleDateString('en-US')}`);
 
-        // C. HRMO / VPAA Section
         const vpaaLog = getSignature('VPAA');
-        if (vpaaLog) {
-            fillText('text_201dcyf', vpaaLog.approverName);
-            fillText('text_202xntg', new Date(vpaaLog.date).toLocaleDateString());
-        }
+        if (vpaaLog) fillText('text_81gbif', `${vpaaLog.approverName} | ${new Date(vpaaLog.date).toLocaleDateString('en-US')}`);
 
-        // Catch HR or HRMO
         const hrLog = form.approvalHistory.find(log => ['HR', 'HRMO'].includes(log.approverRole));
-        if (hrLog) {
-            fillText('text_199wzzc', hrLog.approverName);
-            // HR doesn't have a specific date field on the standard Mapua form, but their name is stamped!
+        if (hrLog) fillText('text_82wmdd', `${hrLog.approverName} | ${new Date(hrLog.date).toLocaleDateString('en-US')}`);
+
+        // 👇 PERFECTED OVERLOAD JUSTIFICATION LOGIC
+        const regularLoad = form.totalEffectiveUnits || 0;
+        const isPartTime = form.employmentType === 'Part-Time';
+        const overloadLimit = isPartTime ? 11 : 15;
+
+        if (regularLoad > overloadLimit) {
+            const chairRemarks = chairLog && chairLog.remarks && chairLog.remarks.trim() !== '' 
+                ? chairLog.remarks 
+                : "Justification pending Program Chair review.";
+            
+            // 🧠 Smart Character Chunker (Calibrated for 704px width)
+            let remainingText = chairRemarks;
+            let lines = ['', '', ''];
+            const MAX_CHARS = 155; // 👈 Optimized for 704px at 7pt font!
+
+            for (let i = 0; i < 3; i++) {
+                if (remainingText.length === 0) break;
+                if (remainingText.length <= MAX_CHARS) {
+                    lines[i] = remainingText;
+                    break;
+                }
+                
+                let breakPoint = remainingText.lastIndexOf(' ', MAX_CHARS);
+                if (breakPoint === -1 || breakPoint === 0) {
+                    breakPoint = MAX_CHARS; 
+                }
+                
+                lines[i] = remainingText.substring(0, breakPoint).trim();
+                remainingText = remainingText.substring(breakPoint).trim();
+            }
+            
+            fillText('text_77ynib', lines[0]);
+            fillText('text_78xlcm', lines[1]);
+            fillText('text_79mcxn', lines[2]);
+        } else {
+            fillText('text_77ynib', "N/A");
         }
 
-        // ==========================================
-        // 4. SECURE AND SEND PDF
-        // ==========================================
-        pdfForm.flatten(); // Lock it so it can't be edited!
+        // pdfForm.flatten(); 
+        // 👇 THE ULTIMATE PDF LOCKER (Preserves Boxes, Removes Dropdown Arrows)
+        const allFields = pdfForm.getFields();
+        const firstPage = pdfDoc.getPages()[0];
+        
+        const dropdownData = [];
+        
+        allFields.forEach(field => {
+            if (field.constructor.name === 'PDFDropdown') {
+                const selected = field.getSelected();
+                const val = selected && selected.length > 0 ? selected[0] : '';
+                
+                const widgets = field.acroField.getWidgets();
+                if (widgets && widgets.length > 0) {
+                    dropdownData.push({ 
+                        field: field, 
+                        val: val, 
+                        rect: widgets[0].getRectangle() 
+                    });
+                }
+            } else {
+                field.enableReadOnly();
+            }
+        });
 
+        dropdownData.forEach(data => {
+            pdfForm.removeField(data.field); 
+            if (data.val) {
+                firstPage.drawText(data.val, {
+                    x: data.rect.x + 2,
+                    y: data.rect.y + 4, 
+                    size: 8
+                });
+            }
+        });
         const pdfBytes = await pdfDoc.save();
+        
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename=ATA_${form.facultyName.replace(/\s+/g, '_')}.pdf`); 
         res.send(Buffer.from(pdfBytes));
@@ -647,11 +666,10 @@ export const viewAtaPdf = async (req, res) => {
 };
 
 // ==========================================
-// 📊 7. DASHBOARD METRICS ENGINE (Live DB Fetch)
+// 📊 7. DASHBOARD METRICS ENGINE 
 // ==========================================
 export const renderDashboard = async (req, res) => {
     try {
-        // 1. Get Session ID
         let sessionUserID = "unknown";
         if (req.user) {
             if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
@@ -660,16 +678,13 @@ export const renderDashboard = async (req, res) => {
             else if (req.user.employeeId) sessionUserID = req.user.employeeId;
         }
 
-        // 👇 2. FETCH FRESH DATA DIRECTLY FROM DATABASE
         const User = mainDB.model('User');
         const liveUser = await User.findById(sessionUserID);
-        
         if (!liveUser) return res.status(404).send("User not found.");
 
         const liveRole = liveUser.role || "Professor";
         const isPracticumCoordinator = liveUser.isPracticumCoordinator === true;
 
-        // 3. Calculate Action Card Counts
         const myPendingCount = await ATAForm.countDocuments({ 
             userID: sessionUserID, 
             status: { $regex: 'PENDING' } 
@@ -680,7 +695,6 @@ export const renderDashboard = async (req, res) => {
             status: 'FINALIZED' 
         });
 
-        // 4. Fetch the Most Recent Form
         const latestForm = await ATAForm.findOne({ userID: sessionUserID }).sort({ createdAt: -1 });
 
         let lastSubmissionDate = "None";
@@ -695,10 +709,9 @@ export const renderDashboard = async (req, res) => {
             effectiveUnits = (latestForm.totalEffectiveUnits || 0) + (latestForm.totalRemedialUnits || 0);
         }
 
-        // 5. Send the FRESH data to the EJS file!
         res.render('ATA/dashboard_window', {
             user: liveUser,
-            role: liveRole, // 👈 Guarantees the dashboard knows they are VPAA/HR!
+            role: liveRole, 
             employmentType: liveUser.employmentType,
             isPracticumCoordinator: isPracticumCoordinator,
             myPendingCount,
@@ -714,13 +727,13 @@ export const renderDashboard = async (req, res) => {
         res.status(500).send("Failed to load dashboard.");
     }
 };
+
 // ==========================================
-// 🖨️ 8. GENERATE LIVE PDF PREVIEW (NO DATABASE SAVE)
+// 🖨️ 8. GENERATE LIVE PDF PREVIEW 
 // ==========================================
 export const previewAtaPdf = async (req, res) => {
     try {
         const formData = req.body;
-        // Run the math engine to get live totals!
         const totals = calculateUnits(formData);
 
         const templatePath = path.join(__dirname, '../templates/ATA-College-Blank.pdf'); 
@@ -730,7 +743,7 @@ export const previewAtaPdf = async (req, res) => {
 
         const fillText = (fieldName, value) => {
             try { 
-                if (value) {
+                if (value !== undefined && value !== null) {
                     const field = pdfForm.getTextField(fieldName);
                     field.setText(value.toString());
                     field.setFontSize(7); 
@@ -742,9 +755,12 @@ export const previewAtaPdf = async (req, res) => {
         fillText('text_1tvhi', formData.facultyName);
         fillText('text_5jvwx', formData.position);
         fillText('COLLEGE', formData.college);
-        fillText('text_2beim', formData.employmentType);
+        fillText('text_2beim', formData.employmentStatus);
         fillText('text_4wesx', formData.address);
-        fillText('text_36xvyn', formData.sectionA_AdminUnits); 
+        const adminUnits = Number(formData.sectionA_AdminUnits) || 0;
+        if (adminUnits > 0) {
+            fillText('text_36xvyn', adminUnits); 
+        }
         
         fillText('TERM', (formData.term || "2nd Term").split(' ')[0]); 
         try { pdfForm.getDropdown('dropdown_87etxp').select(formData.academicYear || "2025-2026"); } 
@@ -755,14 +771,12 @@ export const previewAtaPdf = async (req, res) => {
             if (formData.employmentType === 'Part-Time') pdfForm.getCheckBox('checkbox_8omuk').check();
         } catch (e) {}
 
-        // 2. Map Array Data Safely (B, C, D, E, F, G)
+        // 2. Map Array Data Safely
         const safeForEach = (array, mappingCols, limit) => {
             if (!array || !Array.isArray(array)) return;
             array.forEach((row, i) => {
                 if (i < limit) {
-                    Object.keys(mappingCols).forEach(key => {
-                        fillText(mappingCols[key][i], row[key]);
-                    });
+                    Object.keys(mappingCols).forEach(key => fillText(mappingCols[key][i], row[key]));
                 }
             });
         };
@@ -773,7 +787,7 @@ export const previewAtaPdf = async (req, res) => {
             units:   ['text_70cmcr', 'text_71yakp', 'text_72gwrs', 'text_73lgtb', 'text_74hsiw', 'text_75oeti', 'text_76gklh', 'text_88yf',  'text_89wumx', 'text_90gzrv'],
             effectiveDate: ['text_91nlsp', 'text_92akoo', 'text_93paai', 'text_95sxfz', 'text_96erde', 'text_97xhu',  'text_98nlys', 'text_99teyw', 'text_100vjjp','text_101dvuo']
         }, 10);
-        fillText('text_57cmig', totals.totalTeachingUnits); 
+        fillText('text_57cmig', totals.sumB); 
 
         safeForEach(formData.sectionC_OtherCollege, {
             courseCode: ['text_47rebo', 'text_48qzlp', 'text_49jhlb', 'text_50tsch', 'text_51hunk', 'text_52yzee', 'text_53upjj', 'text_54prkk', 'text_55qvgs', 'text_56krii'],
@@ -781,7 +795,8 @@ export const previewAtaPdf = async (req, res) => {
             units:   ['text_112udtm','text_113dznl','text_114ls',  'text_115lgxa','text_116faud','text_117jugg','text_118mlep','text_119nrkb','text_120kvok','text_121xhpk'],
             effectiveDate: ['text_122aymw','text_123wfov','text_124mqbu','text_125brsh','text_126soxx','text_127fsch','text_128nioh','text_129bo',  'text_130bcsd','text_131uwop']
         }, 10);
-        fillText('text_58ltsz', totals.totalEffectiveUnits); 
+        fillText('text_58ltsz', totals.sumC); 
+        fillText('text_59oaji', totals.totalEffectiveUnits); 
 
         safeForEach(formData.sectionD_AdminWork, {
             workDescription: ['text_20guwb', 'text_21mcrd', 'text_22cvxd', 'text_23wmjb', 'text_24klgl', 'text_25qlo',  'text_26rjfo', 'text_27yhai', 'text_28zdmg', 'text_29pzoo'],
@@ -796,45 +811,171 @@ export const previewAtaPdf = async (req, res) => {
         }, 10);
 
         safeForEach(formData.sectionF_OutsideEmployment, {
-            employer: ['text_204yxyb', 'text_205gtyr', 'text_206ssz'],
-            position: ['text_207zztq', 'text_208zctd', 'text_209lcrw'],
-            courseOrUnits: ['text_210naxn', 'text_211hmtw', 'text_212xchm'],
-            hoursPerWeek: ['text_213qeyx', 'text_214cslh', 'text_215fzzw']
+            employer: ['text_30zgdb', 'text_31svix', 'text_32swnc'],
+            position: ['text_132vcas', 'text_133fnhe', 'text_134zdas'],
+            courseOrUnits: ['text_186xbfm', 'text_187ovcx', 'text_188mvam'],
+            hoursPerWeek: ['text_189wqci', 'text_190bgcl', 'text_191vbow']
         }, 3);
 
-        // Section G (Remedial) Requires dropdown logic, handled separately
+        const sectionG_Cols = {
+            courseId: ['text_192hjls', 'text_193wxqe', 'text_194yhdr', 'text_195fnhw', 'text_196lkcn', 'text_197fbom'],
+            moduleCode: ['text_198qwfc', 'text_199rrkq', 'text_200qtaf', 'text_201kfpr', 'text_202clmr', 'text_203ixre'],
+            section: ['text_204koex', 'text_205fpjg', 'text_206vilo', 'text_207ycmc', 'text_208ct', 'text_209yyje'],
+            units: ['text_210hcgg', 'text_211vjtw', 'text_212aiiv', 'text_213hris', 'text_214rxes', 'text_215glxf'],
+            numberOfStudents: ['text_216libu', 'text_217ppog', 'text_218xytr', 'text_219rsjy', 'text_220nnsl', 'text_221plmo'],
+            effectiveUnits: ['text_223ralg', 'text_224jzoz', 'text_225ywjn', 'text_226dtgn', 'text_227hemq', 'text_228hoxb']
+        };
+
         const sectionG = formData.sectionG_Remedial || [];
-        const typeDrops = ['dropdown_241pzwm', 'dropdown_242uavp', 'dropdown_243vcvz', 'dropdown_244cnyf', 'dropdown_245vvwk'];
-        safeForEach(sectionG, {
-            courseId: ['text_216nuzb', 'text_217psw', 'text_218nwni', 'text_219qckh', 'text_220gohx'],
-            moduleCode: ['text_221qfye', 'text_222jghp', 'text_223yrcy', 'text_224bmbn', 'text_225xqqd'],
-            section: ['text_226zoxr', 'text_227kivx', 'text_228cnyy', 'text_229rwwc', 'text_230pntn'],
-            units: ['text_231hngj', 'text_232zzti', 'text_233rqqk', 'text_234tqso', 'text_235mbtu'],
-            numberOfStudents: ['text_236szcx', 'text_237fvyk', 'text_238tcyf', 'text_239qjld', 'text_240lntt']
-        }, 5);
         sectionG.forEach((row, i) => {
-            if (i < 5) {
-                try {
-                    const drop = pdfForm.getDropdown(typeDrops[i]);
-                    if(row.type === 'lecture') drop.select('Lecture');
-                    if(row.type === 'lab') drop.select('Lab');
-                } catch(e) {}
+            if (i < 6) { 
+                fillText(sectionG_Cols.courseId[i], row.courseId);
+                fillText(sectionG_Cols.moduleCode[i], row.moduleCode);
+                fillText(sectionG_Cols.section[i], row.section);
+                fillText(sectionG_Cols.units[i], row.units);
+                fillText(sectionG_Cols.numberOfStudents[i], row.numberOfStudents);
+                
+                let effUnits = (Number(row.units) || 0) * ((Number(row.numberOfStudents) || 0) / 40);
+                if (row.type === 'lab') effUnits *= 2;
+                if (effUnits > 0) fillText(sectionG_Cols.effectiveUnits[i], effUnits.toFixed(2));
+            }
+        });
+        
+        fillText('text_222pgqw', totals.totalRemedialUnits); 
+        fillText('text_84skhw', `${formData.facultyName} | ${new Date().toLocaleDateString()}`); 
+
+        // 👇 PERFECTED OVERLOAD JUSTIFICATION LOGIC (FOR LIVE PREVIEW)
+        const regularLoad = totals.totalEffectiveUnits || 0;
+        const isPartTime = formData.employmentType === 'Part-Time';
+        const overloadLimit = isPartTime ? 11 : 15;
+
+        if (regularLoad > overloadLimit) {
+            if (formData.justification && formData.justification.trim() !== '') {
+                
+                // 🧠 Smart Character Chunker (Calibrated for 704px width)
+                let remainingText = formData.justification;
+                let lines = ['', '', ''];
+                const MAX_CHARS = 155; // 👈 Optimized for 704px at 7pt font!
+
+                for (let i = 0; i < 3; i++) {
+                    if (remainingText.length === 0) break;
+                    if (remainingText.length <= MAX_CHARS) {
+                        lines[i] = remainingText;
+                        break;
+                    }
+                    
+                    let breakPoint = remainingText.lastIndexOf(' ', MAX_CHARS);
+                    if (breakPoint === -1 || breakPoint === 0) {
+                        breakPoint = MAX_CHARS; 
+                    }
+                    
+                    lines[i] = remainingText.substring(0, breakPoint).trim();
+                    remainingText = remainingText.substring(breakPoint).trim();
+                }
+                
+                fillText('text_77ynib', lines[0]);
+                fillText('text_78xlcm', lines[1]);
+                fillText('text_79mcxn', lines[2]);
+
+            } else {
+                fillText('text_77ynib', "OVERLOAD DETECTED:");
+                fillText('text_78xlcm', "Justification will be provided by the Program Chair upon review and endorsement.");
+            }
+        } else {
+            fillText('text_77ynib', "N/A");
+        }
+
+        // pdfForm.flatten(); 
+        // 👇 THE ULTIMATE PDF LOCKER (No arrows, perfect checkboxes)
+       // 👇 THE ULTIMATE PDF LOCKER (Preserves Boxes, Removes Dropdown Arrows)
+        const allFields = pdfForm.getFields();
+        const firstPage = pdfDoc.getPages()[0];
+        
+        // 1. Collect dropdown data safely
+        const dropdownData = [];
+        
+        allFields.forEach(field => {
+            if (field.constructor.name === 'PDFDropdown') {
+                const selected = field.getSelected();
+                const val = selected && selected.length > 0 ? selected[0] : '';
+                
+                const widgets = field.acroField.getWidgets();
+                if (widgets && widgets.length > 0) {
+                    dropdownData.push({ 
+                        field: field, 
+                        val: val, 
+                        rect: widgets[0].getRectangle() 
+                    });
+                }
+            } else {
+                // Text boxes and checkboxes are locked normally (Preserves their UI borders!)
+                field.enableReadOnly();
             }
         });
 
-        // 3. Faculty Signature
-        fillText('text_186puxz', formData.facultyName); 
-        fillText('text_187swky', new Date().toLocaleDateString()); 
-
-        pdfForm.flatten(); 
+        // 2. Remove the dropdowns entirely and draw pure text in their place!
+        dropdownData.forEach(data => {
+            pdfForm.removeField(data.field); // Deletes the widget (Arrow is permanently gone!)
+            if (data.val) {
+                firstPage.drawText(data.val, {
+                    x: data.rect.x + 2,
+                    y: data.rect.y + 4, // Slight upward adjustment for baseline
+                    size: 8
+                });
+            }
+        });
         const pdfBytes = await pdfDoc.save();
         
-        // Return raw PDF File to the Browser!
         res.setHeader('Content-Type', 'application/pdf');
         res.send(Buffer.from(pdfBytes));
 
     } catch (error) {
         console.error("Preview PDF Error:", error);
         res.status(500).json({ error: "Failed to generate preview." });
+    }
+};
+
+// ==========================================
+// 🩻 PDF X-RAY (VISUAL MAP GENERATOR)
+// ==========================================
+export const discoverPdfFields = async (req, res) => {
+    try {
+        const templatePath = path.join(__dirname, '../templates/ATA-College-Blank.pdf'); 
+        const existingPdfBytes = fs.readFileSync(templatePath);
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const pdfForm = pdfDoc.getForm();
+        const fields = pdfForm.getFields();
+        
+        fields.forEach(field => {
+            const type = field.constructor.name;
+            const name = field.getName();
+            
+            try {
+                if (type === 'PDFTextField') {
+                    const textField = pdfForm.getTextField(name);
+                    textField.setText(name); 
+                    textField.setFontSize(6); 
+                } 
+                else if (type === 'PDFDropdown') {
+                    const dropField = pdfForm.getDropdown(name);
+                    dropField.addOptions([name]);
+                    dropField.select(name);
+                }
+                else if (type === 'PDFCheckBox') {
+                    pdfForm.getCheckBox(name).check();
+                }
+            } catch (err) {}
+        });
+
+        pdfForm.flatten(); 
+        const pdfBytes = await pdfDoc.save();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename=Visual_PDF_Map.pdf');
+        res.send(Buffer.from(pdfBytes));
+
+    } catch (error) {
+        console.error("X-Ray Error:", error);
+        res.status(500).send("Failed to generate visual PDF map.");
     }
 };

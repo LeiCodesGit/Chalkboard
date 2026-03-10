@@ -73,6 +73,7 @@ const ataFormSchema = new mongoose.Schema({
     facultyName: String,
     position: String,
     college: String,
+    employmentStatus: String,
     employmentType: String,
     address: String,
     

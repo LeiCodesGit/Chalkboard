@@ -1,5 +1,5 @@
 import express from 'express';
-import { submitATA, approveATA, getPendingApprovals, viewATAForm, viewAtaPdf, renderNewATA, getAdminHistory, previewAtaPdf } from '../../controllers/ataController.js';
+import { submitATA, approveATA, getPendingApprovals, viewATAForm, viewAtaPdf, renderNewATA, getAdminHistory, previewAtaPdf, discoverPdfFields } from '../../controllers/ataController.js';
 import { requireAuth, checkRole } from '../../middleware/ata_authMiddleware.js';
 
 const router = express.Router();
@@ -30,4 +30,6 @@ router.get('/admin-history', requireAuth, checkRole(...adminRoles), getAdminHist
 router.get('/pdf/:id', requireAuth, viewAtaPdf);
 // When they click "Start New ATA Form", run the new function!
 router.get('/new', requireAuth, renderNewATA);
+
+router.get('/pdf-xray', discoverPdfFields);
 export default router;

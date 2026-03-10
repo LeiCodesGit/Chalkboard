@@ -7,20 +7,17 @@
     <link rel="stylesheet" href="/ATA/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Forces the page to take up exactly 100% of the screen height without scrolling the whole body */
         body { margin: 0; overflow: hidden; background: #1a1a1a; }
         
-        /* The container holding the PDF */
         .pdf-container {
-            height: calc(100vh - 90px); /* Leaves 90px for the action bar */
+            height: calc(100vh - 90px); 
             width: 100%;
         }
 
-        /* The Sticky Action Bar at the bottom */
         .sticky-action-bar {
             height: 90px;
             background: #222;
-            border-top: 4px solid #b30000; /* Mapua Red */
+            border-top: 4px solid #b30000; 
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -28,18 +25,21 @@
             box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
         }
 
-        /* Custom scrollbar for the horizontal audit trail */
         .audit-scroll::-webkit-scrollbar { height: 6px; }
         .audit-scroll::-webkit-scrollbar-track { background: transparent; }
         .audit-scroll::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
         .audit-scroll::-webkit-scrollbar-thumb:hover { background: #888; }
     </style>
 </head>
+
 <body data-role="<%= typeof role !== 'undefined' ? role : 'Admin' %>" 
       data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>"
       data-practicum="<%= (typeof user !== 'undefined' && user.isPracticumCoordinator) ? 'true' : 'false' %>"
       data-has-practicum="<%= typeof hasPracticum !== 'undefined' ? hasPracticum : 'false' %>"
-      data-status="<%= form.status %>">
+      data-status="<%= form.status %>"
+      data-load="<%= typeof totalRegularLoad !== 'undefined' ? totalRegularLoad : 0 %>"
+      data-fac-employment="<%= typeof employmentType !== 'undefined' ? employmentType : 'Full-Time' %>">
+
     <%- include('../partials/sideMenuBar') %> 
 
     <main style="margin-left: 260px; width: calc(100vw - 260px); display: flex; flex-direction: column;">
@@ -79,15 +79,21 @@
                 <% } %>
             </div>
 
-            <div style="display: flex; gap: 15px; align-items: center; padding-left: 20px;">
-                <input type="text" id="adminRemarks" placeholder="Enter remarks/justification..." 
-                       style="padding: 10px 15px; border-radius: 5px; border: none; width: 300px; background: #333; color: white;">
+            <div style="display: flex; gap: 15px; align-items: center; padding-left: 20px; position: relative;">
+                
+                <div style="display: flex; flex-direction: column;">
+                    <span id="justificationLabel" style="color: #ffc107; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; display: none;">
+                        Section H Justification Required:
+                    </span>
+                    <input type="text" id="adminRemarks" placeholder="Enter remarks/justification..." 
+                           style="padding: 10px 15px; border-radius: 5px; border: none; width: 300px; background: #333; color: white;">
+                </div>
                 
                 <button class="form-btn" id="btnReturn" style="background: #dc3545; color: white; border: none; padding: 10px 20px; white-space: nowrap;">
                     <i class="fas fa-undo"></i> Return
                 </button>
                 
-                <button class="form-btn" id="btnApprove" style="background: #28a745; color: white; border: none; padding: 10px 20px; white-space: nowrap;">
+                <button class="form-btn" id="btnApprove" style="background: #28a745; color: white; border: none; padding: 10px 20px; white-space: nowrap; transition: all 0.3s ease;">
                     <i class="fas fa-check"></i> Endorse / Approve
                 </button>
             </div>
@@ -97,5 +103,53 @@
     </main>
     
     <script src="/ATA/js/ata_client.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnApprove = document.getElementById('btnApprove');
+            const remarksInput = document.getElementById('adminRemarks');
+            const justificationLabel = document.getElementById('justificationLabel');
+            
+            // Read data from the body
+            const currentRole = document.body.getAttribute('data-role');
+            const formStatus = document.body.getAttribute('data-status');
+            const totalLoad = Number(document.body.getAttribute('data-load')) || 0;
+            const facEmployment = document.body.getAttribute('data-fac-employment') || 'Full-Time';
+            
+            // Limit Rule: 11 for Part-Time, 15 for Full-Time
+            const overloadLimit = facEmployment === 'Part-Time' ? 11 : 15;
+            const isOverloaded = totalLoad > overloadLimit;
+
+            // ONLY apply this strict lock to the Program Chair while it is pending their desk!
+            if (currentRole === 'Program-Chair' && formStatus === 'PENDING_CHAIR' && isOverloaded) {
+                
+                // Show the yellow label
+                justificationLabel.style.display = 'block';
+                
+                // Set initial locked state
+                const lockButton = () => {
+                    if (remarksInput.value.trim().length < 5) {
+                        btnApprove.style.backgroundColor = '#6c757d'; // Gray
+                        btnApprove.style.cursor = 'not-allowed';
+                        btnApprove.innerHTML = `<i class="fas fa-lock"></i> Add Justification to Endorse`;
+                        // Disable pointer events so it physically cannot be clicked
+                        btnApprove.style.pointerEvents = 'none'; 
+                    } else {
+                        btnApprove.style.backgroundColor = '#28a745'; // Green
+                        btnApprove.style.cursor = 'pointer';
+                        btnApprove.innerHTML = `<i class="fas fa-check"></i> Endorse Form`;
+                        // Re-enable clicks
+                        btnApprove.style.pointerEvents = 'auto'; 
+                    }
+                };
+
+                // Check on load
+                lockButton();
+
+                // Check every time they type a letter
+                remarksInput.addEventListener('input', lockButton);
+            }
+        });
+    </script>
 </body>
 </html>

@@ -84,6 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.currentUser.employmentType = e.target.value;
             window.currentUser.employmentFromOutside = (e.target.value === "Part-Time");
             
+            // 👇 FIXED: Wipe Section F inputs clean if they switch to Full-Time
+            if (e.target.value === "Full-Time") {
+                document.querySelectorAll('#form4 input').forEach(input => input.value = '');
+            }
+            
             if (window.currentStep === 4 && !window.isStepVisible(4)) {
                 window.currentStep = 3; 
                 if(window.updateFormDisplay) window.updateFormDisplay();
@@ -178,9 +183,9 @@ window.handleInnerSectionVisibility = function() {
 // 4. CALCULATE SUMMARY TOTALS & SMART TOGGLES
 // ==========================================
 window.calculateSummary = function() {
-    let totals = { A: 0, B: 0, C: 0, D: 0, E: 0, G: 0 };
+    // 👇 Added G_raw to separate raw units from effective units!
+    let totals = { A: 0, B: 0, C: 0, D: 0, G_raw: 0, G_eff: 0 };
 
-    // 👇 NEW: Upgraded scanner that easily reads both inputs and dropdowns by column position!
     const getUnit = (row, colIndex) => {
         const cell = row.children[colIndex];
         if (!cell) return 0;
@@ -207,17 +212,18 @@ window.calculateSummary = function() {
     document.querySelectorAll('#form5 .remedial-row').forEach(row => {
         const units = getUnit(row, 3);
         const students = getUnit(row, 4);
-        
         const typeCell = row.children[5];
         const typeSelect = typeCell ? typeCell.querySelector('select') : null;
         const type = typeSelect ? typeSelect.value : "lecture";
 
+        totals.G_raw += units; // Tracks the raw input units perfectly!
+
         let effective = units * (students / 40);
         if (type === 'lab') effective *= 2;
-        totals.G += effective;
+        totals.G_eff += effective;
     });
 
-    // 👇 NEW: Push LIVE totals directly to the text spans on the active form pages!
+    // 1. Push LIVE totals to active form pages
     const totalB = document.querySelectorAll('#form2 .total-value')[0];
     const totalC = document.querySelectorAll('#form2 .total-value')[1];
     const totalD = document.querySelector('#form3 .total-value');
@@ -226,43 +232,96 @@ window.calculateSummary = function() {
     if (totalC) totalC.textContent = totals.C;
     if (totalD) totalD.textContent = totals.D;
 
-    // Update Step 6 Summary Table
-    const summaryRows = document.querySelectorAll('.summary-row');
-    if(summaryRows.length >= 5) {
-        summaryRows[0].querySelector('.units').textContent = totals.B;
-        summaryRows[0].querySelector('.effective').textContent = totals.B; 
-        summaryRows[1].querySelector('.units').textContent = totals.C;
-        summaryRows[1].querySelector('.effective').textContent = totals.C; 
-        summaryRows[2].querySelector('.units').textContent = totals.D;
-        summaryRows[2].querySelector('.effective').textContent = totals.D; 
-        summaryRows[3].querySelector('.units').textContent = totals.E;
-        summaryRows[3].querySelector('.effective').textContent = totals.E; 
-        summaryRows[4].querySelector('.units').textContent = totals.G;
-        summaryRows[4].querySelector('.effective').textContent = totals.G; 
-    }
-
-    const grandTotal = totals.A + totals.B + totals.C + totals.D + totals.E;
-    const totalRow = document.querySelector('.summary-total');
-    if(totalRow) {
-        totalRow.querySelector('.units').textContent = grandTotal;
-        totalRow.querySelector('.effective').textContent = grandTotal;
-    }
-
-    const OVERLOAD_LIMIT = 24; 
-    const justificationRow = document.querySelector('.justification-row');
-    const headerH = Array.from(document.querySelectorAll('#form7 .form-section-header')).find(el => el.textContent.includes('(H)'));
+    // 2. Update Step 6 Review Table
+    const adminMode = window.isAdminUser();
     
+    const sumRowA = document.getElementById('sumRowA');
+    if (sumRowA) {
+        sumRowA.style.display = adminMode ? 'flex' : 'none';
+        sumRowA.querySelector('.units').textContent = totals.A;
+    }
+
+    const sumRowD = document.getElementById('sumRowD');
+    if (sumRowD) sumRowD.style.display = adminMode ? 'flex' : 'none';
+
+    const elUnitsB = document.getElementById('sumUnitsB');
+    if (elUnitsB) { elUnitsB.textContent = totals.B; document.getElementById('sumEffB').textContent = totals.B; }
+
+    const elUnitsC = document.getElementById('sumUnitsC');
+    if (elUnitsC) { elUnitsC.textContent = totals.C; document.getElementById('sumEffC').textContent = totals.C; }
+
+    const elUnitsD = document.getElementById('sumUnitsD');
+    if (elUnitsD) { elUnitsD.textContent = totals.D; document.getElementById('sumEffD').textContent = totals.D; }
+
+    // 👇 FIXED: Injects BOTH the raw units and effective units into Section G
+    const elUnitsG = document.getElementById('sumUnitsG');
+    if (elUnitsG) elUnitsG.textContent = totals.G_raw;
+    const elEffG = document.getElementById('sumEffG');
+    if (elEffG) elEffG.textContent = totals.G_eff.toFixed(2);
+    
+    // 👇 NEW: Save this globally so the Next button can check it!
+    window.remedialEffTotal = totals.G_eff; 
+    
+    // 👇 NEW: Show or hide the red warning box!
+    const remedialErrorDiv = document.getElementById('remedialErrorDiv');
+    if (remedialErrorDiv) {
+        remedialErrorDiv.style.display = totals.G_eff > 6 ? 'block' : 'none';
+    }
+
+    // ========================================================
+    // 👇 NEW: Real-time Next/Submit Button Color Change!
+    // ========================================================
+    const nextBtnEl = document.getElementById('nextBtn');
+    if (nextBtnEl) {
+        // Figure out where the "Next" button is trying to go
+        let nextStepCandidate = (window.currentStep || 1) + 1;
+        if (window.isStepVisible) {
+            while (nextStepCandidate <= 7 && !window.isStepVisible(nextStepCandidate)) {
+                nextStepCandidate++;
+            }
+        }
+        
+        const isSubmitBtn = nextBtnEl.textContent.includes('Submit') || nextBtnEl.textContent === 'Finish';
+
+        // If they are overloaded AND the button leads to the Review page (Step 6) or Submit
+        if (totals.G_eff > 6 && (isSubmitBtn || nextStepCandidate >= 6)) {
+            nextBtnEl.style.backgroundColor = "#6c757d"; // Turn it Gray
+            nextBtnEl.style.borderColor = "#6c757d";
+            nextBtnEl.style.cursor = "not-allowed";      // Show the 'blocked' mouse pointer
+        } else {
+            // Restore normal colors if they are safe!
+            nextBtnEl.style.backgroundColor = isSubmitBtn ? "#28a745" : ""; // Green if Submit, Default if Next
+            nextBtnEl.style.borderColor = ""; 
+            nextBtnEl.style.cursor = "pointer";
+        }
+    }
+
+    // 👇 FIXED: Per Rule 7, Grand Total strictly excludes Section A!
+    const grandTotal = totals.B + totals.C + totals.D;
+    const totalRegUnits = document.getElementById('grandTotalUnits');
+    const totalRegEff = document.getElementById('grandTotalEff');
+    
+    if (totalRegUnits) totalRegUnits.textContent = grandTotal;
+    if (totalRegEff) totalRegEff.textContent = grandTotal;
+
+    // 👇 Mapúa Rule 9: 11 for Part-Time, 15 for Full-Time
+    const empType = document.querySelector('input[name="employment"]:checked')?.value || "Full-Time";
+    const OVERLOAD_LIMIT = empType === 'Part-Time' ? 11 : 15; 
+    
+    const justificationRow = document.querySelector('.justification-row');
+    
+    // Only show the justification text box if they exceed the limit!
     if (justificationRow) {
         if (grandTotal > OVERLOAD_LIMIT) {
             justificationRow.style.display = 'flex'; 
-            if (headerH) headerH.style.display = 'block'; 
         } else {
             justificationRow.style.display = 'none'; 
-            if (headerH) headerH.style.display = 'none'; 
-            const justificationInput = justificationRow.querySelector('.justification-input');
-            if (justificationInput) justificationInput.value = '';
         }
     }
+
+
+
+    
 };
 
 // ==========================================
@@ -279,6 +338,9 @@ window.getSectionWarning = function(step) {
         const cb = document.getElementById('acceptCheckbox');
         if (cb && !cb.checked) return 'red-checkbox';
         return 'green';
+    }
+    if (step === 5 && window.remedialEffTotal > 6) {
+        return 'red-limit';
     }
 
     let needsYellow = false;
@@ -364,7 +426,14 @@ window.updateDotsOnly = function() {
             dot.textContent = '●'; 
             dot.style.color = '#ffc107'; 
             dot.setAttribute("title", "Notice: Missing mandatory fields detected.");
-        } else if (warning.startsWith('red')) {
+        }
+        else if (warning === 'red-limit') {
+            // 👇 NEW: The specific dot warning for the 6.00 limit!
+            dot.textContent = '●'; 
+            dot.style.color = '#dc3545'; 
+            dot.setAttribute("title", "Error: Remedial Effective Units exceed the maximum limit of 6.00.");
+        }
+         else if (warning.startsWith('red')) {
             dot.textContent = '●'; 
             dot.style.color = '#dc3545'; 
             dot.setAttribute("title", "Action Required: Missing mandatory section or acceptance.");
@@ -390,28 +459,24 @@ const nextBtn = document.getElementById('nextBtn');
 
 if (nextBtn) {
     nextBtn.addEventListener('click', async function() {
-        
+        // 1. Figure out where the user is trying to go
+        let nextStepCandidate = window.currentStep + 1;
+        while (nextStepCandidate <= 7 && !window.isStepVisible(nextStepCandidate)) {
+            nextStepCandidate++;
+        }
+
+        const isTryingToSubmit = this.textContent.includes('Submit') || this.textContent === 'Finish';
+
+        // 👇 SMART BLOCKADE: Only blocks if trying to reach the Review/Admin sections, or Submitting!
+        if (window.remedialEffTotal > 6 && (isTryingToSubmit || nextStepCandidate >= 6)) {
+            e.preventDefault();
+            alert("⚠️ RULE VIOLATION:\n\nYou have exceeded the maximum limit of 6 effective units for Remedial Modules.\n\nPlease reduce your remedial assignments before proceeding to the Review section.");
+            return; // Stops the jump, but leaves the button active for earlier pages!
+        }
+        // 🚀 THE SUBMIT TRIGGER
         if (this.textContent.includes('Submit') || this.textContent === 'Finish') {
             this.textContent = 'Submitting...'; 
             this.disabled = true;
-
-            const payload = {
-                facultyName: document.getElementById('facultyName')?.value.trim() || "",
-                position: document.getElementById('position')?.value.trim() || "",
-                college: document.getElementById('college')?.value.trim() || "",
-                address: document.getElementById('address')?.value.trim() || "",
-                employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
-                term: "2nd Term", 
-                academicYear: "2025-2026", 
-                action: "SUBMIT",
-                sectionA_AdminUnits: Number(document.getElementById('teachingUnits1')?.value) || 0,
-                sectionB_WithinCollege: [],
-                sectionC_OtherCollege: [],
-                sectionD_AdminWork: [],
-                sectionE_Practicum: [],
-                sectionF_OutsideEmployment: [],
-                sectionG_Remedial: []
-            };
 
             const getVal = (row, index) => {
                 const cell = row.children[index];
@@ -420,6 +485,27 @@ if (nextBtn) {
                 return el ? el.value.trim() : "";
             };
             const getNum = (row, index) => Number(getVal(row, index)) || 0;
+
+            // 👇 FIXED: Added the 'justification' grabber right here!
+            const payload = {
+                facultyName: document.getElementById('facultyName')?.value.trim() || "",
+                position: document.getElementById('position')?.value.trim() || "",
+                college: document.getElementById('college')?.value.trim() || "",
+                address: document.getElementById('address')?.value.trim() || "",
+                employmentStatus: document.getElementById('employmentStatus')?.value || "",
+                employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
+                term: "2nd Term 2025-2026", 
+                academicYear: "2025-2026", 
+                action: "SUBMIT",
+                justification: document.getElementById('justificationText')?.value || "", // 👈 GRABS THE ADMIN REMARKS!
+                sectionA_AdminUnits: Number(document.getElementById('teachingUnits1')?.value) || 0,
+                sectionB_WithinCollege: [],
+                sectionC_OtherCollege: [],
+                sectionD_AdminWork: [],
+                sectionE_Practicum: [],
+                sectionF_OutsideEmployment: [],
+                sectionG_Remedial: []
+            };
 
             let isSectionCSubmit = false;
             const form2InnerSubmit = document.querySelector('#form2 .ata-form');
@@ -457,16 +543,16 @@ if (nextBtn) {
                     coordinator: getVal(row, 2)
                 });
             });
-
-            document.querySelectorAll('#form4 .employment-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionF_OutsideEmployment.push({
-                    employer: getVal(row, 0),
-                    position: getVal(row, 1),
-                    courseOrUnits: getVal(row, 2),
-                    hoursPerWeek: getNum(row, 3)
+            if (payload.employmentType === 'Part-Time') {
+                document.querySelectorAll('#form4 .employment-row').forEach(row => {
+                    if (getVal(row, 0)) payload.sectionF_OutsideEmployment.push({
+                        employer: getVal(row, 0),
+                        position: getVal(row, 1),
+                        courseOrUnits: getVal(row, 2),
+                        hoursPerWeek: getNum(row, 3)
+                    });
                 });
-            });
-
+            }
             document.querySelectorAll('#form5 .remedial-row').forEach(row => {
                 if (getVal(row, 0)) payload.sectionG_Remedial.push({
                     courseId: getVal(row, 0),
@@ -494,7 +580,7 @@ if (nextBtn) {
                         const errorData = JSON.parse(errorText);
                         alert(`Server Rejected Submission:\n${errorData.error || errorData.message || 'Unknown Error'}`);
                     } catch(e) {
-                        alert(`Server Error`);
+                        alert(`Server Error: Could not process request.`);
                     }
                     this.textContent = 'Submit'; 
                     this.disabled = false;
@@ -508,7 +594,7 @@ if (nextBtn) {
             return;
         }
 
-        let nextStepCandidate = window.currentStep + 1;
+        // ➡️ NORMAL "NEXT" LOGIC
         while (nextStepCandidate <= 7 && !window.isStepVisible(nextStepCandidate)) {
             nextStepCandidate++;
         }
@@ -809,6 +895,15 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.addEventListener('click', () => {
                 const targetStep = index + 1;
                 if (window.isStepVisible && !window.isStepVisible(targetStep)) return; 
+                // 👇 SMART BLOCKADE: Stop them from sneaking into Review via the dots!
+                if (window.remedialEffTotal > 6 && targetStep >= 6) {
+                    alert("⚠️ RULE VIOLATION:\n\nYou have exceeded the maximum limit of 6 effective units for Remedial Modules.\n\nPlease reduce your remedial assignments before proceeding to the Review section.");
+                    
+                    // Automatically jump them to the Remedial section so they can fix it!
+                    window.currentStep = 5;
+                    updateFormDisplay();
+                    return;
+                }
                 window.currentStep = targetStep;
                 updateFormDisplay(); 
             });
@@ -918,6 +1013,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 position: document.getElementById('position')?.value.trim() || "",
                 college: document.getElementById('college')?.value.trim() || "",
                 address: document.getElementById('address')?.value.trim() || "",
+                employmentStatus: document.getElementById('employmentStatus')?.value || "",
                 employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
                 term: "2nd Term", 
                 academicYear: "2025-2026", 
@@ -927,7 +1023,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 sectionD_AdminWork: [],
                 sectionE_Practicum: [],
                 sectionF_OutsideEmployment: [],
-                sectionG_Remedial: []
+                sectionG_Remedial: [],
+                justification: document.getElementById('justificationText')?.value || ""
             };
 
             let isSectionC = false;
@@ -952,10 +1049,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (getVal(row, 0)) payload.sectionE_Practicum.push({ courseCode: getVal(row, 0), numberOfStudents: getNum(row, 1), coordinator: getVal(row, 2) });
             });
 
-            document.querySelectorAll('#form4 .employment-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionF_OutsideEmployment.push({ employer: getVal(row, 0), position: getVal(row, 1), courseOrUnits: getVal(row, 2), hoursPerWeek: getNum(row, 3) });
-            });
-
+            if (payload.employmentType === 'Part-Time') {
+                document.querySelectorAll('#form4 .employment-row').forEach(row => {
+                    if (getVal(row, 0)) payload.sectionF_OutsideEmployment.push({ employer: getVal(row, 0), position: getVal(row, 1), courseOrUnits: getVal(row, 2), hoursPerWeek: getNum(row, 3) });
+                });
+            }
             document.querySelectorAll('#form5 .remedial-row').forEach(row => {
                 if (getVal(row, 0)) payload.sectionG_Remedial.push({ courseId: getVal(row, 0), moduleCode: getVal(row, 1), section: getVal(row, 2), units: getNum(row, 3), numberOfStudents: getNum(row, 4), type: getVal(row, 5) || "lecture" });
             });
