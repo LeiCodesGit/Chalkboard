@@ -562,8 +562,11 @@
 
                     <div class="signature-row">
                         <div class="signature-label">SIGNATURE OF FACULTY:</div>
-                        <div class="signature-field">
-                            <button class="upload-btn">Upload File</button>
+                        <div class="signature-field" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                            <canvas id="signatureCanvas" width="400" height="150" style="background: #e9ecef; border: 2px dashed #6c757d; border-radius: 5px; cursor: crosshair;"></canvas>
+                            <button type="button" id="clearSignatureBtn" class="form-btn secondary-btn small-btn" style="background: #444; color: white; padding: 5px 10px;">
+                                <i class="fas fa-eraser"></i> Clear Signature
+                            </button>
                         </div>
                     </div>
 
@@ -629,6 +632,7 @@
     </main>
 
     <script src="/ATA/js/ata_client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
 
 </body>
 </html>

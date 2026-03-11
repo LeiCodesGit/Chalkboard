@@ -1,4 +1,22 @@
 // ==========================================
+// 0. INITIALIZE SIGNATURE PAD
+// ==========================================
+let signaturePad;
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('signatureCanvas');
+    if (canvas) {
+        signaturePad = new SignaturePad(canvas, {
+            penColor: "rgb(0, 0, 0)", // Black ink
+            backgroundColor: "rgba(0,0,0,0)" // Transparent background
+        });
+
+        document.getElementById('clearSignatureBtn').addEventListener('click', () => {
+            signaturePad.clear();
+        });
+    }
+});
+
+// ==========================================
 // 1. HAMBURGER MENU & UI UTILITIES
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -494,6 +512,7 @@ if (nextBtn) {
                 address: document.getElementById('address')?.value.trim() || "",
                 employmentStatus: document.getElementById('employmentStatus')?.value || "",
                 employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
+                facultySignature: signaturePad && !signaturePad.isEmpty() ? signaturePad.toDataURL("image/png") : "",
                 term: "2nd Term 2025-2026", 
                 academicYear: "2025-2026", 
                 action: "SUBMIT",
@@ -613,10 +632,13 @@ if (nextBtn) {
 const btnReturn = document.getElementById('btnReturn');
 const btnApprove = document.getElementById('btnApprove');
 
-if (btnReturn && btnApprove) {
+// 👇 FIXED: Added a check! If 'btnSmartApprove' exists, this script will shut down and let the new EJS script take over!
+const isSmartPage = document.getElementById('btnSmartApprove');
+
+if (btnReturn && btnApprove && !isSmartPage) {
     const remarksInput = document.getElementById('adminRemarks');
     const pathParts = window.location.pathname.split('/');
-    const formId = pathParts[pathParts.length - 1]; 
+    const formId = pathParts[pathParts.length - 1];
 
     // 👇 1. Grab the current status of the form directly from the HTML body
     const formStatus = document.body.getAttribute('data-status');
@@ -1013,6 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 position: document.getElementById('position')?.value.trim() || "",
                 college: document.getElementById('college')?.value.trim() || "",
                 address: document.getElementById('address')?.value.trim() || "",
+                facultySignature: signaturePad && !signaturePad.isEmpty() ? signaturePad.toDataURL("image/png") : "",
                 employmentStatus: document.getElementById('employmentStatus')?.value || "",
                 employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
                 term: "2nd Term", 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { submitATA, approveATA, getPendingApprovals, viewATAForm, viewAtaPdf, renderNewATA, getAdminHistory, previewAtaPdf, discoverPdfFields } from '../../controllers/ataController.js';
+import { submitATA, approveATA, getPendingApprovals, viewATAForm, viewAtaPdf, renderNewATA, getAdminHistory, previewAtaPdf, discoverPdfFields, saveVipSignature, previewVipSignaturePdf } from '../../controllers/ataController.js';
 import { requireAuth, checkRole } from '../../middleware/ata_authMiddleware.js';
 
 const router = express.Router();
@@ -32,4 +32,7 @@ router.get('/pdf/:id', requireAuth, viewAtaPdf);
 router.get('/new', requireAuth, renderNewATA);
 
 router.get('/pdf-xray', discoverPdfFields);
+
+router.post('/settings/signature', requireAuth, saveVipSignature);
+router.post('/preview-vip-signature', requireAuth, previewVipSignaturePdf);
 export default router;

@@ -38,7 +38,8 @@
       data-has-practicum="<%= typeof hasPracticum !== 'undefined' ? hasPracticum : 'false' %>"
       data-status="<%= form.status %>"
       data-load="<%= typeof totalRegularLoad !== 'undefined' ? totalRegularLoad : 0 %>"
-      data-fac-employment="<%= typeof employmentType !== 'undefined' ? employmentType : 'Full-Time' %>">
+      data-fac-employment="<%= typeof employmentType !== 'undefined' ? employmentType : 'Full-Time' %>"
+      data-has-signature="<%= (typeof user !== 'undefined' && user.signatureImage) ? 'true' : 'false' %>">
 
     <%- include('../partials/sideMenuBar') %> 
 
@@ -93,7 +94,7 @@
                     <i class="fas fa-undo"></i> Return
                 </button>
                 
-                <button class="form-btn" id="btnApprove" style="background: #28a745; color: white; border: none; padding: 10px 20px; white-space: nowrap; transition: all 0.3s ease;">
+                <button class="form-btn" id="btnSmartApprove" style="background: #28a745; color: white; border: none; padding: 10px 20px; white-space: nowrap; transition: all 0.3s ease;">
                     <i class="fas fa-check"></i> Endorse / Approve
                 </button>
             </div>
@@ -101,53 +102,147 @@
         </div>
 
     </main>
-    
     <script src="/ATA/js/ata_client.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const btnApprove = document.getElementById('btnApprove');
+            const btnApprove = document.getElementById('btnSmartApprove');
+            const btnReturn = document.getElementById('btnReturn');
             const remarksInput = document.getElementById('adminRemarks');
             const justificationLabel = document.getElementById('justificationLabel');
             
-            // Read data from the body
             const currentRole = document.body.getAttribute('data-role');
             const formStatus = document.body.getAttribute('data-status');
             const totalLoad = Number(document.body.getAttribute('data-load')) || 0;
             const facEmployment = document.body.getAttribute('data-fac-employment') || 'Full-Time';
+            const hasSignature = document.body.getAttribute('data-has-signature') === 'true';
             
-            // Limit Rule: 11 for Part-Time, 15 for Full-Time
+            const hasPracticum = document.body.getAttribute('data-has-practicum') === 'true'; 
+            const isPracticumCoord = document.body.getAttribute('data-practicum') === 'true'; 
+            
             const overloadLimit = facEmployment === 'Part-Time' ? 11 : 15;
             const isOverloaded = totalLoad > overloadLimit;
 
-            // ONLY apply this strict lock to the Program Chair while it is pending their desk!
-            if (currentRole === 'Program-Chair' && formStatus === 'PENDING_CHAIR' && isOverloaded) {
-                
-                // Show the yellow label
-                justificationLabel.style.display = 'block';
-                
-                // Set initial locked state
-                const lockButton = () => {
+            let activeBtnText = "Endorse / Approve"; 
+            let actionToSend = "";
+
+            if (formStatus === 'PENDING_PRACTICUM' && isPracticumCoord) {
+                activeBtnText = "Validate";
+                actionToSend = "VALIDATE";
+            } else if (currentRole === 'Program-Chair') {
+                activeBtnText = hasPracticum ? "Endorse to Practicum" : "Endorse to Dean";
+                actionToSend = "ENDORSE";
+            } else if (currentRole === 'Dean') {
+                activeBtnText = "Approve";
+                actionToSend = "APPROVE";
+            } else if (currentRole === 'VPAA') {
+                activeBtnText = "Note";
+                actionToSend = "NOTE";
+            } else if (currentRole === 'HR' || currentRole === 'HRMO') {
+                activeBtnText = "Finalize";
+                actionToSend = "NOTE"; 
+            }
+
+            const updateButtonState = () => {
+                if (!hasSignature) {
+                    btnApprove.style.backgroundColor = '#6c757d'; 
+                    btnApprove.style.cursor = 'not-allowed';
+                    btnApprove.innerHTML = `<i class="fas fa-signature"></i> Setup E-Signature First`;
+                    btnApprove.style.pointerEvents = 'none';
+                    return; 
+                }
+
+                if (currentRole === 'Program-Chair' && formStatus === 'PENDING_CHAIR' && isOverloaded) {
+                    justificationLabel.style.display = 'block';
                     if (remarksInput.value.trim().length < 5) {
-                        btnApprove.style.backgroundColor = '#6c757d'; // Gray
+                        btnApprove.style.backgroundColor = '#6c757d'; 
                         btnApprove.style.cursor = 'not-allowed';
                         btnApprove.innerHTML = `<i class="fas fa-lock"></i> Add Justification to Endorse`;
-                        // Disable pointer events so it physically cannot be clicked
                         btnApprove.style.pointerEvents = 'none'; 
                     } else {
-                        btnApprove.style.backgroundColor = '#28a745'; // Green
+                        btnApprove.style.backgroundColor = '#28a745'; 
                         btnApprove.style.cursor = 'pointer';
-                        btnApprove.innerHTML = `<i class="fas fa-check"></i> Endorse Form`;
-                        // Re-enable clicks
+                        btnApprove.innerHTML = `<i class="fas fa-check"></i> ${activeBtnText}`;
                         btnApprove.style.pointerEvents = 'auto'; 
                     }
-                };
+                    return; 
+                }
 
-                // Check on load
-                lockButton();
+                btnApprove.style.backgroundColor = '#28a745';
+                btnApprove.style.cursor = 'pointer';
+                btnApprove.innerHTML = `<i class="fas fa-check"></i> ${activeBtnText}`;
+                btnApprove.style.pointerEvents = 'auto'; 
+            };
 
-                // Check every time they type a letter
-                remarksInput.addEventListener('input', lockButton);
+            updateButtonState();
+            if (remarksInput) remarksInput.addEventListener('input', updateButtonState);
+
+            btnApprove.addEventListener('click', async () => {
+                if (!actionToSend) return alert("System could not determine the correct action for your role.");
+
+                const origText = btnApprove.innerHTML;
+                btnApprove.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                btnApprove.style.pointerEvents = 'none';
+
+                try {
+                    const response = await fetch(`/ata/approve/<%= form._id %>`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: actionToSend, remarks: remarksInput ? remarksInput.value : "" })
+                    });
+
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        const rawText = await response.text();
+                        console.error("SERVER RETURNED NON-JSON:", rawText);
+                        alert("CRITICAL ERROR: Server did not return JSON data. Check the terminal console!\n\nResponse Snippet: " + rawText.substring(0, 100));
+                        btnApprove.innerHTML = origText;
+                        btnApprove.style.pointerEvents = 'auto';
+                        return;
+                    }
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        if (result.stayOnPage) {
+                            alert("Endorsed as Chair!\n\nThe system detected you are also the Practicum Coordinator for this form. The page will now refresh so you can Validate it.");
+                            location.reload(); 
+                        } else {
+                            window.location.href = '/ata/pending'; 
+                        }
+                    } else {
+                        alert("Error: " + (result.error || "Failed to process."));
+                        btnApprove.innerHTML = origText;
+                        btnApprove.style.pointerEvents = 'auto';
+                    }
+                } catch (error) {
+                    console.error("FETCH ERROR:", error);
+                    alert("A fatal network error occurred! Error: " + error.message);
+                    btnApprove.innerHTML = origText;
+                    btnApprove.style.pointerEvents = 'auto';
+                }
+            });
+
+            if (btnReturn) {
+                btnReturn.addEventListener('click', async () => {
+                    const remarks = remarksInput ? remarksInput.value : '';
+                    if (remarks.trim().length < 5) return alert("Please provide a reason in the remarks field before returning.");
+                    
+                    const origText = btnReturn.innerHTML;
+                    btnReturn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Returning...';
+                    btnReturn.style.pointerEvents = 'none';
+
+                    try {
+                        const response = await fetch(`/ata/approve/<%= form._id %>`, {
+                            method: 'PUT', 
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'RETURN', remarks: remarks })
+                        });
+                        if (response.ok) window.location.href = '/ata/pending';
+                        else alert("Failed to return form.");
+                    } catch (error) { alert("Network error."); }
+                    finally { btnReturn.innerHTML = origText; btnReturn.style.pointerEvents = 'auto'; }
+                });
             }
         });
     </script>

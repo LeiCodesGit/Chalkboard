@@ -9,7 +9,127 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ==========================================
-// 🧠 1. THE MATH ENGINE (Restored Mapúa Logic)
+// 🔐 SAVE VIP SIGNATURE TO PROFILE VAULT
+// ==========================================
+export const saveVipSignature = async (req, res) => {
+    try {
+        const { signatureImage } = req.body;
+        
+        let sessionUserID = "unknown";
+        if (req.user) {
+            if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
+            else if (req.user._id) sessionUserID = req.user._id.toString();
+            else if (req.user.id) sessionUserID = req.user.id;
+            else if (req.user.employeeId) sessionUserID = req.user.employeeId;
+        }
+
+        const User = mainDB.model('User');
+        const liveUser = await User.findById(sessionUserID);
+        
+        if (!liveUser) return res.status(404).json({ error: "User not found." });
+
+        // Save it to their profile!
+        liveUser.signatureImage = signatureImage;
+        await liveUser.save();
+
+        res.status(200).json({ message: "Signature Vault updated successfully!" });
+    } catch (error) {
+        console.error("Error saving VIP signature:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+// ==========================================
+// 🩻 PREVIEW VIP SIGNATURE ON BLANK FORM
+// ==========================================
+export const previewVipSignaturePdf = async (req, res) => {
+    try {
+        const { signatureImage, role } = req.body;
+        
+        // 👇 FIXED: Fetch the live user to get their REAL NAME!
+        let sessionUserID = "unknown";
+        if (req.user) {
+            if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
+            else if (req.user._id) sessionUserID = req.user._id.toString();
+            else if (req.user.id) sessionUserID = req.user.id;
+            else if (req.user.employeeId) sessionUserID = req.user.employeeId;
+        }
+        const User = mainDB.model('User');
+        const liveUser = await User.findById(sessionUserID);
+        const actualName = liveUser ? `${liveUser.firstName} ${liveUser.lastName}`.trim() : "Faculty Member";
+
+        const templatePath = path.join(__dirname, '../templates/ATA-College-Blank.pdf'); 
+        const existingPdfBytes = fs.readFileSync(templatePath);
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const pdfForm = pdfDoc.getForm();
+
+        let targetBox = 'text_83xjqp'; 
+        let title = "PROGRAM CHAIR / CLUSTER HEAD";
+        let offsetX = 0;
+        let offsetY = 0;
+        let customScale = 0.3; 
+
+        if (role === 'Dean') { 
+            targetBox = 'text_80trhj'; title = "DEAN"; 
+            offsetY = -10;
+        }
+        else if (role === 'VPAA') { 
+            targetBox = 'text_81gbif'; title = "VPAA"; 
+            offsetX = 30; 
+            offsetY = -10;   
+        }
+        else if (['HR', 'HRMO'].includes(role)) { 
+            targetBox = 'text_82wmdd'; title = "HRMO"; 
+            offsetY = -13; 
+        }
+        else if (role === 'Practicum-Coordinator') {
+            targetBox = 'text_176plma'; 
+            offsetX = 45;       
+            offsetY = -8;       
+            customScale = 0.12; 
+        }
+
+        const field = pdfForm.getTextField(targetBox);
+        if (role === 'Practicum-Coordinator') {
+            // 👇 FIXED: Uses your real name instead of Jane Doe!
+            field.setText(actualName); 
+            field.setFontSize(7);
+        } else {
+            field.setText(`SAMPLE PREVIEW | ${new Date().toLocaleDateString('en-US')}`);
+            field.setFontSize(7);
+        }
+
+        if (signatureImage && signatureImage.startsWith('data:image')) {
+            const widgets = field.acroField.getWidgets();
+            if (widgets && widgets.length > 0) {
+                const rect = widgets[0].getRectangle();
+                const page = pdfDoc.getPages()[0];
+                
+                const pngImage = await pdfDoc.embedPng(signatureImage);
+                const pngDims = pngImage.scale(customScale); 
+                
+                page.drawImage(pngImage, {
+                    x: rect.x + offsetX, 
+                    y: rect.y + offsetY, 
+                    width: pngDims.width,
+                    height: pngDims.height,
+                });
+            }
+        }
+
+        pdfForm.getFields().forEach(f => f.enableReadOnly());
+        const pdfBytes = await pdfDoc.save();
+        res.setHeader('Content-Type', 'application/pdf');
+        res.send(Buffer.from(pdfBytes));
+
+    } catch (error) {
+        console.error("VIP Preview Error:", error);
+        res.status(500).json({ error: "Failed to generate VIP preview." });
+    }
+};
+
+// ==========================================
+// 🧠 1. THE MATH ENGINE 
 // ==========================================
 const calculateUnits = (formData) => {
     const sumUnits = (array) => {
@@ -17,12 +137,10 @@ const calculateUnits = (formData) => {
         return array.reduce((sum, item) => sum + (Number(item.units) || 0), 0);
     };
 
-    // Calculate individual sums
     const sumB = sumUnits(formData.sectionB_WithinCollege);
     const sumC = sumUnits(formData.sectionC_OtherCollege);
     const sumD = sumUnits(formData.sectionD_AdminWork);
 
-    // Rule #7 strictly adds B + C + D (Section A is excluded)
     const totalTeachingUnits = sumB + sumC + sumD; 
     const totalEffectiveUnits = totalTeachingUnits; 
 
@@ -45,7 +163,7 @@ const calculateUnits = (formData) => {
 };
 
 // ==========================================
-// 📄 RENDER NEW ATA FORM (With Coordinators)
+// 📄 RENDER NEW ATA FORM
 // ==========================================
 export const renderNewATA = async (req, res) => {
     try {
@@ -68,13 +186,12 @@ export const renderNewATA = async (req, res) => {
 };
 
 // ==========================================
-// 📝 2. CREATE / SUBMIT ATA (Bulletproof Version)
+// 📝 2. CREATE / SUBMIT ATA 
 // ==========================================
 export const submitATA = async (req, res) => { 
     try {
         const formData = req.body; 
         
-        // 1. Foolproof Session ID Grabber
         let sessionUserID = "unknown";
         if (req.user) {
             if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
@@ -83,7 +200,6 @@ export const submitATA = async (req, res) => {
             else if (req.user.employeeId) sessionUserID = req.user.employeeId;
         }
 
-        // 2. Fetch LIVE User Data to guarantee Admin Roles & Names exist
         const User = mainDB.model('User');
         const liveUser = await User.findById(sessionUserID);
         if (!liveUser) return res.status(404).json({ error: "User not found in database." });
@@ -102,7 +218,6 @@ export const submitATA = async (req, res) => {
             const hasPracticum = formData.sectionE_Practicum && formData.sectionE_Practicum.length > 0;
             const adminFullName = `${liveUser.firstName || ''} ${liveUser.lastName || ''}`.trim();
             
-            // 🧠 MAGIC ADMIN AUTO-ENDORSE LOGIC
             if (routingRole === 'Dean') {
                 newStatus = 'PENDING_VPAA'; 
                 initialHistory.push({
@@ -110,6 +225,7 @@ export const submitATA = async (req, res) => {
                     approverName: adminFullName,
                     approvalStatus: 'APPROVED',
                     remarks: formData.justification || "Approved by Dean upon submission.",
+                    signatureImage: liveUser.signatureImage || "",
                     date: Date.now()
                 });
             } 
@@ -120,11 +236,12 @@ export const submitATA = async (req, res) => {
                     approverName: adminFullName,
                     approvalStatus: 'ENDORSED',
                     remarks: formData.justification || "Endorsed by Program Chair upon submission.",
+                    signatureImage: liveUser.signatureImage || "",
                     date: Date.now()
                 });
             } 
             else {
-                newStatus = 'PENDING_CHAIR'; // Normal Faculty
+                newStatus = 'PENDING_CHAIR'; 
             }
         }
 
@@ -137,6 +254,7 @@ export const submitATA = async (req, res) => {
             employmentType: formData.employmentType,
             sectionA_AdminUnits: formData.sectionA_AdminUnits || 0,
             address: formData.address,
+            facultySignature: formData.facultySignature || "",
             term: formData.term || "2nd Term 2025-2026", 
             academicYear: formData.academicYear || "2025-2026",
             
@@ -159,7 +277,6 @@ export const submitATA = async (req, res) => {
 
     } catch (error) {
         console.error("Error submitting ATA:", error);
-        // 👇 Diagnostic fix: Tells the UI EXACTLY what failed in the database!
         res.status(500).json({ error: "Failed to submit ATA Form: " + error.message });
     }
 };
@@ -215,9 +332,29 @@ export const approveATA = async (req, res) => {
 
                 case 'PENDING_PRACTICUM':
                     if ((primaryRole === 'Practicum-Coordinator' || isPracticumCoord) && action === 'VALIDATE') {
-                        newStatus = 'PENDING_DEAN';
                         historyStatus = 'VALIDATED';
                         appliedRole = 'Practicum-Coordinator'; 
+                        
+                        // 👇 SAFETY PATCH: Uses (form.sectionE_Practicum || [])
+                        const requiredCoordinators = [...new Set(
+                            (form.sectionE_Practicum || [])
+                                .filter(row => row.coordinator && row.coordinator.trim() !== '')
+                                .map(row => row.coordinator.trim().toLowerCase())
+                        )];
+
+                        const signedCoordinators = form.approvalHistory
+                            .filter(log => log.approvalStatus === 'VALIDATED' || log.approverRole === 'Practicum-Coordinator')
+                            .map(log => log.approverName.trim().toLowerCase());
+
+                        signedCoordinators.push(adminFullName.toLowerCase()); 
+
+                        const allSigned = requiredCoordinators.every(reqName => signedCoordinators.includes(reqName));
+
+                        if (allSigned) {
+                            newStatus = 'PENDING_DEAN'; 
+                        } else {
+                            newStatus = 'PENDING_PRACTICUM'; 
+                        }
                     } else return res.status(403).json({ error: "Invalid action for Practicum Coordinator." });
                     break;
 
@@ -253,14 +390,37 @@ export const approveATA = async (req, res) => {
             approverName: adminFullName,
             approvalStatus: historyStatus,
             remarks: remarks || "",
+            signatureImage: liveUser.signatureImage || "",
             date: Date.now()
         });
 
         await form.save();
-        res.status(200).json({ message: `Success! Form is now ${newStatus}` });
+
+        let stayOnPage = false;
+        
+        if (newStatus === 'PENDING_PRACTICUM' && isPracticumCoord) {
+            // 👇 SAFETY PATCH: Uses (form.sectionE_Practicum || [])
+            const userIsListedCoord = (form.sectionE_Practicum || []).some(row =>
+                row.coordinator && row.coordinator.trim().toLowerCase() === adminFullName.toLowerCase()
+            );
+            
+            const alreadyValidated = form.approvalHistory.some(log =>
+                log.approverRole === 'Practicum-Coordinator' && log.approverName.toLowerCase() === adminFullName.toLowerCase()
+            );
+
+            if (userIsListedCoord && !alreadyValidated) {
+                stayOnPage = true; 
+            }
+        }
+
+        res.status(200).json({ 
+            message: `Success! Form is now ${newStatus}`,
+            newStatus: newStatus,
+            stayOnPage: stayOnPage 
+        });
 
     } catch (error) { 
-        console.error(error);
+        console.error("APPROVE ATA ERROR:", error);
         res.status(500).json({ error: error.message }); 
     }
 };
@@ -320,7 +480,32 @@ export const getPendingApprovals = async (req, res) => {
             query = { _id: null }; 
         }
 
-        const pendingForms = await ATAForm.find(query).sort({ createdAt: -1 });
+        let pendingForms = await ATAForm.find(query).sort({ createdAt: -1 });
+
+        // 👇 NEW: THE INBOX HIDER 
+        // Hides multi-coordinator forms from people who have already signed them!
+        // 👇 UPGRADED: DUAL-ROLE INBOX HIDER 
+        // Checks if you have signed for the specific required step, not just anywhere in the history!
+        pendingForms = pendingForms.filter(form => {
+            let requiredRoleForStep = '';
+            
+            // Figure out what role the form is currently waiting for
+            if (form.status === 'PENDING_CHAIR') requiredRoleForStep = 'Program-Chair';
+            else if (form.status === 'PENDING_PRACTICUM') requiredRoleForStep = 'Practicum-Coordinator';
+            else if (form.status === 'PENDING_DEAN') requiredRoleForStep = 'Dean';
+            else if (form.status === 'PENDING_VPAA') requiredRoleForStep = 'VPAA';
+            else if (form.status === 'PENDING_HR') requiredRoleForStep = 'HR';
+
+            // Did THIS person sign it AS the REQUIRED role?
+            const alreadySignedForThisStep = form.approvalHistory.some(log => {
+                const nameMatch = log.approverName.toLowerCase() === fullName.toLowerCase();
+                const roleMatch = log.approverRole === requiredRoleForStep || (requiredRoleForStep === 'HR' && ['HR', 'HRMO'].includes(log.approverRole));
+                return nameMatch && roleMatch;
+            });
+
+            // Keep the form if they haven't signed for this specific step yet!
+            return !alreadySignedForThisStep;
+        });
 
         res.render('ATA/pending-approvals', {
             forms: pendingForms,
@@ -415,7 +600,7 @@ export const getAdminHistory = async (req, res) => {
     }
 };
 
-// 📄 5.2 VIEW SPECIFIC FORM (Read-Only with Smart Overload Check)
+// 📄 5.2 VIEW SPECIFIC FORM (Read-Only)
 export const viewATAForm = async (req, res) => {
     try {
         const form = await ATAForm.findById(req.params.id);
@@ -423,11 +608,21 @@ export const viewATAForm = async (req, res) => {
         
         const hasPracticum = form.sectionE_Practicum && form.sectionE_Practicum.length > 0;
         
-        // 👇 NEW: Pass the total load and employment type so the UI can detect overloads!
+        let sessionUserID = "unknown";
+        if (req.user) {
+            if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
+            else if (req.user._id) sessionUserID = req.user._id.toString();
+            else if (req.user.id) sessionUserID = req.user.id;
+            else if (req.user.employeeId) sessionUserID = req.user.employeeId;
+        }
+
+        const User = mainDB.model('User');
+        const liveUser = await User.findById(sessionUserID);
+
         res.render('ATA/review-ata', { 
             form: form, 
-            role: req.user.role,
-            user: req.user,              
+            role: liveUser ? liveUser.role : req.user.role,
+            user: liveUser || req.user, 
             currentPageCategory: 'ata',
             hasPracticum: hasPracticum,
             totalRegularLoad: form.totalEffectiveUnits || 0,
@@ -470,13 +665,9 @@ export const viewAtaPdf = async (req, res) => {
         fillText('text_1tvhi', form.facultyName);
         fillText('text_5jvwx', form.position);
         fillText('COLLEGE', form.college);
-        
-        // 👇 FIXED: Changed formData to form
         fillText('text_2beim', form.employmentStatus);
-        
         fillText('text_4wesx', form.address);
         
-        // 👇 FIXED: Changed formData to form
         const adminUnits = Number(form.sectionA_AdminUnits) || 0;
         if (adminUnits > 0) {
             fillText('text_36xvyn', adminUnits); 
@@ -562,10 +753,36 @@ export const viewAtaPdf = async (req, res) => {
         
         fillText('text_222pgqw', form.totalRemedialUnits); 
 
-        // 3. Official Signatures!
+        // ==========================================
+        // 3. OFFICIAL SIGNATURES & STAMPING
+        // ==========================================
         const formattedCreationDate = new Date(form.createdAt).toLocaleDateString('en-US');
         fillText('text_84skhw', `${form.facultyName} | ${formattedCreationDate}`); 
 
+        if (form.facultySignature && form.facultySignature.startsWith('data:image')) {
+            try {
+                const sigField = pdfForm.getTextField('text_84skhw');
+                const widgets = sigField.acroField.getWidgets();
+                
+                if (widgets && widgets.length > 0) {
+                    const rect = widgets[0].getRectangle();
+                    const firstPage = pdfDoc.getPages()[0];
+                    const pngImage = await pdfDoc.embedPng(form.facultySignature);
+                    const pngDims = pngImage.scale(0.3); 
+
+                    firstPage.drawImage(pngImage, {
+                        x: rect.x,
+                        y: rect.y - 15, 
+                        width: pngDims.width,
+                        height: pngDims.height,
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to stamp database signature:", e);
+            }
+        }
+
+        // Grabbing logs and printing names/dates
         const getSignature = (role) => form.approvalHistory.find(log => log.approverRole === role);
         
         const chairLog = getSignature('Program-Chair');
@@ -580,7 +797,59 @@ export const viewAtaPdf = async (req, res) => {
         const hrLog = form.approvalHistory.find(log => ['HR', 'HRMO'].includes(log.approverRole));
         if (hrLog) fillText('text_82wmdd', `${hrLog.approverName} | ${new Date(hrLog.date).toLocaleDateString('en-US')}`);
 
-        // 👇 PERFECTED OVERLOAD JUSTIFICATION LOGIC
+        // VIP Stamper Engine
+        const stampAdminSignature = async (log, boxName, offsetX = 0, offsetY = 0, customScale = 0.3) => {
+            if (log && log.signatureImage && log.signatureImage.startsWith('data:image')) {
+                try {
+                    const field = pdfForm.getTextField(boxName);
+                    const widgets = field.acroField.getWidgets();
+                    if (widgets && widgets.length > 0) {
+                        const rect = widgets[0].getRectangle();
+                        const page = pdfDoc.getPages()[0];
+                        const pngImage = await pdfDoc.embedPng(log.signatureImage);
+                        const pngDims = pngImage.scale(customScale); 
+                        
+                        page.drawImage(pngImage, {
+                            x: rect.x + offsetX,
+                            y: rect.y + offsetY,
+                            width: pngDims.width,
+                            height: pngDims.height,
+                        });
+                    }
+                } catch (e) {
+                    console.error(`Failed to stamp admin signature for ${boxName}:`, e);
+                }
+            }
+        };
+
+        // Command big signatures
+        if (chairLog) await stampAdminSignature(chairLog, 'text_83xjqp'); 
+        if (deanLog) await stampAdminSignature(deanLog, 'text_80trhj', 0, -10);   
+        if (vpaaLog) await stampAdminSignature(vpaaLog, 'text_81gbif', 30, -10);
+        if (hrLog) await stampAdminSignature(hrLog, 'text_82wmdd', 0, -13);
+
+        // 👇 MULTI-COORDINATOR SMART STAMPER
+        if (form.sectionE_Practicum && form.sectionE_Practicum.length > 0) {
+            const pracBoxes = ['text_176plma','text_177kwyx','text_178bleo','text_179hjnh','text_180znjo','text_181jcgm','text_182hixs','text_183eow', 'text_184ccue','text_185nzmw'];
+            
+            const allPracLogs = form.approvalHistory.filter(log => log.approverRole === 'Practicum-Coordinator');
+
+            for (let i = 0; i < form.sectionE_Practicum.length; i++) {
+                const row = form.sectionE_Practicum[i];
+                
+                if (i < 10 && row.coordinator && row.coordinator.trim() !== '') {
+                    const matchingLog = allPracLogs.find(log => 
+                        log.approverName.toLowerCase() === row.coordinator.trim().toLowerCase()
+                    );
+
+                    if (matchingLog) {
+                        await stampAdminSignature(matchingLog, pracBoxes[i], 45, -8, 0.12);
+                    }
+                }
+            }
+        }
+
+        // PERFECTED OVERLOAD JUSTIFICATION LOGIC
         const regularLoad = form.totalEffectiveUnits || 0;
         const isPartTime = form.employmentType === 'Part-Time';
         const overloadLimit = isPartTime ? 11 : 15;
@@ -590,10 +859,9 @@ export const viewAtaPdf = async (req, res) => {
                 ? chairLog.remarks 
                 : "Justification pending Program Chair review.";
             
-            // 🧠 Smart Character Chunker (Calibrated for 704px width)
             let remainingText = chairRemarks;
             let lines = ['', '', ''];
-            const MAX_CHARS = 155; // 👈 Optimized for 704px at 7pt font!
+            const MAX_CHARS = 155; 
 
             for (let i = 0; i < 3; i++) {
                 if (remainingText.length === 0) break;
@@ -618,8 +886,6 @@ export const viewAtaPdf = async (req, res) => {
             fillText('text_77ynib', "N/A");
         }
 
-        // pdfForm.flatten(); 
-        // 👇 THE ULTIMATE PDF LOCKER (Preserves Boxes, Removes Dropdown Arrows)
         const allFields = pdfForm.getFields();
         const firstPage = pdfDoc.getPages()[0];
         
@@ -632,11 +898,7 @@ export const viewAtaPdf = async (req, res) => {
                 
                 const widgets = field.acroField.getWidgets();
                 if (widgets && widgets.length > 0) {
-                    dropdownData.push({ 
-                        field: field, 
-                        val: val, 
-                        rect: widgets[0].getRectangle() 
-                    });
+                    dropdownData.push({ field: field, val: val, rect: widgets[0].getRectangle() });
                 }
             } else {
                 field.enableReadOnly();
@@ -653,6 +915,7 @@ export const viewAtaPdf = async (req, res) => {
                 });
             }
         });
+
         const pdfBytes = await pdfDoc.save();
         
         res.setHeader('Content-Type', 'application/pdf');
@@ -729,7 +992,7 @@ export const renderDashboard = async (req, res) => {
 };
 
 // ==========================================
-// 🖨️ 8. GENERATE LIVE PDF PREVIEW 
+// 🩻 8. GENERATE LIVE PDF PREVIEW 
 // ==========================================
 export const previewAtaPdf = async (req, res) => {
     try {
@@ -751,7 +1014,6 @@ export const previewAtaPdf = async (req, res) => {
             } catch (err) {}
         };
 
-        // 1. Personal Details
         fillText('text_1tvhi', formData.facultyName);
         fillText('text_5jvwx', formData.position);
         fillText('COLLEGE', formData.college);
@@ -771,7 +1033,6 @@ export const previewAtaPdf = async (req, res) => {
             if (formData.employmentType === 'Part-Time') pdfForm.getCheckBox('checkbox_8omuk').check();
         } catch (e) {}
 
-        // 2. Map Array Data Safely
         const safeForEach = (array, mappingCols, limit) => {
             if (!array || !Array.isArray(array)) return;
             array.forEach((row, i) => {
@@ -842,9 +1103,32 @@ export const previewAtaPdf = async (req, res) => {
         });
         
         fillText('text_222pgqw', totals.totalRemedialUnits); 
-        fillText('text_84skhw', `${formData.facultyName} | ${new Date().toLocaleDateString()}`); 
+        fillText('text_84skhw', `${formData.facultyName} | ${new Date().toLocaleDateString('en-US')}`); 
 
-        // 👇 PERFECTED OVERLOAD JUSTIFICATION LOGIC (FOR LIVE PREVIEW)
+        if (formData.facultySignature && formData.facultySignature.startsWith('data:image')) {
+            try {
+                const sigField = pdfForm.getTextField('text_84skhw');
+                const widgets = sigField.acroField.getWidgets();
+                
+                if (widgets && widgets.length > 0) {
+                    const rect = widgets[0].getRectangle();
+                    const firstPage = pdfDoc.getPages()[0];
+                    
+                    const pngImage = await pdfDoc.embedPng(formData.facultySignature);
+                    const pngDims = pngImage.scale(0.3); 
+
+                    firstPage.drawImage(pngImage, {
+                        x: rect.x,
+                        y: rect.y - 15, 
+                        width: pngDims.width,
+                        height: pngDims.height,
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to stamp live signature preview:", e);
+            }
+        }
+
         const regularLoad = totals.totalEffectiveUnits || 0;
         const isPartTime = formData.employmentType === 'Part-Time';
         const overloadLimit = isPartTime ? 11 : 15;
@@ -852,10 +1136,9 @@ export const previewAtaPdf = async (req, res) => {
         if (regularLoad > overloadLimit) {
             if (formData.justification && formData.justification.trim() !== '') {
                 
-                // 🧠 Smart Character Chunker (Calibrated for 704px width)
                 let remainingText = formData.justification;
                 let lines = ['', '', ''];
-                const MAX_CHARS = 155; // 👈 Optimized for 704px at 7pt font!
+                const MAX_CHARS = 155; 
 
                 for (let i = 0; i < 3; i++) {
                     if (remainingText.length === 0) break;
@@ -885,13 +1168,9 @@ export const previewAtaPdf = async (req, res) => {
             fillText('text_77ynib', "N/A");
         }
 
-        // pdfForm.flatten(); 
-        // 👇 THE ULTIMATE PDF LOCKER (No arrows, perfect checkboxes)
-       // 👇 THE ULTIMATE PDF LOCKER (Preserves Boxes, Removes Dropdown Arrows)
         const allFields = pdfForm.getFields();
         const firstPage = pdfDoc.getPages()[0];
         
-        // 1. Collect dropdown data safely
         const dropdownData = [];
         
         allFields.forEach(field => {
@@ -901,25 +1180,19 @@ export const previewAtaPdf = async (req, res) => {
                 
                 const widgets = field.acroField.getWidgets();
                 if (widgets && widgets.length > 0) {
-                    dropdownData.push({ 
-                        field: field, 
-                        val: val, 
-                        rect: widgets[0].getRectangle() 
-                    });
+                    dropdownData.push({ field: field, val: val, rect: widgets[0].getRectangle() });
                 }
             } else {
-                // Text boxes and checkboxes are locked normally (Preserves their UI borders!)
                 field.enableReadOnly();
             }
         });
 
-        // 2. Remove the dropdowns entirely and draw pure text in their place!
         dropdownData.forEach(data => {
-            pdfForm.removeField(data.field); // Deletes the widget (Arrow is permanently gone!)
+            pdfForm.removeField(data.field); 
             if (data.val) {
                 firstPage.drawText(data.val, {
                     x: data.rect.x + 2,
-                    y: data.rect.y + 4, // Slight upward adjustment for baseline
+                    y: data.rect.y + 4, 
                     size: 8
                 });
             }
@@ -936,7 +1209,7 @@ export const previewAtaPdf = async (req, res) => {
 };
 
 // ==========================================
-// 🩻 PDF X-RAY (VISUAL MAP GENERATOR)
+// 🩻 PDF X-RAY 
 // ==========================================
 export const discoverPdfFields = async (req, res) => {
     try {

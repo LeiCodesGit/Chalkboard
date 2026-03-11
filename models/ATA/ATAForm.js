@@ -60,6 +60,7 @@ const approvalHistorySchema = new mongoose.Schema({
     approverName: { type: String }, 
     approvalStatus: { type: String, enum: ['ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED', 'FINALIZED'] },
     remarks: String, 
+    signatureImage: String,
     date: { type: Date, default: Date.now } 
 });
 
@@ -76,6 +77,7 @@ const ataFormSchema = new mongoose.Schema({
     employmentStatus: String,
     employmentType: String,
     address: String,
+    facultySignature: String,
     
     // Form Metadata
     term: { type: String, default: "2nd Term 2025-2026" },
