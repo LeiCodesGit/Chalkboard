@@ -108,7 +108,8 @@ adminOverviewRouter.get('/', async (req, res) => {
 
         res.render('Syllabus/courseOverviewAdmin', {
             items, approvedCount, archivedCount, returnUrl,
-            currentPageCategory: 'syllabus'
+            currentPageCategory: 'syllabus',
+            user: req.session.user
         });
 
     } catch (error) {
@@ -116,7 +117,8 @@ adminOverviewRouter.get('/', async (req, res) => {
         res.render('Syllabus/courseOverviewAdmin', {
             items: DUMMY_ITEMS,
             approvedCount: 2, archivedCount: 1, returnUrl,
-            currentPageCategory: 'syllabus'
+            currentPageCategory: 'syllabus',
+            user: req.session.user
         });
     }
 });

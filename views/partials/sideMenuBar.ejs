@@ -124,7 +124,7 @@
 
     <ul class="sidebar-menu">
         <li>
-            <a href="/institution" class="<%= (locals.currentPageCategory === 'institution') ? 'active' : '' %>">
+            <a href="<%= (locals.user && (user.role === 'Admin' || user.role === 'HR')) ? '/admin/institution' : '/institution' %>" class="<%= (locals.currentPageCategory === 'institution') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">home</span>
                 <span class="menu-text">Institution</span>
             </a>
@@ -142,7 +142,7 @@
             </a>
         </li>
         <li>
-            <a href="/syllabus" class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
+            <a href="<%= (locals.user && (user.role === 'Admin' || user.role === 'HR')) ? '/syllabus/hr' : '/syllabus' %>" class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">book_4</span>
                 <span class="menu-text">Syllabus</span>
             </a>
