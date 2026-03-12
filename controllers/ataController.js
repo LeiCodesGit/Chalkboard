@@ -221,6 +221,9 @@ export const submitATA = async (req, res) => {
     try {
         const formData = req.body; 
         
+        // 👇 1. Grab the ID from the frontend payload (will be null for new forms)
+        const existingDraftId = formData.existingDraftId; 
+        
         let sessionUserID = "unknown";
         if (req.user) {
             if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
@@ -242,6 +245,7 @@ export const submitATA = async (req, res) => {
         let newStatus = 'DRAFT';
         let initialHistory = []; 
         
+        // 🚀 Auto-Routing Logic (Kept exactly as you wrote it)
         if (formData.action === 'SUBMIT') {
             const routingRole = liveUser.role || "Professor"; 
             const hasPracticum = formData.sectionE_Practicum && formData.sectionE_Practicum.length > 0;
@@ -274,7 +278,8 @@ export const submitATA = async (req, res) => {
             }
         }
 
-        const newForm = new ATAForm({
+        // 👇 2. Package all data into one object so we can use it for BOTH create and update
+        const formPayload = {
             userID: sessionUserID, 
             facultyName: formData.facultyName, 
             position: formData.position,
@@ -298,18 +303,51 @@ export const submitATA = async (req, res) => {
             totalEffectiveUnits: totals.totalEffectiveUnits,
             totalRemedialUnits: totals.totalRemedialUnits,
             status: newStatus,
-            approvalHistory: initialHistory 
-        });
+            
+            // Crucial: Clear out the old rejection remarks from the Chair since they fixed it!
+            remarks: "",
+            chairRemarks: "" 
+        };
 
-        await newForm.save(); 
-        res.status(201).json({ message: "ATA Form saved successfully!", data: newForm });
+        // 👇 3. THE FORK IN THE ROAD (Update vs Create)
+        if (existingDraftId) {
+            // --- UPDATE EXISTING DRAFT ---
+            const existingForm = await ATAForm.findById(existingDraftId);
+            if (!existingForm) return res.status(404).json({ error: "Draft not found." });
+
+            // Apply the new data over the old data
+            Object.assign(existingForm, formPayload);
+
+            // Add auto-history if they are an admin, OR add a "Resubmitted" tag for professors
+            if (initialHistory.length > 0) {
+                existingForm.approvalHistory.push(...initialHistory);
+            } else if (newStatus !== 'DRAFT') {
+                existingForm.approvalHistory.push({
+                    approverRole: 'Professor',
+                    approverName: formData.facultyName,
+                    approvalStatus: 'RESUBMITTED',
+                    remarks: 'Draft corrected and resubmitted to Chair.',
+                    date: Date.now()
+                });
+            }
+
+            await existingForm.save();
+            return res.status(200).json({ message: "Draft successfully updated and resubmitted!", data: existingForm });
+
+        } else {
+            // --- CREATE BRAND NEW FORM ---
+            formPayload.approvalHistory = initialHistory;
+            const newForm = new ATAForm(formPayload);
+            
+            await newForm.save(); 
+            return res.status(201).json({ message: "ATA Form submitted successfully!", data: newForm });
+        }
 
     } catch (error) {
         console.error("Error submitting ATA:", error);
         res.status(500).json({ error: "Failed to submit ATA Form: " + error.message });
     }
 };
-
 // ==========================================
 // 🚦 3. ENDORSE / APPROVE / RETURN 
 // ==========================================
@@ -518,21 +556,32 @@ export const getPendingApprovals = async (req, res) => {
         pendingForms = pendingForms.filter(form => {
             let requiredRoleForStep = '';
             
-            // Figure out what role the form is currently waiting for
             if (form.status === 'PENDING_CHAIR') requiredRoleForStep = 'Program-Chair';
             else if (form.status === 'PENDING_PRACTICUM') requiredRoleForStep = 'Practicum-Coordinator';
             else if (form.status === 'PENDING_DEAN') requiredRoleForStep = 'Dean';
             else if (form.status === 'PENDING_VPAA') requiredRoleForStep = 'VPAA';
             else if (form.status === 'PENDING_HR') requiredRoleForStep = 'HR';
 
-            // Did THIS person sign it AS the REQUIRED role?
-            const alreadySignedForThisStep = form.approvalHistory.some(log => {
+            // Find the index of the MOST RECENT "RESUBMITTED" action by the Professor
+            let lastResubmitIndex = -1;
+            for (let i = form.approvalHistory.length - 1; i >= 0; i--) {
+                if (form.approvalHistory[i].approvalStatus === 'RESUBMITTED') {
+                    lastResubmitIndex = i;
+                    break;
+                }
+            }
+
+            // Check if Marites signed it AFTER the last time it was resubmitted
+            const alreadySignedForThisStep = form.approvalHistory.some((log, index) => {
+                // If this signature happened BEFORE the resubmission, ignore it!
+                if (index < lastResubmitIndex) return false;
+
                 const nameMatch = log.approverName.toLowerCase() === fullName.toLowerCase();
                 const roleMatch = log.approverRole === requiredRoleForStep || (requiredRoleForStep === 'HR' && ['HR', 'HRMO'].includes(log.approverRole));
+                
                 return nameMatch && roleMatch;
             });
 
-            // Keep the form if they haven't signed for this specific step yet!
             return !alreadySignedForThisStep;
         });
 

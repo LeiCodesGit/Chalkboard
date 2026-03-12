@@ -201,6 +201,53 @@ router.get("/view-submission/:id", requireAuth, async (req, res) => {
     }
 });
 
+// ==========================================
+// 📝 EDIT DRAFT SUBMISSION (NEW ROUTE)
+// ==========================================
+router.get("/edit/:id", requireAuth, async (req, res) => {
+    try {
+        // Kick executives out
+        const userRole = req.user.role || "";
+        if (['VPAA', 'HR', 'HRMO'].includes(userRole)) {
+            return res.redirect('/ata/dashboard/window');
+        }
+
+        // Find the specific form
+        const formId = req.params.id;
+        const draftForm = await ATAForm.findById(formId);
+
+        if (!draftForm) {
+            return res.status(404).send("ATA Form not found.");
+        }
+
+        // Prevent users from editing forms that have already been submitted/approved
+        if (draftForm.status !== 'DRAFT') {
+            return res.status(403).send("Error: Only returned drafts can be edited.");
+        }
+
+        // We need the exact same data variables that the '/new' route uses
+        const safeUser = getSafeUser(req.user);
+        const User = mainDB.model('User'); 
+        const coordinators = await User.find({ isPracticumCoordinator: true });
+        const coordinatorNames = coordinators.map(c => `${c.firstName} ${c.lastName}`.trim());
+
+        // Render the new-ata page, but pass the draftForm data to it
+        res.render("ATA/new-ata", {
+            user: safeUser,
+            role: safeUser.role,
+            employmentType: safeUser.employmentType,
+            isPracticumCoordinator: safeUser.isPracticumCoordinator,
+            coordinators: coordinatorNames,
+            currentPageCategory: 'ata',
+            form: draftForm // 👈 This variable triggers the "Reason for Return" banner in EJS
+        });
+
+    } catch (error) {
+        console.error("Error loading edit ATA page:", error);
+        res.status(500).send("Server Error");
+    }
+});
+
 router.get("/reports", requireAuth, (req, res) => res.render("ATA/reports"));
 router.get("/profile", requireAuth, (req, res) => res.render("ATA/profile"));
 router.get("/admin/courses", requireAuth, (req, res) => res.render("ATA/admin-courses"));
