@@ -4,68 +4,117 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TWS - Teaching Load Details</title>
-  <link rel="stylesheet" href="/twa/public/twsStyle.css" />
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
 </head>
 
-<body>
-  <%- include("partials/twsNavBar") %>
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
 
-  <main class="main-content">
-    <div class="page-container">
+    <main class="tws-app-main">
+      <div class="tws-app-center">
 
-      <div class="header-pill">
-        <h1>TWS - Teaching Load Details</h1>
+        <!-- Header pill -->
+        <div class="tws-app-title-pill">
+          <h1>TWS - Teaching Load Details</h1>
+        </div>
+
+        <!-- Card -->
+        <section class="tws-card">
+          <form method="POST" action="/tws/teaching-load/<%= tws.id %>">
+
+            <div class="tws-card-header">
+              <div class="tws-card-title">My Teaching Workload Sheets</div>
+
+              <!-- (button label same as PDF vibe) -->
+              <button class="tws-create-pill" type="submit" name="action" value="save"
+                style="border:none; cursor:pointer;">
+                + Create New TWS
+              </button>
+            </div>
+
+            <!-- Table header -->
+            <div class="tws-table">
+              <div class="tws-row tws-head" style="grid-template-columns: 0.9fr 1.2fr 0.5fr 0.8fr 0.8fr 0.9fr;">
+                <div>Course Code</div>
+                <div>Course Title</div>
+                <div>Units</div>
+                <div>Lecture Hours</div>
+                <div>Lab Hours</div>
+                <div>No. of Sections</div>
+              </div>
+
+              <% if (!tws.loads || tws.loads.length === 0) { %>
+                <div class="tws-row" style="grid-template-columns: 1fr;">
+                  <div style="opacity:.9;">No rows yet. Click “+ Add Row”.</div>
+                </div>
+              <% } %>
+
+              <% (tws.loads || []).forEach((r, idx) => { %>
+                <div class="tws-row" style="grid-template-columns: 0.9fr 1.2fr 0.5fr 0.8fr 0.8fr 0.9fr;">
+                  <div>
+                    <input name="courseCode" value="<%= r.courseCode || '' %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                  </div>
+                  <div>
+                    <input name="section" value="<%= r.section || '' %>"
+                      placeholder="Course Title"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                  </div>
+                  <div>
+                    <input name="units" type="number" min="0" value="<%= r.units || '' %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                  </div>
+                  <div>
+                    <input name="lec" type="number" min="0" value="<%= r.lec || '' %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                  </div>
+                  <div>
+                    <input name="lab" type="number" min="0" value="<%= r.lab || '' %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                  </div>
+                  <div>
+                    <input name="sections" type="number" min="1" value="<%= r.sections || '1' %>"
+                      style="width:100%; border:none; border-radius:999px; background: rgba(255,255,255,0.18); color:#fff; padding: 8px 10px; outline:none;" />
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+
+            <!-- Mid actions like PDF (+ Add Row / Remove Row) -->
+            <div style="display:flex; justify-content:center; gap:14px; margin-top:14px;">
+              <button class="tws-btn-white" type="submit" name="action" value="addRow" style="cursor:pointer;">
+                + Add Row
+              </button>
+              <button class="tws-btn-white" type="submit" name="action" value="removeRow" style="cursor:pointer;">
+                Remove Row
+              </button>
+            </div>
+
+            <!-- Bottom buttons -->
+            <div class="tws-next-wrap" style="margin-top: 16px;">
+              <button class="tws-btn-white" type="submit" name="action" value="back" style="cursor:pointer;">
+                Back
+              </button>
+
+              <button class="tws-btn-white" type="submit" name="action" value="save" style="cursor:pointer;">
+                Save Draft
+              </button>
+
+              <button class="tws-next" type="submit" name="action" value="next" style="cursor:pointer;">
+                Next
+              </button>
+            </div>
+
+          </form>
+        </section>
+
       </div>
-
-      <section class="panel">
-        <div class="panel-header">
-          <h2>My Teaching Workload Sheets</h2>
-          <a href="#" class="create-btn">+ Create New TWS</a>
-        </div>
-
-        <div class="table-grid load-grid">
-          <div class="grid-head">Course Code</div>
-          <div class="grid-head">Course Title</div>
-          <div class="grid-head center">Units</div>
-          <div class="grid-head center">Lecture Hours</div>
-          <div class="grid-head center">Lab Hours</div>
-          <div class="grid-head center">No. of Sections</div>
-
-          <div class="grid-cell">CE 101</div>
-          <div class="grid-cell">Intro to Engineers</div>
-          <div class="grid-cell center">3</div>
-          <div class="grid-cell center">2</div>
-          <div class="grid-cell center">2</div>
-          <div class="grid-cell center">1</div>
-
-          <div class="grid-cell">ME 202</div>
-          <div class="grid-cell">Thermodynamics</div>
-          <div class="grid-cell center">4</div>
-          <div class="grid-cell center">3</div>
-          <div class="grid-cell center">3</div>
-          <div class="grid-cell center">1</div>
-
-          <div class="grid-cell">CH 305</div>
-          <div class="grid-cell">Chemical Engineering</div>
-          <div class="grid-cell center">3</div>
-          <div class="grid-cell center">2</div>
-          <div class="grid-cell center">3</div>
-          <div class="grid-cell center">1</div>
-        </div>
-
-        <div class="row-actions">
-          <button class="action-btn">+ Add Row</button>
-          <button class="action-btn">Remove Row</button>
-        </div>
-      </section>
-
-      <div class="triple-actions">
-        <a href="/twa/faculty-info" class="pill-btn">Back</a>
-        <a href="#" class="pill-btn">Save Draft</a>
-        <a href="/twa/submission-status" class="pill-btn">Next</a>
-      </div>
-
-    </div>
-  </main>
+    </main>
+  </div>
 </body>
 </html>

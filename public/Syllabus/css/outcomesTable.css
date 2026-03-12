@@ -115,23 +115,19 @@
     color: var(--color-charcoal);
     box-sizing: border-box;
     display: block;
-<<<<<<< HEAD
 }
 
 .editable-cell:focus {
     background-color: rgba(0, 36, 85, 0.02);
-=======
     background-color: transparent !important;
 }
 
 .editable-cell:focus {
     background-color: transparent !important;
->>>>>>> Syllabus
 }
 
 /* Active Highlight Styling */
 .outcomes-editor-table td.highlighted-cell {
-<<<<<<< HEAD
     background-color: rgba(0, 36, 85, 0.08) !important;
 }
 
@@ -153,15 +149,11 @@
 .index-cell.selected {
     background-color: #3c4043 !important;
     color: var(--color-white) !important;
-=======
-    background-color: transparent !important;
->>>>>>> Syllabus
 }
 
 /* Selection Box Overlay */
 #table-selection-box {
     position: absolute;
-<<<<<<< HEAD
     border: 1px solid var(--color-mapua-blue);
     background-color: rgba(0, 36, 85, 0.05);
     pointer-events: none;
@@ -172,7 +164,6 @@
     box-sizing: border-box;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
     /* Inner thin white line for contrast */
-=======
     border: 2px solid var(--color-mapua-blue);
     background-color: transparent !important;
     pointer-events: none;
@@ -181,14 +172,12 @@
     box-sizing: border-box;
     /* Create white inner gap */
     box-shadow: inset 0 0 0 1px white;
->>>>>>> Syllabus
 }
 
 .selection-handle {
     position: absolute;
     bottom: -4px;
     right: -4px;
-<<<<<<< HEAD
     width: 7px;
     height: 7px;
     background-color: var(--color-mapua-blue);
@@ -196,13 +185,11 @@
     cursor: crosshair;
     pointer-events: auto;
     /* Only the handle is interactive */
-=======
     width: 6px;
     height: 6px;
     background-color: var(--color-mapua-blue);
     border: 1px solid white;
     pointer-events: auto;
->>>>>>> Syllabus
     border-radius: 1px;
 }
 
@@ -211,8 +198,6 @@
     pointer-events: none;
 }
 
-<<<<<<< HEAD
-=======
 /* Advanced Color Picker */
 .color-picker-dropdown {
     display: flex;
@@ -340,7 +325,6 @@
     font-size: 18px;
 }
 
->>>>>>> Syllabus
 /* CO Placeholder */
 .editable-cell.co-cell.show-placeholder::before {
     content: attr(data-placeholder);

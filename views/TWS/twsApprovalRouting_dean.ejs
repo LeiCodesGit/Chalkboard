@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TWS - Approval Routing</title>
+
+  <link rel="stylesheet" href="/TWS/css/twsDeanStyle.css" />
+</head>
+
+<body class="twsd-body">
+  <div class="twsd-layout">
+    <aside class="twsd-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
+
+    <main class="twsd-main">
+      <div class="twsd-center">
+
+        <div class="twsd-title-pill">
+          <h1>TWS - Approval Routing</h1>
+        </div>
+
+        <div class="twsd-glass">
+          <div class="twsd-approval-wrap">
+
+            <div class="twsd-approval-top">
+              <h2>APPROVED BY:</h2>
+              <div style="font-weight:900; margin-top:2px;">DEAN</div>
+
+              <div class="small">Signature: [ Insert ]</div>
+              <div class="small">Date: __ / __ / __</div>
+            </div>
+
+            <div class="twsd-approval-bottom">
+              <div class="twsd-approve-line">
+                <span class="twsd-arrow">⬇</span>
+                <span>Approve</span>
+                <div class="twsd-line"></div>
+              </div>
+
+              <form method="POST" action="/tws/approval/<%= tws.id %>">
+                <div class="twsd-approval-actions">
+                  <button class="twsd-btn twsd-green" type="submit" name="action" value="approve">Approve</button>
+                  <button class="twsd-btn twsd-white" type="submit" name="action" value="reject">Reject</button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</body>
+</html>

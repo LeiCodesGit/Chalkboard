@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS: Teaching Workload Sheet</title>
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+</head>
+
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
+
+    <main class="tws-app-main">
+      <div class="tws-app-center">
+
+        <!-- Header pill -->
+        <div class="tws-app-title-pill">
+          <h1>TWS: Teaching Workload Sheet</h1>
+        </div>
+
+        <!-- Big glass wrapper -->
+        <div class="tws-app-glass">
+
+          <!-- Card 1: My Teaching Workload Sheets -->
+          <section class="tws-card tws-card-wide">
+            <div class="tws-card-header">
+              <div class="tws-card-title">My Teaching Workload Sheets</div>
+
+              <!-- Create button (top right) -->
+              <a class="tws-create-pill" href="/tws/create">+ Create New TWS</a>
+            </div>
+
+            <div class="tws-table">
+              <div class="tws-row tws-head">
+                <div>Academic Year</div>
+                <div>Term</div>
+                <div>Date Created</div>
+                <div>Status</div>
+                <div class="tws-action-col">Action</div>
+              </div>
+
+              <% if (!list || list.length === 0) { %>
+                <div class="tws-row tws-empty">
+                  <div style="grid-column: 1 / -1;">No TWS yet. Click “Create New TWS”.</div>
+                </div>
+              <% } %>
+
+              <% (list || []).forEach(tws => { %>
+                <div class="tws-row">
+                  <div><%= tws.faculty?.acadYear || "—" %></div>
+                  <div><%= tws.faculty?.term || "—" %></div>
+
+                  <div>
+                    <% 
+                      const d = new Date(tws.createdAt || Date.now());
+                      const mm = String(d.getMonth()+1).padStart(2,"0");
+                      const dd = String(d.getDate()).padStart(2,"0");
+                      const yyyy = d.getFullYear();
+                    %>
+                    <%= `${mm}/${dd}/${yyyy}` %>
+                  </div>
+
+                  <div><%= tws.status || "Draft" %></div>
+
+                  <div class="tws-btns">
+                    <a class="tws-btn-white" href="/tws/summary/<%= tws.id %>">View</a>
+                    <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Edit</a>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </section>
+
+          <!-- Card 2: Guidelines -->
+          <section class="tws-card tws-card-guidelines">
+            <div class="tws-card-title">TWS Guidelines</div>
+            <ul class="tws-guidelines">
+              <li>Submit one Teaching Workload Sheet per semester</li>
+              <li>Approved TWS documents are automatically archived.</li>
+            </ul>
+          </section>
+
+          <!-- Next button bottom-right -->
+          <div class="tws-next-wrap">
+            <a class="tws-next" href="/tws/faculty/<%= (list && list[0] && list[0].id) ? list[0].id : '' %>">
+              Next
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

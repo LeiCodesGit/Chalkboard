@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teaching Workload Sheet</title>
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+</head>
+
+<body class="tws-landing-body">
+  <!-- IMPORTANT: wrapper to prevent CSS overlap -->
+  <div class="tws">
+
+    <div class="tws-layout">
+      <aside class="tws-sidebar">
+        <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+      </aside>
+
+      <main class="tws-main">
+        <div class="tws-center">
+
+          <div class="tws-title-pill">
+            <h1>Teaching Workload Sheet</h1>
+          </div>
+
+          <div class="tws-panel">
+            <h2>Welcome to the Teaching Workload Sheet (TWS)</h2>
+
+            <p>
+              You're in the Teaching Workload Sheet, your hub for managing and viewing teaching assignments,
+              schedules, and workload distribution. Please select your role to view or edit the Teaching
+              Workload Sheet (TWS) that fits your responsibilities and available permissions.
+            </p>
+
+            <!-- directs to Program Chair -->
+            <a class="tws-btn" href="/tws/program-chair">Get Started!</a>
+
+            <div class="tws-info-box">
+              <h3>TWS Information</h3>
+              <ul>
+                <li>The TWS is designed to ensure balanced teaching load distribution</li>
+                <li>Select a role to either view or approve Teaching Workload Sheets.</li>
+                <li>Contact your system administrator if you need assistance.</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+
+  </div>
+</body>
+</html>

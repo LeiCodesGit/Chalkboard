@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TWS - Created Teaching Workload Sheet</title>
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+</head>
+
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
+
+    <main class="tws-app-main">
+      <div class="tws-app-center">
+
+        <div class="tws-app-title-pill">
+          <h1>TWS: Teaching Workload Sheet</h1>
+        </div>
+
+        <section class="tws-card tws-card-wide">
+          <div class="tws-card-title">Created Teaching Workload Sheet</div>
+
+          <div class="tws-schedule-layout">
+
+            <!-- TIMETABLE GRID -->
+            <div class="tws-timetable">
+              <%
+                const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+                const times = [
+                  "7:00 AM",
+                  "8:15 AM",
+                  "9:30 AM",
+                  "10:45 AM",
+                  "12:00 PM",
+                  "1:15 PM",
+                  "2:30 PM",
+                  "3:45 PM",
+                  "5:00 PM",
+                  "6:15 PM",
+                  "7:30 PM",
+                  "8:45 PM"
+                ];
+              %>
+
+              <!-- HEADER ROW -->
+              <div class="tws-cell tws-head tws-corner"></div>
+              <% days.forEach(d => { %>
+                <div class="tws-cell tws-head"><%= d %></div>
+              <% }) %>
+
+              <!-- BODY ROWS (TIME ALWAYS FIRST COLUMN) -->
+              <% times.forEach((t) => { %>
+                <!-- Time column -->
+                <div class="tws-cell tws-time" style="grid-column: 1;"><%= t %></div>
+
+                <!-- 7 day slots -->
+                <% for (let c = 0; c < 7; c++) { %>
+                  <div class="tws-cell tws-slot"></div>
+                <% } %>
+              <% }) %>
+
+              <!-- SAMPLE BLOCKS
+                Grid columns: 1=time col, 2=Mon ... 8=Sun
+                Grid rows: 1=header, 2=7:00, 3=8:15, 4=9:30, ...
+              -->
+              <div class="tws-block highlight-yellow" style="grid-column: 3; grid-row: 2;">
+                <div class="tws-block-code">GE104A</div>
+                <div class="tws-block-sub">R603</div>
+              </div>
+
+              <div class="tws-block highlight-blue" style="grid-column: 4; grid-row: 2;">
+                <div class="tws-block-code">CPE2114</div>
+                <div class="tws-block-sub">R405</div>
+              </div>
+
+              <div class="tws-block highlight-purple" style="grid-column: 6; grid-row: 2;">
+                <div class="tws-block-code">GE1033</div>
+                <div class="tws-block-sub">A504</div>
+              </div>
+
+              <!-- NSTP placed at 12:00 PM row (row 6) -->
+              <div class="tws-block highlight-green" style="grid-column: 5; grid-row: 6;">
+                <div class="tws-block-code">NSTP</div>
+                <div class="tws-block-sub">TWS</div>
+              </div>
+
+            </div>
+
+            <!-- LOAD DETAILS -->
+            <div class="tws-load-details">
+              <div class="ld-title">Load Details</div>
+
+              <div class="ld-row">
+                Tracking Hours
+                <span><%= Number(tws?.totals?.totalHours || 0).toFixed(2) %></span>
+              </div>
+
+              <div class="ld-divider"></div>
+
+              <% (tws?.createdWorkload || []).forEach(s => { %>
+                <div class="ld-row">
+                  <%= s.code %> - <%= s.title %>
+                  <span><%= Number(s.units || 0).toFixed(2) %></span>
+                </div>
+              <% }) %>
+
+              <div class="ld-divider"></div>
+
+              <div class="ld-row">
+                <b>Total Units</b>
+                <span><b><%= (tws?.createdWorkload || []).reduce((a,x)=>a+Number(x.units||0),0).toFixed(2) %></b></span>
+              </div>
+            </div>
+
+          </div><!-- /tws-schedule-layout -->
+
+          <!-- SIGNATURES -->
+          <div class="tws-signatures">
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <div class="sig-name">Name: <%= tws?.deanName || "test" %></div>
+              <div class="sig-role">DEAN</div>
+            </div>
+
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <div class="sig-name">Name: <%= tws?.programChairName || "" %></div>
+              <div class="sig-role">Program Chair</div>
+            </div>
+          </div>
+
+        </section>
+
+        <div class="tws-footer-actions">
+          <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>">Back</a>
+          <a class="tws-next" href="/tws/faculty/<%= tws.id %>">Next</a>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+</body>
+</html>

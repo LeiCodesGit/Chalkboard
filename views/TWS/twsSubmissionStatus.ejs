@@ -4,71 +4,72 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TWS - Submission Status</title>
-  <link rel="stylesheet" href="/twa/public/twsStyle.css" />
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
 </head>
 
-<body>
-  <%- include("partials/twsNavBar") %>
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
 
-  <main class="main-content">
-    <div class="page-container">
+    <main class="tws-app-main">
+      <div class="tws-app-center">
 
-      <div class="header-pill">
-        <h1>TWS - Submission Status</h1>
-      </div>
-
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Your Teaching Workload Sheet has been submitted.</h2>
+        <div class="tws-app-title-pill">
+          <h1>TWS - Submission Status</h1>
         </div>
 
-        <div class="status-wrap">
-          <div class="status-row">
-            <span class="status-dot done"></span>
-            <span class="status-text">Submitted</span>
+        <section class="tws-card">
+          <div class="tws-card-title" style="margin-bottom:10px;">
+            Your Teaching Workload Sheet has been <b><%= tws.status || "Submitted" %></b>.
           </div>
 
-          <div class="status-row">
-            <span class="status-dot pending"></span>
-            <span class="status-text">Secretary Review</span>
-          </div>
-
-          <div class="status-row">
-            <span class="status-dot pending"></span>
-            <span class="status-text">Chair Endorsement</span>
-          </div>
-
-          <div class="status-row">
-            <span class="status-dot pending"></span>
-            <span class="status-text">Dean Approval</span>
-          </div>
-
-          <hr class="divider" />
-
-          <div class="summary-lines">
-            <div class="summary-line">
-              <span>Total Units:</span>
-              <span>14</span>
+          <!-- Stepper -->
+          <div class="tws-stepper">
+            <div class="tws-step tws-step-done">
+              <div class="tws-dot">✔</div>
+              <div class="tws-step-text">Submitted</div>
             </div>
-            <div class="summary-line">
-              <span>Total Hours (Lec, Lab):</span>
-              <span>7</span>
+
+            <div class="tws-line"></div>
+
+            <div class="tws-step tws-step-pending">
+              <div class="tws-dot"></div>
+              <div class="tws-step-text">Secretary Review</div>
             </div>
-            <div class="summary-line">
-              <span>Equivalent Load:</span>
-              <span>14</span>
+
+            <div class="tws-line"></div>
+
+            <div class="tws-step tws-step-pending">
+              <div class="tws-dot"></div>
+              <div class="tws-step-text">Chair Endorsement</div>
+            </div>
+
+            <div class="tws-line"></div>
+
+            <div class="tws-step tws-step-wait">
+              <div class="tws-dot"></div>
+              <div class="tws-step-text">Dean Approval</div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <div class="triple-actions">
-        <a href="/twa/teaching-load" class="pill-btn">Back</a>
-        <a href="#" class="pill-btn">Save Draft</a>
-        <a href="/twa/summary" class="pill-btn">Next</a>
+          <!-- Metrics -->
+          <div class="tws-metrics">
+            <div>Total Units:</div><div><%= tws.totals?.totalUnits ?? 0 %></div>
+            <div>Total Hours:</div><div><%= tws.totals?.totalHours ?? 0 %></div>
+          </div>
+
+          <div class="tws-footer-actions">
+            <a class="tws-next" href="/tws/approval/<%= tws.id %>">Next</a>
+            <a class="tws-btn-white" href="/tws/dashboard">Back to Dashboard</a>
+          </div>
+        </section>
+
       </div>
-
-    </div>
-  </main>
+    </main>
+  </div>
 </body>
 </html>

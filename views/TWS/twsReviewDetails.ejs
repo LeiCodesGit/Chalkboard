@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TWS - Review Details</title>
+
+  <link rel="stylesheet" href="/TWS/css/twsDeanStyle.css" />
+</head>
+
+<body class="twsd-body">
+  <div class="twsd-layout">
+    <aside class="twsd-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
+
+    <main class="twsd-main">
+      <div class="twsd-center">
+
+        <div class="twsd-title-pill">
+          <h1>TWS – Review Details</h1>
+        </div>
+
+        <div class="twsd-glass">
+
+          <section class="twsd-card twsd-card-wide">
+            <div class="twsd-card-header">
+              <div class="twsd-card-title">My Teaching Workload Sheets</div>
+            </div>
+
+            <div class="twsd-table">
+              <div class="twsd-row twsd-head" style="grid-template-columns: 1fr 0.55fr 0.9fr 0.9fr 1fr;">
+                <div>Academic Year</div>
+                <div>Term</div>
+                <div>Date Created</div>
+                <div>Status</div>
+                <div style="text-align:right;">Action</div>
+              </div>
+
+              <% if (!list || list.length === 0) { %>
+                <div class="twsd-empty">No TWS yet.</div>
+              <% } %>
+
+              <% (list || []).forEach(tws => { %>
+                <div class="twsd-row" style="grid-template-columns: 1fr 0.55fr 0.9fr 0.9fr 1fr;">
+                  <div><%= tws.faculty?.acadYear || "—" %></div>
+                  <div><%= tws.faculty?.term || "—" %></div>
+                  <div>
+                    <% 
+                      const d = new Date(tws.createdAt || Date.now());
+                      const mm = String(d.getMonth()+1).padStart(2,"0");
+                      const dd = String(d.getDate()).padStart(2,"0");
+                      const yyyy = d.getFullYear();
+                    %>
+                    <%= `${mm}/${dd}/${yyyy}` %>
+                  </div>
+                  <div><%= tws.status || "Draft" %></div>
+                  <div class="twsd-btns">
+                    <a class="twsd-btn twsd-white" href="/tws/summary/<%= tws.id %>">View</a>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </section>
+
+          <!-- Guidelines -->
+          <section class="twsd-card twsd-card-mid">
+            <div class="twsd-card-title">TWS Guidelines</div>
+            <ul class="twsd-guidelines">
+              <li>Submit one Teaching Workload Sheet per semester</li>
+              <li>Approved TWS documents are automatically archived.</li>
+            </ul>
+          </section>
+
+          <div class="twsd-next-wrap">
+            <a class="twsd-next" href="/tws/dean">Next</a>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+</body>
+</html>

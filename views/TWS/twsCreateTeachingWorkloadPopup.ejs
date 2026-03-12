@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TWS - Create Teaching Workload Sheet</title>
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+</head>
+
+<body class="tws-app-body">
+<div class="tws-app-layout">
+
+  <aside class="tws-app-sidebar">
+    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+  </aside>
+
+  <main class="tws-app-main">
+  <div class="tws-app-center">
+
+    <div class="tws-app-title-pill">
+      <h1>TWS - Teaching Workload Sheet</h1>
+    </div>
+
+    <section class="tws-card">
+
+      <div class="tws-card-header">
+        <div class="tws-card-title">Create Teaching Workload Sheet</div>
+
+        <!-- mimic "Filter / Search / Refresh" like your UI -->
+        <div class="pc-actions">
+          <button class="pc-chip" type="button">Filter by Department</button>
+          <button class="pc-chip" type="button">Search...</button>
+          <button class="pc-chip" type="button" onclick="location.reload()">Refresh</button>
+        </div>
+      </div>
+
+      <!-- SUBJECT TABLE -->
+      <div class="tws-table">
+        <div class="tws-row tws-head">
+          <div>Course Code</div>
+          <div>Course Title</div>
+          <div>Units</div>
+          <div>Actions</div>
+        </div>
+
+        <% (subjects || []).forEach(s => { 
+            const alreadyAdded = (tws.createdWorkload || []).some(x => x.code === s.code);
+        %>
+          <div class="tws-row">
+            <div><%= s.code %></div>
+            <div><%= s.title %></div>
+            <div><%= Number(s.units).toFixed(2) %></div>
+
+            <div class="tws-btns">
+              <button
+                class="tws-btn-white"
+                type="button"
+                <%= alreadyAdded ? "disabled" : "" %>
+                onclick="openModal('<%= s.code %>', '<%= s.title.replace(/'/g, "\\'") %>', '<%= Number(s.units).toFixed(2) %>')"
+                style="<%= alreadyAdded ? 'opacity:.55; cursor:not-allowed;' : '' %>"
+              >
+                <%= alreadyAdded ? "Added" : "Add" %>
+              </button>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <!-- optional: show list of added subjects (para sure ka na na-add) -->
+      <div style="margin-top:12px; opacity:.95; font-size:12px;">
+        <b>Added Subjects:</b>
+        <% if (!tws.createdWorkload || tws.createdWorkload.length === 0) { %>
+          <span> none</span>
+        <% } else { %>
+          <span>
+            <%= tws.createdWorkload.map(x => x.code).join(", ") %>
+          </span>
+        <% } %>
+      </div>
+
+    </section>
+
+    <!-- Footer buttons -->
+    <div class="tws-footer-actions">
+      <a class="tws-btn-white" href="/tws/dashboard">Back</a>
+      <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
+    </div>
+
+  </div>
+  </main>
+</div>
+
+<!-- POPUP MODAL -->
+<div class="tws-modal-bg" id="addModal">
+  <div class="tws-modal">
+    <div class="tws-modal-title" id="modalTitle">Add Subject</div>
+
+    <!-- REAL SUBMIT FORM -->
+    <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/add">
+      <!-- hidden fields (subject info) -->
+      <input type="hidden" name="code" id="m_code" />
+      <input type="hidden" name="title" id="m_title" />
+      <input type="hidden" name="units" id="m_units" />
+
+      <label>Choose Time Slot</label>
+      <select name="timeSlot" required>
+        <option value="">-- Select --</option>
+        <option>7:00 AM - 8:15 AM</option>
+        <option>8:30 AM - 9:45 AM</option>
+        <option>10:00 AM - 11:15 AM</option>
+        <option>1:00 PM - 2:15 PM</option>
+        <option>2:30 PM - 3:45 PM</option>
+      </select>
+
+      <label>Choose Section</label>
+      <select name="sectionRoom" required>
+        <option value="">-- Select --</option>
+        <option>A1531 | R611</option>
+        <option>A1532 | R612</option>
+        <option>A1533 | R613</option>
+      </select>
+
+      <div class="tws-modal-actions">
+        <button class="tws-modal-cancel" type="button" onclick="closeModal()">Cancel</button>
+        <!-- SUBMIT => adds subject => redirects back SAME PAGE -->
+        <button class="tws-modal-add" type="submit">+ Add Subject</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<script>
+function openModal(code, title, units){
+  document.getElementById("modalTitle").textContent = `Add Subject: ${code} - ${title}`;
+  document.getElementById("m_code").value = code;
+  document.getElementById("m_title").value = title;
+  document.getElementById("m_units").value = units;
+
+  document.getElementById("addModal").style.display = "flex";
+}
+function closeModal(){
+  document.getElementById("addModal").style.display = "none";
+}
+</script>
+
+</body>
+</html>

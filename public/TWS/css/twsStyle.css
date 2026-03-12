@@ -1,470 +1,944 @@
-* {
-  box-sizing: border-box;
+/* ======================================================
+   TWS STYLE (ONE FILE ONLY)
+   - Landing page: twsLandingWelcome.ejs
+   - Program Chair: twsProgramChair.ejs
+   - App pages: dashboard, faculty info, teaching load, summary, etc.
+   - Modal popup for Add Subject
+====================================================== */
+
+/* ---------- VARIABLES ---------- */
+:root{
+  --tws-bg-overlay: rgba(0,0,0,0.30);
+  --tws-glass: rgba(110, 120, 135, 0.42);
+  --tws-pill: rgba(110, 120, 135, 0.62);
+  --tws-card: rgba(0,0,0,0.58);
+  --tws-border: rgba(255,255,255,0.68);
+  --tws-shadow: 0 16px 30px rgba(0,0,0,0.32);
+  --tws-green: #18b06b;
+  --tws-blue: #2e6cff;
+  --tws-white: rgba(255,255,255,0.92);
+  --tws-text: #fff;
+  --tws-text-dark: #111;
+}
+
+*{ box-sizing: border-box; }
+a{ color: inherit; text-decoration: none; }
+button, input, select{ font-family: inherit; }
+
+
+/* ======================================================
+   LANDING PAGE (twsLandingWelcome.ejs)
+====================================================== */
+.tws-landing-body{
   margin: 0;
-  padding: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--tws-text);
+  background:
+    linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
+    url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-body {
-  background: url("background.png") center / cover no-repeat fixed;
-  color: white;
-}
-
-/* Sidebar */
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-  width: 240px;
-  background: rgba(20, 20, 20, 0.92);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.logo-area {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.logo {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-}
-
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.menu-item {
-  text-decoration: none;
-  color: white;
-  padding: 12px;
-  border-radius: 12px;
-}
-
-.menu-item.active,
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.sidebar-bottom {
-  margin-top: auto;
-}
-
-/* Main */
-.main-content {
-  margin-left: 240px;
+.tws-layout{
+  display: grid;
+  grid-template-columns: 260px 1fr;
   min-height: 100vh;
-  padding: 30px;
 }
 
-.page-container {
-  max-width: 1100px;
-  margin: 0 auto;
+.tws-sidebar{
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
-/* Header pill */
-.header-pill {
-  background: rgba(120, 130, 140, 0.55);
-  border-radius: 20px;
-  padding: 18px;
+/* keep sidebar partial inside the column */
+.tws-sidebar > *{
+  position: relative !important;
+  left: 0 !important;
+  width: 100% !important;
+}
+
+.tws-main{
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0;
+}
+
+.tws-center{
+  width: min(900px, 92%);
+  margin-top: 70px;
   text-align: center;
-  margin-bottom: 20px;
 }
 
-.header-pill h1 {
+/* Title pill */
+.tws-title-pill{
+  background: var(--tws-pill);
+  border-radius: 18px;
+  padding: 14px 18px;
+  width: min(660px, 100%);
+  margin: 0 auto 16px auto;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+}
+
+.tws-title-pill h1{
+  margin: 0;
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.4px;
 }
 
-/* Panels (cards) */
-.panel {
-  background: rgba(40, 40, 40, 0.95);
-  border: 2px solid rgba(255, 255, 255, 0.75);
-  border-radius: 20px;
-  padding: 20px;
-  margin-bottom: 18px;
+/* Main glass panel */
+.tws-panel{
+  background: var(--tws-glass);
+  border-radius: 18px;
+  padding: 18px 22px 22px 22px;
+  width: min(780px, 100%);
+  margin: 0 auto;
+  box-shadow: var(--tws-shadow);
+  backdrop-filter: blur(3px);
 }
 
-/* Panel header */
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.panel-header h2 {
-  font-size: 20px;
-}
-
-/* Create button */
-.create-btn {
-  background: #00c26f;
-  color: white;
-  text-decoration: none;
-  padding: 10px 16px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-/* Table grid */
-.table-grid {
-  display: grid;
-  grid-template-columns: 1.4fr 0.7fr 1.1fr 1fr 1.2fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.grid-head {
-  font-weight: 700;
-  font-size: 14px;
-  opacity: 0.95;
-}
-
-.grid-cell {
-  font-size: 14px;
-}
-
-/* Buttons */
-.center {
-  text-align: center;
-}
-
-.action-btn {
-  background: white;
-  color: black;
-  border: none;
-  border-radius: 20px;
-  padding: 6px 16px;
-  font-weight: 700;
-  margin: 0 4px;
-  cursor: pointer;
-}
-
-.action-btn:hover {
-  opacity: 0.85;
-}
-
-/* Guidelines */
-.guidelines ul {
-  margin-top: 12px;
-  padding-left: 20px;
-}
-
-.guidelines li {
-  margin: 8px 0;
-}
-
-/* Next button */
-.next-wrapper {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.next-btn {
-  background: white;
-  color: black;
-  text-decoration: none;
-  padding: 12px 36px;
-  border-radius: 30px;
-  font-size: 22px;
-  font-weight: 700;
-}
-
-
-.pill-btn {
-  background: white;
-  color: black;
-  text-decoration: none;
-  padding: 12px 34px;
-  border-radius: 30px;
-  font-size: 18px;
-  font-weight: 700;
-  display: inline-block;
-  min-width: 140px;
-  text-align: center;
-}
-
-.triple-actions {
-  display: flex;
-  justify-content: center;
-  gap: 22px;
-  margin-top: 18px;
-}
-
-.form-box {
-  border: 2px solid rgba(255,255,255,0.75);
-  border-radius: 14px;
-  padding: 18px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 14px;
-  align-items: center;
-  margin: 10px 0;
-}
-
-.form-label {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.form-input {
-  height: 14px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.25);
-}
-
-.load-grid {
-  grid-template-columns: 0.9fr 1.7fr 0.6fr 0.9fr 0.8fr 0.9fr;
-}
-
-.row-actions {
-  display: flex;
-  justify-content: center;
-  gap: 18px;
-  margin-top: 16px;
-}
-
-.status-wrap {
-  padding: 10px 6px;
-}
-
-.status-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 12px 0;
-}
-
-.status-dot {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #bdbdbd;
-}
-
-.status-dot.done {
-  background: #00c26f;
-}
-
-.status-dot.pending {
-  background: #d8c66a;
-}
-
-.status-text {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.divider {
-  border: none;
-  height: 1px;
-  background: rgba(255,255,255,0.25);
-  margin: 16px 0;
-}
-
-.summary-lines {
-  display: grid;
-  gap: 10px;
-  font-size: 14px;
-}
-
-.summary-line {
-  display: flex;
-  justify-content: space-between;
-  max-width: 420px;
-}
-
-.summary-grid {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.mini-title {
+.tws-panel h2{
+  margin: 8px 0 10px 0;
   font-size: 15px;
   font-weight: 800;
-  margin-bottom: 8px;
+  opacity: 0.98;
 }
 
-.mini-lines {
-  display: grid;
-  gap: 7px;
-  font-size: 13px;
+.tws-panel p{
+  margin: 0 auto;
+  max-width: 690px;
+  font-size: 12px;
+  line-height: 1.65;
   opacity: 0.95;
 }
 
-.summary-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
-  justify-content: center;
-  min-width: 180px;
-}
-
-.submit-btn {
-  background: #00c26f;
-  color: white;
-  text-decoration: none;
-  padding: 10px 18px;
-  border-radius: 22px;
-  font-weight: 800;
+/* Get Started button */
+.tws-btn{
   display: inline-block;
-  text-align: center;
-}
-
-.edit-btn {
-  background: white;
-  color: black;
-  text-decoration: none;
-  padding: 10px 18px;
-  border-radius: 22px;
-  font-weight: 800;
-  display: inline-block;
-  text-align: center;
-}
-
-.archived-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 0.6fr 1fr 0.8fr 0.3fr;
-  gap: 12px;
-  align-items: center;
-}
-
-.dl-icon {
-  font-size: 18px;
-  opacity: 0.9;
-}
-
-.ok-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 28px;
-}
-
-.ok-btn {
-  background: white;
-  color: black;
-  text-decoration: none;
+  margin-top: 16px;
+  background: var(--tws-green);
+  color: #fff;
   padding: 12px 46px;
-  border-radius: 30px;
-  font-size: 20px;
+  border-radius: 999px;
   font-weight: 800;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-
-.routing-box {
-  display: grid;
-  gap: 18px;
+.tws-btn:hover{
+  transform: translateY(-1px);
+  opacity: 0.96;
 }
 
-.routing-top {
+/* Info box */
+.tws-info-box{
+  margin: 16px auto 0 auto;
+  width: min(780px, 100%);
+  background: rgba(0,0,0,0.60);
   border: 2px solid rgba(255,255,255,0.75);
   border-radius: 14px;
-  padding: 18px;
+  padding: 14px 18px;
+  text-align: left;
 }
 
-.routing-title {
+.tws-info-box h3{
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.tws-info-box ul{
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+
+/* ======================================================
+   PROGRAM CHAIR (twsProgramChair.ejs)
+====================================================== */
+.pc-body{
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  background:
+    linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
+    url("/TWS/img/background.png") no-repeat center center / cover fixed;
+}
+
+.pc-layout{
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.pc-sidebar{
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.pc-sidebar > *{
+  position: relative !important;
+  left: 0 !important;
+  width: 100% !important;
+}
+
+.pc-main{
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.pc-center{
+  width: min(1040px, 92%);
+  margin-top: 60px;
+}
+
+.pc-title-pill{
+  background: var(--tws-pill);
+  border-radius: 18px;
+  padding: 14px 18px;
+  width: min(760px, 100%);
+  margin: 0 auto 16px auto;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.pc-title-pill h1{
+  margin: 0;
+  font-size: 28px;
   font-weight: 800;
+}
+
+/* The main dark cards */
+.pc-card{
+  background: var(--tws-card);
+  border-radius: 14px;
+  border: 2px solid var(--tws-border);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.30);
+  padding: 14px;
+  margin: 0 auto 14px auto;
+  max-width: 980px;
+}
+
+.pc-card-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 10px;
 }
 
-.routing-role {
-  font-size: 18px;
+.pc-card-title{
   font-weight: 900;
-  margin-bottom: 18px;
-}
-
-.routing-meta {
-  display: grid;
-  gap: 10px;
   font-size: 14px;
 }
 
-.muted {
+.pc-actions{
+  display: flex;
+  gap: 10px;
+}
+
+.pc-chip{
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.45);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Rows */
+.pc-table{
+  display: grid;
+  gap: 10px;
+}
+
+.pc-row{
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 1fr 0.55fr 1.2fr 1.25fr;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.pc-table-small .pc-row{
+  grid-template-columns: 1.4fr 1.1fr 0.55fr 1.25fr;
+}
+
+.pc-head{
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.pc-empty{
   opacity: 0.85;
+  padding: 10px 0;
 }
 
-.routing-bottom {
-  border: 2px solid rgba(255,255,255,0.75);
-  border-radius: 14px;
-  padding: 18px;
+/* Buttons group */
+.pc-btns{
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
-.approve-label {
-  font-size: 18px;
+.pc-btn{
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
   font-weight: 900;
-  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.65);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.pc-white{
+  background: var(--tws-white);
+  color: var(--tws-text-dark);
+}
+
+.pc-blue{
+  background: var(--tws-blue);
+  color: #fff;
+  border-color: rgba(255,255,255,0.35);
+}
+
+.pc-next-wrap{
   display: flex;
-  align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.green-arrow {
-  color: #00c26f;
-  font-size: 22px;
+.pc-next{
+  background: var(--tws-white);
+  color: var(--tws-text-dark);
+  border-radius: 999px;
+  padding: 12px 34px;
+  font-weight: 900;
+  font-size: 20px;
+  border: 1px solid rgba(255,255,255,0.6);
 }
 
-.route-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px 0 18px;
+
+/* ======================================================
+   APP PAGES (dashboard, faculty, load, summary)
+====================================================== */
+.tws-app-body{
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  background:
+    linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
+    url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-.route-bar {
-  height: 2px;
-  flex: 1;
-  background: rgba(255,255,255,0.75);
+.tws-app-layout{
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
 }
 
-.route-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.85);
+.tws-app-sidebar{
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
-.route-actions {
+.tws-app-sidebar > *{
+  position: relative !important;
+  left: 0 !important;
+  width: 100% !important;
+}
+
+.tws-app-main{
   display: flex;
   justify-content: center;
-  gap: 16px;
+  align-items: flex-start;
+}
+
+.tws-app-center{
+  width: min(1040px, 92%);
+  margin-top: 60px;
+}
+
+.tws-app-title-pill{
+  background: var(--tws-pill);
+  border-radius: 18px;
+  padding: 14px 18px;
+  width: min(760px, 100%);
+  margin: 0 auto 16px auto;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.tws-app-title-pill h1{
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.tws-card{
+  background: var(--tws-card);
+  border-radius: 14px;
+  border: 2px solid var(--tws-border);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.30);
+  padding: 14px;
+  margin: 0 auto 14px auto;
+  max-width: 980px;
+}
+
+.tws-card-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.tws-card-title{
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.tws-create-pill{
+  background: var(--tws-green);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.tws-table{
+  display: grid;
+  gap: 10px;
+}
+
+.tws-row{
+  display: grid;
+  grid-template-columns: 1fr 0.55fr 0.9fr 0.9fr 1fr;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.tws-head{
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.tws-btns{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tws-btn-white{
+  background: var(--tws-white);
+  color: var(--tws-text-dark);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 900;
+  border: 1px solid rgba(255,255,255,0.65);
+}
+
+.tws-guidelines{
+  margin: 10px 0 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.8;
+  opacity: 0.95;
+}
+
+.tws-next-wrap{
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tws-next{
+  background: var(--tws-white);
+  color: var(--tws-text-dark);
+  border-radius: 999px;
+  padding: 12px 34px;
+  font-weight: 900;
+  font-size: 20px;
+  border: 1px solid rgba(255,255,255,0.6);
+}
+
+/* ======================================================
+   MODAL (ADD SUBJECT POPUP) - can be used in create/load page
+====================================================== */
+.tws-modal-bg{
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.tws-modal{
+  background: #1e1e1e;
+  padding: 18px;
+  width: 360px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 22px 44px rgba(0,0,0,0.5);
+}
+
+.tws-modal-title{
+  font-weight: 900;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.tws-modal label{
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.95;
   margin-top: 10px;
 }
 
-.approve-btn {
-  background: #00c26f;
-  color: white;
+.tws-modal select{
+  width: 100%;
+  padding: 9px 10px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  outline: none;
+}
+
+.tws-modal-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.tws-modal-cancel{
+  background: rgba(255,255,255,0.22);
+  color: #fff;
   border: none;
-  padding: 10px 26px;
-  border-radius: 24px;
+  padding: 8px 16px;
+  border-radius: 999px;
   font-weight: 900;
   cursor: pointer;
 }
 
-.reject-btn {
-  background: white;
-  color: black;
+.tws-modal-add{
+  background: var(--tws-green);
+  color: #fff;
   border: none;
-  padding: 10px 26px;
-  border-radius: 24px;
+  padding: 8px 16px;
+  border-radius: 999px;
   font-weight: 900;
   cursor: pointer;
 }
 
-.approve-btn:hover,
-.reject-btn:hover {
+/* ======================================================
+Status / Approval / Archived
+====================================================== */
+
+.tws-footer-actions{
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Stepper */
+.tws-stepper{
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tws-step{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.95;
+}
+
+.tws-dot{
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.10);
+  font-size: 12px;
+}
+
+.tws-step-done .tws-dot{
+  background: var(--tws-green);
+  border-color: rgba(255,255,255,0.30);
+}
+
+.tws-step-pending .tws-dot{
+  background: rgba(255, 214, 107, 0.65);
+  border-color: rgba(255,255,255,0.30);
+}
+
+.tws-step-wait .tws-dot{
+  background: rgba(255,255,255,0.20);
+}
+
+.tws-line{
+  width: 48px;
+  height: 2px;
+  background: rgba(255,255,255,0.45);
+}
+
+/* Metrics */
+.tws-metrics{
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 8px 12px;
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+/* Approval Routing box */
+.tws-routing-box{
+  background: rgba(0,0,0,0.45);
+  border: 2px solid rgba(255,255,255,0.65);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.tws-routing-top{
+  text-align: center;
+  padding: 6px 0 12px;
+}
+
+.tws-routing-approvedby{
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0.95;
+}
+
+.tws-routing-role{
+  font-size: 18px;
+  font-weight: 900;
+  margin-top: 4px;
+}
+
+.tws-routing-small{
+  font-size: 12px;
   opacity: 0.9;
+  margin-top: 4px;
 }
+
+.tws-routing-bottom{
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.tws-routing-label{
+  font-size: 12px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tws-routing-line{
+  height: 2px;
+  width: 100%;
+  background: rgba(255,255,255,0.45);
+}
+
+.tws-routing-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Pills for approval buttons */
+.tws-pill-btn{
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 900;
+  border: 1px solid rgba(255,255,255,0.60);
+}
+
+.tws-pill-green{
+  background: var(--tws-green);
+  color: #fff;
+  border-color: rgba(255,255,255,0.25);
+}
+
+.tws-pill-white{
+  background: var(--tws-white);
+  color: var(--tws-text-dark);
+}
+
+.tws-footer-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:14px;
+  max-width:980px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.tws-btn-white:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* ======================================================
+   CREATED TWS PAGE (timetable + load details + signatures)
+   Safe add-on: only affects classes used in created-teaching-workload.ejs
+====================================================== */
+
+/* Prevent grid children from overflowing their columns */
+.tws-schedule-layout,
+.tws-timetable,
+.tws-load-details {
+  min-width: 0;
+}
+
+/* 2-column layout: timetable + details */
+.tws-schedule-layout{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 18px;
+  align-items: start;
+  margin-top: 12px;
+}
+
+/* If screen is small, stack vertically so nothing overlaps */
+@media (max-width: 980px){
+  .tws-schedule-layout{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Timetable grid --- */
+.tws-timetable{
+  position: relative;
+  display: grid;
+
+  /* 1 time column + 7 day columns */
+  grid-template-columns: 72px repeat(7, minmax(0, 1fr));
+  grid-auto-rows: 44px;
+
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.25);
+
+  /* stops browser from stretching rows and creating “gaps” */
+  align-content: start;
+}
+
+/* Cells */
+.tws-timetable .tws-cell{
+  border-right: 1px solid rgba(255,255,255,0.22);
+  border-bottom: 1px solid rgba(255,255,255,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: rgba(255,255,255,0.9);
+  font-size: 12px;
+  text-align: center;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+/* Remove right border ONLY for the last day column (Sunday) */
+/* This is safer than nth-child(8n) because your blocks are also children */
+.tws-timetable .tws-cell:nth-child(8),
+.tws-timetable .tws-cell:nth-child(16),
+.tws-timetable .tws-cell:nth-child(24),
+.tws-timetable .tws-cell:nth-child(32),
+.tws-timetable .tws-cell:nth-child(40),
+.tws-timetable .tws-cell:nth-child(48),
+.tws-timetable .tws-cell:nth-child(56),
+.tws-timetable .tws-cell:nth-child(64),
+.tws-timetable .tws-cell:nth-child(72),
+.tws-timetable .tws-cell:nth-child(80),
+.tws-timetable .tws-cell:nth-child(88),
+.tws-timetable .tws-cell:nth-child(96),
+.tws-timetable .tws-cell:nth-child(104){
+  border-right: none;
+}
+
+/* Header row */
+.tws-timetable .tws-head{
+  background: rgba(0,0,0,0.35);
+  font-weight: 800;
+}
+
+/* Top-left corner */
+.tws-timetable .tws-corner{
+  background: rgba(0,0,0,0.35);
+}
+
+/* Time column (FORCE column 1) */
+.tws-timetable .tws-time{
+  background: rgba(0,0,0,0.35);
+  font-weight: 800;
+  font-size: 11px;
+  grid-column: 1 !important;
+}
+
+/* Empty slots */
+.tws-timetable .tws-slot{
+  background: rgba(0,0,0,0.12);
+}
+
+/* --- Subject blocks overlay (grid overlay) --- */
+.tws-timetable .tws-block{
+  z-index: 5;
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+
+  border: 1px solid rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+/* Labels inside block */
+.tws-block-code{ font-weight: 900; }
+.tws-block-sub{ font-weight: 800; opacity: 0.9; }
+
+/* Colors (only for timetable blocks) */
+.tws-timetable .highlight-yellow{ background: #e6d57a; color: #111; }
+.tws-timetable .highlight-blue{ background: #2a86d6; color: #111; }
+.tws-timetable .highlight-purple{ background: #7a4aa8; color: #111; }
+.tws-timetable .highlight-green{ background: #00c26a; color: #111; }
+
+/* Responsive: slightly smaller */
+@media (max-width: 520px){
+  .tws-timetable{
+    grid-template-columns: 62px repeat(7, minmax(0, 1fr));
+    grid-auto-rows: 40px;
+  }
+  .tws-timetable .tws-cell{
+    font-size: 11px;
+  }
+  .tws-timetable .tws-time{
+    font-size: 10px;
+  }
+  .tws-timetable .tws-block{
+    font-size: 10px;
+  }
+}
+
+/* --- Load details panel --- */
+.tws-load-details{
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  padding: 14px;
+  color: rgba(255,255,255,0.95);
+  overflow: hidden;
+}
+
+.tws-load-details .ld-title{
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.tws-load-details .ld-row{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  align-items: flex-start;
+}
+
+/* wrap long left text nicely */
+.tws-load-details .ld-row{
+  flex-wrap: wrap;
+}
+
+.tws-load-details .ld-row span{
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.tws-load-details .ld-divider{
+  margin: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.25);
+}
+
+/* --- Signatures inside card bottom --- */
+.tws-signatures{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+@media (max-width: 720px){
+  .tws-signatures{
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+.sig-box{
+  text-align: center;
+  color: rgba(255,255,255,0.95);
+  min-width: 0;
+}
+
+.sig-line{
+  height: 1px;
+  background: rgba(255,255,255,0.6);
+  margin: 0 auto 10px;
+  width: 70%;
+}
+
+.sig-name{ font-size: 12px; font-weight: 800; }
+.sig-role{ font-size: 12px; font-weight: 900; margin-top: 4px; }

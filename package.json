@@ -7,8 +7,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon TLA/tlaServer.js",
-    "twa": "nodemon TWA/twaServer.js"
+    "start": "nodemon index.js"
+    
   },
   "repository": {
     "type": "git",
