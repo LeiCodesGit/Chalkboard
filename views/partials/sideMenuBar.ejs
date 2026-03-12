@@ -118,7 +118,7 @@
             alt="User Profile" 
             class="avatar">
         <span class="username">
-            <%= (locals.user && user.fullName) ? user.fullName : 'Guest User' %>
+            <%= (locals.user && user.firstName) ? `${user.firstName} ${user.lastName}` : 'Guest User' %>
         </span>
     </div>
 

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pending Approvals</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-bg">
+    <main class="main-content" style="padding: 40px;">
+        
+        <div class="dashboard-title">
+            Forms to Approve (<%= role %> - <%= college %>)
+        </div>
+
+        <div class="form-cards-container" style="margin-top: 20px;">
+            <div class="form-card-scrollable">
+                
+                <table style="width: 100%; text-align: left; border-collapse: collapse; color: white;">
+                    <thead style="border-bottom: 2px solid #555;">
+                        <tr>
+                            <th style="padding: 10px;">Faculty Name</th>
+                            <th style="padding: 10px;">College</th>
+                            <th style="padding: 10px;">Term</th>
+                            <th style="padding: 10px;">Teaching Units</th>
+                            <th style="padding: 10px;">Status</th>
+                            <th style="padding: 10px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (forms.length === 0) { %>
+                            <tr>
+                                <td colspan="6" style="padding: 20px; text-align: center;">No pending forms for your department!</td>
+                            </tr>
+                        <% } else { %>
+                            <% forms.forEach(form => { %>
+                                <tr style="border-bottom: 1px solid #444;">
+                                    <td style="padding: 10px;"><%= form.facultyName %></td>
+                                    <td style="padding: 10px;"><%= form.college %></td>
+                                    <td style="padding: 10px;"><%= form.term %> <%= form.academicYear %></td>
+                                    <td style="padding: 10px;"><%= form.totalTeachingUnits %></td>
+                                    <td style="padding: 10px;"><span class="pending-badge"><%= form.status %></span></td>
+                                    <td style="padding: 10px;">
+                                        <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none;">Review</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 30px;">
+                    <a href="/dashboard/window" class="form-btn secondary-btn" style="text-decoration: none;">Back to Dashboard</a>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>

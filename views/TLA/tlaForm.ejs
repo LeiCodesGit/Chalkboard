@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLA | <%= tla ? 'Edit Form' : 'Create Form' %></title>
+    
+    <!--inside the public file, for colors-->
+    <link rel="stylesheet" href="/common/css/variables.css">
+
+    <link rel="stylesheet" href="/TLA/css/tlaForm.css">
+</head>
+<body>
+
+    <%- include('../partials/sideMenuBar') %>
+    
+    <main class="main-content">
+        <div class="background-overlay"></div>
+        
+        <div class="form-container">
+
+            <h1>COLLEGE TEACHING-LEARNING ACTIVITY</h1>
+
+            <!-- Status badge for non-editable records -->
+            <% if (status && ['Pending','Approved','Archived'].includes(status.status)) { %>
+                <div class="status-badge status-badge--locked">
+                    <% if (status.status === 'Pending') { %>
+                        &#9203; This TLA is <strong>Pending</strong> approval. Pre-digital section is locked.
+                    <% } else if (status.status === 'Approved') { %>
+                        &#9989; Pre-digital session <strong>Approved</strong>. You may now fill in the post-digital section.
+                    <% } else { %>
+                        &#128274; This TLA is <strong><%= status.status %></strong> and cannot be edited.
+                    <% } %>
+                </div>
+            <% } %>
+
+            <%
+                const formAction = tla ? '/tla/form/' + tla._id : '/tla/form';
+                // Pre-digital locked when Pending, Approved, or Archived
+                const isLocked   = status && ['Pending','Approved','Archived'].includes(status.status);
+            %>
+            
+            <form id="tla-form" action="<%= formAction %>" method="POST">
+
+                <div class="form-section top-section">
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label>NAME</label>
+                            <input type="text" name="_name" value="<%= user ? user.firstName + ' ' + user.lastName : '' %>" disabled="disabled">
+                        </div>
+                        <div class="form-group">
+                            <label>Faculty Member Facilitating Digital Session</label>
+                            <input type="text" name="facultyFacilitating"
+                                   value="<%= tla && tla.facultyFacilitating ? tla.facultyFacilitating : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label>Section(s)</label>
+                            <input type="text" name="section"
+                                   value="<%= tla && tla.section ? tla.section : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>Course Code</label>
+                            <input type="text" name="courseCode"
+                                   value="<%= tla && tla.courseCode ? tla.courseCode : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                    </div>
+
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label>Date of Digital Day</label>
+                            <input type="date" name="dateofDigitalDay"
+                                   value="<%= tla && tla.dateofDigitalDay ? tla.dateofDigitalDay : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>Week Number</label>
+                            <input type="number" name="weekNumber" min="1" max="18"
+                                   value="<%= tla && tla.weekNumber ? tla.weekNumber : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Course Outcome(s)</label>
+                            <textarea name="courseOutcomes" rows="2" <%= isLocked ? 'disabled' : '' %>><%= tla && tla.courseOutcomes ? tla.courseOutcomes : '' %></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>MEDIATING/INTENDED LEARNING OUTCOME(S) AND CODES (ADD ROWS AS NEEDED)</label>
+                            <textarea name="mediatingOutcomes" rows="5" <%= isLocked ? 'disabled' : '' %>><%= tla && tla.mediatingOutcomes ? tla.mediatingOutcomes : '' %></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <%
+                    // Post-digital is editable only when the pre-digital has been approved
+                    const postUnlocked = status && status.status === 'Approved';
+                    const postDisabled = isLocked || !postUnlocked;
+                %>
+
+                <div class="form-sections-row">
+                    <div class="form-section half-section">
+                        <h3>PRE-DIGITAL SESSION</h3>
+                        <div class="form-group">
+                            <label>MO/ILO CODE</label>
+                            <input type="text" name="pre_moIloCode"
+                                   value="<%= preDigital && preDigital.moIloCode ? preDigital.moIloCode : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>Teaching Learning Activity</label>
+                            <input type="text" name="pre_teacherLearningActivity"
+                                   value="<%= preDigital && preDigital.teacherLearningActivity ? preDigital.teacherLearningActivity : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>LMS Tool / Digital Tool used to Deliver the TLA</label>
+                            <input type="text" name="pre_lmsDigitalTool"
+                                   value="<%= preDigital && preDigital.lmsDigitalTool ? preDigital.lmsDigitalTool : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>ASSESSMENT</label>
+                            <input type="text" name="pre_assessment"
+                                   value="<%= preDigital && preDigital.assessment ? preDigital.assessment : '' %>"
+                                   <%= isLocked ? 'disabled' : '' %>>
+                        </div>
+                        <button type="button" class="attach-btn">ATTACH SIGNATURE</button>
+                    </div>
+                    
+                    <div class="form-section half-section post-digital-section <%= postDisabled ? 'post-locked' : '' %>">
+                        <h3>POST-DIGITAL SESSION</h3>
+
+                        <% if (postDisabled && !isLocked) { %>
+                        <div class="post-lock-notice">
+                            &#128274; Available after pre-digital session is approved.
+                        </div>
+                        <% } %>
+
+                        <div class="form-group">
+                            <label>MO/ILO CODE</label>
+                            <input type="text" name="post_moIloCode"
+                                   value="<%= postDigital && postDigital.moIloCode ? postDigital.moIloCode : '' %>"
+                                   <%= postDisabled ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>PARTICIPANT TURNOUT</label>
+                            <input type="text" name="post_participantTurnout"
+                                   value="<%= postDigital && postDigital.participantTurnout ? postDigital.participantTurnout : '' %>"
+                                   <%= postDisabled ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>ASSESSMENT RESULTS</label>
+                            <input type="text" name="post_assessmentResults"
+                                   value="<%= postDigital && postDigital.assessmentResults ? postDigital.assessmentResults : '' %>"
+                                   <%= postDisabled ? 'disabled' : '' %>>
+                        </div>
+                        <div class="form-group">
+                            <label>REMARKS</label>
+                            <input type="text" name="post_remarks"
+                                   value="<%= postDigital && postDigital.remarks ? postDigital.remarks : '' %>"
+                                   <%= postDisabled ? 'disabled' : '' %>>
+                        </div>
+                        <button type="button" class="attach-btn" <%= postDisabled ? 'disabled' : '' %>>ATTACH SIGNATURE</button>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <% const currentStatus = status ? status.status : null; %>
+
+                    <% if (currentStatus === 'Archived') { %>
+                        <!-- Archived: read-only, no edits -->
+                        <button type="button" class="btn-save" onclick="window.location.href='/tla/overview'">BACK TO DASHBOARD</button>
+                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
+
+                    <% } else if (currentStatus === 'Pending') { %>
+                        <!-- Pending: waiting for approval, no edits -->
+                        <button type="button" class="btn-save" onclick="window.location.href='/tla/overview'">BACK TO DASHBOARD</button>
+                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
+
+                    <% } else if (currentStatus === 'Approved') { %>
+                        <!-- Approved: can only fill/submit post-digital -->
+                        <button type="submit" name="action" value="submit-post" class="btn-submit">SUBMIT POST-DIGITAL</button>
+                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
+
+                    <% } else { %>
+                        <!-- Draft / Returned / Not Submitted / new: normal edit -->
+                        <button type="submit" name="action" value="draft" class="btn-save">SAVE AS DRAFT</button>
+                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
+                        <button type="submit" name="action" value="submit" class="btn-submit">SUBMIT</button>
+                    <% } %>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="/TLA/js/tlaForm.js"></script>
+</body>
+</html>

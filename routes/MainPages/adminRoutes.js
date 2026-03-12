@@ -1,15 +1,17 @@
 import express from "express";
 import { mainDB } from "../../database/mongo-dbconnect.js"; 
 import userSchema from "../../models/user.js";
+import { isAuthenticated, authorizeRoles } from "../../middleware/authMiddleware.js";
 
 const adminRoutes = express.Router();
 
 const MainUser = mainDB.model("User", userSchema);
 
-adminRoutes.get("/institution", async (req, res) => {
+adminRoutes.get("/institution", isAuthenticated, authorizeRoles("Admin", "HR"), async (req, res) => {
     res.render("MainPages/admin/adminDashboard", {
         currentPageCategory: "institution",
-        announcements: [] 
+        announcements: [],
+        user: req.session.user
     });
 });
 

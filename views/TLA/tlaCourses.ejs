@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMCM Chalkboard | TLA Courses</title>
+
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- Global colour variables -->
+    <link rel="stylesheet" href="/common/css/variables.css">
+
+    <!-- Page styles -->
+    <link rel="stylesheet" href="/TLA/css/tlaCourses.css">
+</head>
+<body>
+
+    <%- include('../partials/sideMenuBar') %>
+
+    <main class="main-content">
+
+        <!-- ================================================ -->
+        <!--  TOP BAR: Title + Search + Term Dropdown          -->
+        <!-- ================================================ -->
+        <div class="courses-topbar">
+            <h1 class="courses-title">Courses</h1>
+
+            <!-- View toggle (list / grid) -->
+            <div class="view-toggle">
+                <button class="toggle-btn active" id="btn-list-view" title="List view">
+                    <span class="material-symbols-outlined">format_list_bulleted</span>
+                </button>
+                <button class="toggle-btn" id="btn-grid-view" title="Grid view">
+                    <span class="material-symbols-outlined">grid_view</span>
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="search-box">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input
+                    type="text"
+                    id="course-search"
+                    placeholder="Search your Courses"
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- Terms dropdown -->
+            <div class="term-dropdown-wrap">
+                <label class="dropdown-label">Terms</label>
+                <select id="term-filter" class="term-select">
+                    <option value="">All Terms</option>
+                    <%
+                        // Build unique term options from the courses array
+                        const termSet = new Set();
+                        if (locals.courses) {
+                            courses.forEach(c => {
+                                const termLabel = 'A.Y. ' + (c.schoolYear || '') + ' | ' + (c.term || '');
+                                termSet.add(termLabel);
+                            });
+                        }
+                    %>
+                    <% termSet.forEach(function(t) { %>
+                        <option value="<%= t %>"><%= t %></option>
+                    <% }); %>
+                </select>
+            </div>
+        </div>
+
+        <!-- ================================================ -->
+        <!--  Results count + active filter chip               -->
+        <!-- ================================================ -->
+        <div class="courses-results-bar">
+            <span class="results-count" id="results-count">
+                <%= locals.courses ? courses.length : 0 %> Results
+            </span>
+            <div class="active-chips" id="active-chips"></div>
+        </div>
+
+        <!-- ================================================ -->
+        <!--  COURSE CARDS GRID                                -->
+        <!-- ================================================ -->
+        <div class="courses-grid" id="courses-grid">
+            <% if (locals.courses && courses.length > 0) { %>
+                <% courses.forEach(function(course) { %>
+                    <a
+                        class="course-card"
+                        href="/tla/overview/<%= course.syllabusId %>"
+                        data-course-code="<%= course.courseCode %>"
+                        data-course-title="<%= course.courseTitle %>"
+                        data-term="A.Y. <%= course.schoolYear || '' %> | <%= course.term || '' %>"
+                    >
+                        <!-- Card banner image -->
+                        <div class="card-banner">
+                            <% if (course.hasBanner) { %>
+                                <img src="/api/syllabus/<%= course.syllabusId %>/image" alt="Course banner" class="card-banner-img">
+                            <% } else { %>
+                                <div class="card-banner-placeholder"></div>
+                            <% } %>
+                        </div>
+
+                        <!-- Card body -->
+                        <div class="card-body">
+                            <h3 class="card-course-code"><%= course.courseCode %></h3>
+                            <p class="card-course-title"><%= course.courseTitle %></p>
+                            <p class="card-course-meta">
+                                <span><%= course.section || '' %></span>
+                                <% if (course.term) { %>
+                                    <span class="meta-sep">&bull;</span>
+                                    <span><%= course.term %></span>
+                                <% } %>
+                                <% if (course.schoolYear) { %>
+                                    <span class="meta-sep">&bull;</span>
+                                    <span>A.Y. <%= course.schoolYear %></span>
+                                <% } %>
+                            </p>
+                        </div>
+                    </a>
+                <% }); %>
+            <% } else { %>
+                <div class="no-courses">
+                    <span class="material-symbols-outlined no-courses-icon">school</span>
+                    <p>No courses found.</p>
+                </div>
+            <% } %>
+        </div>
+
+    </main>
+
+    <script src="/TLA/js/tlaCourses.js"></script>
+</body>
+</html>

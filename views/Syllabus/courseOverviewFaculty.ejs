@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses</title>
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/Syllabus/css/syllabus.css">
+    <link rel="stylesheet" href="/Syllabus/css/courseOverviewFaculty.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <%- include('../partials/sideMenuBar') %>
+
+            <main class="main-content" style="background: #ffffff !important;">
+
+                <section class="content-panel">
+                    <div class="overview-panel">
+
+                        <div class="courses-header">
+                            <div class="header-left">
+                                <h1>Courses</h1>
+                                <div class="view-toggles">
+                                    <button class="toggle-btn list-view"><i class="fas fa-bars"></i></button>
+                                    <button class="toggle-btn grid-view active"><i class="fas fa-th-large"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="header-center">
+                                <div class="search-container"
+                                    data-userid="<%= typeof userId !== 'undefined' ? userId : '' %>">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="searchInput" placeholder="Search your Courses"
+                                        autocomplete="off">
+                                </div>
+
+                                <div class="control-group terms-group"><label>Terms</label><select>
+                                        <option>A.Y. 2025-2026 | COLLEGE | 2nd Trimester</option>
+                                    </select></div>
+                                <div class="control-group filters-group"><label>Filters</label><select>
+                                        <option>All Courses</option>
+                                    </select></div>
+                            </div>
+
+                            <div class="header-right">
+                                <div class="control-group items-per-page"><label>Items per Page</label><select>
+                                        <option>25</option>
+                                    </select></div>
+                            </div>
+                        </div>
+
+                        <div class="results-bar">
+                            <span class="result-count" id="resultCount">
+                                <%= typeof courses !=='undefined' ? courses.length : 0 %> Results
+                            </span>
+                        </div>
+
+                        <div class="course-grid">
+                            <% if (typeof courses !=='undefined' && courses.length> 0) { %>
+                                <% courses.forEach(course=> { %>
+                                    <div class="course-card" data-id="<%= course.id %>"
+                                        data-hasdraft="<%= course.hasDraft %>">
+                                        <div class="card-image">
+                                            <img src="<%= course.img || 'https://picsum.photos/400/200?random=' + course.id %>"
+                                                alt="Course Image">
+                                        </div>
+                                        <div class="card-content">
+                                            <span class="course-code">
+                                                <%= course.code %>
+                                            </span>
+                                            <h3 class="course-title">
+                                                <%= course.title %>
+                                            </h3>
+                                            <p class="course-status">
+                                                <%= course.status || 'No Syllabus Draft' %>
+                                            </p>
+                                        </div>
+                                        <div class="card-footer">
+                                            <span class="instructor">
+                                                <%= course.instructor %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <p
+                                                style="text-align: center; color: #777; grid-column: 1 / -1; padding: 40px 0;">
+                                                No courses found.</p>
+                                            <% } %>
+                        </div>
+                    </div>
+                </section>
+            </main>
+    </div>
+
+    <div class="modal-overlay" id="draftModal">
+        <div class="modal-content" style="width: 460px; text-align: center;">
+            <div class="modal-header" style="justify-content: space-between;">
+                <div class="modal-title-group">
+                    <div class="modal-icon"><i class="fas fa-file-alt"></i></div>
+                    <h2>Syllabus Draft</h2>
+                </div>
+                <span class="close-modal" onclick="closeDraftModal()">&times;</span>
+            </div>
+
+            <div style="padding: 30px 20px; text-align: center;">
+                <p id="draftMessage" style="font-size: 16px; font-weight: 600; color: #444; margin: 0;"></p>
+            </div>
+
+            <div class="modal-actions" style="justify-content: center;">
+                <button id="draftActionBtn" class="submit-btn" style="width: 100%; justify-content: center;">
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/Syllabus/js/courseFaculty.js"></script>
+</body>
+
+</html>

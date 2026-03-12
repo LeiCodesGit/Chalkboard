@@ -5,8 +5,9 @@ const tlaApprovalStatusSchema = new Schema({
   approvalDate: Date,
   remarks: String,
   approvedBy: String,
-  status: { type: String, enum: ["Approved","Pending","Not Submitted"], default: "Not Submitted" }
+  status: { type: String, enum: ["Approved","Pending","Returned","Not Submitted"], default: "Not Submitted" }
 },{ timestamps:true });
 
 const TLAApprovalStatus = model("TLAApprovalStatus", tlaApprovalStatusSchema);
+export { tlaApprovalStatusSchema };
 export default TLAApprovalStatus;

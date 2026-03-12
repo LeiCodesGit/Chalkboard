@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabus Approval Queue (Tech Assistant)</title>
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/Syllabus/css/syllabus.css">
+    <link rel="stylesheet" href="/Syllabus/css/syllabusApproval.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <%- include('../partials/sideMenuBar') %>
+
+            <main class="main-content" style="background:#f7f8fa !important;">
+                <section class="content-panel">
+                    <div class="approval-panel">
+
+                        <!-- Header -->
+                        <div class="approval-header">
+                            <div class="approval-header-left">
+                                <div>
+                                    <h1>Syllabus Review Queue</h1>
+                                    <p class="approval-subtitle">Review submitted syllabus drafts for your courses</p>
+                                </div>
+                            </div>
+                            <div class="approval-header-right">
+                                <div class="approval-stats">
+                                    <div class="stat-pill pending">
+                                        <i class="fas fa-clock"></i>
+                                        <span>
+                                            <%= pendingCount %> Pending
+                                        </span>
+                                    </div>
+                                    <div class="stat-pill approved">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>
+                                            <%= approvedCount %> Approved
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Tabs -->
+                        <div class="filter-tabs">
+                            <button class="tab-btn active" data-filter="all">All Drafts</button>
+                            <button class="tab-btn" data-filter="Pending">Pending</button>
+                            <button class="tab-btn" data-filter="Approved">Reviewed</button>
+                        </div>
+
+                        <!-- Search Bar -->
+                        <div class="approval-search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="approvalSearch" placeholder="Search by course title or code...">
+                        </div>
+
+                        <!-- Draft List -->
+                        <div class="draft-list" id="draftList">
+
+                            <% if (!drafts || drafts.length===0) { %>
+                                <div class="empty-state">
+                                    <div class="empty-icon"><i class="fas fa-file-alt"></i></div>
+                                    <h3>No Syllabus Drafts Found</h3>
+                                    <p>There are currently no syllabus drafts to review.</p>
+                                </div>
+                                <% } %>
+
+                                    <% for (var i=0; i < drafts.length; i++) { %>
+                                        <% var d=drafts[i]; %>
+                                            <!-- Only render if Pending or Approved -->
+                                            <% if (d.status==='Pending' || d.status==='Approved' ) { %>
+                                                <div class="draft-row" data-status="<%= d.status %>"
+                                                    data-title="<%= (d.courseTitle || '').toLowerCase() %>"
+                                                    data-code="<%= (d.courseCode || '').toLowerCase() %>">
+
+                                                    <div class="draft-thumb">
+                                                        <img src="<%= d.img %>" alt="Course Image">
+                                                    </div>
+
+                                                    <div class="draft-info">
+                                                        <span class="draft-code">
+                                                            <%= d.courseCode %>
+                                                        </span>
+                                                        <h3 class="draft-title">
+                                                            <%= d.courseTitle %>
+                                                        </h3>
+                                                        <div class="draft-meta">
+                                                            <span><i class="fas fa-user-tie"></i>
+                                                                <%= d.instructor %>
+                                                            </span>
+                                                            <span><i class="fas fa-calendar-alt"></i> Submitted: <%=
+                                                                    d.submittedDate %></span>
+                                                            <% if (d.approvalDate) { %>
+                                                                <span><i class="fas fa-check"></i> Approved: <%=
+                                                                        d.approvalDate %></span>
+                                                                <% } %>
+                                                                    <% if (d.approvedBy) { %>
+                                                                        <span><i class="fas fa-user-shield"></i> By: <%=
+                                                                                d.approvedBy %></span>
+                                                                        <% } %>
+                                                                            <% if (d.remarks) { %>
+                                                                                <span class="draft-remarks"><i
+                                                                                        class="fas fa-comment-alt"></i>
+                                                                                    <%= d.remarks %>
+                                                                                </span>
+                                                                                <% } %>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="draft-actions">
+                                                        <% if (d.status==='Approved' ) { %>
+                                                            <span class="status-badge status-approved">
+                                                                <i class="fas fa-check-circle"></i> Reviewed
+                                                            </span>
+                                                            <% } else if (d.status==='Pending' ) { %>
+                                                                <span class="status-badge status-pending">
+                                                                    <i class="fas fa-hourglass-half"></i> Pending
+                                                                </span>
+                                                                <% } %>
+                                                                    <button class="review-btn"
+                                                                        data-href="/syllabus/edit/<%= d.syllabusId %>"
+                                                                        onclick="window.location.href=this.dataset.href">
+                                                                        <i class="fas fa-eye"></i> Review
+                                                                    </button>
+                                                    </div>
+                                                </div>
+                                                <% } %>
+                                                    <% } %>
+
+                        </div>
+                    </div>
+                </section>
+            </main>
+    </div>
+
+    <script>
+        var tabs = document.querySelectorAll('.tab-btn');
+        var rows = document.querySelectorAll('.draft-row');
+        var searchInput = document.getElementById('approvalSearch');
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                filterRows();
+            });
+        });
+
+        searchInput.addEventListener('input', filterRows);
+
+        function filterRows() {
+            var activeFilter = document.querySelector('.tab-btn.active').dataset.filter;
+            var query = searchInput.value.trim().toLowerCase();
+            rows.forEach(function (row) {
+                var statusMatch = (activeFilter === 'all') || (row.dataset.status === activeFilter);
+                var searchMatch = !query || row.dataset.title.includes(query) || row.dataset.code.includes(query);
+                row.style.display = (statusMatch && searchMatch) ? '' : 'none';
+            });
+        }
+
+        filterRows(); // run on load
+    </script>
+</body>
+
+</html>

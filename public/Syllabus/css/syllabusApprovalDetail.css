@@ -1,0 +1,519 @@
+/* ═══════════════════════════════════════════════════════════
+   Syllabus Approval Detail — syllabusApprovalDetail.css
+   Mirrors the TLA Approval page design
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Main Content Area ─────────────────────────────────── */
+.approval-detail-main {
+    margin-left: 0;
+    min-height: 100vh;
+    background-image: url('/common/img/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.approval-detail-main .background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.80);
+    z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEADER BAR
+   ═══════════════════════════════════════════════════════════ */
+.approval-detail-header {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, var(--color-charcoal) 0%, #3a3a3a 100%);
+    padding: 18px 30px;
+    color: var(--text-on-dark);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ad-header-logo {
+    flex-shrink: 0;
+}
+
+.ad-header-logo img {
+    height: 52px;
+    width: auto;
+    opacity: 0.95;
+}
+
+.ad-header-divider {
+    width: 1px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.3);
+    margin: 0 20px;
+    flex-shrink: 0;
+}
+
+.ad-header-info {
+    flex: 1;
+}
+
+.ad-course-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.ad-course-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ad-meta-divider {
+    opacity: 0.4;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BODY LAYOUT — Two-column
+   ═══════════════════════════════════════════════════════════ */
+.approval-detail-body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 24px;
+    padding: 24px 30px 40px;
+    align-items: flex-start;
+}
+
+/* ─── LEFT: Document Panel ──────────────────────────────── */
+.ad-document-panel {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.ad-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--text-on-dark);
+    background: rgba(0, 0, 0, 0.55);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    transition: background 0.2s;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+}
+
+.ad-back-btn:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.ad-back-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.ad-file-type-badge {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.ad-section-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-on-light);
+    margin-bottom: 20px;
+}
+
+/* ── Document preview card ── */
+.ad-document-preview {
+    background: rgba(230, 230, 230, 0.65);
+    border-radius: 14px;
+    padding: 28px 30px;
+    border: 1px solid rgba(200, 200, 200, 0.5);
+}
+
+.ad-no-data-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+    color: var(--text-on-light);
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RIGHT: Approval Sidebar
+   ═══════════════════════════════════════════════════════════ */
+.ad-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: rgba(245, 245, 245, 0.92);
+    border-radius: 14px;
+    padding: 22px 18px;
+    border: 1px solid rgba(200, 200, 200, 0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 20px;
+}
+
+.ad-sidebar-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    margin-bottom: 18px;
+    letter-spacing: 0.5px;
+}
+
+/* ── Approval Tracker Steps ── */
+.ad-tracker {
+    margin-bottom: 20px;
+}
+
+.ad-tracker-steps {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+    padding: 0 4px;
+}
+
+.ad-tracker-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+}
+
+/* Dot */
+.ad-step-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid #ccc;
+    background: #fff;
+    z-index: 2;
+    transition: all 0.3s;
+}
+
+.ad-step-dot.step-approved {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.ad-step-dot.step-ongoing {
+    background: #ffc107;
+    border-color: #ffc107;
+}
+
+.ad-step-dot.step-pending {
+    background: #bbb;
+    border-color: #bbb;
+}
+
+.ad-step-dot.step-rejected {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Connecting line */
+.ad-step-line {
+    position: absolute;
+    top: 10px;
+    left: calc(50% + 11px);
+    width: calc(100% - 22px);
+    height: 3px;
+    background: #ddd;
+    z-index: 1;
+}
+
+.ad-step-line.line-approved {
+    background: #28a745;
+}
+
+.ad-step-line.line-ongoing {
+    background: #ffc107;
+}
+
+.ad-step-line.line-rejected {
+    background: #dc3545;
+}
+
+/* Labels */
+.ad-step-labels {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.ad-step-role {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.ad-step-sublabel {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* ── Sidebar Sections ── */
+.ad-sidebar-section {
+    margin-bottom: 16px;
+}
+
+.ad-sidebar-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-on-light);
+    margin-bottom: 6px;
+}
+
+.ad-comments-box {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: inherit;
+    resize: vertical;
+    background: #fff;
+    color: var(--text-on-light);
+    box-sizing: border-box;
+}
+
+.ad-comments-box:focus {
+    outline: none;
+    border-color: var(--accent-secondary);
+    box-shadow: 0 0 0 2px rgba(0, 36, 85, 0.15);
+}
+
+/* ── Status Dropdown ── */
+.ad-status-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ad-status-indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #28a745;
+    transition: background 0.3s;
+}
+
+.ad-status-indicator.indicator-approved {
+    background: #28a745;
+}
+
+.ad-status-indicator.indicator-endorsed {
+    background: #28a745;
+}
+
+.ad-status-indicator.indicator-returned {
+    background: #dc3545;
+}
+
+.ad-status-indicator.indicator-pending {
+    background: #ffc107;
+}
+
+.ad-status-select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text-on-light);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+}
+
+.ad-status-select:focus {
+    outline: none;
+    border-color: var(--accent-secondary);
+}
+
+/* ── Signature Box ── */
+.ad-signature-wrapper {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.ad-signature-box {
+    flex: 1;
+    height: 80px;
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color 0.2s, background 0.2s;
+    overflow: hidden;
+}
+
+.ad-signature-box:hover {
+    border-color: var(--accent-secondary);
+    background: rgba(0, 36, 85, 0.03);
+}
+
+.ad-signature-placeholder {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.ad-signature-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.ad-signature-remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #dc3545;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+
+.ad-signature-remove-btn:hover {
+    color: #a71d2a;
+}
+
+.ad-signature-remove-btn .material-symbols-outlined {
+    font-size: 24px;
+}
+
+/* ── Action Buttons ── */
+.ad-sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.ad-btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+}
+
+.ad-btn-action .material-symbols-outlined {
+    font-size: 18px;
+}
+
+.ad-btn-pdf {
+    background: var(--accent-secondary);
+    color: var(--text-on-dark);
+}
+
+.ad-btn-pdf:hover {
+    background: var(--accent-secondary-hover);
+}
+
+.ad-btn-draft {
+    background: var(--text-muted);
+    color: var(--text-on-dark);
+}
+
+.ad-btn-draft:hover {
+    background: #777;
+}
+
+.ad-btn-submit {
+    background: var(--accent-primary);
+    color: var(--text-on-dark);
+}
+
+.ad-btn-submit:hover {
+    background: var(--accent-primary-hover);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+    .approval-detail-body {
+        flex-direction: column;
+    }
+
+    .ad-sidebar {
+        width: 100%;
+        position: static;
+    }
+
+    .ad-tracker-steps {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .approval-detail-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .ad-header-logo {
+        margin-left: 0;
+    }
+}

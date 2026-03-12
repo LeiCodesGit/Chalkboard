@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Review ATA Form</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dashboard-bg">
+    <main class="main-content" style="padding: 40px; max-width: 800px; margin: 0 auto;">
+        
+        <div class="dashboard-title">ATA Form Review</div>
+
+        <div class="form-card" style="background-color: rgba(255,255,255,0.05); padding: 30px; border-radius: 10px; color: white;">
+            <h2>Faculty: <%= form.facultyName %></h2>
+            <p><strong>Position:</strong> <%= form.position %></p>
+            <p><strong>College/Program:</strong> <%= form.college %></p>
+            <p><strong>Term:</strong> <%= form.term %> <%= form.academicYear %></p>
+            <hr style="border-color: #444; margin: 20px 0;">
+
+            <h3>Load Summary</h3>
+            <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #444;">
+                    <th style="padding: 10px;">Section</th>
+                    <th style="padding: 10px;">Teaching Units</th>
+                </tr>
+                <tr style="border-bottom: 1px solid #444;">
+                    <td style="padding: 10px;">(A) Admin Units</td>
+                    <td style="padding: 10px;"><%= form.sectionA_AdminUnits %></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #444;">
+                    <td style="padding: 10px;">(B) Within College</td>
+                    <td style="padding: 10px;"><%= form.sectionB_WithinCollege.reduce((sum, c) => sum + c.units, 0) %></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #444;">
+                    <td style="padding: 10px;">(G) Remedial</td>
+                    <td style="padding: 10px;"><%= form.totalRemedialUnits %></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px;"><strong>TOTAL TEACHING UNITS</strong></td>
+                    <td style="padding: 10px;"><strong><%= form.totalTeachingUnits %></strong></td>
+                </tr>
+            </table>
+
+            <hr style="border-color: #444; margin: 20px 0;">
+
+            <div style="background-color: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px;">
+                <h3>Administrator Action</h3>
+                <textarea id="remarksBox" rows="3" placeholder="Enter remarks or justification (Required if returning)..." style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: none; background: #333; color: white;"></textarea>
+                
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="rejectBtn" class="form-btn" style="background-color: #8b0000; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Return to Faculty</button>
+
+                    <% if (role === 'Program-Chair') { %>
+                        <% if (form.sectionE_Practicum && form.sectionE_Practicum.length > 0) { %>
+                            <button id="endorsePracticumBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to Practicum</button>
+                            <button id="skipToDeanBtn" class="form-btn" style="background-color: #ffc107; border: none; color: #333; padding: 8px 12px; border-radius: 5px; font-size: 0.8em;">Skip to Dean</button>
+                        <% } else { %>
+                            <button id="endorseDeanBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to Dean</button>
+                        <% } %>
+                    
+                    <% } else if (role === 'Practicum-Coordinator') { %>
+                        <button id="endorseDeanBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to Dean</button>
+
+                    <% } else if (role === 'Dean') { %>
+                        <button id="endorseVpaaBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to VPAA</button>
+                    <% } %>
+                    </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <a href="/ata/pending" style="color: #aaa;">← Back to Inbox</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function submitDecision(action, targetStatus = null) {
+            const remarks = document.getElementById('remarksBox').value;
+            const formId = '<%= form._id %>';
+
+            if (action === 'RETURN' && remarks.trim() === '') {
+                alert("Remarks required to return form to the faculty.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/ata/approve/${formId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer dummy_test_token_123` },
+                    body: JSON.stringify({ action, remarks, targetStatus }) 
+                });
+
+                if (response.ok) {
+                    window.location.href = '/ata/pending';
+                } else {
+                    alert("Failed to update status.");
+                }
+            } catch (err) { alert("Network error."); }
+        }
+
+        // Attach listeners safely based on which buttons rendered
+        if (document.getElementById('rejectBtn')) {
+            document.getElementById('rejectBtn').addEventListener('click', () => submitDecision('RETURN'));
+        }
+        
+        // Chair Listeners
+        if (document.getElementById('endorsePracticumBtn')) {
+            document.getElementById('endorsePracticumBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_PRACTICUM'));
+            document.getElementById('skipToDeanBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_DEAN'));
+        } 
+        
+        // General Endorse to Dean Listener (Used by Chair and Practicum Coordinator)
+        if (document.getElementById('endorseDeanBtn')) {
+            document.getElementById('endorseDeanBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_DEAN'));
+        }
+
+        // Dean Listener
+        if (document.getElementById('endorseVpaaBtn')) {
+            document.getElementById('endorseVpaaBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_VPAA'));
+        }
+    </script>
+</body>
+</html>

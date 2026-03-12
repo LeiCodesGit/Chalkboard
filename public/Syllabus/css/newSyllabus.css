@@ -1,0 +1,587 @@
+@import url('/common/css/variables.css');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  background: #f2f2f2;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar/Dashboard Layout */
+.dashboard {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 300px;
+  background: #2b2b2b;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 25px 0;
+}
+
+.sidebar-logo img {
+  width: 130px;
+  height: auto;
+  margin-bottom: 30px;
+}
+
+.sidebar-divider {
+  width: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  position: absolute;
+  left: 70px;
+
+  top: 240px;
+  height: 250px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 40px;
+  text-align: left;
+  width: 100%;
+  padding: 20px 0 20px 120px;
+  line-height: 2.2;
+}
+
+.sidebar-menu a {
+  color: white;
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 1px;
+  opacity: 0.9;
+  transition: 0.3s;
+}
+
+.sidebar-menu a:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+.theme-btn {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 13px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  opacity: 0.9;
+  transition: 0.3s;
+}
+
+.theme-btn:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* Section 1: Top bar - 47px, back button top left */
+.syllabus-top-bar {
+  flex-shrink: 0;
+  height: 47px;
+  display: flex;
+  align-items: center;
+  padding-left: 0;
+  background: var(--color-charcoal);
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-on-dark);
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: var(--sidebar-hover);
+}
+
+.back-btn-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* MMCM Background: fixed to main area, fit width, no white gaps, 35% fill */
+.main-content::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-white);
+  background-size: cover;
+  background-attachment: fixed;
+  opacity: 0.35;
+  z-index: 0;
+  pointer-events: none;
+  width: 100%;
+}
+
+.main-content>* {
+  position: relative;
+  z-index: 1;
+}
+
+.syllabus-scroll-area {
+  overflow-y: auto;
+  padding-bottom: 60px;
+}
+
+/* Section 2: MMCM Banner 350px; scrolls up with content */
+.syllabus-banner {
+  flex-direction: column;
+  height: 300px;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    url('/common/img/background.jpg') no-repeat center center/cover;
+  ;
+  color: var(--text-on-dark, #fff);
+  text-align: center;
+}
+
+.syllabus-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.syllabus-banner-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  line-height: 60px;
+  margin: auto;
+  font-size: 60px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-white) !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Section 3: Main content - fills remaining height so it adjusts when 2nd section scrolls up */
+.syllabus-content-section {
+  flex: 1;
+  min-height: calc(100vh - 47px - 200px);
+  padding: 20px;
+}
+
+/*.content-panel {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 20px;
+  border-radius: 12px;
+}*/
+.content-card {
+  background: var(--color-white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.content-panel {
+  flex: 1;
+  background: var(--color-white);
+  border-radius: 20px;
+  padding: 30px;
+  overflow-y: auto;
+  border: 10px solid var(--color-charcoal);
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 680px;
+  position: relative;
+}
+
+/* Home Button */
+/*.home-circle img {
+  width: 50%;       
+  height: 50%;      
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+.home-circle {
+  position: absolute;       
+  bottom: 20px;            
+  left: 20px;               
+  width: 65px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--color-charcoal);
+  color: var(--color-white);
+  font-size: 26px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+  transition: 0.3s ease;
+  z-index: 10;
+}
+.home-circle:hover {
+  background: #444;
+  transform: scale(1.1);
+}*/
+
+/* Next Button */
+.next-btn-rect {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  margin-right: 50px;
+
+  /* Dimensions & Shape */
+  width: 140px;
+  height: 48px;
+  border-radius: 15px;
+
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  /* Visuals */
+  background: #222;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 0 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: 0.3s ease;
+  z-index: 100;
+}
+
+.next-icon-img {
+  height: 14px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.next-btn-rect:hover {
+  background: var(--sidebar-hover);
+  transform: scale(1.05);
+}
+
+/* Title between banner and panel */
+.college-header-outside {
+  text-align: center;
+  font-size: 29px;
+  font-weight: 600;
+  margin: 40px 0 20px 0;
+  color: var(--red-hover);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Transparent Panel Style */
+.content-panel-transparent {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  padding: 60px 50px;
+  margin: 0 auto 50px auto;
+  max-width: 1000px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Internal Card Styling */
+.content-card-transparent {
+  background: transparent;
+  text-align: center;
+}
+
+.content-label-simple {
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  color: var(--text-on-light);
+}
+
+.content-body-simple {
+  line-height: 1.8;
+  font-size: 15px;
+  color: var(--text-on-light);
+  padding: 0 20px;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Program Educational Objectives */
+.peo-grid-container {
+  width: 100%;
+  margin-top: 5px;
+}
+
+.peo-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 0 5px 0;
+  /* Reserve space for delete button so header aligns with rows */
+  padding-right: 30px;
+}
+
+.peo-intro {
+  text-align: left;
+  font-size: 15px;
+  margin: 0;
+  flex: 1;
+}
+
+.mission-column-header {
+  width: 118px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.mission-main-text {
+  font-weight: 800;
+  font-size: 13px;
+  display: block;
+}
+
+.mission-labels {
+  display: flex;
+  justify-content: space-around;
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.peo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+}
+
+.peo-text-side {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  /* Account for delete button width so header aligns with rows */
+  padding-right: 8px;
+  align-items: center;
+}
+
+.peo-number {
+  font-weight: 600;
+  font-size: 12px;
+  min-width: 20px;
+}
+
+.peo-checkbox-side {
+  width: 118px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-around;
+  padding-top: 2px;
+}
+
+.peo-checkbox-side input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.peo-editable-text {
+  width: 100%;
+  min-height: 30px;
+  height: auto;
+  border: 1px dashed var(--color-charcoal) !important;
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--text-on-light);
+  padding: 4px 15px;
+  box-sizing: border-box;
+  display: block;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  text-align: left;
+  outline: none;
+  font-size: 14px;
+  line-height: 22px;
+  transition: all 0.2s ease;
+}
+
+.peo-editable-text:not(:focus):empty {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+.peo-editable-text:focus {
+  background: var(--color-white);
+  box-shadow: 0 0 0 2px rgba(39, 39, 39, 0.1);
+  border: 1px solid var(--color-charcoal) !important;
+  outline: none;
+}
+
+.peo-editable-text:empty::before {
+  content: "";
+}
+
+.peo-editable-text:focus::before {
+  content: "";
+}
+
+
+/* Add Row Button - Integrated inside the section */
+.add-row-wrapper {
+  margin-top: 15px;
+  padding-left: 32px;
+}
+
+.btn-add-peo {
+  background: transparent;
+  border: none;
+  color: var(--color-charcoal);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  transition: opacity 0.2s;
+}
+
+.btn-add-peo:hover {
+  opacity: 0.7;
+}
+
+.add-row-icon {
+  font-size: 18px;
+  color: var(--color-charcoal);
+}
+
+/* Delete Row Button */
+.btn-delete-row {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: var(--color-mapua-red);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.btn-delete-row:hover {
+  opacity: 0.7;
+}
+
+.btn-delete-row .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--color-mapua-red);
+}
+
+/* Persistent placeholder — show when element has the class even after typing and clearing */
+[contenteditable].show-placeholder::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  font-style: italic;
+  cursor: text;
+  pointer-events: none;
+}
+
+.material-symbols-outlined {
+  font-size: 20px;
+  /* Adjust size as needed */
+  vertical-align: middle;
+  display: inline-block;
+  margin-right: 5px;
+  /* Spacing between icon and text */
+}
+
+/* Ensure buttons use flexbox for better alignment */
+.back-btn,
+.next-btn-rect,
+.btn-add-peo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Page Break Styling for PDF Export */
+@media print {
+
+  body {
+    margin: 0;
+    background: white;
+  }
+
+  .content-panel {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    box-sizing: border-box;
+    margin: 0 auto;
+    background: white;
+  }
+
+  .content-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 15px;
+  }
+
+  .content-body {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .editor-toolbar,
+  .home-bottom-wrapper,
+  .next-circle {
+    display: none !important;
+  }
+
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+}

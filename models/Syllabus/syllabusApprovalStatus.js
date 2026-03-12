@@ -1,12 +1,17 @@
-import { Schema, model } from "mongoose";
+import mongoose from "mongoose";
+import { mainDB } from "../../database/mongo-dbconnect.js";
+
+const { Schema } = mongoose;
 
 const syllabusApprovalStatusSchema = new Schema({
   syllabusID: { type: Schema.Types.ObjectId, ref: "Syllabus", required: true },
-  status: { type: String, enum: ["Approved","Pending","Not Submitted"], default: "Not Submitted" },
+  status: { type: String, enum: ["Approved", "Pending", "Not Submitted", "Archived"], default: "Not Submitted" },
   approvalDate: Date,
   remarks: String,
-  approvedBy: String
-},{ timestamps:true });
+  approvedBy: String,
+  archivedBy: String,
+  archivedDate: Date
+}, { timestamps: true });
 
-const SyllabusApprovalStatus = model("SyllabusApprovalStatus", syllabusApprovalStatusSchema);
+const SyllabusApprovalStatus = mainDB.models.SyllabusApprovalStatus || mainDB.model("SyllabusApprovalStatus", syllabusApprovalStatusSchema);
 export default SyllabusApprovalStatus;
