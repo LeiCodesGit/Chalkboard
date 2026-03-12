@@ -28,7 +28,6 @@
           </div>
         <% } %>
 
-        <!-- BIG GLASS WRAPPER (matches screenshot) -->
         <div class="pc-glass">
 
           <!-- ===== Submitted Teaching Workload Sheets ===== -->
@@ -65,12 +64,11 @@
                   <div><%= tws.faculty?.acadYear || "—" %></div>
                   <div><%= tws.faculty?.term || "—" %></div>
 
-                  <!-- status colored like screenshot -->
                   <div class="pc-status">
                     <% 
                       const st = (tws.approval?.status || "").toLowerCase();
                       const isReturned = st.includes("returned");
-                      const isEval = st.includes("forwarded") || st.includes("evaluation");
+                      const isEval = st.includes("forwarded") || st.includes("evaluation") || st.includes("pending");
                       const statusText = tws.approval?.status || "For Evaluation (Assigned)";
                     %>
 
@@ -80,7 +78,8 @@
                   </div>
 
                   <div class="pc-btns">
-                    <a class="pc-btn pc-white" href="/tws/summary/<%= tws.id %>">View</a>
+                    <!-- FIXED: View should open the created TWS page -->
+                    <a class="pc-btn pc-white" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view&from=program-chair">View</a>
 
                     <% const canChairSendToDean = ["Sent to Faculty", "Returned to Program Chair", "Draft"].includes(tws.status || ""); %>
                     <% const canChairReturnDraft = ["Returned to Program Chair", "Rejected"].includes(tws.status || ""); %>
@@ -102,7 +101,7 @@
                     <% } %>
 
                     <% if (!canChairSendToDean && !canChairReturnDraft) { %>
-                      <span class="pc-btn pc-white" style="opacity:.7; pointer-events:none;">No action</span>
+                      <span class="pc-btn pc-white pc-btn-disabled">No action</span>
                     <% } %>
                   </div>
                 </div>
@@ -137,7 +136,7 @@
                   <div><%= tws.faculty?.term || "—" %></div>
 
                   <div class="pc-btns pc-btns-right">
-                    <a class="pc-btn pc-white" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view">View</a>
+                    <a class="pc-btn pc-white" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view&from=program-chair">View</a>
 
                     <% const canPersonalSendToDean = ["Draft", "Returned to Program Chair"].includes(tws.status || ""); %>
                     <% if (canPersonalSendToDean) { %>
@@ -147,7 +146,7 @@
                       <button class="pc-btn pc-blue" type="submit">✉ Send to Dean</button>
                     </form>
                     <% } else { %>
-                      <span class="pc-btn pc-white" style="opacity:.7; pointer-events:none;"><%= tws.status || "No action" %></span>
+                      <span class="pc-btn pc-white pc-btn-disabled"><%= tws.status || "No action" %></span>
                     <% } %>
                   </div>
                 </div>
@@ -155,12 +154,11 @@
             </div>
           </section>
 
-          <!-- Next button bottom-right like screenshot -->
           <div class="pc-next-wrap">
             <a class="pc-next" href="/tws/dashboard">Next</a>
           </div>
 
-        </div><!-- /pc-glass -->
+        </div>
 
       </div>
     </main>

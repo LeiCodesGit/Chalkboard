@@ -1,9 +1,18 @@
 /* ======================================================
    TWS STYLE (ONE FILE ONLY)
-   - Landing page: twsLandingWelcome.ejs
-   - Program Chair: twsProgramChair.ejs
-   - App pages: dashboard, faculty info, teaching load, summary, etc.
-   - Modal popup for Add Subject
+   Covers:
+   1) Shared / Global styles
+   2) Landing page
+   3) Program Chair page
+   4) Shared app pages (dashboard, faculty info, teaching load, summary)
+   5) Modal popup
+   6) Status / Approval / Archived pages
+   7) Created Teaching Workload page
+====================================================== */
+
+
+/* ======================================================
+   1) SHARED / GLOBAL
 ====================================================== */
 
 /* ---------- VARIABLES ---------- */
@@ -27,8 +36,10 @@ button, input, select{ font-family: inherit; }
 
 
 /* ======================================================
-   LANDING PAGE (twsLandingWelcome.ejs)
+   2) LANDING PAGE
+   Used in: twsLandingWelcome.ejs
 ====================================================== */
+
 .tws-landing-body{
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -71,7 +82,7 @@ button, input, select{ font-family: inherit; }
   text-align: center;
 }
 
-/* Title pill */
+/* Landing title pill */
 .tws-title-pill{
   background: var(--tws-pill);
   border-radius: 18px;
@@ -88,7 +99,7 @@ button, input, select{ font-family: inherit; }
   letter-spacing: 0.4px;
 }
 
-/* Main glass panel */
+/* Landing main glass panel */
 .tws-panel{
   background: var(--tws-glass);
   border-radius: 18px;
@@ -114,7 +125,7 @@ button, input, select{ font-family: inherit; }
   opacity: 0.95;
 }
 
-/* Get Started button */
+/* Landing Get Started button */
 .tws-btn{
   display: inline-block;
   margin-top: 16px;
@@ -132,7 +143,7 @@ button, input, select{ font-family: inherit; }
   opacity: 0.96;
 }
 
-/* Info box */
+/* Landing info box */
 .tws-info-box{
   margin: 16px auto 0 auto;
   width: min(780px, 100%);
@@ -158,8 +169,10 @@ button, input, select{ font-family: inherit; }
 
 
 /* ======================================================
-   PROGRAM CHAIR (twsProgramChair.ejs)
+   3) PROGRAM CHAIR PAGE
+   Used in: twsProgramChair.ejs
 ====================================================== */
+
 .pc-body{
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -215,7 +228,7 @@ button, input, select{ font-family: inherit; }
   font-weight: 800;
 }
 
-/* The main dark cards */
+/* Program Chair cards */
 .pc-card{
   background: var(--tws-card);
   border-radius: 14px;
@@ -239,6 +252,17 @@ button, input, select{ font-family: inherit; }
   font-size: 14px;
 }
 
+.pc-glass{
+  width: min(1000px, 100%);
+  margin: 0 auto;
+}
+
+.pc-card-wide,
+.pc-card-small{
+  max-width: 980px;
+}
+
+/* Program Chair top action chips */
 .pc-actions{
   display: flex;
   gap: 10px;
@@ -255,7 +279,7 @@ button, input, select{ font-family: inherit; }
   cursor: pointer;
 }
 
-/* Rows */
+/* Program Chair table layout */
 .pc-table{
   display: grid;
   gap: 10px;
@@ -283,7 +307,11 @@ button, input, select{ font-family: inherit; }
   padding: 10px 0;
 }
 
-/* Buttons group */
+.pc-action-col{
+  text-align: right;
+}
+
+/* Program Chair buttons */
 .pc-btns{
   display: flex;
   gap: 10px;
@@ -292,13 +320,20 @@ button, input, select{ font-family: inherit; }
 }
 
 .pc-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   border-radius: 999px;
-  padding: 7px 14px;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 800;
   border: 1px solid rgba(255,255,255,0.65);
   cursor: pointer;
   line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .pc-white{
@@ -312,6 +347,23 @@ button, input, select{ font-family: inherit; }
   border-color: rgba(255,255,255,0.35);
 }
 
+.pc-form-inline{
+  display: inline-flex;
+}
+
+.pc-btns-right{
+  justify-content: flex-end;
+}
+
+/* Program Chair status colors */
+.pc-status-text{
+  font-weight: 800;
+}
+
+.pc-yellow{ color: #ffd66b; }
+.pc-red{ color: #ff8b8b; }
+
+/* Program Chair next button */
 .pc-next-wrap{
   display: flex;
   justify-content: flex-end;
@@ -322,48 +374,36 @@ button, input, select{ font-family: inherit; }
 }
 
 .pc-next{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   background: var(--tws-white);
   color: var(--tws-text-dark);
   border-radius: 999px;
-  padding: 12px 34px;
-  font-weight: 900;
-  font-size: 20px;
-  border: 1px solid rgba(255,255,255,0.6);
-}
-
-.pc-glass{
-  width: min(1000px, 100%);
-  margin: 0 auto;
-}
-
-.pc-card-wide,
-.pc-card-small{
-  max-width: 980px;
-}
-
-.pc-action-col{
-  text-align: right;
-}
-
-.pc-form-inline{
-  display: inline-flex;
-}
-
-.pc-btns-right{
-  justify-content: flex-end;
-}
-
-.pc-status-text{
   font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.65);
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
-
-.pc-yellow{ color: #ffd66b; }
-.pc-red{ color: #ff8b8b; }
 
 
 /* ======================================================
-   APP PAGES (dashboard, faculty, load, summary)
+   4) SHARED APP PAGES
+   Used in:
+   - twsCreatePage.ejs
+   - twsFacultyDashboard.ejs
+   - twsFacultyInfo.ejs
+   - twsTeachingLoad.ejs
+   - twsSummary.ejs
+   - twsArchived.ejs
+   - other shared TWS pages
 ====================================================== */
+
 .tws-app-body{
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -419,6 +459,7 @@ button, input, select{ font-family: inherit; }
   font-weight: 800;
 }
 
+/* Shared app cards */
 .tws-card{
   background: var(--tws-card);
   border-radius: 14px;
@@ -443,6 +484,7 @@ button, input, select{ font-family: inherit; }
   text-align: right;
 }
 
+/* Shared app card header */
 .tws-card-header{
   display: flex;
   align-items: center;
@@ -465,6 +507,7 @@ button, input, select{ font-family: inherit; }
   font-weight: 900;
 }
 
+/* Shared app table */
 .tws-table{
   display: grid;
   gap: 10px;
@@ -483,6 +526,7 @@ button, input, select{ font-family: inherit; }
   opacity: 0.9;
 }
 
+/* Shared app buttons */
 .tws-btns{
   display: flex;
   justify-content: flex-end;
@@ -494,16 +538,42 @@ button, input, select{ font-family: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   background: var(--tws-white);
   color: var(--tws-text-dark);
   border-radius: 999px;
-  padding: 7px 14px;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 800;
   border: 1px solid rgba(255,255,255,0.65);
   line-height: 1;
-  min-height: 32px;
   cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Dashboard-only smaller action buttons
+   Used in: twsCreatePage.ejs */
+.tws-dashboard-btns{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.tws-dashboard-delete-form{
+  display: inline-flex;
+  margin: 0;
+}
+
+.tws-dashboard-action-btn{
+  min-width: 60px;
+  height: 28px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .tws-btn-danger{
@@ -512,6 +582,7 @@ button, input, select{ font-family: inherit; }
   border-color: rgba(255,255,255,0.35);
 }
 
+/* Shared app special rows */
 .tws-workload-row{
   grid-template-columns: 1fr 1.2fr 0.55fr 0.55fr 0.75fr;
 }
@@ -528,13 +599,8 @@ button, input, select{ font-family: inherit; }
   display: inline-flex;
 }
 
-.pc-btn{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-}
 
+/* Shared app helper text */
 .tws-guidelines{
   margin: 10px 0 0 0;
   padding-left: 18px;
@@ -543,6 +609,7 @@ button, input, select{ font-family: inherit; }
   opacity: 0.95;
 }
 
+/* Shared app next button */
 .tws-next-wrap{
   display: flex;
   justify-content: flex-end;
@@ -553,18 +620,28 @@ button, input, select{ font-family: inherit; }
 }
 
 .tws-next{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   background: var(--tws-white);
   color: var(--tws-text-dark);
   border-radius: 999px;
-  padding: 12px 34px;
-  font-weight: 900;
-  font-size: 20px;
-  border: 1px solid rgba(255,255,255,0.6);
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.65);
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
 /* ======================================================
-   MODAL (ADD SUBJECT POPUP) - can be used in create/load page
+   5) MODAL
+   Used in: twsCreateTeachingWorkloadPopup.ejs
 ====================================================== */
+
 .tws-modal-bg{
   display: none;
   position: fixed;
@@ -600,13 +677,30 @@ button, input, select{ font-family: inherit; }
 
 .tws-modal select{
   width: 100%;
-  padding: 9px 10px;
+  padding: 9px 12px;
   margin-top: 6px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(255,255,255,0.08);
   color: #fff;
   outline: none;
+  appearance: auto;
+}
+
+/* dropdown options */
+.tws-modal select option{
+  background: #1f1f1f;
+  color: #fff;
+}
+
+/* default placeholder option like -- Select -- */
+.tws-modal select option[value=""]{
+  color: #d1d5db;
+}
+
+.tws-modal select:focus{
+  border-color: rgba(255,255,255,0.35);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
 }
 
 .tws-modal-actions{
@@ -636,8 +730,14 @@ button, input, select{ font-family: inherit; }
   cursor: pointer;
 }
 
+
 /* ======================================================
-Status / Approval / Archived
+   6) STATUS / APPROVAL / ARCHIVED
+   Used in:
+   - twsSubmissionStatus.ejs
+   - twsApprovalRouting_dean.ejs
+   - twsArchived.ejs
+   - review / archive related pages
 ====================================================== */
 
 .tws-footer-actions{
@@ -699,7 +799,7 @@ Status / Approval / Archived
   background: rgba(255,255,255,0.45);
 }
 
-/* Metrics */
+/* Status metrics */
 .tws-metrics{
   margin-top: 14px;
   display: grid;
@@ -709,7 +809,7 @@ Status / Approval / Archived
   opacity: 0.95;
 }
 
-/* Approval Routing box */
+/* Dean approval routing box */
 .tws-routing-box{
   background: rgba(0,0,0,0.45);
   border: 2px solid rgba(255,255,255,0.65);
@@ -767,12 +867,21 @@ Status / Approval / Archived
   flex-wrap: wrap;
 }
 
-/* Pills for approval buttons */
+/* Approval action pills */
 .tws-pill-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   border-radius: 999px;
-  padding: 8px 16px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 800;
   border: 1px solid rgba(255,255,255,0.60);
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .tws-pill-green{
@@ -786,6 +895,7 @@ Status / Approval / Archived
   color: var(--tws-text-dark);
 }
 
+/* Footer button row */
 .tws-footer-actions{
   display:flex;
   justify-content:flex-end;
@@ -801,9 +911,10 @@ Status / Approval / Archived
   cursor:not-allowed;
 }
 
+
 /* ======================================================
-   CREATED TWS PAGE (timetable + load details + signatures)
-   Safe add-on: only affects classes used in created-teaching-workload.ejs
+   7) CREATED TEACHING WORKLOAD PAGE
+   Used in: twsCreatedTeachingWorkload.ejs
 ====================================================== */
 
 /* Prevent grid children from overflowing their columns */
@@ -829,7 +940,7 @@ Status / Approval / Archived
   }
 }
 
-/* --- Timetable grid --- */
+/* Timetable grid */
 .tws-timetable{
   position: relative;
   display: grid;
@@ -843,11 +954,11 @@ Status / Approval / Archived
   overflow: hidden;
   background: rgba(0,0,0,0.25);
 
-  /* stops browser from stretching rows and creating “gaps” */
+  /* stops browser from stretching rows and creating gaps */
   align-content: start;
 }
 
-/* Cells */
+/* Timetable cells */
 .tws-timetable .tws-cell{
   border-right: 1px solid rgba(255,255,255,0.22);
   border-bottom: 1px solid rgba(255,255,255,0.22);
@@ -862,8 +973,7 @@ Status / Approval / Archived
   white-space: nowrap;
 }
 
-/* Remove right border ONLY for the last day column (Sunday) */
-/* This is safer than nth-child(8n) because your blocks are also children */
+/* Remove right border for the last day column */
 .tws-timetable .tws-cell:nth-child(8),
 .tws-timetable .tws-cell:nth-child(16),
 .tws-timetable .tws-cell:nth-child(24),
@@ -880,18 +990,16 @@ Status / Approval / Archived
   border-right: none;
 }
 
-/* Header row */
+/* Timetable headers */
 .tws-timetable .tws-head{
   background: rgba(0,0,0,0.35);
   font-weight: 800;
 }
 
-/* Top-left corner */
 .tws-timetable .tws-corner{
   background: rgba(0,0,0,0.35);
 }
 
-/* Time column (FORCE column 1) */
 .tws-timetable .tws-time{
   background: rgba(0,0,0,0.35);
   font-weight: 800;
@@ -899,12 +1007,11 @@ Status / Approval / Archived
   grid-column: 1 !important;
 }
 
-/* Empty slots */
 .tws-timetable .tws-slot{
   background: rgba(0,0,0,0.12);
 }
 
-/* --- Subject blocks overlay (grid overlay) --- */
+/* Subject blocks */
 .tws-timetable .tws-block{
   z-index: 5;
   border-radius: 6px;
@@ -912,30 +1019,27 @@ Status / Approval / Archived
   display: flex;
   flex-direction: column;
   justify-content: center;
-
   text-align: center;
   font-size: 11px;
   font-weight: 800;
-
   border: 1px solid rgba(0,0,0,0.25);
   overflow: hidden;
 }
 
-/* Labels inside block */
 .tws-block-code{ font-weight: 900; }
 .tws-block-sub{ font-weight: 800; opacity: 0.9; }
 
-/* Colors (only for timetable blocks) */
+/* Timetable block colors */
 .tws-timetable .highlight-yellow{ background: #e6d57a; color: #111; }
 .tws-timetable .highlight-blue{ background: #2a86d6; color: #111; }
 .tws-timetable .highlight-purple{ background: #7a4aa8; color: #111; }
 .tws-timetable .highlight-green{ background: #00c26a; color: #111; }
 
-/* Semantic schedule coloring */
+/* Semantic timetable coloring */
 .tws-timetable .tws-block-assigned{ background: #00c26a; color: #111; }
 .tws-timetable .tws-block-conflict{ background: #d93a2f; color: #fff; }
 
-/* Responsive: slightly smaller */
+/* Small screen tweaks */
 @media (max-width: 520px){
   .tws-timetable{
     grid-template-columns: 62px repeat(7, minmax(0, 1fr));
@@ -952,7 +1056,7 @@ Status / Approval / Archived
   }
 }
 
-/* --- Load details panel --- */
+/* Load details panel */
 .tws-load-details{
   background: rgba(0,0,0,0.18);
   border: 1px solid rgba(255,255,255,0.25);
@@ -993,7 +1097,7 @@ Status / Approval / Archived
   border-top: 1px solid rgba(255,255,255,0.25);
 }
 
-/* --- Signatures inside card bottom --- */
+/* Signature section */
 .tws-signatures{
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

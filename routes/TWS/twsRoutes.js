@@ -472,24 +472,34 @@ router.post(
 /* ======================================================
    STEP 3 — CREATED TEACHING WORKLOAD
 ====================================================== */
+
 router.get(
   "/created-teaching-workload/:id",
-  requireProgramChairOrDean,
+  requireLoggedIn,
   asyncHandler(async (req, res) => {
-    const tws = await getOwnedTwsOr404(req, res);
-    if (!tws) return;
     const isViewOnly = String(req.query?.mode || "").toLowerCase() === "view";
+
+    // VIEW mode = broader access (Dean / Program Chair dept scope / assigned faculty / owner)
+    // EDIT mode = owner only
+    const tws = isViewOnly
+      ? await getAccessibleTwsOr404(req, res)
+      : await getOwnedTwsOr404(req, res);
+
+    if (!tws) return;
+
     const from = String(req.query?.from || "").toLowerCase();
     const role = getSessionUserRole(req.twsUser);
-    const viewBackUrl =
-      from === "dean" || role === "Dean"
-        ? "/tws/dean"
-        : "/tws/dashboard";
+
+    let viewBackUrl = "/tws/dashboard";
+    if (from === "dean" || role === "Dean") {
+      viewBackUrl = "/tws/dean";
+    } else if (from === "program-chair" || role === "Program-Chair") {
+      viewBackUrl = "/tws/program-chair";
+    }
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
     const approval = await TWSApprovalStatus.findOne({ twsID: tws._id }).lean();
 
-    // Fetch Dean + Program Chair names for signatures
     const dept = tws.faculty?.dept || "";
     let deanName = "";
     let programChairName = "";
