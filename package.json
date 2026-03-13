@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js",
-    "twa": "nodemon TWA/twaServer.js"
+    "dev": "nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -24,12 +24,14 @@
   "author": "A361 - Foxtrot Batch - Computer Engineering",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "docx-preview": "^0.3.7",
     "docxtemplater": "^3.68.3",
     "dotenv": "^17.3.1",
     "ejs": "^4.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.0",
     "mongoose": "^9.2.1",
     "pdf-lib": "^1.17.1",
@@ -37,6 +39,6 @@
     "puppeteer": "^24.37.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.14"
   }
 }

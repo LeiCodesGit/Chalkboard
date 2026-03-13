@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>TWS - HR Archive</title>
+  <link rel="stylesheet" href="/TWS/css/twsstyles.css" />
+</head>
+<body>
+  <aside class="tws-sidebar">
+    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+  </aside>
+
+  <div class="main">
+    <div class="shell">
+
+      <div class="page-title">TWS - HR Archive</div>
+
+      <!-- Approved Teaching Workload Sheets -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Approved Teaching Workload Sheets</div>
+          <div class="panel-actions">
+            <div class="search-wrap">
+              <input class="search-bar" type="text" id="hrSearch" placeholder="Search by Name" oninput="filterHR()" />
+              <span class="search-icon">&#128269;</span>
+            </div>
+            <button class="btn btn-purple" type="button">&#9965; Filter by Department</button>
+            <a class="btn" href="/tws/hr-archive">Refresh</a>
+          </div>
+        </div>
+
+        <div class="tws-table col-hr">
+          <div class="trow thead">
+            <div>Faculty Name</div>
+            <div>Department</div>
+            <div>Academic Year</div>
+            <div>Term</div>
+            <div>Date Approved</div>
+            <div class="tcell-right">Status</div>
+          </div>
+
+          <% if (!list || !list.length) { %>
+            <div class="trow">
+              <div style="grid-column:1/-1;opacity:.7;padding:10px 0;">No approved TWS records yet.</div>
+            </div>
+          <% } %>
+
+          <%
+            function formatDatePH(value) {
+              var date = value ? new Date(value) : null;
+              if (!date || isNaN(date.getTime())) return "—";
+              return date.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                timeZone: "Asia/Manila",
+              });
+            }
+          %>
+
+          <% (list || []).forEach(function(t) {
+               var approvedDate = t.approval && t.approval.approvedAt
+                 ? formatDatePH(t.approval.approvedAt)
+                 : formatDatePH(t.createdAt);
+          %>
+            <div class="trow hr-row"
+                data-name="<%= (t.faculty.name || '').toLowerCase() %>"
+                 onclick="showDetail(`<%= t.faculty.name || '(Name)' %>`, `<%= t.id %>`, `<%= t.faculty.acadYear || '2025 - 2026' %>`)"
+                 style="cursor:pointer;">
+              <div class="arch-name"><%= t.faculty.name || '—' %></div>
+              <div><%= t.faculty.dept || '—' %></div>
+              <div><%= t.faculty.acadYear || t.schoolYear || '—' %></div>
+              <div><%= t.faculty.term || t.term || '—' %></div>
+              <div><%= approvedDate %></div>
+              <div class="tcell-right">
+                <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Archive Details -->
+      <div class="panel" id="archiveDetail">
+        <div class="panel-title">Archive Details</div>
+        <hr class="divider" />
+        <div class="archive-details">
+          <div>Selected Faculty: <span id="detailFaculty">(Name)</span></div>
+          <div>File Name: <span id="detailFile">(File Name)</span></div>
+          <div>Storage Location: HR Records &gt; TWS &gt; SY 2025 - 2026</div>
+          <div class="muted">Archive files are stored for record-keeping and retrieval.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function filterHR() {
+      var q = document.getElementById('hrSearch').value.toLowerCase();
+      document.querySelectorAll('.hr-row').forEach(function(row) {
+        row.style.display = row.dataset.name.includes(q) ? '' : 'none';
+      });
+    }
+
+    function showDetail(name, id, sy) {
+      document.getElementById('detailFaculty').textContent = name;
+      document.getElementById('detailFile').textContent   = 'TWS-' + id + '.pdf';
+      document.querySelector('#archiveDetail .archive-details div:nth-child(3)').innerHTML =
+        'Storage Location: HR Records &gt; TWS &gt; SY ' + sy;
+    }
+  </script>
+</body>
+</html>

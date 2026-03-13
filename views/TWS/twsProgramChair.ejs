@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS - Program Chair</title>
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+</head>
+
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
+
+    <main class="tws-app-main">
+      <div class="tws-pc-center">
+
+        <h1 class="tws-dash-title">Teaching Working Sheet</h1>
+
+        <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+          <div style="margin: 0 0 12px 0; background: rgba(220,38,38,0.18); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+            <b>Action blocked:</b> <%= errorMessage %>
+          </div>
+        <% } %>
+
+        <!-- ===== Submitted Teaching Workload Sheets ===== -->
+        <section class="tws-pc-section">
+          <div class="tws-pc-section-header">Submitted Teaching Workload Sheets</div>
+
+          <div class="tws-pc-card">
+            <div class="tws-pc-table">
+
+              <div class="tws-pc-row tws-pc-head">
+                <div>Faculty Name</div>
+                <div>Department</div>
+                <div>Academic Year</div>
+                <div>Term</div>
+                <div>Status</div>
+                <div>Action</div>
+              </div>
+
+              <% if (!submitted || submitted.length === 0) { %>
+                <div class="tws-pc-row tws-pc-empty">
+                  <div style="grid-column: 1 / -1; text-align: center;">No submitted TWS yet.</div>
+                </div>
+              <% } %>
+
+              <% (submitted || []).forEach(tws => { %>
+                <div class="tws-pc-row">
+                  <div><%= tws.faculty?.name || "" %></div>
+                  <div><%= tws.faculty?.dept || "" %></div>
+                  <div><%= tws.faculty?.acadYear || "" %></div>
+                  <div><%= tws.faculty?.term || "" %></div>
+
+                  <div>
+                    <% 
+                      const st = (tws.approval?.status || "").toLowerCase();
+                      const statusText = tws.approval?.status || "Pending";
+                    %>
+                    <span class="tws-pc-status"><%= statusText %></span>
+                  </div>
+
+                  <div class="tws-pc-actions">
+                    <a class="tws-pc-btn tws-pc-btn-view" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view&from=program-chair">View</a>
+
+                    <% const canChairSendToDean = ["Sent to Faculty", "Returned to Program Chair", "Draft"].includes(tws.status || ""); %>
+                    <% const canChairReturnDraft = ["Returned to Program Chair", "Rejected"].includes(tws.status || ""); %>
+
+                    <% if (canChairSendToDean) { %>
+                    <form method="post" action="/tws/program-chair/action" class="tws-pc-form">
+                      <input type="hidden" name="id" value="<%= tws.id %>" />
+                      <input type="hidden" name="action" value="sendToDean" />
+                      <button class="tws-pc-btn tws-pc-btn-action" type="submit">Send to Dean</button>
+                    </form>
+                    <% } else if (canChairReturnDraft) { %>
+                    <form method="post" action="/tws/program-chair/action" class="tws-pc-form">
+                      <input type="hidden" name="id" value="<%= tws.id %>" />
+                      <input type="hidden" name="action" value="return" />
+                      <button class="tws-pc-btn tws-pc-btn-action" type="submit">Return to Draft</button>
+                    </form>
+                    <% } else { %>
+                      <span class="tws-pc-btn tws-pc-btn-disabled">No Action</span>
+                    <% } %>
+                  </div>
+                </div>
+              <% }) %>
+
+            </div>
+          </div>
+
+          <div class="tws-pc-footer">
+            <a class="tws-dash-btn-refresh" href="/tws/program-chair">Refresh</a>
+          </div>
+        </section>
+
+        <!-- ===== Personal Course Load ===== -->
+        <section class="tws-pc-section">
+          <div class="tws-pc-section-header">TWS - Personal Course Load</div>
+
+          <div class="tws-pc-card">
+            <div class="tws-pc-table tws-pc-table-small">
+
+              <div class="tws-pc-row tws-pc-head tws-pc-row-small">
+                <div>Faculty Name</div>
+                <div>Department</div>
+                <div>Term</div>
+                <div>Action</div>
+              </div>
+
+              <% if (!personal || personal.length === 0) { %>
+                <div class="tws-pc-row tws-pc-empty">
+                  <div style="grid-column: 1 / -1; text-align: center;">No items yet.</div>
+                </div>
+              <% } %>
+
+              <% (personal || []).forEach(tws => { %>
+                <div class="tws-pc-row tws-pc-row-small">
+                  <div><%= tws.faculty?.name || "" %></div>
+                  <div><%= tws.faculty?.dept || "" %></div>
+                  <div><%= tws.faculty?.term || "" %></div>
+
+                  <div class="tws-pc-actions">
+                    <a class="tws-pc-btn tws-pc-btn-view" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view&from=program-chair">View</a>
+
+                    <% const canPersonalSendToDean = ["Draft", "Returned to Program Chair"].includes(tws.status || ""); %>
+                    <% if (canPersonalSendToDean) { %>
+                    <form method="post" action="/tws/program-chair/action" class="tws-pc-form">
+                      <input type="hidden" name="id" value="<%= tws.id %>" />
+                      <input type="hidden" name="action" value="sendToDean" />
+                      <button class="tws-pc-btn tws-pc-btn-send" type="submit">Send to Dean</button>
+                    </form>
+                    <% } else { %>
+                      <span class="tws-pc-btn tws-pc-btn-view"><%= tws.status || "No action" %></span>
+                    <% } %>
+                  </div>
+                </div>
+              <% }) %>
+
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+</body>
+</html>

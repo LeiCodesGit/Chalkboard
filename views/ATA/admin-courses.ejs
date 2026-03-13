@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Curriculum Manager</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="/common/css/style.css">
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            max-width: 800px;
+            width: 100%;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #111827;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        /* Form Layout */
+        .form-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box; /* Fixes padding issues */
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Course List Styles */
+        .course-section {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .course-row {
+            display: grid;
+            grid-template-columns: 2fr 3fr 1fr 40px;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Buttons */
+        button {
+            cursor: pointer;
+            font-family: inherit;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .remove-btn {
+            background-color: #fee2e2;
+            color: var(--danger-color);
+            height: 38px;
+            width: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .remove-btn:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .add-btn {
+            background-color: white;
+            border: 1px dashed var(--primary-color);
+            color: var(--primary-color);
+            width: 100%;
+            padding: 12px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .add-btn:hover {
+            background-color: #eff6ff;
+        }
+
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 25px;
+            border-radius: 8px;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            backdrop-filter: blur(2px);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        .loading-text {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Saving to Database...</div>
+    </div>
+
+     <!-- Sidebar Navigation -->
+    <div class="page-layout">
+        <aside class="sidebar">
+            <%- include('../partials/sideMenuBar') %>
+        </aside>
+
+    <div class="container">
+        <h1>Curriculum Manager</h1>
+        
+        <form id="courseForm" action="/admin/courses/save" method="POST">
+            
+            <div class="form-header">
+                <div>
+                    <label for="program">Program Name</label>
+                    <input type="text" name="program" id="program" placeholder="e.g., BS Computer Engineering" required>
+                </div>
+
+                <div>
+                    <label for="title">Term / Semester</label>
+                    <input type="text" name="title" id="title" placeholder="e.g., 1st Year - 1st Semester" required>
+                </div>
+            </div>
+
+            <div class="course-section">
+                <div class="section-title">
+                    <span>Course List</span>
+                    <small style="font-weight: 400; color: #6b7280;">Add subjects below</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 3fr 1fr 40px; gap: 10px; margin-bottom: 10px; font-size: 0.8rem; font-weight: 600; color: #6b7280; padding: 0 5px;">
+                    <span>CODE</span>
+                    <span>DESCRIPTION</span>
+                    <span>UNITS</span>
+                    <span></span>
+                </div>
+
+                <div id="course-container">
+                    <div class="course-row">
+                        <input type="text" name="courseCode[]" placeholder="CPE101" required>
+                        <input type="text" name="courseName[]" placeholder="Intro to Computer Engineering" required>
+                        <input type="number" name="units[]" placeholder="3" style="max-width: 100%;" required>
+                        <div style="width: 38px;"></div>
+                    </div>
+                </div>
+
+                <button type="button" class="add-btn" onclick="addCourseRow()">+ Add Another Course</button>
+            </div>
+
+            <button type="submit" class="submit-btn">Save Curriculum</button>
+        </form>
+    </div>
+
+    <script>
+        function addCourseRow() {
+            const container = document.getElementById('course-container');
+            
+            const div = document.createElement('div');
+            div.className = 'course-row';
+
+            div.innerHTML = `
+                <input type="text" name="courseCode[]" placeholder="Course Code" required>
+                <input type="text" name="courseName[]" placeholder="Course Name" required>
+                <input type="number" name="units[]" placeholder="Units" required>
+                <button type="button" class="remove-btn" onclick="removeRow(this)" title="Remove Course">✕</button>
+            `;
+
+            container.appendChild(div);
+            // Auto-focus the first input of the new row
+            div.querySelector('input').focus();
+        }
+
+        function removeRow(button) {
+            button.parentElement.remove();
+        }
+
+        // Show Loader on Submit
+        document.getElementById('courseForm').addEventListener('submit', function(e) {
+            // Show the overlay
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            // Allow the form to submit naturally...
+            // The page will reload/redirect after the backend processes it.
+        });
+    </script>
+</body>
+</html>

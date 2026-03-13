@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMCM Chalkboard | User Configuration</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
 
     <link rel="stylesheet" href="/common/css/variables.css">
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        body {
             background-color: var(--page-bg, #f4f4f4); 
             color: #333; 
         }
@@ -376,14 +374,54 @@
             ]
         };
 
+        const roleSelect = document.getElementById('role');
         const deptSelect = document.getElementById('department-select');
         const progSelect = document.getElementById('program-select');
 
-        deptSelect.addEventListener('change', function() {
-            const selectedDept = this.value;
+        roleSelect.addEventListener('change', function() {
+            const role = this.value;
+
+            // Reset defaults
+            deptSelect.disabled = false;
+            progSelect.disabled = false;
+            deptSelect.required = true;
+            progSelect.required = true;
+
+            if (role === "Admin" || role === "HR") {
+                deptSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
+                progSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
+                deptSelect.required = false;
+                progSelect.required = false;
+            } 
+            else if (role === "Dean") {
+                resetDepartmentOptions();
+                progSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
+                progSelect.required = false;
+            } 
+            else {
+                resetDepartmentOptions();
+                updatePrograms(); 
+            }
+        });
+
+        function resetDepartmentOptions() {
+            if (deptSelect.value === "N/A" || deptSelect.options.length <= 1) {
+                deptSelect.innerHTML = `
+                    <option value="" disabled selected hidden>Select Department</option>
+                    <option value="ATYCB">ATYCB</option>
+                    <option value="CAS">CAS</option>
+                    <option value="CCIS">CCIS</option>
+                    <option value="CEA">CEA</option>
+                    <option value="CHS">CHS</option>
+                `;
+            }
+        }
+
+        function updatePrograms() {
+            const selectedDept = deptSelect.value;
+            if (roleSelect.value === "Dean" || roleSelect.value === "Admin" || roleSelect.value === "HR") return;
+
             progSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
-            
-            // Get and populate new options
             const programs = programData[selectedDept];
             if (programs) {
                 programs.forEach(prog => {
@@ -393,7 +431,9 @@
                     progSelect.appendChild(option);
                 });
             }
-        });
+        }
+
+        deptSelect.addEventListener('change', updatePrograms);
     </script>
 </body>
 </html>

@@ -1,0 +1,439 @@
+/* ============================
+   endorseSyllabus.css
+   Mirrors reviewSyllabus.css but for Program Chair Endorsement
+   ============================ */
+
+/* ---- Base Typography (matches courseOverview.css) ---- */
+body,
+.main-content,
+.main-content input,
+.main-content select,
+.main-content button,
+.main-content textarea {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ---- Main Layout ---- */
+.main-content {
+    margin-left: 260px;
+    min-height: 100vh;
+    background: #f5f6f8;
+}
+
+/* ============================
+   TOP BANNER
+   ============================ */
+.review-top-banner {
+    width: 100%;
+    padding: 14px 40px;
+    background-color: #111111;
+    position: relative;
+    z-index: 10;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.banner-logo {
+    display: flex;
+    align-items: center;
+    padding-right: 20px;
+    border-right: 1.5px solid #3a3a3a;
+}
+
+.banner-logo img {
+    height: 56px;
+    width: auto;
+    filter: brightness(0) invert(1);
+}
+
+.banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.banner-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: 0.3px;
+}
+
+.banner-text p {
+    font-size: 11px;
+    color: #a0aec0;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+/* ============================
+   CARD CONTAINER
+   ============================ */
+.review-card-container {
+    background-color: #ffffff;
+    border-radius: 16px;
+    margin: 24px 36px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+/* ============================
+   PAGE HEADER
+   ============================ */
+.review-page-header {
+    display: flex;
+    align-items: center;
+    padding: 20px 32px 14px 32px;
+    position: relative;
+    background: transparent;
+}
+
+.review-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background-color: #111111;
+    color: #ffffff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    letter-spacing: 0.2px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    position: absolute;
+    left: 32px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.review-back-btn:hover {
+    background-color: #333333;
+    transform: translateX(-2px);
+}
+
+.file-type-title {
+    flex: 1;
+    text-align: center;
+}
+
+.file-type-title h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0;
+    letter-spacing: 0.3px;
+}
+
+.review-page-divider {
+    border: none;
+    border-top: 1px solid #eef0f4;
+    margin: 0 32px 20px 32px;
+}
+
+/* ============================
+   CONTENT LAYOUT
+   ============================ */
+.review-content-layout {
+    display: flex;
+    gap: 28px;
+    padding: 0 32px 32px 32px;
+    align-items: flex-start;
+}
+
+/* ---- Left Panel ---- */
+.review-left-panel {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.review-left-panel h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111111;
+    margin-bottom: 16px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.document-placeholder {
+    flex: 1;
+    background-color: #f0f2f5;
+    border-radius: 12px;
+    border: 1.5px dashed #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    min-height: 460px;
+}
+
+.document-placeholder p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1.7;
+    letter-spacing: 0.3px;
+}
+
+/* ============================
+   RIGHT PANEL
+   ============================ */
+.review-right-panel {
+    flex: 1;
+    min-width: 300px;
+    max-width: 380px;
+}
+
+.permission-card {
+    background-color: #ffffff;
+    border-radius: 14px;
+    padding: 22px;
+    border: 1px solid #eef0f4;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.permission-card h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111111;
+    text-align: center;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================
+   PROGRESS TRACKER
+   ============================ */
+.progress-tracker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #111111;
+    border-radius: 10px;
+    padding: 16px 10px;
+    margin-bottom: 20px;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    flex: 1;
+    z-index: 2;
+}
+
+.step-circle {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background-color: #4b5563;
+}
+
+.step.completed .step-circle {
+    background-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+}
+
+.step.ongoing .step-circle {
+    background-color: #ea580c;
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.25);
+}
+
+.step span {
+    font-size: 9px;
+    color: #6b7280;
+    line-height: 1.3;
+    margin-top: 3px;
+}
+
+.step.completed span,
+.step.ongoing span {
+    color: #e5e7eb;
+}
+
+.step-line {
+    height: 2px;
+    flex: 1;
+    background-color: #374151;
+    margin: 0 -12px;
+    z-index: 1;
+    transform: translateY(-12px);
+}
+
+.step-line.completed {
+    background-color: #16a34a;
+}
+
+.step-line.ongoing {
+    background-color: #ea580c;
+}
+
+/* ============================
+   COMMENTS
+   ============================ */
+.comments-section {
+    margin-bottom: 16px;
+}
+
+.comments-section label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: #111111;
+    margin-bottom: 8px;
+}
+
+.comments-section textarea {
+    width: 100%;
+    height: 110px;
+    border-radius: 10px;
+    border: 1.5px solid #e0e3e8;
+    background-color: #f8f9fb;
+    padding: 11px 13px;
+    resize: none;
+    font-family: inherit;
+    font-size: 13px;
+    color: #222;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.comments-section textarea::placeholder {
+    color: #b0b7c3;
+}
+
+.comments-section textarea:focus {
+    border-color: #111111;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.06);
+}
+
+/* ============================
+   STATUS
+   ============================ */
+.status-section {
+    margin-bottom: 20px;
+}
+
+.status-section label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: #111111;
+    margin-bottom: 8px;
+}
+
+.styled-select-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fb;
+    border: 1.5px solid #e0e3e8;
+    border-radius: 10px;
+    padding: 0 14px;
+    height: 40px;
+    transition: border-color 0.2s ease;
+}
+
+.styled-select-container:focus-within {
+    border-color: #111111;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.06);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #16a34a;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.styled-select-container select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #111111;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+}
+
+.styled-select-container::after {
+    content: '\f078';
+    font-family: 'Font Awesome 5 Free', 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 14px;
+    pointer-events: none;
+    color: #9ca3af;
+    font-size: 10px;
+}
+
+/* ============================
+   ACTION BUTTONS
+   ============================ */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-buttons button {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.2px;
+    transition: filter 0.2s ease, transform 0.1s ease;
+}
+
+.action-buttons button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.action-buttons button:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+}
+
+.btn-red {
+    background-color: #c0392b;
+}
+
+.btn-dark {
+    background-color: #111111;
+}
+
+.btn-endorse {
+    background-color: #1a7a4a;
+}

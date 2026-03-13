@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMCM Chalkboard | Dean Portal</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+
+    <!--inside the public file, for colors-->
+    <link rel="stylesheet" href="/common/css/variables.css"> 
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--page-bg, #f4f4f4);
+            color: #333;
+        }
+
+        .page-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr; 
+            min-height: 100vh;
+        }
+
+        .side-menu-container {
+            background-color: var(--sidebar-bg, #2c3e50);
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .side-menu-container > * {
+            position: relative !important; 
+            left: 0 !important;
+            width: 100% !important;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .about {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('/common/img/background.jpg') no-repeat center center/cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-on-dark, #fff);
+            text-align: center;
+        }
+
+        .btn-proj-overview {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: var(--accent-primary, #a01a1e);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 15px;
+        }
+
+        .btn-proj-overview:hover {
+            background-color: var(--accent-primary-hover, #7d1417);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .announcement-box {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            max-width: 800px;
+            width: 90%;
+            margin: 30px 0 40px;
+        }
+
+        .announcement-box h2 {
+            color: var(--accent-primary, #a01a1e);
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .announcement-item {
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .announcement-item:last-child {
+            border-bottom: none;
+        }
+
+        .meta-tag {
+            font-size: 0.7rem;
+            color: #888;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .modal-overlay {
+            display: none; 
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px); 
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 5vh auto;
+            padding: 35px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 650px;
+            max-height: 80vh;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease-out;
+            
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .modal-content::-webkit-scrollbar { width: 6px; }
+        .modal-content::-webkit-scrollbar-track { background: transparent; margin: 15px; }
+        .modal-content::-webkit-scrollbar-thumb { 
+            background: #ccc; 
+            border-radius: 10px; 
+        }
+        .modal-content::-webkit-scrollbar-thumb:hover { background: var(--accent-primary, #a01a1e); }
+
+        .team-section {
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .team-section h3 {
+            color: var(--color-mapua-blue, #002455);
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            font-size: 1.15rem;
+        }
+
+        .team-group-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--color-mapua-blue, #002455);
+            margin-top: 15px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        .team-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .team-member {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            padding: 10px 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary, #a01a1e);
+            transition: transform 0.2s ease;
+        }
+
+        .team-member:hover { transform: translateX(5px); background: #f0f0f0; }
+
+        .team-member small {
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover { color: var(--accent-primary, #a01a1e); }
+
+        @keyframes slideDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-layout">
+        <aside class="side-menu-container">
+            <%- include('partials/deanMenuBar') %>
+        </aside>
+
+        <main class="main-content">
+            <div class="about">
+                <h1>Welcome to MMCM Chalkboard</h1>
+                <p>Enterprise Resource Planning for Automated Faculty Academic Workflows</p>
+                <button class="btn-proj-overview">Project Overview</button>
+            </div>
+
+            <div class="announcement-box">
+                <h2>System Announcements</h2>
+                
+                <div class="announcement-item">
+                    <span class="meta-tag">Dean's Office • Academic Requirement</span>
+                    <p><strong>Workflow Sync:</strong> All faculty members are requested to upload their standardized 
+                    Teaching-Learning Activities (TLAs) for the current quarter through the automation module by Friday.</p>
+                </div>
+
+                <div class="announcement-item">
+                    <span class="meta-tag">HR Department • Administrative Update</span>
+                    <p><strong>TWS Verification:</strong> Please verify your Teaching-Work Schedules (TWS) to ensure 
+                    proper load balancing and automated payroll synchronization for this period.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="projectModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Project Overview</h2>
+            <p style="line-height: 1.6; color: var(--text-on-light);">
+                MMCM Chalkboard is a centralized repository designed to eliminate manual tracking inefficiencies. 
+                By automating faculty workflows, the system ensures that all academic materials are 
+                organized, accessible, and synchronized across the institution.
+            </p>
+            <hr style="border: 0; border-top: 3px dashed var(--text-muted); margin: 20px 0;">
+            <p style="margin: 5px 0; font-size: 0.9rem; color: var(--text-on-light);">
+                This is a <strong>Final Project</strong> for 
+                <span style="color: var(--color-mapua-blue, #002455); font-weight: bold;">CPE107-1L SOFTWARE DESIGN LABORATORY</span>
+            </p>
+            <p style="margin: 5px 0; font-size: 0.9rem; color: var(--text-on-light);">
+                Developed by <strong style="color: var(--accent-primary);">Section A361</strong> | A.Y. 2025-2026
+            </p>
+            <div class="team-section">
+                <h3>Development Team - Section A361</h3>
+                <div class="team-list">
+                    <div class="team-group-label">Leadership</div>
+                    <div class="team-member leadership"><span>Leah Rouse Cruzo</span> <small>Project Lead</small></div>
+                    <div class="team-member leadership"><span>Vince Lawrence Baraclan</span> <small>Asst. Team Lead</small></div>
+
+                    <div class="team-group-label">Syllabus Module</div>
+                    <div class="team-member"><span>Alain Bibaoco</span> <small>Team Lead</small></div>
+                    <div class="team-member"><span>Candesse Gabrielle Bartolome</span> <small>Assistant Lead</small></div>
+                    <div class="team-member"><span>Vincent Rafael Apog</span> <small>System Analyst</small></div>
+                    <div class="team-member"><span>Aleexa Villafuerte</span> <small>UI/UX Designer</small></div>
+                    <div class="team-member"><span>Ariff Jibran Mantil</span> <small>QA / Documentation</small></div>
+                    <div class="team-member"><span>Hannah Kyla Barol</span> <small>Developer</small></div>
+                    <div class="team-member"><span>Cyrile Jane Damos</span> <small>Developer</small></div>
+                    <div class="team-member"><span>Marjomillen Reave N Sy</span> <small>Developer</small></div>
+                    <div class="team-member"><span>Andrea Cassandra Caunga</span> <small>Developer</small></div>
+                    <div class="team-member"><span>Anja Alegarme</span> <small>Developer</small></div>
+
+                    <div class="team-group-label">ATA Module</div>
+                    <div class="team-member"><span>Mohammad Jameel Jibreel Mamogkat</span> <small>Team Lead</small></div>
+                    <div class="team-member"><span>Duff Bastasa</span> <small>Assistant Lead</small></div>
+                    <div class="team-member"><span>Kriszzia Shane Longakit</span> <small>System Analyst</small></div>
+                    <div class="team-member"><span>Patrick Thomas Aureada</span> <small>UI/UX Designer</small></div>
+                    <div class="team-member"><span>Honey Mae Milana</span> <small>QA / Documentation</small></div>
+                    <div class="team-member"><span>Lymel Bonzo</span> <small>Developer</small></div>
+
+                    <div class="team-group-label">TWS Module</div>
+                    <div class="team-member"><span>Kevin D Enerio</span> <small>Team Lead</small></div>
+                    <div class="team-member"><span>Sharmayne Andrea Cena</span> <small>Assistant Lead</small></div>
+                    <div class="team-member"><span>Mhar Jethro Zacal</span> <small>System Analyst</small></div>
+                    <div class="team-member"><span>Clark Kent Alaan</span> <small>UI/UX Designer</small></div>
+                    <div class="team-member"><span>Allen Dayle Ang</span> <small>QA / Documentation</small></div>
+                    <div class="team-member"><span>Christina Heliane Sevilla</span> <small>Developer</small></div>
+                    <div class="team-member"><span>Najiep Ali</span> <small>Developer</small></div>
+
+                    <div class="team-group-label">TLA Module</div>
+                    <div class="team-member"><span>Jon Clyde Dagaang</span> <small>Team Lead</small></div>
+                    <div class="team-member"><span>Jaryl Kurt Benedicto</span> <small>Assistant Lead</small></div>
+                    <div class="team-member"><span>Kris Matthew Deximo</span> <small>System Analyst</small></div>
+                    <div class="team-member"><span>Sophia Angel Managbanag</span> <small>UI/UX Designer</small></div>
+                    <div class="team-member"><span>Andrea Luisa Tan</span> <small>QA / Documentation</small></div>
+                    <div class="team-member"><span>Kurt Adrian Luzoraga</span> <small>Developer</small></div>
+                    <div class="team-member"><span>Zoey Liana Gonzales</span> <small>Developer</small></div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="/MainPages/js/projectDetailsScript.js"></script>
+</body>
+</html>

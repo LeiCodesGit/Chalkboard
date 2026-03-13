@@ -1,0 +1,444 @@
+/* ============================================================
+   TWS — Separated Stylesheet  (twsstyles.css)
+   Covers: Faculty Dashboard, TA Archive, HR Archive + shared
+   ============================================================ */
+
+/* ── RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+  background: url("../img/background.png") center / cover no-repeat fixed;
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.main-content,
+.main {
+  margin-left: 260px;
+  min-height: 100vh;
+  padding: 30px 28px;
+}
+
+.page-container,
+.shell {
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+/* ── PAGE TITLE ── */
+.page-title {
+  background: rgba(60, 65, 80, 0.62);
+  backdrop-filter: blur(4px);
+  border-radius: 18px;
+  padding: 17px 26px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin-bottom: 20px;
+}
+
+/* ── PANELS ── */
+.panel {
+  background: rgba(30, 30, 35, 0.93);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 20px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* group of buttons in the panel header */
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 18px;
+  border-radius: 22px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  border: 2px solid rgba(255,255,255,0.7);
+  background: transparent;
+  color: #fff;
+  transition: opacity 0.18s;
+  white-space: nowrap;
+}
+.btn:hover { opacity: 0.80; }
+
+.btn-green  { background: #00c26f; border-color: #00c26f; color: #fff; }
+.btn-purple { background: #6d28d9; border-color: #6d28d9; color: #fff; }
+
+.btn-big {
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+  font-size: 16px;
+  padding: 9px 32px;
+  border-radius: 28px;
+}
+
+.btn-small {
+  font-size: 12px;
+  padding: 5px 13px;
+}
+
+.btn-stack {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 8px;
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+.btn-stack.btn-green {
+  background: #00c26f;
+  border-color: #00c26f;
+  color: #fff;
+}
+
+/* ── PILL (table action) ── */
+.pill {
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+  padding: 5px 15px;
+  border-radius: 22px;
+  font-weight: 700;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  transition: opacity 0.18s;
+}
+.pill:hover { opacity: 0.82; }
+.pill-view  { background: #fff; color: #000; border: none; }
+.pill-edit  { background: rgba(255,255,255,0.16); color: #fff; border: 1px solid rgba(255,255,255,0.38); }
+.pill-sign  { background: #b8860b; color: #fff; border: none; }
+
+/* ── STATUS BADGES ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.s-draft        { background: rgba(255,255,255,0.13); color: #d1d5db; }
+.s-for-review   { background: transparent; color: #a78bfa; border: 1px solid #a78bfa; }
+.s-returned     { background: transparent; color: #fb923c; border: 1px solid #fb923c; }
+.s-approved     { background: #00c26f; color: #fff; }
+.s-submitted    { background: #1a5fa8; color: #fff; }
+.s-rejected     { background: #cc2222; color: #fff; }
+.s-for-signing  { background: #b8860b; color: #fff; }
+.s-reviewed     { background: #2a8080; color: #fff; }
+
+/* ── DATA TABLE (grid-based) ── */
+
+/* Faculty Dashboard columns: Academic Year | Term | Date | Status | Action */
+.tws-table { display: grid; }
+
+.trow {
+  display: grid;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.11);
+  font-size: 14px;
+}
+.trow.thead {
+  font-weight: 700;
+  font-size: 13px;
+  opacity: 0.88;
+  border-bottom: 2px solid rgba(255,255,255,0.28);
+  padding-bottom: 8px;
+}
+
+/* Faculty dashboard: 5 cols */
+.col-faculty .trow  { grid-template-columns: 1.3fr 0.7fr 1.1fr 1.1fr 0.8fr; }
+
+/* TA Archive: Faculty Name | Dept | Acad Year | Term | Date Approved | Archived Date | Action */
+.col-ta .trow       { grid-template-columns: 1.3fr 1.2fr 1.1fr 0.6fr 1.1fr 1.1fr 0.7fr; }
+
+/* HR Archive: Faculty Name | Dept | Acad Year | Term | Date Approved | Status */
+.col-hr .trow       { grid-template-columns: 1.3fr 1.2fr 1.1fr 0.6fr 1.1fr 0.8fr; }
+
+.tcell-right {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* ── SEARCH BAR ── */
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-bar {
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid rgba(255,255,255,0.38);
+  border-radius: 22px;
+  color: #fff;
+  padding: 7px 36px 7px 14px;
+  font-size: 13px;
+  width: 200px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-bar::placeholder { opacity: 0.52; }
+.search-bar:focus { border-color: #6d28d9; }
+.search-icon {
+  position: absolute;
+  right: 11px;
+  font-size: 14px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ── FACULTY SIGNATURE PANEL ── */
+.sig-section {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.sig-field { flex: 1; min-width: 220px; }
+.sig-label {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.82;
+  margin-bottom: 6px;
+}
+.sig-input {
+  background: rgba(255,255,255,0.16);
+  border: none;
+  border-bottom: 2px solid rgba(255,255,255,0.5);
+  color: #fff;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.sig-input:focus { border-bottom-color: #6d28d9; }
+.sig-date {
+  font-size: 13px;
+  opacity: 0.65;
+  margin-top: 8px;
+}
+.sig-update-btn {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 9px 22px;
+  border-radius: 22px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.18s;
+  align-self: flex-end;
+}
+.sig-update-btn:hover { opacity: 0.82; }
+
+/* ── SUBMIT SECTION ── */
+.submit-desc {
+  font-size: 13px;
+  opacity: 0.68;
+  margin-bottom: 0;
+}
+
+/* ── ARCHIVE DETAILS PANEL ── */
+.archive-details {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  margin-top: 4px;
+}
+.archive-details span {
+  opacity: 0.75;
+}
+.arch-name { font-weight: 700; }
+
+/* ── FORM (faculty info / other pages) ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 185px 1fr;
+  gap: 14px 18px;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+.bar-input {
+  background: rgba(255,255,255,0.16);
+  border: none;
+  border-bottom: 2px solid rgba(255,255,255,0.5);
+  border-radius: 0;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 14px;
+  width: 100%;
+}
+.bar-input:focus { outline: none; border-bottom-color: #00c26f; }
+
+.cell-input {
+  background: rgba(255,255,255,0.13);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 13px;
+  width: 100%;
+}
+.cell-input:focus { outline: none; border-color: #00c26f; }
+
+/* ── KV DISPLAY ── */
+.kv {
+  display: grid;
+  grid-template-columns: 185px 1fr;
+  gap: 8px 14px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.kv.two-col { grid-template-columns: 225px 1fr; }
+.mt { margin-top: 18px; }
+
+/* ── SUMMARY ── */
+.summary-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.summary-left  { flex: 1; min-width: 260px; }
+.summary-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 170px;
+}
+
+/* ── SUBMISSION STATUS STEPS ── */
+.status-title { font-size: 15px; margin-bottom: 18px; }
+.status-grid { display: flex; align-items: center; margin: 20px 0; }
+.step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #9ca3af;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.dot.green  { background: #00c26f; }
+.dot.yellow { background: #d8c66a; }
+.dot.gray   { background: #4b5563; }
+.step-text  { font-size: 12px; text-align: center; white-space: nowrap; opacity: 0.85; }
+.line { flex: 1; height: 2px; background: rgba(255,255,255,0.32); margin-bottom: 20px; }
+
+.metrics {
+  display: grid;
+  grid-template-columns: 185px 1fr;
+  gap: 8px 14px;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+/* ── ROUTING ── */
+.routing-box  { display: grid; gap: 18px; }
+.routing-top,
+.routing-bottom {
+  border: 2px solid rgba(255,255,255,0.6);
+  border-radius: 14px;
+  padding: 18px;
+}
+.routing-title  { font-weight: 800; margin-bottom: 10px; }
+.routing-role   { font-size: 18px; font-weight: 900; margin-bottom: 18px; }
+.routing-meta   { display: grid; gap: 10px; font-size: 14px; }
+.approve-label  { font-size: 18px; font-weight: 900; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.green-arrow    { color: #00c26f; font-size: 22px; }
+.route-line { display: flex; align-items: center; gap: 10px; margin: 10px 0 18px; }
+.route-bar  { height: 2px; flex: 1; background: rgba(255,255,255,0.7); }
+.route-dot  { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.82); }
+.route-actions { display: flex; justify-content: center; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+.approve-btn {
+  background: #00c26f; color: #fff; border: none;
+  padding: 10px 26px; border-radius: 24px; font-weight: 900; cursor: pointer;
+}
+.reject-btn {
+  background: #fff; color: #000; border: none;
+  padding: 10px 26px; border-radius: 24px; font-weight: 900; cursor: pointer;
+}
+.approve-btn:hover, .reject-btn:hover { opacity: 0.85; }
+
+/* ── MISC UTILITIES ── */
+.divider {
+  border: none;
+  height: 1px;
+  background: rgba(255,255,255,0.18);
+  margin: 14px 0;
+}
+.bullets {
+  list-style: disc;
+  padding-left: 22px;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.bottom-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.mid-actions { display: flex; gap: 10px; margin: 12px 0; }
+.next-wrapper { display: flex; justify-content: flex-end; margin-top: 16px; }
+.ok-wrapper   { display: flex; justify-content: center; margin-top: 28px; }
+.center { text-align: center; }
+.right  { text-align: right; }
+.muted  { opacity: 0.72; }
+.bold   { font-weight: 700; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 820px) {
+  .main, .main-content { margin-left: 0; padding: 14px; }
+  .col-faculty .trow,
+  .col-ta .trow,
+  .col-hr .trow { grid-template-columns: 1fr; gap: 4px; }
+  .summary-box { flex-direction: column; }
+  .sig-section { flex-direction: column; align-items: flex-start; }
+}

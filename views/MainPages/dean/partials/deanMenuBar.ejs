@@ -1,0 +1,174 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+<style>
+    /* Scope all styles to #main-sidebar to prevent leakage */
+    #main-sidebar.sidebar {
+        position: fixed;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 16px;
+        left: 0;
+        top: 0;
+        width: 260px;
+        min-width: 260px;
+        max-width: 260px;
+        height: 100vh;
+        background-color: var(--sidebar-bg);
+        color: var(--text-on-dark);
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+    }
+
+    #main-sidebar .sidebar-logo {
+        padding: 20px;
+        text-align: center;
+    }
+
+    #main-sidebar .sidebar-logo img {
+        max-width: 140px;
+        height: auto;
+    }
+
+    #main-sidebar .user-profile {
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--sidebar-line);
+        margin-bottom: 10px;
+        color: var(--text-on-dark);
+        font-size: 16px;
+    }
+
+    #main-sidebar .avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    #main-sidebar .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-grow: 1;
+    }
+
+    #main-sidebar .sidebar-menu li a {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: var(--text-muted); 
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    /* Scoped Active State */
+    #main-sidebar .sidebar-menu li a.active {
+        background-color: var(--accent-primary); 
+        color: var(--text-on-dark);
+        border-left: 4px solid var(--text-on-dark);
+        font-weight: 600;
+        pointer-events: none; 
+        cursor: default;
+    }
+
+    #main-sidebar .sidebar-menu li a:hover:not(.active) {
+        background-color: var(--sidebar-hover);
+        color: var(--text-on-dark);
+    }
+
+    #main-sidebar .sidebar-footer {
+        padding: 20px;
+        border-top: 1px solid var(--sidebar-line);
+    }
+
+    #main-sidebar .sign-out-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        padding: 12px 20px;
+        transition: all 0.3s ease;
+    }
+
+    #main-sidebar .sign-out-btn:hover {
+        background-color: var(--sidebar-hover);
+        color: var(--text-on-dark);
+    }
+
+    #main-sidebar .material-symbols-outlined {
+        margin-right: 15px;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+</style>
+
+<nav id="main-sidebar" class="sidebar">
+    <div class="sidebar-logo">
+        <img src="/common/img/schoolLogo.png" alt="Logo">
+    </div>
+
+    <div class="user-profile">
+        <img src="<%= (locals.user && user.avatar) ? user.avatar : '/common/img/default-avatar.jpg' %>" 
+            alt="User Profile" 
+            class="avatar">
+        <span class="username">
+            <%= (locals.user && user.firstName) ? `${user.firstName} ${user.lastName}` : 'Guest User' %>
+        </span>
+    </div>
+
+    <ul class="sidebar-menu">
+        <li>
+            <a href="/institution" class="<%= (locals.currentPageCategory === 'institution') ? 'active' : '' %>">
+                <span class="material-symbols-outlined">home</span>
+                <span class="menu-text">Institution</span>
+            </a>
+        </li>
+        <li>
+            <a href="/tws" class="<%= (locals.currentPageCategory === 'tws') ? 'active' : '' %>">
+                <span class="material-symbols-outlined">event_note</span>
+                <span class="menu-text">TWS</span>
+            </a>
+        </li>
+        <li>
+            <a href="/ata/dashboard/window" class="<%= (locals.currentPageCategory === 'ata') ? 'active' : '' %>">
+                <span class="material-symbols-outlined">fact_check</span>
+                <span class="menu-text">ATA</span>
+            </a>
+        </li>
+        <li>
+            <a href="/syllabus" class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
+                <span class="material-symbols-outlined">book_4</span>
+                <span class="menu-text">Syllabus</span>
+            </a>
+        </li>
+        <li>
+            <a href="/tla" class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
+                <span class="material-symbols-outlined">assignment</span>
+                <span class="menu-text">TLA</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <button class="sign-out-btn" id="btn-signout">
+            <span class="material-symbols-outlined">exit_to_app</span>
+            <span class="sign-out-text">Sign out</span>
+        </button>
+    </div>
+</nav>
+
+<script>
+    const signOutBtn = document.getElementById('btn-signout');
+    
+    signOutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '/login/logout';
+    });
+</script>

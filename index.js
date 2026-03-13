@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./database/mongo-dbconnect.js";
 import session from 'express-session';
+import { isAuthenticated } from "./middleware/authMiddleware.js";
 
 
 // ========================
@@ -15,9 +16,9 @@ const __dirname = path.dirname(__filename);
 // ========================
 // Load .env from ROOT
 // ========================
-dotenv.config({ path: path.resolve(__dirname,".env") });
-dotenv.config(); 
-console.log("MONGO_URI:", process.env.MONGO_URI);   
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+dotenv.config();
+console.log("MONGO_URI:", process.env.MONGO_URI);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +39,10 @@ app.use(session({
 }));
 
 // ========================
+// Middleware
+// ========================
+
+// ========================
 // View Engine Setup
 // ========================
 app.set("view engine", "ejs");
@@ -53,9 +58,10 @@ app.use(express.static(path.join(__dirname, "public")));
 // ========================
 // Main Pages
 import loginRoutes from "./routes/MainPages/loginRoutes.js";
-import institutionRoutes from "./routes/MainPages/institutionRoutes.js";
+import professorRoutes from "./routes/MainPages/professorRoutes.js";
 import adminRoutes from "./routes/MainPages/adminRoutes.js";
 import progChairRoutes from "./routes/MainPages/progChairRoutes.js";
+import deanRoutes from "./routes/MainPages/deanRoutes.js";
 import userRoutes from './routes/APIs/userRoutes.js';
 
 // TLA
@@ -73,18 +79,56 @@ import tlaApprovalApiRoutes  from "./routes/APIs/TLA/tlaApprovalStatusRoutes.js"
 import tlaPreDigitalRoutes   from "./routes/APIs/TLA/tlaPreDigitalSessionRoutes.js";
 import tlaPostDigitalRoutes  from "./routes/APIs/TLA/tlaPostDigitalSessionRoutes.js";
 
-//Syllabus
-import landingPageRouter from "./routes/Syllabus/landingPage.js";
+// Syllabus
+import courseOverviewRoutes from "./routes/Syllabus/courseOverview.js";
+import syllabusCourseOverviewActions from "./models/Syllabus/syllabusCourseOverview.js";
+import syllabusApprovalStatusActions from "./models/Syllabus/syllabusApprovalStatus.js";
+import newSyllabusRoutes from "./routes/Syllabus/newSyllabusRoutes.js";
+import infoSyllabusRoutes from "./routes/Syllabus/infoSyllabusRoutes.js";
+import courseOverviewFacultyRoutes from "./routes/Syllabus/courseOverviewFaculty.js";
+import syllabusApprovalRoutes from "./routes/Syllabus/syllabusApproval.js";
+import reviewSyllabusRoutes from "./routes/Syllabus/reviewSyllabusRoutes.js";
+import syllabusApprovalTechAsstRouter from "./routes/Syllabus/syllabusApprovalTechAsstRoutes.js";
+import endorseSyllabusRouter from "./routes/Syllabus/endorseSyllabusRoutes.js";
+import deanApprovalRouter from "./routes/Syllabus/deanApprovalRoutes.js";
+import adminOverviewRouter from "./routes/Syllabus/adminOverviewRoute.js";
+import scheduleSyllabusRoutes from "./routes/Syllabus/scheduleSyllabusRoutes.js";
+
+// ATA
+import ataPages from "./routes/ATA/ataPages.js";
+import ataApiRoutes from "./routes/ATA/ataRoutes.js";
+import ataAuthRoutes from "./routes/ATA/authRoutes.js";
+
+//TWS
+import twsRoutes from "./routes/TWS/twsRoutes.js";
+
 
 // ========================
 // Routes
 // ========================
 // Main Pages
 app.use("/login",loginRoutes);
-app.use("/institution",institutionRoutes);
+
+// Shared Institution entry point used by sidebar links.
+// Redirect users to their role-specific dashboard route.
+app.get("/institution", isAuthenticated, (req, res, next) => {
+    const role = req.session?.user?.role;
+
+    if (role === "Program-Chair") return res.redirect("/progChair/institution");
+    if (role === "Dean") return res.redirect("/dean/institution");
+    if (role === "Admin" || role === "HR" || role === "Super-Admin") {
+        return res.redirect("/admin/institution");
+    }
+
+    // Professors continue to the mounted /institution professor route.
+    return next();
+});
+
+app.use("/institution",professorRoutes);
 app.use("/admin/users", userRoutes); //admin user API
 app.use("/admin",adminRoutes);
 app.use("/progChair", progChairRoutes);
+app.use("/dean", deanRoutes);
 
 //TLA Pages
 app.use("/tla/dashboard", dashBoardRoutes);
@@ -103,7 +147,33 @@ app.use("/api/tla/post-digital",  tlaPostDigitalRoutes);
 app.use("/api/tla",               tlaApiRoutes);
 
 //Syllabus
-app.use("/syllabus", landingPageRouter);
+app.get("/syllabus", (req, res) => {
+    res.redirect("/syllabus/507f1f77bcf86cd799439011");
+});
+app.use("/syllabus/api", syllabusCourseOverviewActions);
+app.use("/syllabus/approval", syllabusApprovalStatusActions);
+app.use("/syllabus/create", newSyllabusRoutes);
+app.use("/syllabus/info", infoSyllabusRoutes);
+app.use("/syllabus/approve", syllabusApprovalRoutes);
+app.use("/syllabus/edit", reviewSyllabusRoutes);
+app.use("/syllabus/schedule", scheduleSyllabusRoutes);
+app.use("/syllabus/tech-assistant", syllabusApprovalTechAsstRouter);
+app.use("/syllabus/prog-chair", endorseSyllabusRouter);
+app.use("/syllabus/dean/approve", deanApprovalRouter);
+app.use("/syllabus/hr", adminOverviewRouter);
+app.use("/syllabus", courseOverviewRoutes); // wildcard /:userId — MUST be last
+
+// Faculty specific route
+app.use("/faculty", courseOverviewFacultyRoutes);
+
+// ATA Pages
+app.use("/ata", ataPages);
+app.use("/ata", ataApiRoutes); 
+app.use("/ata/auth", ataAuthRoutes);
+// TWS
+app.use("/tws", twsRoutes);
+
+
 
 // ========================
 // 404 (LAST)

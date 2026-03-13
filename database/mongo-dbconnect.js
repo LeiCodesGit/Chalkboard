@@ -22,7 +22,32 @@ backup1.once("open", () => console.log("✅ Connected to backup1"));
 backup2.once("open", () => console.log("✅ Connected to backup2"));
 
 const connectDB = async () => {
-  console.log("Initializing MongoDB connections...");
+  try {
+    console.log("Initializing MongoDB connections...");
+
+    await mongoose.connect(baseURI, {
+      dbName: "mainDB",
+    });
+
+    console.log("✅ Connected to default mongoose (mainDB)");
+
+    try {
+      const indexes = await mongoose.connection.collection("tws").indexes();
+      const hasOldIdIndex = indexes.some((idx) => idx.name === "id_1");
+
+      if (hasOldIdIndex) {
+        await mongoose.connection.collection("tws").dropIndex("id_1");
+        console.log("✅ Dropped old index: id_1 from tws collection");
+      } else {
+        console.log("ℹ️ No old id_1 index found on tws collection");
+      }
+    } catch (indexErr) {
+      console.log("ℹ️ TWS index cleanup skipped:", indexErr.message);
+    }
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error);
+    throw error;
+  }
 };
 
 export { mainDB, backup1, backup2 };

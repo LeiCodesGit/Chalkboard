@@ -4,53 +4,364 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TWS - Summary And Preview</title>
-  <link rel="stylesheet" href="/twa/public/twsStyle.css" />
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
 </head>
 
-<body>
-  <%- include("partials/twsNavBar") %>
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
 
-  <main class="main-content">
-    <div class="page-container">
+    <main class="tws-app-main">
+      <div class="tws-app-center">
 
-      <div class="header-pill">
-        <h1>TWS - Summary And Preview</h1>
-      </div>
-
-      <section class="panel">
-        <div class="summary-grid">
-          <div>
-            <h3 class="mini-title">Faculty Information</h3>
-            <div class="mini-lines">
-              <div>Faculty Name:</div>
-              <div>Employee ID:</div>
-              <div>Department:</div>
-              <div>Academic Year:</div>
-              <div>Term:</div>
-              <div>Employment Status:</div>
-            </div>
-
-            <h3 class="mini-title" style="margin-top:16px;">Teaching Load Summary</h3>
-            <div class="mini-lines">
-              <div>Total Units: <strong>14</strong></div>
-              <div>Equivalent Load: <strong>14</strong></div>
-            </div>
-          </div>
-
-          <div class="summary-actions">
-            <a href="/twa/dashboard" class="submit-btn">Submit TWS</a>
-            <a href="/twa/faculty-info" class="edit-btn">Edit</a>
-          </div>
+        <div class="tws-app-title-pill">
+          <h1>TWS - Summary And Preview</h1>
         </div>
-      </section>
 
-      <div class="triple-actions">
-        <a href="/twa/submission-status" class="pill-btn">Back</a>
-        <a href="#" class="pill-btn">Save Draft</a>
-        <a href="/twa/dashboard" class="pill-btn">Home</a>
+        <section class="tws-card">
+          <% const currentStatus = tws.status || "Draft"; %>
+          <% const isChair = !!canManageAsChair; %>
+          <% const isProfessor = !!(user && user.role === "Professor"); %>
+          <% const canFacultyAct = isProfessor && currentStatus === "Sent to Faculty"; %>
+          <% const canSendToFaculty = isChair && ["Draft", "Returned to Program Chair"].includes(currentStatus); %>
+          <% const canSendToDean = isChair && ["Draft", "Returned to Program Chair"].includes(currentStatus); %>
+          <% const canEdit = isChair && ["Draft", "Returned to Program Chair", "Rejected"].includes(currentStatus); %>
+
+          <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+            <div style="margin-bottom:12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+              <b>Action blocked:</b> <%= errorMessage %>
+            </div>
+          <% } %>
+
+          <form method="POST" action="/tws/summary/<%= tws.id %>">
+
+            <div style="display:flex; gap:18px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
+              <div style="flex: 1; min-width: 520px;">
+
+                <div class="tws-card-title" style="margin-bottom:10px;">Faculty Information</div>
+
+                <div style="display:grid; grid-template-columns: 180px 1fr; gap:10px 14px; font-size:12px;">
+                  <div style="font-weight:800;">Faculty Name:</div><div><%= tws.faculty?.name || "—" %></div>
+                  <div style="font-weight:800;">Employee ID:</div><div><%= tws.faculty?.empId || "—" %></div>
+                  <div style="font-weight:800;">Department:</div><div><%= tws.faculty?.dept || "—" %></div>
+                  <div style="font-weight:800;">Academic Year:</div><div><%= tws.faculty?.acadYear || "—" %></div>
+                  <div style="font-weight:800;">Term:</div><div><%= tws.faculty?.term || "—" %></div>
+                  <div style="font-weight:800;">Employment Status:</div><div><%= tws.faculty?.empStatus || "—" %></div>
+                  <div style="font-weight:800;">Current Status:</div><div><%= tws.status || "Draft" %></div>
+                </div>
+
+                <div class="tws-card-title" style="margin-top:18px;">Teaching Load Summary</div>
+
+                <div style="display:grid; grid-template-columns: 180px 1fr 220px 1fr; gap:10px 14px; font-size:12px; margin-top:10px;">
+                  <div style="font-weight:800;">Total Units:</div><div><%= tws.totals?.totalUnits ?? 0 %></div>
+                  <div style="font-weight:800;">Total Hours (Lec/Lab):</div><div><%= tws.totals?.totalHours ?? 0 %></div>
+
+                  <div style="font-weight:800;">Equivalent Load:</div><div><%= tws.totals?.equivLoad ?? 0 %></div>
+                  <div style="font-weight:800;">Approval Status:</div><div><%= tws.approval?.status || "Not Submitted" %></div>
+                </div>
+              </div>
+
+              <div style="width: 260px; display:flex; flex-direction:column; gap:12px; align-items:flex-end;">
+
+                <% if (canSendToFaculty) { %>
+                  <button
+                    type="submit"
+                    name="action"
+                    value="sendToFaculty"
+                    style="border:none; cursor:pointer; background: #3b82f6; color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send to Faculty
+                  </button>
+
+                  <button
+                    type="submit"
+                    name="action"
+                    value="sendToDean"
+                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send to Dean
+                  </button>
+                <% } else if (canSendToDean) { %>
+                  <button
+                    type="submit"
+                    name="action"
+                    value="sendToDean"
+                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send to Dean
+                  </button>
+                <% } else if (isChair) { %>
+                  <div style="width:100%; border-radius:12px; background: rgba(255,255,255,0.12); color:#fff; padding:10px 12px; font-size:12px; text-align:left;">
+                    Current status is <b><%= currentStatus %></b>. This record cannot be re-sent from this page.
+                  </div>
+                <% } %>
+
+                <% if (user && user.role === "Dean" && tws.status === "Approved") { %>
+                  <button
+                    type="submit"
+                    formaction="/tws/send-to-hr/<%= tws.id %>"
+                    formmethod="POST"
+                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                  >
+                    Send Approved TWS to HR Archive
+                  </button>
+                <% } %>
+
+                <% if (canEdit) { %>
+                <button
+                  type="submit"
+                  name="action"
+                  value="edit"
+                  class="tws-btn-white"
+                  style="cursor:pointer; width:100%;"
+                >
+                  Edit
+                </button>
+                <% } %>
+
+                <a href="/tws/dashboard" class="tws-btn-white" style="text-decoration:none; text-align:center; width:100%;">
+                  Back to Dashboard
+                </a>
+
+                <% if (canFacultyAct) { %>
+                  <button
+                    type="submit"
+                    formaction="/tws/signature"
+                    formmethod="POST"
+                    class="tws-btn-white"
+                    style="cursor:pointer; width:100%;"
+                  >
+                    Sign TWS
+                  </button>
+
+                  <button
+                    type="submit"
+                    formaction="/tws/faculty-return/<%= tws.id %>"
+                    formmethod="POST"
+                    class="tws-btn-white"
+                    style="cursor:pointer; width:100%;"
+                  >
+                    Return for Revision
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+            <% if (canFacultyAct) { %>
+              <input type="hidden" name="id" value="<%= tws.id %>" />
+
+              <div style="margin-top:14px; display:grid; gap:8px; max-width:640px;">
+                <label for="facultyReturnRemarks" style="font-size:12px; font-weight:800;">Revision Notes (optional)</label>
+                <textarea
+                  id="facultyReturnRemarks"
+                  name="remarks"
+                  rows="3"
+                  placeholder="State what needs to be revised before approval."
+                  style="width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.35); background:rgba(255,255,255,0.08); color:#fff; padding:10px 12px; resize:vertical; font-size:12px;"
+                ></textarea>
+              </div>
+            <% } %>
+
+            <div class="tws-card-title" style="margin-top:18px;">Teaching Load Summary (Table View)</div>
+
+            <div class="tws-schedule-layout" style="margin-top:10px;">
+              <div class="tws-timetable">
+                <%
+                  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                  const times = [
+                    "7:00 AM", "8:15 AM", "9:30 AM", "10:45 AM", "12:00 PM",
+                    "1:15 PM", "2:30 PM", "3:45 PM", "5:00 PM", "6:15 PM", "7:30 PM", "8:45 PM"
+                  ];
+                %>
+
+                <div class="tws-cell tws-head tws-corner"></div>
+                <% days.forEach(function(day) { %>
+                  <div class="tws-cell tws-head"><%= day %></div>
+                <% }) %>
+
+                <% times.forEach(function(time) { %>
+                  <div class="tws-cell tws-time" style="grid-column: 1;"><%= time %></div>
+                  <% for (let c = 0; c < 7; c++) { %>
+                    <div class="tws-cell tws-slot"></div>
+                  <% } %>
+                <% }) %>
+
+                <%
+                  const dayMap = { Mon: 2, Tue: 3, Wed: 4, Thu: 5, Fri: 6, Sat: 7, Sun: 8 };
+                  const timeMap = {};
+                  times.forEach(function(time, index) { timeMap[time] = index + 2; });
+
+                  function toMinutes(timeStr) {
+                    if (!timeStr) return null;
+                    const match = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+                    if (!match) return null;
+                    let hour = Number(match[1]);
+                    const minute = Number(match[2]);
+                    const ampm = match[3].toUpperCase();
+                    if (ampm === "PM" && hour !== 12) hour += 12;
+                    if (ampm === "AM" && hour === 12) hour = 0;
+                    return hour * 60 + minute;
+                  }
+
+                  function parseSchedule(item) {
+                    const rawDay = String(item.day || "").trim();
+                    const rawSlot = String(item.timeSlot || "").trim();
+                    const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+                    if (!slotMatch) return null;
+
+                    const day = rawDay || slotMatch[1] || "";
+                    const startStr = (slotMatch[2] || "").trim();
+                    const endStr = (slotMatch[3] || "").trim();
+                    const startMin = toMinutes(startStr);
+                    const endMin = toMinutes(endStr);
+
+                    if (!dayMap[day] || startMin === null || endMin === null) return null;
+                    return { day: day, startStr: startStr, endStr: endStr, startMin: startMin, endMin: endMin };
+                  }
+
+                  const parsedBlocks = (tws?.createdWorkload || []).map(function(item) {
+                    return {
+                      item: item,
+                      parsed: parseSchedule(item),
+                      isConflict: false,
+                    };
+                  });
+
+                  for (let i = 0; i < parsedBlocks.length; i++) {
+                    for (let j = i + 1; j < parsedBlocks.length; j++) {
+                      const a = parsedBlocks[i].parsed;
+                      const b = parsedBlocks[j].parsed;
+                      if (!a || !b || a.day !== b.day) continue;
+                      const overlaps = a.startMin < b.endMin && b.startMin < a.endMin;
+                      if (overlaps) {
+                        parsedBlocks[i].isConflict = true;
+                        parsedBlocks[j].isConflict = true;
+                      }
+                    }
+                  }
+
+                  parsedBlocks.forEach(function(block) {
+                    const p = block.parsed;
+                    if (!p) return;
+                    const col = dayMap[p.day];
+                    const row = timeMap[p.startStr] || 2;
+                    const colorClass = block.isConflict ? "tws-block-conflict" : "tws-block-assigned";
+                %>
+                  <div class="tws-block <%= colorClass %>" data-col="<%= col %>" data-row="<%= row %>">
+                    <div class="tws-block-code"><%= block.item.code || "—" %></div>
+                    <div class="tws-block-sub"><%= block.item.sectionRoom || "" %></div>
+                  </div>
+                <%
+                  });
+                %>
+              </div>
+
+              <div class="tws-load-details">
+                <div class="ld-title">Load Details</div>
+
+                <div class="ld-row">
+                  Tracking Hours
+                  <span><%= Number(tws?.totals?.totalHours || 0).toFixed(2) %></span>
+                </div>
+
+                <div class="ld-divider"></div>
+
+                <% if (!tws?.createdWorkload || tws.createdWorkload.length === 0) { %>
+                  <div style="opacity:.9; font-size:12px; padding:10px 0;">
+                    No subjects found for this TWS record.
+                  </div>
+                <% } %>
+
+                <% (tws?.createdWorkload || []).forEach(function(subject) { %>
+                  <div class="ld-row" style="gap:10px;">
+                    <div style="max-width:220px;">
+                      <b><%= subject.code || "—" %></b>
+                    </div>
+                    <span><%= Number(subject.units || 0).toFixed(2) %></span>
+                  </div>
+                <% }) %>
+
+                <div class="ld-divider"></div>
+
+                <div class="ld-row">
+                  <b>Total Hours</b>
+                  <span><b><%= Number(tws?.totals?.totalHours || 0).toFixed(2) %></b></span>
+                </div>
+
+                <div class="ld-row" style="border-bottom:none; padding-bottom:0;">
+                  <b>Unit Distribution</b>
+                  <span></span>
+                </div>
+
+                <div class="ld-row">
+                  Academic
+                  <span><%= Number(tws?.academicUnits || tws?.totals?.totalUnits || 0).toFixed(2) %></span>
+                </div>
+
+                <div class="ld-row">
+                  PE
+                  <span><%= Number(tws?.peUnits || 0).toFixed(2) %></span>
+                </div>
+
+                <div class="ld-row">
+                  Values
+                  <span>0.00</span>
+                </div>
+
+                <div class="ld-row">
+                  NSTP
+                  <span><%= Number(tws?.nstpUnits || 0).toFixed(2) %></span>
+                </div>
+
+                <div class="ld-row">
+                  Deloading
+                  <span><%= Number(tws?.deloadingUnits || 0).toFixed(2) %></span>
+                </div>
+
+                <div class="ld-divider"></div>
+
+                <div class="ld-row">
+                  <b>Total Units</b>
+                  <span><b><%= Number(tws?.totals?.totalUnits || 0).toFixed(2) %></b></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="tws-signatures" style="margin-top:18px;">
+              <div class="sig-box">
+                <div class="sig-line"></div>
+                <div class="sig-name">Name: <%= tws?.deanName || "" %></div>
+                <div class="sig-role">DEAN</div>
+              </div>
+
+              <div class="sig-box">
+                <div class="sig-line"></div>
+                <div class="sig-name">Name: <%= tws?.programChairName || "" %></div>
+                <div class="sig-role">Program Chair</div>
+              </div>
+            </div>
+
+          </form>
+        </section>
+
       </div>
+    </main>
+  </div>
 
-    </div>
-  </main>
+  <script>
+    (function () {
+      var blocks = document.querySelectorAll('.tws-timetable .tws-block[data-col][data-row]');
+      blocks.forEach(function (block) {
+        var col = Number(block.getAttribute('data-col') || 0);
+        var row = Number(block.getAttribute('data-row') || 0);
+        if (col > 0) block.style.gridColumn = String(col);
+        if (row > 0) block.style.gridRow = String(row);
+      });
+    })();
+  </script>
 </body>
 </html>
