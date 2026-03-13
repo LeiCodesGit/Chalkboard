@@ -11,83 +11,106 @@
 <body data-role="<%= typeof role !== 'undefined' ? role : '' %>" 
       data-employment="<%= typeof employmentType !== 'undefined' ? employmentType : '' %>"
       data-practicum="<%= typeof isPracticumCoordinator !== 'undefined' ? isPracticumCoordinator : 'false' %>">
+    <%- include('../partials/sideMenuBar') %>
+    
+    <main class="dashboard-bg" style="margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-top: 6vh;">
 
-    <!-- HAMBURGER MENU -->
-    <div class="hamburger-menu" id="hamburgerMenu">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <%- include('../partials/sideMenuBar') %>
-    </div>
-
-    <!-- DASHBOARD CONTENT -->
-    <main class="dashboard-bg">
-
-        <div class="dashboard-title">DASHBOARD</div>
+        <div class="dashboard-title">ACCEPTANCE OF TEACHING ASSIGNMENT</div>
 
         <div class="welcome-box">
-            <h2>Welcome, <%= user.name %> | <%= role %> | <%= user.program %></h2>
+            <h2>
+                Welcome, <%= user.name %> | <%= role %>
+                <% if (role === 'Dean') { %>
+                    | CEA
+                <% } else if (user.program) { %>
+                    | <%= user.program %>
+                <% } %>
+            </h2>
         </div>
 
-        <div class="action-cards">
-            <a href="/ata/new" class="action-card-link-wrapper">
-                <div class="action-card">
-                    <div class="action-card-title">Start New ATA Form</div>
-                </div>
-            </a>
+      <%
+    const isExecutive = ['VPAA', 'HR', 'HRMO'].includes(role);
+    const isAdmin = ['Program-Chair', 'Dean', 'Admin', 'VPAA', 'HR', 'HRMO'].includes(role);
+    const canViewArchived = ['Program-Chair', 'Dean', 'VPAA', 'HR', 'HRMO'].includes(role);
+%>
 
-            <% if (role === 'Program-Chair' || role === 'Dean' || role === 'Admin') { %>
-                <a href="/admin/courses" id="adminCourseBtn" class="action-card-link-wrapper">
-                    <div class="action-card" style="background-color: #721c24;">
-                        <div class="action-card-title"><i class="fas fa-database"></i> Manage Courses</div>
-                    </div>
-                </a>
+<div class="action-cards">
 
-                <a href="/ata/pending" id="adminApprovalCard" class="action-card-link-wrapper">
-                    <div class="action-card" style="background-color: #d39e00; color: #333;">
-                        <div class="action-card-title"><i class="fas fa-inbox"></i> Forms to Approve</div>
-                        <div class="action-card-link">Review Faculty Submissions →</div>
-                    </div>
-                </a>
-            <% } %>
+    <% if (!isExecutive) { %>
+        <a href="/ata/new" class="action-card-link-wrapper">
+            <div class="action-card">
+                <div class="action-card-title">Start New ATA Form</div>
+            </div>
+        </a>
+
+        <a href="/ata/submissions?filter=pending" class="action-card-link-wrapper">
             <div class="action-card pending-card">
-                <div class="action-card-title">My Pending Forms (<span id="myPendingCount">0</span>)</div>
+                <div class="action-card-title">My Pending Forms (<span id="myPendingCount"><%= myPendingCount %></span>)</div>
                 <div class="action-card-link">View My Forms →</div>
             </div>
+        </a>
 
+        <a href="/ata/submissions?filter=approved" class="action-card-link-wrapper">
             <div class="action-card approved-card">
-                <div class="action-card-title">My Approved Forms (<span id="myApprovedCount">0</span>)</div>
+                <div class="action-card-title">My Approved Forms (<span id="myApprovedCount"><%= myApprovedCount %></span>)</div>
                 <div class="action-card-link">View My Forms →</div>
             </div>
-        </div>
+        </a>
+    <% } %>
 
-        <div class="active-term">
-            Active Term: [Term Selection]
-        </div>
+    <% if (['Program-Chair', 'Dean', 'Admin'].includes(role)) { %>
+        <a href="/admin/courses" id="adminCourseBtn" class="action-card-link-wrapper">
+            <div class="action-card" style="background-color: #721c24;">
+                <div class="action-card-title"><i class="fas fa-database"></i> Manage Courses</div>
+            </div>
+        </a>
+    <% } %>
 
-        <div class="info-box">
-            <div class="info-row">Last Submission: [None] | Status: [None]</div>
-            <div class="info-row">Total Units: 0 | Effective Units: 0</div>
-        </div>
+    <% if (isAdmin || isPracticumCoordinator) { %>
+        <a href="/ata/pending" id="ataInboxCard" class="action-card-link-wrapper">
+            <div class="action-card" style="background-color: #d39e00; color: #333;">
+                <div class="action-card-title"><i class="fas fa-inbox"></i> Forms to Approve</div>
+                <div class="action-card-link">Review Faculty Submissions →</div>
+            </div>
+        </a>
 
-        <a href="/" class="back-button">Back</a>
+        <a href="/ata/admin-history" id="adminHistoryCard" class="action-card-link-wrapper">
+            <div class="action-card" style="background-color: #28a745; color: white;">
+                <div class="action-card-title"><i class="fas fa-history"></i> Approved History</div>
+                <div class="action-card-link">View Processed Forms →</div>
+            </div>
+        </a>
+    <% } %>
+
+    <% if (canViewArchived) { %>
+        <a href="/ata/archived-atas" class="action-card-link-wrapper">
+            <div class="action-card" style="background-color: #17a2b8; color: white;">
+                <div class="action-card-title">
+                    <i class="fas fa-box-archive"></i> Archived ATAs
+                </div>
+                <div class="action-card-link">View All Archived Records →</div>
+            </div>
+        </a>
+    <% } %>
+
+</div>
+
+
+
+        <% if (!isExecutive) { %>
+            <div class="info-box">
+                <div class="info-row">
+                    Last Submission: <strong><%= lastSubmissionDate %></strong> | 
+                    Status: <strong><%= lastStatus %></strong>
+                </div>
+                <div class="info-row">
+                    Total Units: <strong><%= totalUnits %></strong> | 
+                    Effective Units: <strong><%= effectiveUnits %></strong>
+                </div>
+            </div>
+        <% } %>
+        
     </main>
-<<<<<<< HEAD:views/ATA/dashboard_window.ejs
-
     <script src="/ATA/js/ata_client.js"></script>
-
-    <script src="/ATA/js/ata_client.js"></script>
-    
-    <%- include('partials/dev_toolbar') %>
-=======
-    <script src="/js/ata_client.js"></script>
->>>>>>> ATA:ATA/views/dashboard_window.ejs
 </body>
 </html>

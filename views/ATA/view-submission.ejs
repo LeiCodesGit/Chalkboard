@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Submission: <%= form.facultyName %></title>
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; overflow: hidden; background: #1a1a1a; }
+        .pdf-container {
+            height: calc(100vh - 90px);
+            width: 100%;
+        }
+        .sticky-action-bar {
+            height: 90px; background: #222; border-top: 4px solid #b30000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 40px; box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
+        }
+        
+        /* Custom scrollbar for the horizontal audit trail */
+        .audit-scroll::-webkit-scrollbar { height: 6px; }
+        .audit-scroll::-webkit-scrollbar-track { background: transparent; }
+        .audit-scroll::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .audit-scroll::-webkit-scrollbar-thumb:hover { background: #888; }
+    </style>
+</head>
+<body data-role="<%= typeof role !== 'undefined' ? role : 'Professor' %>" 
+      data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>">
+    
+    <%- include('../partials/sideMenuBar') %> 
+
+    <main style="margin-left: 260px; width: calc(100vw - 260px); display: flex; flex-direction: column;">
+        
+        <div class="pdf-container">
+            <iframe src="/ata/pdf/<%= form._id %>" width="100%" height="100%" style="border: none;"></iframe>
+        </div>
+
+        <div class="sticky-action-bar">
+            
+            <div style="display: flex; align-items: center; gap: 20px; flex: 1; overflow: hidden;">
+                <div style="color: white; font-size: 16px; white-space: nowrap;">
+                    <strong>Status:</strong> 
+                    <span style="color: <%= form.status === 'FINALIZED' ? '#28a745' : '#ffc107' %>; font-weight: bold;">
+                        <%= form.status.replace('_', ' ') %>
+                    </span>
+                </div>
+
+                <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
+                    <div class="audit-scroll" style="display: flex; gap: 10px; border-left: 2px solid #555; padding-left: 20px; overflow-x: auto; align-items: center; padding-bottom: 5px;">
+                        <span style="color: #aaa; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Audit Trail:</span>
+                        
+                        <% form.approvalHistory.forEach(log => { %>
+                            <div style="background: #2a2a2a; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; color: #ddd; border: 1px solid #444; white-space: nowrap; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                <% if (log.approvalStatus === 'RETURNED') { %>
+                                    <i class="fas fa-undo" style="color: #dc3545;"></i>
+                                <% } else { %>
+                                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                                <% } %>
+                                <strong><%= log.approverName || log.approverRole %></strong>
+                                <span style="color: #888; font-size: 0.75rem;">(<%= log.approvalStatus %>) - <%= new Date(log.date).toLocaleDateString() %></span>
+                            </div>
+                        <% }) %>
+                        
+                    </div>
+                <% } %>
+            </div>
+
+            <div style="margin-left: 20px;">
+                <button onclick="window.history.back()" class="form-btn" style="background: #6c757d; color: white; border: none; padding: 10px 20px; cursor: pointer; white-space: nowrap;">
+                    <i class="fas fa-arrow-left"></i> Back to Submissions
+                </button>
+            </div>
+        </div>
+
+    </main>
+    
+    <script src="/ATA/js/ata_client.js"></script>
+</body>
+</html>
