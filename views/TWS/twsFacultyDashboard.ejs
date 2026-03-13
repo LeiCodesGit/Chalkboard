@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS - Faculty</title>
+  <link rel="stylesheet" href="/TWS/css/twsstyles.css" />
+</head>
+<body>
+  <aside class="tws-sidebar">
+    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+  </aside>
+
+  <div class="main">
+    <div class="shell">
+
+      <div class="page-title">TWS - Faculty</div>
+
+      <!-- ===== Teaching Workload Sheets ===== -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Teaching Workload Sheets</div>
+          <div class="panel-actions">
+            <button class="btn btn-purple" type="button">&#9965; Filter by Department</button>
+            <a class="btn" href="/tws/dashboard">Refresh</a>
+          </div>
+        </div>
+
+        <div class="tws-table col-faculty">
+          <div class="trow thead">
+            <div>Academic Year</div>
+            <div>Term</div>
+            <div>Date Created</div>
+            <div>Status</div>
+            <div class="tcell-right">Action</div>
+          </div>
+
+          <% if (!list || !list.length) { %>
+            <div class="trow">
+              <div style="grid-column:1/-1; opacity:.7; padding:10px 0;">
+                No TWS assigned to you yet. Please wait for your Program Chair to assign one.
+              </div>
+            </div>
+          <% } %>
+
+          <%
+            function formatDatePH(value) {
+              var date = value ? new Date(value) : new Date();
+              if (isNaN(date.getTime())) return "—";
+              return date.toLocaleDateString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                timeZone: "Asia/Manila",
+              });
+            }
+          %>
+
+          <% (list || []).forEach(function(t) {
+               var dateStr = formatDatePH(t.createdAt);
+
+               var st = (t.status || 'Draft').toLowerCase();
+               var statusLabel = t.status || 'Draft';
+               var badge = 's-draft';
+               if (st === 'approved')                        badge = 's-approved';
+               else if (st === 'submitted' || st === 'sent to dean') badge = 's-submitted';
+               else if (st === 'sent to faculty') { badge = 's-for-review'; statusLabel = 'For Signing'; }
+               else if (st.includes('chair') || st.includes('review')) badge = 's-for-review';
+               else if (st.includes('returned'))             badge = 's-returned';
+               var canSignNow = st === 'sent to faculty';
+          %>
+            <div class="trow">
+              <div><%= (t.faculty && t.faculty.acadYear) ? t.faculty.acadYear : (t.schoolYear || '—') %></div>
+              <div><%= (t.faculty && t.faculty.term) ? t.faculty.term : (t.term || '—') %></div>
+              <div><%= dateStr %></div>
+              <div>
+                <span class="status-badge <%= badge %>"><%= statusLabel %></span>
+              </div>
+              <div class="tcell-right">
+                <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>
+                <% if (canSignNow) { %>
+                  <form method="POST" action="/tws/signature" style="display:inline;">
+                    <input type="hidden" name="id" value="<%= t.id %>" />
+                    <button class="pill pill-edit" type="submit" style="cursor:pointer;">Sign</button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- ===== Faculty Signature ===== -->
+      <div class="panel">
+        <div class="panel-title" style="margin-bottom:14px;">TWS - Faculty Signature</div>
+        <hr class="divider" />
+        <% const signable = (list || []).filter(function(t){ return (t.status || '').toLowerCase() === 'sent to faculty'; }); %>
+        <form id="sigForm" method="POST" action="/tws/signature">
+          <div class="sig-section">
+            <div class="sig-field">
+              <div class="sig-label">Prepared by</div>
+              <input
+                class="sig-input"
+                type="text"
+                name="preparedBy"
+                placeholder="Enter faculty name"
+                value="<%= (typeof user !== 'undefined' && user) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '' %>"
+                readonly
+              />
+              <div class="sig-label" style="margin-top:10px;">TWS For Signing</div>
+              <select class="sig-input" name="id" style="height:auto; padding:10px;" <%= signable.length ? '' : 'disabled' %>>
+                <% if (!signable.length) { %>
+                  <option value="">No TWS pending signature</option>
+                <% } %>
+                <% signable.forEach(function(t){ %>
+                  <option value="<%= t.id %>"><%= t.faculty?.name || 'Faculty' %> - <%= t.faculty?.term || 'Term' %> - <%= t.faculty?.acadYear || 'SY' %></option>
+                <% }) %>
+              </select>
+              <div class="sig-date" id="sigDate"></div>
+            </div>
+            <button class="sig-update-btn" type="submit" <%= signable.length ? '' : 'disabled style="opacity:.6; cursor:not-allowed;"' %>>Sign Selected TWS</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ===== Faculty Queue ===== -->
+      <div class="panel">
+        <div class="panel-title" style="margin-bottom:10px;">Faculty Queue</div>
+        <hr class="divider" />
+        <p class="submit-desc">
+          You can sign only records marked as <b>For Signing</b>. Signed records are forwarded to the Dean for approval.
+        </p>
+        <div class="bottom-btns">
+          <% if (signable.length) { %>
+            <a class="btn btn-green" href="/tws/summary/<%= signable[0].id %>">Open First For-Signing TWS</a>
+          <% } else { %>
+            <button class="btn" type="button" disabled style="opacity:.5; cursor:not-allowed;">
+              No TWS Waiting For Signature
+            </button>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var el = document.getElementById('sigDate');
+      if (el) {
+        var opts = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' };
+        el.textContent = new Date().toLocaleDateString('en-US', opts) + ' (PHT)';
+      }
+    })();
+  </script>
+</body>
+</html>

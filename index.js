@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./database/mongo-dbconnect.js";
 import session from 'express-session';
+import { isAuthenticated } from "./middleware/authMiddleware.js";
 
 
 // ========================
@@ -40,9 +41,6 @@ app.use(session({
 // ========================
 // Middleware
 // ========================
-// ADDED: These are required for the Bulk Delete feature
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // ========================
 // View Engine Setup
@@ -99,11 +97,31 @@ import ataPages from "./routes/ATA/ataPages.js";
 import ataApiRoutes from "./routes/ATA/ataRoutes.js";
 import ataAuthRoutes from "./routes/ATA/authRoutes.js";
 
+//TWS
+import twsRoutes from "./routes/TWS/twsRoutes.js";
+
+
 // ========================
 // Routes
 // ========================
 // Main Pages
 app.use("/login",loginRoutes);
+
+// Shared Institution entry point used by sidebar links.
+// Redirect users to their role-specific dashboard route.
+app.get("/institution", isAuthenticated, (req, res, next) => {
+    const role = req.session?.user?.role;
+
+    if (role === "Program-Chair") return res.redirect("/progChair/institution");
+    if (role === "Dean") return res.redirect("/dean/institution");
+    if (role === "Admin" || role === "HR" || role === "Super-Admin") {
+        return res.redirect("/admin/institution");
+    }
+
+    // Professors continue to the mounted /institution professor route.
+    return next();
+});
+
 app.use("/institution",professorRoutes);
 app.use("/admin/users", userRoutes); //admin user API
 app.use("/admin",adminRoutes);
@@ -148,6 +166,9 @@ app.use("/faculty", courseOverviewFacultyRoutes);
 app.use("/ata", ataPages);
 app.use("/ata", ataApiRoutes); 
 app.use("/ata/auth", ataAuthRoutes);
+// TWS
+app.use("/tws", twsRoutes);
+
 
 
 // ========================

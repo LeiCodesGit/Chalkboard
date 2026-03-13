@@ -4,64 +4,104 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TWS - Faculty Information</title>
-  <link rel="stylesheet" href="/twa/public/twsStyle.css" />
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
 </head>
 
-<body>
-  <%- include("partials/twsNavBar") %>
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
 
-  <main class="main-content">
-    <div class="page-container">
+    <main class="tws-app-main">
+      <div class="tws-app-center">
 
-      <div class="header-pill">
-        <h1>TWS - Faculty Information</h1>
-      </div>
-
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Faculty Information</h2>
+        <!-- Header pill -->
+        <div class="tws-app-title-pill">
+          <h1>TWS - Faculty Information</h1>
         </div>
 
-        <div class="form-box">
-          <div class="form-row">
-            <div class="form-label">Faculty Name:</div>
-            <div class="form-input"></div>
-          </div>
+        <!-- Card -->
+        <section class="tws-card">
 
-          <div class="form-row">
-            <div class="form-label">Employee ID:</div>
-            <div class="form-input"></div>
-          </div>
+          <div class="tws-card-title" style="margin-bottom: 10px;">Faculty Information</div>
 
-          <div class="form-row">
-            <div class="form-label">Department:</div>
-            <div class="form-input"></div>
-          </div>
+          <form method="POST" action="/tws/faculty/<%= tws.id %>">
 
-          <div class="form-row">
-            <div class="form-label">Academic Year:</div>
-            <div class="form-input"></div>
-          </div>
+            <div style="display:grid; grid-template-columns: 160px 1fr; gap: 12px; align-items:center; font-size:12px;">
 
-          <div class="form-row">
-            <div class="form-label">Term:</div>
-            <div class="form-input"></div>
-          </div>
+              <div style="font-weight:800;">Faculty Name:</div>
+              <input
+                type="text"
+                name="name"
+                value="<%= tws.faculty?.name || '' %>"
+                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+              />
 
-          <div class="form-row">
-            <div class="form-label">Employee Status:</div>
-            <div class="form-input"></div>
-          </div>
-        </div>
-      </section>
+              <div style="font-weight:800;">Employee ID:</div>
+              <input
+                type="text"
+                name="empId"
+                value="<%= tws.faculty?.empId || '' %>"
+                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+              />
 
-      <div class="triple-actions">
-        <a href="/twa/dashboard" class="pill-btn">Back</a>
-        <a href="#" class="pill-btn">Save Draft</a>
-        <a href="/twa/teaching-load" class="pill-btn">Next</a>
+              <div style="font-weight:800;">Department:</div>
+              <input
+                type="text"
+                name="dept"
+                value="<%= tws.faculty?.dept || '' %>"
+                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+              />
+
+              <div style="font-weight:800;">Academic Year:</div>
+              <input
+                type="text"
+                name="acadYear"
+                placeholder="2025 - 2026"
+                value="<%= tws.faculty?.acadYear || '' %>"
+                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+              />
+
+              <div style="font-weight:800;">Term:</div>
+              <input
+                type="text"
+                name="term"
+                placeholder="1st / 2nd / 3rd"
+                value="<%= tws.faculty?.term || '' %>"
+                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+              />
+
+              <div style="font-weight:800;">Employee Status:</div>
+              <input
+                type="text"
+                name="empStatus"
+                value="<%= tws.faculty?.empStatus || '' %>"
+                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+              />
+            </div>
+
+            <div class="tws-next-wrap" style="margin-top: 16px;">
+              <a class="tws-btn-white" href="/tws/dashboard">Back</a>
+
+              <button class="tws-btn-white" type="submit" name="action" value="save"
+                style="cursor:pointer;">
+                Save Draft
+              </button>
+
+              <button class="tws-next" type="submit" name="action" value="next"
+                style="cursor:pointer;">
+                Next
+              </button>
+            </div>
+
+          </form>
+        </section>
+
       </div>
-
-    </div>
-  </main>
+    </main>
+  </div>
 </body>
 </html>

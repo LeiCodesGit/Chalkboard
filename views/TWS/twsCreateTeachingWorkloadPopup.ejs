@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TWS - Create Teaching Workload Sheet</title>
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+</head>
+
+<body class="tws-app-body">
+<div class="tws-app-layout">
+
+  <aside class="tws-app-sidebar">
+    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+  </aside>
+
+  <main class="tws-app-main">
+  <div class="tws-app-center">
+
+    <div class="tws-app-title-pill">
+      <h1>TWS - Teaching Workload Sheet</h1>
+    </div>
+
+    <section class="tws-card">
+
+      <div class="tws-card-header">
+        <div class="tws-card-title">Create Teaching Workload Sheet</div>
+
+        <!-- mimic "Filter / Search / Refresh" like your UI -->
+        <div class="pc-actions">
+          <button class="pc-chip" type="button">Filter by Department</button>
+          <button class="pc-chip" type="button">Search...</button>
+          <button class="pc-chip" type="button" onclick="location.reload()">Refresh</button>
+        </div>
+      </div>
+
+      <!-- SUBJECT TABLE -->
+      <div class="tws-table tws-workload-table">
+        <div class="tws-row tws-head tws-workload-row">
+          <div>Course Code</div>
+          <div>Course Title</div>
+          <div>Units</div>
+          <div class="tws-workload-col-head">Add</div>
+          <div class="tws-workload-col-head">Remove</div>
+        </div>
+
+        <% (subjects || []).forEach(s => { 
+            const alreadyAdded = (tws.createdWorkload || []).some(x => x.code === s.code);
+        %>
+          <div class="tws-row tws-workload-row">
+            <div><%= s.code %></div>
+            <div><%= s.title %></div>
+            <div><%= Number(s.units).toFixed(2) %></div>
+
+            <div class="tws-btns tws-workload-action-cell">
+              <button
+                class="tws-btn-white"
+                type="button"
+                <%= alreadyAdded ? "disabled" : "" %>
+                onclick="openModal('<%= s.code %>', '<%= s.title.replace(/'/g, "\\'") %>', '<%= Number(s.units).toFixed(2) %>')"
+              >
+                <%= alreadyAdded ? "Added" : "Add" %>
+              </button>
+            </div>
+
+            <div class="tws-btns tws-workload-action-cell">
+              <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/remove" style="display:inline;" onsubmit="return confirm('Remove this subject from the workload?');">
+                <input type="hidden" name="code" value="<%= s.code %>" />
+                <button
+                  class="tws-btn-white tws-btn-danger"
+                  type="submit"
+                  <%= alreadyAdded ? "" : "disabled" %>
+                >
+                  Remove
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <!-- optional: show list of added subjects (para sure ka na na-add) -->
+      <div style="margin-top:12px; opacity:.95; font-size:12px;">
+        <b>Added Subjects:</b>
+        <% if (!tws.createdWorkload || tws.createdWorkload.length === 0) { %>
+          <span> none</span>
+        <% } else { %>
+          <span>
+            <%= tws.createdWorkload.map(x => x.code).join(", ") %>
+          </span>
+        <% } %>
+      </div>
+
+    </section>
+
+    <!-- Footer buttons -->
+    <div class="tws-footer-actions">
+  <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Back</a>
+  <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
+</div>
+
+  </div>
+  </main>
+</div>
+
+<!-- POPUP MODAL -->
+<div class="tws-modal-bg" id="addModal">
+  <div class="tws-modal">
+    <div class="tws-modal-title" id="modalTitle">Add Subject</div>
+
+    <!-- REAL SUBMIT FORM -->
+    <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/add">
+      <!-- hidden fields (subject info) -->
+      <input type="hidden" name="code" id="m_code" />
+      <input type="hidden" name="title" id="m_title" />
+      <input type="hidden" name="units" id="m_units" />
+
+      <label>Choose Day</label>
+      <select name="day" required>
+        <option value="">-- Select --</option>
+        <option value="Mon">Mon</option>
+        <option value="Tue">Tue</option>
+        <option value="Wed">Wed</option>
+        <option value="Thu">Thu</option>
+        <option value="Fri">Fri</option>
+        <option value="Sat">Sat</option>
+        <option value="Sun">Sun</option>
+      </select>
+
+      <label>Choose Time Slot</label>
+      <select name="timeSlot" required>
+        <option value="">-- Select --</option>
+        <option>7:00 AM - 8:15 AM</option>
+        <option>8:15 AM - 9:30 AM</option>
+        <option>9:30 AM - 10:45 AM</option>
+        <option>10:45 AM - 12:00 PM</option>
+        <option>1:15 PM - 2:30 PM</option>
+        <option>2:30 PM - 3:45 PM</option>
+        <option>3:45 PM - 5:00 PM</option>
+        <option>5:00 PM - 6:15 PM</option>
+        <option>6:15 PM - 7:30 PM</option>
+        <option>7:30 PM - 8:45 PM</option>
+      </select>
+
+      <label>Choose Section</label>
+      <select name="sectionRoom" required>
+        <option value="">-- Select --</option>
+        <option>A1531 | R611</option>
+        <option>A1532 | R612</option>
+        <option>A1533 | R613</option>
+      </select>
+
+      <div class="tws-modal-actions">
+        <button class="tws-modal-cancel" type="button" onclick="closeModal()">Cancel</button>
+        <!-- SUBMIT => adds subject => redirects back SAME PAGE -->
+        <button class="tws-modal-add" type="submit">+ Add Subject</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<script>
+function openModal(code, title, units){
+  document.getElementById("modalTitle").textContent = `Add Subject: ${code} - ${title}`;
+  document.getElementById("m_code").value = code;
+  document.getElementById("m_title").value = title;
+  document.getElementById("m_units").value = units;
+
+  document.getElementById("addModal").style.display = "flex";
+}
+function closeModal(){
+  document.getElementById("addModal").style.display = "none";
+}
+</script>
+
+</body>
+</html>

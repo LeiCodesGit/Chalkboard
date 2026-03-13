@@ -210,7 +210,9 @@ body.dark-mode .hamburger-menu span {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+     margin-left: 250px; /* Adjust based on sidebar width */
+    padding: 20px;
+    width: calc(100% - 250px);
     gap: 30px;
     overflow: hidden;
 }
@@ -1685,7 +1687,8 @@ For ATA FROMS ONLY
         width: 100vw;
     }
     .main-content { 
-        padding: 20px; 
+        margin-left: 0;
+        width: 100%;
     }
     
     .dashboard-bg {

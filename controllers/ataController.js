@@ -45,10 +45,7 @@ export const previewVipSignaturePdf = async (req, res) => {
     try {
         const { signatureImage, role } = req.body;
         
-<<<<<<< HEAD
-=======
         // 👇 Fetch the live user to get their REAL NAME!
->>>>>>> fa23f7b75f9e35279c1fc6e542a87f4c43d66293
         let sessionUserID = "unknown";
         if (req.user) {
             if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
