@@ -81,9 +81,22 @@
                                             <div style="display: flex; flex-direction: column; gap: 4px;">
                                                 <% form.approvalHistory.forEach(log => { %>
                                                     <div style="color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                        <i class="fas fa-check-circle" style="color: #28a745; margin-right: 4px;"></i>
+                                                        <% if (log.approvalStatus === 'RETURNED' || log.approvalStatus === 'REJECTED') { %>
+                                                            <i class="fas fa-times-circle" style="color: #dc3545; font-size: 0.7rem;"></i>
+                                                        <% } else { %>
+                                                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 0.7rem;"></i>
+                                                        <% } %>
                                                         <strong style="color: #ddd;"><%= log.approverName || log.approverRole %></strong> 
                                                         <span style="font-size: 0.75rem;">(<%= log.approvalStatus %>)</span>
+                                                        <br>
+                                                        <span style="font-size: 0.65rem; color: #777; margin-left: 14px;">
+                                                            <%= new Date(log.date).toLocaleDateString() %>
+                                                        </span>
+                                                        <% if (log.approvalStatus === 'RETURNED' && log.remarks) { %>
+                                                            <div style="margin-top: 5px; margin-left: 16px; margin-bottom: 5px; padding: 5px 8px; background-color: rgba(220, 53, 69, 0.15); border-left: 2px solid #dc3545; color: #ff9999; font-size: 0.7rem; border-radius: 2px;">
+                                                                <strong>Reason:</strong> <%= log.remarks %>
+                                                            </div>
+                                                        <% } %>
                                                     </div>
                                                 <% }) %>
                                             </div>

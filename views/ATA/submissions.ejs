@@ -65,13 +65,22 @@
                                                 <div style="font-weight: bold; margin-bottom: 4px; color: #fff;">Approval Track:</div>
                                                 <% form.approvalHistory.forEach(log => { %>
                                                     <div style="margin-bottom: 3px;">
-                                                        <i class="fas fa-check-circle" style="color: #28a745; font-size: 0.7rem;"></i> 
+                                                        <% if (log.approvalStatus === 'RETURNED' || log.approvalStatus === 'REJECTED') { %>
+                                                            <i class="fas fa-times-circle" style="color: #dc3545; font-size: 0.7rem;"></i>
+                                                        <% } else { %>
+                                                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 0.7rem;"></i>
+                                                        <% } %>
                                                         <strong><%= log.approverName || log.approverRole %></strong> 
                                                         (<span style="color: #bbb;"><%= log.approvalStatus %></span>)
                                                         <br>
                                                         <span style="font-size: 0.65rem; color: #777; margin-left: 14px;">
                                                             <%= new Date(log.date).toLocaleDateString() %>
                                                         </span>
+                                                        <% if (log.approvalStatus === 'RETURNED' && log.remarks) { %>
+                                                            <div style="margin-top: 5px; margin-left: 16px; margin-bottom: 5px; padding: 5px 8px; background-color: rgba(220, 53, 69, 0.15); border-left: 2px solid #dc3545; color: #ff9999; font-size: 0.7rem; border-radius: 2px;">
+                                                                <strong>Reason:</strong> <%= log.remarks %>
+                                                            </div>
+                                                        <% } %>
                                                     </div>
                                                 <% }) %>
                                             </div>
@@ -80,7 +89,15 @@
                                         <% } %>
                                     </td>
                                     <td style="padding: 10px;">
-                                       <a href="/ata/view-submission/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none;">View PDF</a>
+                                       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <a href="/ata/view-submission/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none;">View PDF</a>
+
+                                        <% if (form.status === 'DRAFT') { %>
+                                            <a href="/ata/edit/<%= form._id %>" class="form-btn" style="text-decoration: none; background-color: #ffc107; color: #000; font-weight: bold;">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                        <% } %>
+                                    </div>
                                     </td>
                                 </tr>
                             <% }) %>

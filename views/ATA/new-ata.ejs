@@ -73,6 +73,9 @@
             
             <div class="form-card-scrollable" id="form1">
                 <div class="ata-form">
+                    <% if (typeof form !== 'undefined' && form._id) { %>
+                        <input type="hidden" id="existingDraftId" value="<%= form._id %>">
+                    <% } %>
                     
                     <div class="form-row">
                         <div class="form-label">NAME:</div>
@@ -448,6 +451,7 @@
                         <div class="remedial-col">Section</div>
                         <div class="remedial-col">Units</div>
                         <div class="remedial-col">Students</div>
+                        <div class="remedial-col">Type</div>
                         <div class="remedial-col">Actions</div>
                     </div>
 
@@ -632,7 +636,9 @@
         </div>
 
     </main>
-
+    <script>
+        window.DRAFT_FORM_DATA = <%- typeof form !== 'undefined' && form ? JSON.stringify(form) : 'null' %>;
+    </script>
     <script src="/ATA/js/ata_client.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
 

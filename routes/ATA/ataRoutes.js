@@ -36,5 +36,4 @@ router.get('/pdf-xray', discoverPdfFields);
 
 router.post('/settings/signature', requireAuth, saveVipSignature);
 router.post('/preview-vip-signature', requireAuth, previewVipSignaturePdf);
-
 export default router;

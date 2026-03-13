@@ -506,6 +506,7 @@ if (nextBtn) {
 
             // 👇 FIXED: Added the 'justification' grabber right here!
             const payload = {
+                existingDraftId: document.getElementById('existingDraftId')?.value || null, // 👈 ADD THIS LINE!
                 facultyName: document.getElementById('facultyName')?.value.trim() || "",
                 position: document.getElementById('position')?.value.trim() || "",
                 college: document.getElementById('college')?.value.trim() || "",
@@ -1031,6 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const getNum = (row, index) => Number(getVal(row, index)) || 0;
 
             const payload = {
+                existingDraftId: document.getElementById('existingDraftId')?.value || null,
                 facultyName: document.getElementById('facultyName')?.value.trim() || "",
                 position: document.getElementById('position')?.value.trim() || "",
                 college: document.getElementById('college')?.value.trim() || "",
@@ -1105,5 +1107,144 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewPdfBtn.disabled = false;
             }
         });
+    }
+});
+
+// ==========================================
+// 11. AUTO-POPULATE DRAFT DATA (EDIT MODE)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if the backend passed a draft form to the EJS template
+    if (window.DRAFT_FORM_DATA && typeof window.DRAFT_FORM_DATA === 'object') {
+        console.log("Found draft data! Populating form...", window.DRAFT_FORM_DATA);
+        const data = window.DRAFT_FORM_DATA;
+
+        // --- Helper to fill standard inputs ---
+        const fillInput = (id, value) => {
+            const el = document.getElementById(id);
+            if (el && value) el.value = value;
+        };
+
+        // --- A. Personal Details & Setup ---
+        fillInput('facultyName', data.facultyName);
+        fillInput('position', data.position);
+        fillInput('college', data.college);
+        fillInput('address', data.address);
+        fillInput('employmentStatus', data.employmentStatus);
+        
+        if (data.employmentType === 'Part-Time') {
+            const ptRadio = document.getElementById('radioPartTime');
+            if (ptRadio) ptRadio.click(); // .click() ensures the other JS logic fires!
+        } else {
+            const ftRadio = document.getElementById('radioFullTime');
+            if (ftRadio) ftRadio.click();
+        }
+
+        // --- Helper to fill repeating Table Rows ---
+        const fillTable = (dataArray, sectionContainerId, rowClass, addBtnSelector, mappingFunc) => {
+            if (!dataArray || dataArray.length === 0) return;
+            
+            const container = document.getElementById(sectionContainerId);
+            if (!container) return;
+
+            // 1. Click the add button enough times to match the data length
+            const addBtn = container.querySelector(addBtnSelector);
+            // We start at 1 because the HTML already has 1 empty row by default
+            for (let i = 1; i < dataArray.length; i++) {
+                if(addBtn) addBtn.click();
+            }
+
+            // 2. Now fill the rows
+            const rows = container.querySelectorAll(`.${rowClass}`);
+            dataArray.forEach((item, index) => {
+                if (rows[index]) {
+                    mappingFunc(rows[index], item);
+                }
+            });
+        };
+
+        // --- B. Section A: Admin Units ---
+        fillInput('teachingUnits1', data.sectionA_AdminUnits);
+
+        // --- C. Section B: Within College ---
+        fillTable(data.sectionB_WithinCollege, 'form2', 'course-row', '.add-course-btn button', (row, item) => {
+            const inputs = row.querySelectorAll('input, select');
+            if(inputs[0]) inputs[0].value = item.courseCode || '';
+            if(inputs[1]) inputs[1].value = item.section || '';
+            if(inputs[2]) inputs[2].value = item.units || '';
+            if(inputs[3]) inputs[3].value = item.effectiveDate || '';
+        });
+
+        // --- D. Section C: Other Colleges (Note: Needs specific logic if mixed in form2) ---
+        // Since form2 mixes Section B and C, we find the divider and only look at rows after it
+        if (data.sectionC_OtherCollege && data.sectionC_OtherCollege.length > 0) {
+            const form2 = document.getElementById('form2');
+            const divider = form2.querySelector('.form-divider');
+            if (divider) {
+                // Find the Add Button specifically for Section C (the one after the divider)
+                const addBtns = form2.querySelectorAll('.add-course-btn button');
+                const addBtnC = addBtns[addBtns.length - 1]; // Usually the second one
+
+                for (let i = 1; i < data.sectionC_OtherCollege.length; i++) {
+                    if(addBtnC) addBtnC.click();
+                }
+
+                // Get all course rows, but only process those that come AFTER the divider
+                const allCourseRows = Array.from(form2.querySelectorAll('.course-row'));
+                const sectionCRows = allCourseRows.filter(row => {
+                    return row.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_PRECEDING;
+                });
+
+                data.sectionC_OtherCollege.forEach((item, index) => {
+                    if (sectionCRows[index]) {
+                        const inputs = sectionCRows[index].querySelectorAll('input, select');
+                        if(inputs[0]) inputs[0].value = item.courseCode || '';
+                        if(inputs[1]) inputs[1].value = item.section || '';
+                        if(inputs[2]) inputs[2].value = item.units || '';
+                        if(inputs[3]) inputs[3].value = item.effectiveDate || '';
+                    }
+                });
+            }
+        }
+
+        // --- E. Section D: Admin Work ---
+        fillTable(data.sectionD_AdminWork, 'form3', 'admin-row', '.add-course-btn button', (row, item) => {
+            const inputs = row.querySelectorAll('input, select');
+            if(inputs[0]) inputs[0].value = item.workDescription || '';
+            if(inputs[1]) inputs[1].value = item.units || '';
+            if(inputs[2]) inputs[2].value = item.effectiveDate || '';
+        });
+
+        // --- F. Section E: Practicum ---
+        fillTable(data.sectionE_Practicum, 'form3', 'practicum-row', '.add-course-btn:last-of-type button', (row, item) => {
+            const inputs = row.querySelectorAll('input, select');
+            if(inputs[0]) inputs[0].value = item.courseCode || '';
+            if(inputs[1]) inputs[1].value = item.numberOfStudents || '';
+            if(inputs[2]) inputs[2].value = item.coordinator || '';
+        });
+
+        // --- G. Section F: Outside Employment ---
+        fillTable(data.sectionF_OutsideEmployment, 'form4', 'employment-row', '.add-course-btn button', (row, item) => {
+            const inputs = row.querySelectorAll('input');
+            if(inputs[0]) inputs[0].value = item.employer || '';
+            if(inputs[1]) inputs[1].value = item.position || '';
+            if(inputs[2]) inputs[2].value = item.courseOrUnits || '';
+            if(inputs[3]) inputs[3].value = item.hoursPerWeek || '';
+        });
+
+        // --- H. Section G: Remedial ---
+        fillTable(data.sectionG_Remedial, 'form5', 'remedial-row', '.add-course-btn button', (row, item) => {
+            const inputs = row.querySelectorAll('input, select');
+            if(inputs[0]) inputs[0].value = item.courseId || '';
+            if(inputs[1]) inputs[1].value = item.moduleCode || '';
+            if(inputs[2]) inputs[2].value = item.section || '';
+            if(inputs[3]) inputs[3].value = item.units || '';
+            if(inputs[4]) inputs[4].value = item.numberOfStudents || '';
+            if(inputs[5]) inputs[5].value = item.type || 'lecture';
+        });
+
+        // --- I. Finally, trigger calculations! ---
+        if (window.calculateSummary) window.calculateSummary();
+        if (window.updateDotsOnly) window.updateDotsOnly();
     }
 });

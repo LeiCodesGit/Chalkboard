@@ -55,10 +55,10 @@ const approvalHistorySchema = new mongoose.Schema({
     approverRole: { 
         type: String, 
         // 👇 FIXED: Added 'HR' so the database accepts Vince's signature!
-        enum: ['Program-Chair', 'Practicum-Coordinator', 'Dean', 'VPAA', 'HR', 'HRMO'] 
+        enum: ['Professor','Program-Chair', 'Practicum-Coordinator', 'Dean', 'VPAA', 'HR', 'HRMO'] 
     },
     approverName: { type: String }, 
-    approvalStatus: { type: String, enum: ['ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED', 'FINALIZED'] },
+    approvalStatus: { type: String, enum: ['RESUBMITTED','ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED', 'FINALIZED'] },
     remarks: String, 
     signatureImage: String,
     date: { type: Date, default: Date.now } 

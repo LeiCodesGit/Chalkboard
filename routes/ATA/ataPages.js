@@ -201,43 +201,52 @@ router.get("/view-submission/:id", requireAuth, async (req, res) => {
     }
 });
 
-const archivedViewRoles = ['Program-Chair', 'Dean', 'VPAA', 'HR', 'HRMO'];
- 
-router.get("/archived-atas", requireAuth, async (req, res) => {
+// ==========================================
+// 📝 EDIT DRAFT SUBMISSION (NEW ROUTE)
+// ==========================================
+router.get("/edit/:id", requireAuth, async (req, res) => {
     try {
+        // Kick executives out
         const userRole = req.user.role || "";
- 
-        // 🔒 SECURITY: Only admin roles can view archived ATAs
-        if (!archivedViewRoles.includes(userRole) && !req.user.isPracticumCoordinator) {
+        if (['VPAA', 'HR', 'HRMO'].includes(userRole)) {
             return res.redirect('/ata/dashboard/window');
         }
- 
+
+        // Find the specific form
+        const formId = req.params.id;
+        const draftForm = await ATAForm.findById(formId);
+
+        if (!draftForm) {
+            return res.status(404).send("ATA Form not found.");
+        }
+
+        // Prevent users from editing forms that have already been submitted/approved
+        if (draftForm.status !== 'DRAFT') {
+            return res.status(403).send("Error: Only returned drafts can be edited.");
+        }
+
+        // We need the exact same data variables that the '/new' route uses
         const safeUser = getSafeUser(req.user);
- 
-        // Fetch all ATAForms with status ARCHIVED
-        // Exclude heavy fields not needed for the list view
-        const forms = await ATAForm.find({ status: 'ARCHIVED' })
-            .select('facultyName userID college program position employmentType term academicYear approvalHistory archivedAt updatedAt status')
-            .sort({ archivedAt: -1, updatedAt: -1 });
- 
-        const totalCount = forms.length;
- 
-        res.render("ATA/archived-atas", {
-            user:                  safeUser,
-            role:                  safeUser.role,
-            employmentType:        safeUser.employmentType,
+        const User = mainDB.model('User'); 
+        const coordinators = await User.find({ isPracticumCoordinator: true });
+        const coordinatorNames = coordinators.map(c => `${c.firstName} ${c.lastName}`.trim());
+
+        // Render the new-ata page, but pass the draftForm data to it
+        res.render("ATA/new-ata", {
+            user: safeUser,
+            role: safeUser.role,
+            employmentType: safeUser.employmentType,
             isPracticumCoordinator: safeUser.isPracticumCoordinator,
-            forms:                 forms,
-            totalCount:            totalCount,
-            currentPageCategory:   'ata'
+            coordinators: coordinatorNames,
+            currentPageCategory: 'ata',
+            form: draftForm // 👈 This variable triggers the "Reason for Return" banner in EJS
         });
- 
+
     } catch (error) {
-        console.error("[Archived ATAs] Error loading page:", error);
-        res.status(500).send("Server Error loading Archived ATAs.");
+        console.error("Error loading edit ATA page:", error);
+        res.status(500).send("Server Error");
     }
 });
-
 
 router.get("/reports", requireAuth, (req, res) => res.render("ATA/reports"));
 router.get("/profile", requireAuth, (req, res) => res.render("ATA/profile"));
