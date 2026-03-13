@@ -20,80 +20,159 @@
             background: white; border-radius: 5px; height: 100px; display: flex; 
             justify-content: center; align-items: center; overflow: hidden;
         }
+        
+        /* 👇 MASSIVE FULL-SCREEN LAYOUT FIX */
+        .main-content {
+            padding: 10px !important; 
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+        .form-cards-container {
+            height: 100%; 
+            width: 100%;  
+            max-width: 100% !important; 
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            box-sizing: border-box;
+        }
+        .inner-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #444;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: space-between;
+        }
+        .table-wrapper {
+            flex: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden; /* STRICTLY PREVENTS HORIZONTAL SCROLL */
+            border: 1px solid #444;
+            border-radius: 6px;
+            background: #1a1a1a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            table-layout: fixed;
+        }
+        th, td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .bottom-actions {
+            flex-shrink: 0; 
+            padding-top: 15px;
+            margin-top: 15px;
+            border-top: 2px solid #444;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body class="dashboard-bg"
-      data-role="<%= role %>"
+      data-role="<%= typeof role !== 'undefined' ? role : 'Admin' %>"
       data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>"
-      data-practicum="<%= typeof user !== 'undefined' && user.isPracticumCoordinator ? 'true' : 'false' %>"
+      data-practicum="<%= (typeof user !== 'undefined' && user.isPracticumCoordinator) ? 'true' : 'false' %>"
       data-user-sig="<%= typeof user !== 'undefined' && user.signatureImage ? user.signatureImage : '' %>">
       
-    <%- include('../partials/sideMenuBar') %>
-    
-    <main class="main-content" style="padding: 40px; margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh;">
-        
-        <div class="dashboard-title">
-            <% if (typeof isHistory !== 'undefined' && isHistory) { %>
-                <i class="fas fa-history"></i> Processed & Approved Forms (<%= role %> - <%= college %>)
+    <% 
+        if (typeof role !== 'undefined') {
+            if (['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) { %>
+                <%- include('../MainPages/admin/partials/adminSideMenuBar') %>
+            <% } else if (role === 'Dean') { %>
+                <%- include('../MainPages/dean/partials/deanMenuBar') %>
+            <% } else if (role === 'Program-Chair') { %>
+                <%- include('../MainPages/progChair/partials/progChairMenuBar') %>
             <% } else { %>
-                Forms to Approve (<%= role %> - <%= college %>)
-            <% } %>
-        </div>
+                <%- include('../partials/sideMenuBar') %>
+            <% } 
+        } else { %>
+            <%- include('../partials/sideMenuBar') %>
+        <% }
+    %>
+    
+    <main class="main-content" style="margin-left: 260px; width: calc(100vw - 260px);">
 
-        <div class="form-cards-container" style="margin-top: 20px;">
-            <div class="form-card-scrollable">
-                
-                <table style="width: 100%; text-align: left; border-collapse: collapse; color: white;">
-                    <thead style="border-bottom: 2px solid #555;">
+        <div class="form-cards-container">
+            
+            <div class="inner-title">
+                <div>
+                    <% if (typeof isHistory !== 'undefined' && isHistory) { %>
+                        <i class="fas fa-history" style="color: #4a9eff;"></i> Processed & Approved Forms
+                    <% } else { %>
+                        <i class="fas fa-inbox" style="color: #ffc107;"></i> Forms to Approve
+                    <% } %>
+                </div>
+                <div style="font-size: 1.1rem; color: #aaa; font-weight: normal;">
+                    <%= role %> - <%= college %>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead style="border-bottom: 2px solid #555; background: #333; position: sticky; top: 0; z-index: 10;">
                         <tr>
-                            <th style="padding: 10px;">Faculty Name</th>
-                            <th style="padding: 10px;">College</th>
-                            <th style="padding: 10px;">Term</th>
-                            <th style="padding: 10px;">Approval Progress</th>
-                            <th style="padding: 10px;">
+                            <th style="padding: 12px 10px; width: 14%;">Faculty Name</th>
+                            <th style="padding: 12px 10px; width: 10%;">College</th>
+                            <th style="padding: 12px 10px; width: 12%;">Term</th>
+                            <th style="padding: 12px 10px; width: 40%;">Approval Track</th>
+                            <th style="padding: 12px 10px; width: 14%;">
                                 <%= (typeof isHistory !== 'undefined' && isHistory) ? 'Current Status' : 'Awaiting Action From' %>
                             </th>
-                            <th style="padding: 10px;">Action</th>
+                            <th style="padding: 12px 10px; width: 10%; text-align: center;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% if (forms.length === 0) { %>
                             <tr>
-                                <td colspan="6" style="padding: 40px; text-align: center; color: #a0a0a0; font-style: italic;">
+                                <td colspan="6" style="padding: 50px; text-align: center; color: #aaa; font-style: italic;">
                                     <% if (typeof isHistory !== 'undefined' && isHistory) { %>
-                                        <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                        <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 10px; display: block;"></i>
                                         Your approved history is currently empty.
                                     <% } else { %>
-                                        <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 10px; display: block;"></i>
                                         No pending forms require your attention!
                                     <% } %>
                                 </td>
                             </tr>
                         <% } else { %>
                             <% forms.forEach(form => { %>
-                                <tr style="border-bottom: 1px solid #333;">
-                                    <td style="padding: 15px 10px;"><%= form.facultyName %></td>
+                                <tr style="border-bottom: 1px solid #333; vertical-align: top;">
+                                    <td style="padding: 15px 10px; font-weight: bold; font-size: 1.05rem;"><%= form.facultyName %></td>
                                     <td style="padding: 15px 10px;"><%= form.college %></td>
-                                    <td style="padding: 15px 10px;"><%= form.term %> <%= form.academicYear %></td>
+                                    <td style="padding: 15px 10px; font-size: 0.95rem;"><%= form.term %> <br> <span style="font-size: 0.8rem; color:#aaa;"><%= form.academicYear %></span></td>
                                     
-                                    <td style="padding: 15px 10px; font-size: 0.85rem; max-width: 250px;">
+                                    <td style="padding: 12px 10px;">
                                         <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
-                                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                            <div style="font-size: 0.85rem; color: #aaa; background: #2a2a2a; padding: 10px; border-radius: 6px; border-left: 4px solid #b30000; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);">
                                                 <% form.approvalHistory.forEach(log => { %>
-                                                    <div style="color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                    <div style="margin-bottom: 6px;">
                                                         <% if (log.approvalStatus === 'RETURNED' || log.approvalStatus === 'REJECTED') { %>
-                                                            <i class="fas fa-times-circle" style="color: #dc3545; font-size: 0.7rem;"></i>
+                                                            <i class="fas fa-times-circle" style="color: #dc3545; margin-right: 5px;"></i>
                                                         <% } else { %>
-                                                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 0.7rem;"></i>
+                                                            <i class="fas fa-check-circle" style="color: #28a745; margin-right: 5px;"></i>
                                                         <% } %>
-                                                        <strong style="color: #ddd;"><%= log.approverName || log.approverRole %></strong> 
-                                                        <span style="font-size: 0.75rem;">(<%= log.approvalStatus %>)</span>
-                                                        <br>
-                                                        <span style="font-size: 0.65rem; color: #777; margin-left: 14px;">
+                                                        <strong style="color: #ddd; font-size: 0.9rem;"><%= log.approverName || log.approverRole %></strong> 
+                                                        (<span style="color: #bbb;"><%= log.approvalStatus %></span>)
+                                                        <span style="font-size: 0.75rem; color: #777; margin-left: 10px;">
                                                             <%= new Date(log.date).toLocaleDateString() %>
                                                         </span>
                                                         <% if (log.approvalStatus === 'RETURNED' && log.remarks) { %>
-                                                            <div style="margin-top: 5px; margin-left: 16px; margin-bottom: 5px; padding: 5px 8px; background-color: rgba(220, 53, 69, 0.15); border-left: 2px solid #dc3545; color: #ff9999; font-size: 0.7rem; border-radius: 2px;">
+                                                            <div style="margin-top: 4px; margin-left: 20px; padding: 6px 10px; background-color: rgba(220, 53, 69, 0.15); border-left: 3px solid #dc3545; color: #ff9999; font-size: 0.8rem; border-radius: 4px;">
                                                                 <strong>Reason:</strong> <%= log.remarks %>
                                                             </div>
                                                         <% } %>
@@ -101,7 +180,7 @@
                                                 <% }) %>
                                             </div>
                                         <% } else { %>
-                                            <span style="color: #777; font-style: italic;">No signatures yet</span>
+                                            <span style="color: #777; font-style: italic; font-size: 0.9rem;">No signatures yet</span>
                                         <% } %>
                                     </td>
 
@@ -115,7 +194,7 @@
                                             let badgeColor = (form.status === 'FINALIZED') ? '#28a745' : '#ffc107';
                                             let textColor = (form.status === 'FINALIZED') ? '#fff' : '#000';
                                         %>
-                                        <span class="pending-badge" style="background-color: <%= badgeColor %>; color: <%= textColor %>; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">
+                                        <span class="pending-badge" style="background-color: <%= badgeColor %>; color: <%= textColor %>; padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; display: inline-block;">
                                             <% if (form.status === 'FINALIZED') { %>
                                                 <i class="fas fa-check-double"></i> Finalized
                                             <% } else { %>
@@ -126,9 +205,9 @@
 
                                     <td style="padding: 15px 10px;">
                                         <% if (typeof isHistory !== 'undefined' && isHistory) { %>
-                                            <a href="/ata/view-submission/<%= form._id %>" class="form-btn secondary-btn" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">View Form</a>
+                                            <a href="/ata/view-submission/<%= form._id %>" class="form-btn secondary-btn" style="text-decoration: none; padding: 8px 0; font-size: 0.9rem; text-align: center; display: block; width: 100%; box-sizing: border-box;">View Form</a>
                                         <% } else { %>
-                                            <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">Review</a>
+                                            <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none; padding: 8px 0; font-size: 0.9rem; text-align: center; display: block; width: 100%; box-sizing: border-box;">Review</a>
                                         <% } %>
                                     </td>
                                 </tr>
@@ -136,26 +215,28 @@
                         <% } %>
                     </tbody>
                 </table>
+            </div>
 
-                <div style="margin-top: 30px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                    <a href="/ata/dashboard/window" class="form-btn secondary-btn" style="text-decoration: none;">Back to Dashboard</a>
-                    
-                    <button id="openSignatureModal" class="form-btn" style="background: <%= user.signatureImage ? '#17a2b8' : '#28a745' %>; color: white; border: none; cursor: pointer;">
-                        <i class="fas fa-signature"></i> <%= user.signatureImage ? 'Change E-Signature' : 'Setup E-Signature' %>
+            <div class="bottom-actions">
+                <a href="<%= (typeof role !== 'undefined' && ['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) ? '/admin/ata' : '/ata/dashboard/window' %>" class="form-btn secondary-btn" style="text-decoration: none;">Back to Dashboard</a>
+                
+                <% if (typeof isHistory === 'undefined' || !isHistory) { %>
+                    <button id="openSignatureModal" class="form-btn" style="background: <%= typeof user !== 'undefined' && user.signatureImage ? '#17a2b8' : '#28a745' %>; color: white; border: none; cursor: pointer;">
+                        <i class="fas fa-signature"></i> <%= typeof user !== 'undefined' && user.signatureImage ? 'Change E-Signature' : 'Setup E-Signature' %>
                     </button>
 
-                    <% if (user.signatureImage) { %>
+                    <% if (typeof user !== 'undefined' && user.signatureImage) { %>
                         <button type="button" id="mainPreviewSigBtn" class="form-btn" style="background: #6c757d; color: white; border: none; cursor: pointer;">
-                            <i class="fas fa-file-pdf"></i> Preview E-Signature
+                            <i class="fas fa-file-pdf"></i> Preview
                         </button>
                         
                         <button type="button" id="mainDeleteSigBtn" class="form-btn" style="background: #dc3545; color: white; border: none; cursor: pointer;">
-                            <i class="fas fa-trash"></i> Delete E-Signature
+                            <i class="fas fa-trash"></i> Delete
                         </button>
                     <% } %>
-                </div>
-
+                <% } %>
             </div>
+
         </div>
     </main>
 
@@ -164,39 +245,33 @@
             <h2 style="margin: 0; font-size: 1.5rem; border-bottom: 2px solid #b30000; padding-bottom: 10px;">
                 <i class="fas fa-lock"></i> VIP Signature Vault
             </h2>
-            
             <p style="font-size: 0.9rem; color: #ccc;">
                 Draw your signature below. This will be securely saved to your profile and automatically stamped on ATA forms when you click "Approve".
             </p>
-
-            <% if (user.signatureImage) { %>
+            <% if (typeof user !== 'undefined' && user.signatureImage) { %>
                 <div style="font-size: 0.8rem; color: #aaa;">Current Saved Signature:</div>
                 <div class="signature-preview-box">
                     <img src="<%= user.signatureImage %>" style="max-height: 80px;">
                 </div>
             <% } %>
-
             <div style="font-size: 0.8rem; color: #aaa; margin-top: 10px;">Draw New Signature:</div>
             <div style="background: #e9ecef; border-radius: 5px; padding: 5px;">
                 <canvas id="vipSignatureCanvas" width="440" height="150" style="cursor: crosshair;"></canvas>
             </div>
-            
             <div style="display: flex; justify-content: space-between; margin-top: 15px;">
                 <button type="button" id="clearVipSigBtn" class="form-btn secondary-btn small-btn" style="background: #444; border: none; padding: 8px 15px; color: white;">
                     <i class="fas fa-eraser"></i> Clear Canvas
                 </button>
                 <button type="button" id="deleteVipSigBtn" class="form-btn secondary-btn small-btn" 
-                        style="background: <%= user.signatureImage ? '#dc3545' : '#6c757d' %>; border: none; padding: 8px 15px; color: white; cursor: <%= user.signatureImage ? 'pointer' : 'not-allowed' %>;"
-                        <%= user.signatureImage ? '' : 'disabled' %>>
+                        style="background: <%= typeof user !== 'undefined' && user.signatureImage ? '#dc3545' : '#6c757d' %>; border: none; padding: 8px 15px; color: white; cursor: <%= typeof user !== 'undefined' && user.signatureImage ? 'pointer' : 'not-allowed' %>;"
+                        <%= typeof user !== 'undefined' && user.signatureImage ? '' : 'disabled' %>>
                         <i class="fas fa-trash"></i> Delete
                 </button>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" id="closeVipSigBtn" class="form-btn secondary-btn small-btn" style="background: #dc3545; border: none; padding: 8px 15px; color: white;">Cancel</button>
-                    
                     <button type="button" id="previewVipSigBtn" class="form-btn secondary-btn small-btn" style="background: #17a2b8; border: none; padding: 8px 15px; color: white;">
                         <i class="fas fa-file-pdf"></i> Preview on Form
                     </button>
-                    
                     <button type="button" id="saveVipSigBtn" class="form-btn primary-btn small-btn" style="background: #28a745; border: none; padding: 8px 15px; color: white;">
                         <i class="fas fa-save"></i> Save Signature
                     </button>
@@ -220,11 +295,9 @@
             
             let signaturePad;
 
-           // 👇 FIXED: Priority Hierarchy!
-            let effectiveRole = '<%= role %>';
-            const isPracticumCoord = <%= user.isPracticumCoordinator ? 'true' : 'false' %>;
+            let effectiveRole = '<%= typeof role !== 'undefined' ? role : 'Admin' %>';
+            const isPracticumCoord = <%= typeof user !== 'undefined' && user.isPracticumCoordinator ? 'true' : 'false' %>;
             
-            // Only switch to Practicum preview if they are NOT a major admin!
             if (isPracticumCoord && effectiveRole !== 'Program-Chair' && effectiveRole !== 'Dean' && effectiveRole !== 'VPAA') {
                 effectiveRole = 'Practicum-Coordinator';
             }
@@ -238,10 +311,9 @@
                 });
             }
 
-            closeBtn.addEventListener('click', () => overlay.style.display = 'none');
-            clearBtn.addEventListener('click', () => { if (signaturePad) signaturePad.clear(); });
+            if(closeBtn) closeBtn.addEventListener('click', () => overlay.style.display = 'none');
+            if(clearBtn) clearBtn.addEventListener('click', () => { if (signaturePad) signaturePad.clear(); });
             
-            // 🔴 MODAL DELETE BUTTON LOGIC
             if (deleteBtn) {
                 deleteBtn.addEventListener('click', async () => {
                     if (!confirm("Are you sure you want to completely delete your saved e-signature?")) return;
@@ -273,82 +345,80 @@
                 });
             }
 
-            // 🟢 MODAL PREVIEW BUTTON LOGIC
-            previewBtn.addEventListener('click', async () => {
-                const sigToPreview = (signaturePad && !signaturePad.isEmpty()) ? signaturePad.toDataURL("image/png") : "<%= user.signatureImage || '' %>";
-                
-                if (!sigToPreview) {
-                    alert("Please draw a signature first to preview it!");
-                    return;
-                }
-
-                const origText = previewBtn.innerHTML;
-                previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-                previewBtn.disabled = true;
-
-                try {
-                    const response = await fetch('/ata/preview-vip-signature', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        // 👇 FIXED: Uses the smart role!
-                        body: JSON.stringify({ signatureImage: sigToPreview, role: effectiveRole })
-                    });
-
-                    if (response.ok) {
-                        const blob = await response.blob();
-                        window.open(URL.createObjectURL(blob), '_blank');
-                    } else {
-                        const errorMsg = await response.text();
-                        alert("Preview failed: " + errorMsg);
+            if (previewBtn) {
+                previewBtn.addEventListener('click', async () => {
+                    const userSig = "<%= typeof user !== 'undefined' && user.signatureImage ? user.signatureImage : '' %>";
+                    const sigToPreview = (signaturePad && !signaturePad.isEmpty()) ? signaturePad.toDataURL("image/png") : userSig;
+                    
+                    if (!sigToPreview) {
+                        alert("Please draw a signature first to preview it!");
+                        return;
                     }
-                } catch (error) {
-                    alert("Network error occurred.");
-                } finally {
-                    previewBtn.innerHTML = origText;
-                    previewBtn.disabled = false;
-                }
-            });
 
-            // 🔵 SAVE BUTTON LOGIC
-            saveBtn.addEventListener('click', async () => {
-                if (!signaturePad || signaturePad.isEmpty()) {
-                    alert("Please draw a signature before saving!");
-                    return;
-                }
+                    const origText = previewBtn.innerHTML;
+                    previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                    previewBtn.disabled = true;
 
-                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                saveBtn.disabled = true;
+                    try {
+                        const response = await fetch('/ata/preview-vip-signature', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ signatureImage: sigToPreview, role: effectiveRole })
+                        });
 
-                try {
-                    const response = await fetch('/ata/settings/signature', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ signatureImage: signaturePad.toDataURL("image/png") })
-                    });
-
-                    const responseData = await response.json().catch(() => ({})); 
-
-                    if (response.ok) {
-                        alert("Signature saved securely to your Vault!");
-                        location.reload(); 
-                    } else {
-                        alert("Server Rejected Save:\n" + (responseData.error || response.statusText || "Unknown Error"));
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            window.open(URL.createObjectURL(blob), '_blank');
+                        } else {
+                            const errorMsg = await response.text();
+                            alert("Preview failed: " + errorMsg);
+                        }
+                    } catch (error) {
+                        alert("Network error occurred.");
+                    } finally {
+                        previewBtn.innerHTML = origText;
+                        previewBtn.disabled = false;
                     }
-                } catch (error) {
-                    alert("Network error occurred.");
-                } finally {
-                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Signature';
-                    saveBtn.disabled = false;
-                }
-            });
+                });
+            }
 
-            // =========================================================
-            // 🌟 MAIN DASHBOARD BUTTON LOGIC (Outside the Modal)
-            // =========================================================
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async () => {
+                    if (!signaturePad || signaturePad.isEmpty()) {
+                        alert("Please draw a signature before saving!");
+                        return;
+                    }
+
+                    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                    saveBtn.disabled = true;
+
+                    try {
+                        const response = await fetch('/ata/settings/signature', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ signatureImage: signaturePad.toDataURL("image/png") })
+                        });
+
+                        const responseData = await response.json().catch(() => ({})); 
+
+                        if (response.ok) {
+                            alert("Signature saved securely to your Vault!");
+                            location.reload(); 
+                        } else {
+                            alert("Server Rejected Save:\n" + (responseData.error || response.statusText || "Unknown Error"));
+                        }
+                    } catch (error) {
+                        alert("Network error occurred.");
+                    } finally {
+                        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Signature';
+                        saveBtn.disabled = false;
+                    }
+                });
+            }
+
             const mainPreviewBtn = document.getElementById('mainPreviewSigBtn');
             const mainDeleteBtn = document.getElementById('mainDeleteSigBtn');
 
-            // 1. Dashboard Preview Button
             if (mainPreviewBtn) {
                 mainPreviewBtn.addEventListener('click', async () => {
                     const origText = mainPreviewBtn.innerHTML;
@@ -356,11 +426,11 @@
                     mainPreviewBtn.disabled = true;
 
                     try {
+                        const userSig = "<%= typeof user !== 'undefined' && user.signatureImage ? user.signatureImage : '' %>";
                         const response = await fetch('/ata/preview-vip-signature', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            // 👇 FIXED: Uses the smart role!
-                            body: JSON.stringify({ signatureImage: "<%= user.signatureImage || '' %>", role: effectiveRole })
+                            body: JSON.stringify({ signatureImage: userSig, role: effectiveRole })
                         });
 
                         if (response.ok) {
@@ -378,7 +448,6 @@
                 });
             }
 
-            // 2. Dashboard Delete Button
             if (mainDeleteBtn) {
                 mainDeleteBtn.addEventListener('click', async () => {
                     if (!confirm("Are you sure you want to completely delete your saved e-signature?")) return;

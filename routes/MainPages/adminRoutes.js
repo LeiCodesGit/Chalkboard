@@ -2,6 +2,7 @@ import express from "express";
 import { mainDB } from "../../database/mongo-dbconnect.js"; 
 import userSchema from "../../models/user.js";
 import { isAuthenticated, authorizeRoles } from "../../middleware/authMiddleware.js";
+import { renderDashboard } from "../../controllers/ataController.js";
 
 const adminRoutes = express.Router();
 
@@ -31,5 +32,12 @@ adminRoutes.get("/config/users", async (req, res) => {
         });
     }
 });
+
+adminRoutes.get(
+    "/ata", 
+    isAuthenticated, 
+    authorizeRoles("Admin", "Super-Admin", "VPAA", "HR", "HRMO"), 
+    renderDashboard
+); // needed to catch the /admin/ata dashboard from sidebar for formatting
 
 export default adminRoutes;

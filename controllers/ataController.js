@@ -441,8 +441,9 @@ export const approveATA = async (req, res) => {
 
                 case 'PENDING_HR':
                     if (['HR', 'HRMO'].includes(primaryRole) && action === 'NOTE') {
-                        newStatus = 'ARCHIVED';
-                        historyStatus = 'ARCHIVED';
+                        // Return status to FINALIZED so it shows up in "My Approved Forms"
+                        newStatus = 'FINALIZED'; 
+                        historyStatus = 'FINALIZED'; 
                         form.archivedAt   = new Date();
                         form.archivedById = sessionUserID;
                     } else return res.status(403).json({ error: "Invalid action for HR." });
@@ -1012,17 +1013,29 @@ export const viewAtaPdf = async (req, res) => {
 // ==========================================
 export const renderDashboard = async (req, res) => {
     try {
+        // 👇 FIXED: Tell it to check req.session.user (which your login system uses)
+        const sessionData = req.session?.user || req.user;
+        
+        if (!sessionData) {
+            console.error("No session data found. Redirecting to login.");
+            return res.redirect('/login');
+        }
+
         let sessionUserID = "unknown";
-        if (req.user) {
-            if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
-            else if (req.user._id) sessionUserID = req.user._id.toString();
-            else if (req.user.id) sessionUserID = req.user.id;
-            else if (req.user.employeeId) sessionUserID = req.user.employeeId;
+        if (sessionData._id && sessionData._id.$oid) sessionUserID = sessionData._id.$oid;
+        else if (sessionData._id) sessionUserID = sessionData._id.toString();
+        else if (sessionData.id) sessionUserID = sessionData.id;
+        else if (sessionData.employeeId) sessionUserID = sessionData.employeeId;
+
+        // If it's still unknown, block the database call so it doesn't crash
+        if (sessionUserID === "unknown") {
+            console.error("Could not extract a valid ID from the session object.");
+            return res.redirect('/login');
         }
 
         const User = mainDB.model('User');
         const liveUser = await User.findById(sessionUserID);
-        if (!liveUser) return res.status(404).send("User not found.");
+        if (!liveUser) return res.status(404).send("User not found in database.");
 
         const liveRole = liveUser.role || "Professor";
         const isPracticumCoordinator = liveUser.isPracticumCoordinator === true;
@@ -1032,10 +1045,9 @@ export const renderDashboard = async (req, res) => {
             status: { $regex: 'PENDING' } 
         });
 
-        // ✅ PATCHED: Now counts ARCHIVED instead of FINALIZED
         const myApprovedCount = await ATAForm.countDocuments({ 
             userID: sessionUserID, 
-            status: 'ARCHIVED'
+            status: 'FINALIZED' 
         });
 
         const latestForm = await ATAForm.findOne({ userID: sessionUserID }).sort({ createdAt: -1 });
@@ -1062,7 +1074,8 @@ export const renderDashboard = async (req, res) => {
             lastSubmissionDate,
             lastStatus,
             totalUnits,
-            effectiveUnits
+            effectiveUnits,
+            currentPageCategory: 'ata' // Ensures the sidebar highlights the ATA button!
         });
 
     } catch (error) {

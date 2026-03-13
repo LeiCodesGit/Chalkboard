@@ -9,20 +9,24 @@
     <link rel="stylesheet" href="/common/css/variables.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body data-role="<%= typeof role !== 'undefined' ? role : '' %>" 
-      data-employment="<%= typeof employmentType !== 'undefined' ? employmentType : '' %>"
-      data-practicum="<%= typeof isPracticumCoordinator !== 'undefined' ? isPracticumCoordinator : 'false' %>">
+<body data-role="<%= typeof role !== 'undefined' ? role : (typeof user !== 'undefined' && user.role ? user.role : 'Professor') %>" 
+      data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>"
+      data-practicum="<%= (typeof user !== 'undefined' && user.isPracticumCoordinator) ? 'true' : 'false' %>">
+    
     <% 
-        // Correct paths based on your MainPages folder structure
-        if (role === 'Admin') { %>
-            <%- include('../MainPages/admin/partials/adminSideMenuBar') %>
-        <% } else if (role === 'Dean') { %>
-            <%- include('../MainPages/dean/partials/deanMenuBar') %>
-        <% } else if (role === 'Program-Chair') { %>
-            <%- include('../MainPages/progChair/partials/progChairMenuBar') %>
-        <% } else { %>
+        if (typeof role !== 'undefined') {
+            if (['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) { %>
+                <%- include('../MainPages/admin/partials/adminSideMenuBar') %>
+            <% } else if (role === 'Dean') { %>
+                <%- include('../MainPages/dean/partials/deanMenuBar') %>
+            <% } else if (role === 'Program-Chair') { %>
+                <%- include('../MainPages/progChair/partials/progChairMenuBar') %>
+            <% } else { %>
+                <%- include('../partials/sideMenuBar') %>
+            <% } 
+        } else { %>
             <%- include('../partials/sideMenuBar') %>
-        <% } 
+        <% }
     %>
     
     <main class="dashboard-bg" style="margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-top: 6vh;">
@@ -31,93 +35,93 @@
 
         <div class="welcome-box">
             <h2>
-                Welcome, <%= user.name %> | <%= role %>
-                <% if (role === 'Dean') { %>
+                Welcome, <%= typeof user !== 'undefined' ? user.name : 'Faculty' %> | <%= typeof role !== 'undefined' ? role : 'Professor' %>
+                <% if (typeof role !== 'undefined' && role === 'Dean') { %>
                     | CEA
-                <% } else if (user.program) { %>
+                <% } else if (typeof user !== 'undefined' && user.program) { %>
                     | <%= user.program %>
                 <% } %>
             </h2>
         </div>
 
       <%
-    const isExecutive = ['VPAA', 'HR', 'HRMO'].includes(role);
-    const isAdmin = ['Program-Chair', 'Dean', 'Admin', 'VPAA', 'HR', 'HRMO'].includes(role);
-    const canViewArchived = ['Program-Chair', 'Dean', 'VPAA', 'HR', 'HRMO'].includes(role);
-%>
+        const currentRole = typeof role !== 'undefined' ? role : 'Professor';
+        const isExecutive = ['VPAA', 'HR', 'HRMO'].includes(currentRole);
+        const isAdmin = ['Program-Chair', 'Dean', 'Admin', 'VPAA', 'HR', 'HRMO'].includes(currentRole);
+        const canViewArchived = ['Program-Chair', 'Dean', 'VPAA', 'HR', 'HRMO'].includes(currentRole);
+        const isPracCoord = typeof user !== 'undefined' && user.isPracticumCoordinator;
+      %>
 
-<div class="action-cards">
+        <div class="action-cards">
 
-    <% if (!isExecutive) { %>
-        <a href="/ata/new" class="action-card-link-wrapper">
-            <div class="action-card">
-                <div class="action-card-title">Start New ATA Form</div>
-            </div>
-        </a>
+            <% if (!isExecutive) { %>
+                <a href="/ata/new" class="action-card-link-wrapper">
+                    <div class="action-card">
+                        <div class="action-card-title">Start New ATA Form</div>
+                    </div>
+                </a>
 
-        <a href="/ata/submissions?filter=pending" class="action-card-link-wrapper">
-            <div class="action-card pending-card">
-                <div class="action-card-title">My Pending Forms (<span id="myPendingCount"><%= myPendingCount %></span>)</div>
-                <div class="action-card-link">View My Forms →</div>
-            </div>
-        </a>
+                <a href="/ata/submissions?filter=pending" class="action-card-link-wrapper">
+                    <div class="action-card pending-card">
+                        <div class="action-card-title">My Pending Forms (<span id="myPendingCount"><%= typeof myPendingCount !== 'undefined' ? myPendingCount : 0 %></span>)</div>
+                        <div class="action-card-link">View My Forms →</div>
+                    </div>
+                </a>
 
-        <a href="/ata/submissions?filter=approved" class="action-card-link-wrapper">
-            <div class="action-card approved-card">
-                <div class="action-card-title">My Approved Forms (<span id="myApprovedCount"><%= myApprovedCount %></span>)</div>
-                <div class="action-card-link">View My Forms →</div>
-            </div>
-        </a>
-    <% } %>
+                <a href="/ata/submissions?filter=approved" class="action-card-link-wrapper">
+                    <div class="action-card approved-card">
+                        <div class="action-card-title">My Approved Forms (<span id="myApprovedCount"><%= typeof myApprovedCount !== 'undefined' ? myApprovedCount : 0 %></span>)</div>
+                        <div class="action-card-link">View My Forms →</div>
+                    </div>
+                </a>
+            <% } %>
 
-    <% if (['Program-Chair', 'Dean', 'Admin'].includes(role)) { %>
-        <a href="/admin/courses" id="adminCourseBtn" class="action-card-link-wrapper">
-            <div class="action-card" style="background-color: #721c24;">
-                <div class="action-card-title"><i class="fas fa-database"></i> Manage Courses</div>
-            </div>
-        </a>
-    <% } %>
+            <% if (['Program-Chair', 'Dean', 'Admin'].includes(currentRole)) { %>
+                <a href="/admin/courses" id="adminCourseBtn" class="action-card-link-wrapper">
+                    <div class="action-card" style="background-color: #721c24;">
+                        <div class="action-card-title"><i class="fas fa-database"></i> Manage Courses</div>
+                    </div>
+                </a>
+            <% } %>
 
-    <% if (isAdmin || isPracticumCoordinator) { %>
-        <a href="/ata/pending" id="ataInboxCard" class="action-card-link-wrapper">
-            <div class="action-card" style="background-color: #d39e00; color: #333;">
-                <div class="action-card-title"><i class="fas fa-inbox"></i> Forms to Approve</div>
-                <div class="action-card-link">Review Faculty Submissions →</div>
-            </div>
-        </a>
+            <% if (isAdmin || isPracCoord) { %>
+                <a href="/ata/pending" id="ataInboxCard" class="action-card-link-wrapper">
+                    <div class="action-card" style="background-color: #d39e00; color: #333;">
+                        <div class="action-card-title"><i class="fas fa-inbox"></i> Forms to Approve</div>
+                        <div class="action-card-link">Review Faculty Submissions →</div>
+                    </div>
+                </a>
 
-        <a href="/ata/admin-history" id="adminHistoryCard" class="action-card-link-wrapper">
-            <div class="action-card" style="background-color: #28a745; color: white;">
-                <div class="action-card-title"><i class="fas fa-history"></i> Approved History</div>
-                <div class="action-card-link">View Processed Forms →</div>
-            </div>
-        </a>
-    <% } %>
+                <a href="/ata/admin-history" id="adminHistoryCard" class="action-card-link-wrapper">
+                    <div class="action-card" style="background-color: #28a745; color: white;">
+                        <div class="action-card-title"><i class="fas fa-history"></i> Approved History</div>
+                        <div class="action-card-link">View Processed Forms →</div>
+                    </div>
+                </a>
+            <% } %>
 
-    <% if (canViewArchived) { %>
-        <a href="/ata/archived-atas" class="action-card-link-wrapper">
-            <div class="action-card" style="background-color: #17a2b8; color: white;">
-                <div class="action-card-title">
-                    <i class="fas fa-box-archive"></i> Archived ATAs
-                </div>
-                <div class="action-card-link">View All Archived Records →</div>
-            </div>
-        </a>
-    <% } %>
+            <% if (canViewArchived) { %>
+                <a href="/ata/archived-atas" class="action-card-link-wrapper">
+                    <div class="action-card" style="background-color: #17a2b8; color: white;">
+                        <div class="action-card-title">
+                            <i class="fas fa-box-archive"></i> Archived ATAs
+                        </div>
+                        <div class="action-card-link">View All Archived Records →</div>
+                    </div>
+                </a>
+            <% } %>
 
-</div>
-
-
+        </div>
 
         <% if (!isExecutive) { %>
             <div class="info-box">
                 <div class="info-row">
-                    Last Submission: <strong><%= lastSubmissionDate %></strong> | 
-                    Status: <strong><%= lastStatus %></strong>
+                    Last Submission: <strong><%= typeof lastSubmissionDate !== 'undefined' ? lastSubmissionDate : 'None' %></strong> | 
+                    Status: <strong><%= typeof lastStatus !== 'undefined' ? lastStatus : 'None' %></strong>
                 </div>
                 <div class="info-row">
-                    Total Units: <strong><%= totalUnits %></strong> | 
-                    Effective Units: <strong><%= effectiveUnits %></strong>
+                    Total Units: <strong><%= typeof totalUnits !== 'undefined' ? totalUnits : 0 %></strong> | 
+                    Effective Units: <strong><%= typeof effectiveUnits !== 'undefined' ? effectiveUnits : 0 %></strong>
                 </div>
             </div>
         <% } %>
