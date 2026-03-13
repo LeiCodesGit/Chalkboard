@@ -33,11 +33,13 @@ loginRoutes.post("/", async (req, res) => {
             id: user._id,
             email: user.email,
             firstName: user.firstName,
+            middleName: user.middleName || "",
             lastName: user.lastName,
             role: user.role,
-            program: user.program || "",
+            employeeId: user.employeeId || "",
             department: user.department || "",
-            employmentType: user.employmentType || "",
+            program: user.program || "",
+            employmentType: user.employmentType || ""
         };
         // --- SESSION LOGIC END ---
 

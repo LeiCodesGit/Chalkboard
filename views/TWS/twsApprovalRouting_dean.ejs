@@ -10,7 +10,7 @@
 
 <body class="twsd-body">
   <div class="twsd-layout">
-    <aside class="twsd-sidebar">
+    <aside class="tws-sidebar">
       <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
     </aside>
 
@@ -28,23 +28,37 @@
               <h2>APPROVED BY:</h2>
               <div style="font-weight:900; margin-top:2px;">DEAN</div>
 
-              <div class="small">Signature: [ Insert ]</div>
-              <div class="small">Date: __ / __ / __</div>
+              <div class="small">Faculty: <b><%= tws.faculty?.name || "—" %></b></div>
+              <div class="small">Department: <b><%= tws.faculty?.dept || "—" %></b></div>
+              <div class="small">Current Status: <b><%= tws.status || "Pending" %></b></div>
             </div>
 
             <div class="twsd-approval-bottom">
               <div class="twsd-approve-line">
                 <span class="twsd-arrow">⬇</span>
-                <span>Approve</span>
+                <span>Dean Decision</span>
                 <div class="twsd-line"></div>
               </div>
 
               <form method="POST" action="/tws/approval/<%= tws.id %>">
+                <div style="margin: 12px 0 18px 0;">
+                  <textarea
+                    name="remarks"
+                    placeholder="Remarks (optional)"
+                    style="width:100%; min-height:120px; border:none; border-radius:18px; padding:14px; outline:none;"
+                  ><%= tws.approval?.remarks || "" %></textarea>
+                </div>
+
                 <div class="twsd-approval-actions">
                   <button class="twsd-btn twsd-green" type="submit" name="action" value="approve">Approve</button>
                   <button class="twsd-btn twsd-white" type="submit" name="action" value="reject">Reject</button>
+                  <button class="twsd-btn twsd-white" type="submit" name="action" value="return">Return</button>
                 </div>
               </form>
+
+              <div style="margin-top:16px;">
+                <a class="twsd-btn twsd-white" href="/tws/dean" style="text-decoration:none;">Back</a>
+              </div>
             </div>
 
           </div>

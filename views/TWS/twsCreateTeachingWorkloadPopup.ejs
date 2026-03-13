@@ -34,32 +34,45 @@
       </div>
 
       <!-- SUBJECT TABLE -->
-      <div class="tws-table">
-        <div class="tws-row tws-head">
+      <div class="tws-table tws-workload-table">
+        <div class="tws-row tws-head tws-workload-row">
           <div>Course Code</div>
           <div>Course Title</div>
           <div>Units</div>
-          <div>Actions</div>
+          <div class="tws-workload-col-head">Add</div>
+          <div class="tws-workload-col-head">Remove</div>
         </div>
 
         <% (subjects || []).forEach(s => { 
             const alreadyAdded = (tws.createdWorkload || []).some(x => x.code === s.code);
         %>
-          <div class="tws-row">
+          <div class="tws-row tws-workload-row">
             <div><%= s.code %></div>
             <div><%= s.title %></div>
             <div><%= Number(s.units).toFixed(2) %></div>
 
-            <div class="tws-btns">
+            <div class="tws-btns tws-workload-action-cell">
               <button
                 class="tws-btn-white"
                 type="button"
                 <%= alreadyAdded ? "disabled" : "" %>
                 onclick="openModal('<%= s.code %>', '<%= s.title.replace(/'/g, "\\'") %>', '<%= Number(s.units).toFixed(2) %>')"
-                style="<%= alreadyAdded ? 'opacity:.55; cursor:not-allowed;' : '' %>"
               >
                 <%= alreadyAdded ? "Added" : "Add" %>
               </button>
+            </div>
+
+            <div class="tws-btns tws-workload-action-cell">
+              <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/remove" style="display:inline;" onsubmit="return confirm('Remove this subject from the workload?');">
+                <input type="hidden" name="code" value="<%= s.code %>" />
+                <button
+                  class="tws-btn-white tws-btn-danger"
+                  type="submit"
+                  <%= alreadyAdded ? "" : "disabled" %>
+                >
+                  Remove
+                </button>
+              </form>
             </div>
           </div>
         <% }) %>
@@ -81,9 +94,9 @@
 
     <!-- Footer buttons -->
     <div class="tws-footer-actions">
-      <a class="tws-btn-white" href="/tws/dashboard">Back</a>
-      <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
-    </div>
+  <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Back</a>
+  <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
+</div>
 
   </div>
   </main>
@@ -101,14 +114,31 @@
       <input type="hidden" name="title" id="m_title" />
       <input type="hidden" name="units" id="m_units" />
 
+      <label>Choose Day</label>
+      <select name="day" required>
+        <option value="">-- Select --</option>
+        <option value="Mon">Mon</option>
+        <option value="Tue">Tue</option>
+        <option value="Wed">Wed</option>
+        <option value="Thu">Thu</option>
+        <option value="Fri">Fri</option>
+        <option value="Sat">Sat</option>
+        <option value="Sun">Sun</option>
+      </select>
+
       <label>Choose Time Slot</label>
       <select name="timeSlot" required>
         <option value="">-- Select --</option>
         <option>7:00 AM - 8:15 AM</option>
-        <option>8:30 AM - 9:45 AM</option>
-        <option>10:00 AM - 11:15 AM</option>
-        <option>1:00 PM - 2:15 PM</option>
+        <option>8:15 AM - 9:30 AM</option>
+        <option>9:30 AM - 10:45 AM</option>
+        <option>10:45 AM - 12:00 PM</option>
+        <option>1:15 PM - 2:30 PM</option>
         <option>2:30 PM - 3:45 PM</option>
+        <option>3:45 PM - 5:00 PM</option>
+        <option>5:00 PM - 6:15 PM</option>
+        <option>6:15 PM - 7:30 PM</option>
+        <option>7:30 PM - 8:45 PM</option>
       </select>
 
       <label>Choose Section</label>

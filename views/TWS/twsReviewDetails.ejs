@@ -10,7 +10,7 @@
 
 <body class="twsd-body">
   <div class="twsd-layout">
-    <aside class="twsd-sidebar">
+    <aside class="tws-sidebar">
       <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
     </aside>
 
@@ -41,19 +41,24 @@
                 <div class="twsd-empty">No TWS yet.</div>
               <% } %>
 
+              <%
+                function formatDatePH(value) {
+                  var date = value ? new Date(value) : new Date();
+                  if (isNaN(date.getTime())) return "—";
+                  return date.toLocaleDateString("en-US", {
+                    month: "2-digit",
+                    day: "2-digit",
+                    year: "numeric",
+                    timeZone: "Asia/Manila",
+                  });
+                }
+              %>
+
               <% (list || []).forEach(tws => { %>
                 <div class="twsd-row" style="grid-template-columns: 1fr 0.55fr 0.9fr 0.9fr 1fr;">
-                  <div><%= tws.faculty?.acadYear || "—" %></div>
-                  <div><%= tws.faculty?.term || "—" %></div>
-                  <div>
-                    <% 
-                      const d = new Date(tws.createdAt || Date.now());
-                      const mm = String(d.getMonth()+1).padStart(2,"0");
-                      const dd = String(d.getDate()).padStart(2,"0");
-                      const yyyy = d.getFullYear();
-                    %>
-                    <%= `${mm}/${dd}/${yyyy}` %>
-                  </div>
+                  <div><%= tws.faculty?.acadYear || tws.schoolYear || "—" %></div>
+                  <div><%= tws.faculty?.term || tws.term || "—" %></div>
+                  <div><%= formatDatePH(tws.createdAt) %></div>
                   <div><%= tws.status || "Draft" %></div>
                   <div class="twsd-btns">
                     <a class="twsd-btn twsd-white" href="/tws/summary/<%= tws.id %>">View</a>

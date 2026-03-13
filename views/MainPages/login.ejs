@@ -177,14 +177,17 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    if (result.role === 'Admin') {
+                    if (result.role === 'Admin' || result.role === 'Super-Admin') {
                         window.location.href = '/admin/institution';
                     } else if (result.role === 'Professor') {
                         window.location.href = '/institution';
                     } else if (result.role === 'Program-Chair') {
-                        window.location.href = '/progchair/institution';
+                        window.location.href = '/progChair/institution';
+                    } else if (result.role === 'Dean') {
+                        window.location.href = '/dean/institution';
+                    } else if (result.role === 'HR') {
+                        window.location.href = '/admin/institution';
                     } else {
-                        // Add all the users here:
                         window.location.href = '/institution';
                     }
                 } else {
