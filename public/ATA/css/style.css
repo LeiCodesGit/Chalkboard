@@ -11,16 +11,27 @@
 body {
     background: #f4f6f9;
     color: #333;
-    transition: background 0.3s ease, color 0.3s ease;
+    /* transition: background 0.3s ease, color 0.3s ease; */
     overflow-x: hidden;
     height: 100vh;
     overflow: hidden;
+}
+/* ===============================
+   OFFICIAL SIDEBAR VARIABLES
+================================= */
+:root {
+    --sidebar-bg: #222222;       /* Dark grey background */
+    --text-on-dark: #ffffff;     /* White text */
+    --text-muted: #b0b0b0;       /* Grey inactive text */
+    --sidebar-line: #333333;     /* Divider lines */
+    --sidebar-hover: #3a3a3a;    /* Hover state */
+    --accent-primary: #b30000;   /* Official Mapua Red for active tab */
 }
 
 /* ===============================
    HAMBURGER MENU (ANIMATED SLIDE) - IMPROVED VISIBILITY
 ================================= */
-.hamburger-menu {
+/* .hamburger-menu {
     position: fixed;
     top: 20px;
     left: 20px;
@@ -71,7 +82,7 @@ body {
 }
 
 /* Dark mode */
-body.dark-mode .hamburger-menu {
+/* body.dark-mode .hamburger-menu {
     background: rgba(255,255,255,0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
@@ -80,12 +91,12 @@ body.dark-mode .hamburger-menu:hover {
 }
 body.dark-mode .hamburger-menu span {
     background: #fff;
-}
+} */
 
 /* ===============================
    SIDEBAR
 ================================= */
-.sidebar {
+/* .sidebar {
     position: fixed;
     top: 0;
     left: -240px;
@@ -168,12 +179,12 @@ body.dark-mode .hamburger-menu span {
     margin-top: 20px;
     font-size: 12px;
     opacity: 0.6;
-}
+} */
 
 /* ===============================
    OVERLAY
 ================================= */
-.sidebar-overlay {
+/* .sidebar-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.4);
@@ -185,14 +196,16 @@ body.dark-mode .hamburger-menu span {
 .sidebar-overlay.active {
     opacity: 1;
     pointer-events: all;
-}
+} */ 
 
 /* ===============================
    MAIN CONTENT
 ================================= */
 .main-content {
     height: 100vh;
-    background: url('/images/bg-image.jpg') center/cover no-repeat;
+    background: url('/ATA/images/bg-image.jpg') center/cover no-repeat;
+    margin-left: 260px; 
+    width: calc(100vw - 260px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -281,7 +294,8 @@ body.dark-mode .hamburger-menu span {
 .dashboard-bg {
     height: 100vh;
     width: 100vw;
-    background: url('/images/bg-image.jpg') center/cover no-repeat;
+    margin-left: 0;
+    background: url('/ATA/images/bg-image.jpg') center/cover no-repeat;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -484,7 +498,8 @@ body.dark-mode .hamburger-menu span {
 .form-bg-fixed {
     height: 100vh;
     width: 100%;
-    background: url('/images/bg-image.jpg') center/cover no-repeat;
+    margin-left: 0;
+    background: url('/ATA/images/bg-image.jpg') center/cover no-repeat;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1587,10 +1602,10 @@ body.dark-mode {
     background: #1f2227;
     color: #f1f1f1;
 }
-body.dark-mode .hamburger-menu span { background: #fff; }
+/* body.dark-mode .hamburger-menu span { background: #fff; } */
 body.dark-mode .welcome-container::before { background: rgba(0,0,0,0.6); }
 body.dark-mode .card { background: #2c2f36; color: #fff; }
-body.dark-mode .sidebar { background: #181a1f; }
+/* body.dark-mode .sidebar { background: #181a1f; } */
 
 /* ===============================
    RESPONSIVE
@@ -1664,6 +1679,11 @@ For ATA FROMS ONLY
 }
 
 @media (max-width: 768px) {
+    .main-content, .dashboard-bg, .form-bg-fixed {
+        margin-left: 0;
+        width: 100%;
+        width: 100vw;
+    }
     .main-content { 
         padding: 20px; 
     }

@@ -28,7 +28,7 @@ const userSchema = new Schema({
 
 	role: {
 		type: String,
-		enum: ["Professor", "Program-Chair", "Dean", "HR", "Admin", "Super-Admin"],
+		enum: ["Professor", "Program-Chair", "Dean", "HR", "Admin", "Super-Admin", 'Practicum-Coordinator', 'VPAA', 'HRMO', 'HR'],
 		default: "Professor"
 	},
 
@@ -69,7 +69,13 @@ const userSchema = new Schema({
 	employeeId: {
 		type: String,
 		unique: true
-	}
+	},
+	
+  isPracticumCoordinator: {
+    type: Boolean,
+    default: false
+  },
+	signatureImage: { type: String, default: "" }
 
 	}, { timestamps: true });
 

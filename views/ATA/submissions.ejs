@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapúa MCM - My Submissions</title>
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-bg">
+    <%- include('../partials/sideMenuBar') %>
+
+    <main class="main-content" style="padding: 40px; margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh;">
+        
+        <div class="dashboard-title">
+            <% if (filterType === 'approved') { %>
+                My Approved Forms
+            <% } else if (filterType === 'pending') { %>
+                My Pending Forms
+            <% } else { %>
+                My Form Submissions
+            <% } %>
+        </div>
+        
+        <div class="form-cards-container" style="margin-top: 20px;">
+            <div class="form-card-scrollable">
+                
+                <table style="width: 100%; text-align: left; border-collapse: collapse; color: white;">
+                    <thead style="border-bottom: 2px solid #555;">
+                        <tr>
+                            <th style="padding: 10px;">Date Submitted</th>
+                            <th style="padding: 10px;">Term</th>
+                            <th style="padding: 10px;">Total Units</th>
+                            <th style="padding: 10px;">Status</th>
+                            <th style="padding: 10px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!forms || forms.length === 0) { %>
+                            <tr>
+                                <td colspan="5" style="padding: 20px; text-align: center;">
+                                    <% if (filterType === 'approved') { %>
+                                        You don't have any fully approved forms yet.
+                                    <% } else { %>
+                                        You don't have any pending forms at the moment.
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% forms.forEach(form => { %>
+                                <tr style="border-bottom: 1px solid #444;">
+                                    <td style="padding: 10px;"><%= new Date(form.createdAt).toLocaleDateString() %></td>
+                                    <td style="padding: 10px;"><%= form.term %> <%= form.academicYear %></td>
+                                    <td style="padding: 10px;"><%= form.totalEffectiveUnits %></td>
+                                    <td style="padding: 10px; max-width: 300px;">
+                                        <div style="margin-bottom: 8px;">
+                                            <span class="pending-badge" style="background-color: <%= form.status === 'FINALIZED' ? '#28a745' : '#ffc107' %>; color: <%= form.status === 'FINALIZED' ? '#fff' : '#000' %>; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">
+                                                <%= form.status.replace('_', ' ') %>
+                                            </span>
+                                        </div>
+
+                                        <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
+                                            <div style="font-size: 0.75rem; color: #aaa; background: #222; padding: 8px; border-radius: 5px; border-left: 2px solid #b30000;">
+                                                <div style="font-weight: bold; margin-bottom: 4px; color: #fff;">Approval Track:</div>
+                                                <% form.approvalHistory.forEach(log => { %>
+                                                    <div style="margin-bottom: 3px;">
+                                                        <i class="fas fa-check-circle" style="color: #28a745; font-size: 0.7rem;"></i> 
+                                                        <strong><%= log.approverName || log.approverRole %></strong> 
+                                                        (<span style="color: #bbb;"><%= log.approvalStatus %></span>)
+                                                        <br>
+                                                        <span style="font-size: 0.65rem; color: #777; margin-left: 14px;">
+                                                            <%= new Date(log.date).toLocaleDateString() %>
+                                                        </span>
+                                                    </div>
+                                                <% }) %>
+                                            </div>
+                                        <% } else { %>
+                                            <div style="font-size: 0.75rem; color: #777;">No signatures yet.</div>
+                                        <% } %>
+                                    </td>
+                                    <td style="padding: 10px;">
+                                       <a href="/ata/view-submission/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none;">View PDF</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 30px;">
+                    <a href="/ata/dashboard/window" class="form-btn secondary-btn" style="text-decoration: none;">Back to Dashboard</a>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>

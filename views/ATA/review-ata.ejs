@@ -2,122 +2,249 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Review ATA Form</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body class="dashboard-bg">
-    <main class="main-content" style="padding: 40px; max-width: 800px; margin: 0 auto;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Form: <%= form.facultyName %></title>
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; overflow: hidden; background: #1a1a1a; }
         
-        <div class="dashboard-title">ATA Form Review</div>
+        .pdf-container {
+            height: calc(100vh - 90px); 
+            width: 100%;
+        }
 
-        <div class="form-card" style="background-color: rgba(255,255,255,0.05); padding: 30px; border-radius: 10px; color: white;">
-            <h2>Faculty: <%= form.facultyName %></h2>
-            <p><strong>Position:</strong> <%= form.position %></p>
-            <p><strong>College/Program:</strong> <%= form.college %></p>
-            <p><strong>Term:</strong> <%= form.term %> <%= form.academicYear %></p>
-            <hr style="border-color: #444; margin: 20px 0;">
+        .sticky-action-bar {
+            height: 90px;
+            background: #222;
+            border-top: 4px solid #b30000; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
+        }
 
-            <h3>Load Summary</h3>
-            <table style="width: 100%; text-align: left; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #444;">
-                    <th style="padding: 10px;">Section</th>
-                    <th style="padding: 10px;">Teaching Units</th>
-                </tr>
-                <tr style="border-bottom: 1px solid #444;">
-                    <td style="padding: 10px;">(A) Admin Units</td>
-                    <td style="padding: 10px;"><%= form.sectionA_AdminUnits %></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #444;">
-                    <td style="padding: 10px;">(B) Within College</td>
-                    <td style="padding: 10px;"><%= form.sectionB_WithinCollege.reduce((sum, c) => sum + c.units, 0) %></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #444;">
-                    <td style="padding: 10px;">(G) Remedial</td>
-                    <td style="padding: 10px;"><%= form.totalRemedialUnits %></td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px;"><strong>TOTAL TEACHING UNITS</strong></td>
-                    <td style="padding: 10px;"><strong><%= form.totalTeachingUnits %></strong></td>
-                </tr>
-            </table>
+        .audit-scroll::-webkit-scrollbar { height: 6px; }
+        .audit-scroll::-webkit-scrollbar-track { background: transparent; }
+        .audit-scroll::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .audit-scroll::-webkit-scrollbar-thumb:hover { background: #888; }
+    </style>
+</head>
 
-            <hr style="border-color: #444; margin: 20px 0;">
+<body data-role="<%= typeof role !== 'undefined' ? role : 'Admin' %>" 
+      data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>"
+      data-practicum="<%= (typeof user !== 'undefined' && user.isPracticumCoordinator) ? 'true' : 'false' %>"
+      data-has-practicum="<%= typeof hasPracticum !== 'undefined' ? hasPracticum : 'false' %>"
+      data-status="<%= form.status %>"
+      data-load="<%= typeof totalRegularLoad !== 'undefined' ? totalRegularLoad : 0 %>"
+      data-fac-employment="<%= typeof employmentType !== 'undefined' ? employmentType : 'Full-Time' %>"
+      data-has-signature="<%= (typeof user !== 'undefined' && user.signatureImage) ? 'true' : 'false' %>">
 
-            <div style="background-color: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px;">
-                <h3>Administrator Action</h3>
-                <textarea id="remarksBox" rows="3" placeholder="Enter remarks or justification (Required if returning)..." style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: none; background: #333; color: white;"></textarea>
-                
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button id="rejectBtn" class="form-btn" style="background-color: #8b0000; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Return to Faculty</button>
+    <%- include('../partials/sideMenuBar') %> 
 
-                    <% if (role === 'Program-Chair') { %>
-                        <% if (form.sectionE_Practicum && form.sectionE_Practicum.length > 0) { %>
-                            <button id="endorsePracticumBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to Practicum</button>
-                            <button id="skipToDeanBtn" class="form-btn" style="background-color: #ffc107; border: none; color: #333; padding: 8px 12px; border-radius: 5px; font-size: 0.8em;">Skip to Dean</button>
-                        <% } else { %>
-                            <button id="endorseDeanBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to Dean</button>
-                        <% } %>
-                    
-                    <% } else if (role === 'Practicum-Coordinator') { %>
-                        <button id="endorseDeanBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to Dean</button>
-
-                    <% } else if (role === 'Dean') { %>
-                        <button id="endorseVpaaBtn" class="form-btn" style="background-color: #28a745; border: none; color: white; padding: 10px 15px; border-radius: 5px;">Endorse to VPAA</button>
-                    <% } %>
-                    </div>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <a href="/ata/pending" style="color: #aaa;">← Back to Inbox</a>
-            </div>
+    <main style="margin-left: 260px; width: calc(100vw - 260px); display: flex; flex-direction: column;">
+        
+        <div class="pdf-container">
+            <iframe src="/ata/pdf/<%= form._id %>" width="100%" height="100%" style="border: none;"></iframe>
         </div>
+
+        <div class="sticky-action-bar">
+            
+            <div style="display: flex; align-items: center; gap: 20px; flex: 1; overflow: hidden;">
+                <div style="color: white; font-size: 16px; white-space: nowrap;">
+                    <strong>Reviewing:</strong> <%= form.facultyName %> | 
+                    <strong>Status:</strong> 
+                    <span style="color: <%= form.status === 'FINALIZED' ? '#28a745' : '#ffc107' %>; font-weight: bold;">
+                        <%= form.status.replace('_', ' ') %>
+                    </span>
+                </div>
+
+                <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
+                    <div class="audit-scroll" style="display: flex; gap: 10px; border-left: 2px solid #555; padding-left: 20px; overflow-x: auto; align-items: center; padding-bottom: 5px;">
+                        <span style="color: #aaa; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">Audit Trail:</span>
+                        
+                        <% form.approvalHistory.forEach(log => { %>
+                            <div style="background: #2a2a2a; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; color: #ddd; border: 1px solid #444; white-space: nowrap; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                <% if (log.approvalStatus === 'RETURNED') { %>
+                                    <i class="fas fa-undo" style="color: #dc3545;"></i>
+                                <% } else { %>
+                                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                                <% } %>
+                                <strong><%= log.approverName || log.approverRole %></strong>
+                                <span style="color: #888; font-size: 0.75rem;">(<%= log.approvalStatus %>) - <%= new Date(log.date).toLocaleDateString() %></span>
+                            </div>
+                        <% }) %>
+                        
+                    </div>
+                <% } %>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: center; padding-left: 20px; position: relative;">
+                
+                <div style="display: flex; flex-direction: column;">
+                    <span id="justificationLabel" style="color: #ffc107; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; display: none;">
+                        Section H Justification Required:
+                    </span>
+                    <input type="text" id="adminRemarks" placeholder="Enter remarks/justification..." 
+                           style="padding: 10px 15px; border-radius: 5px; border: none; width: 300px; background: #333; color: white;">
+                </div>
+                
+                <button class="form-btn" id="btnReturn" style="background: #dc3545; color: white; border: none; padding: 10px 20px; white-space: nowrap;">
+                    <i class="fas fa-undo"></i> Return
+                </button>
+                
+                <button class="form-btn" id="btnSmartApprove" style="background: #28a745; color: white; border: none; padding: 10px 20px; white-space: nowrap; transition: all 0.3s ease;">
+                    <i class="fas fa-check"></i> Endorse / Approve
+                </button>
+            </div>
+
+        </div>
+
     </main>
+    <script src="/ATA/js/ata_client.js"></script>
 
     <script>
-        async function submitDecision(action, targetStatus = null) {
-            const remarks = document.getElementById('remarksBox').value;
-            const formId = '<%= form._id %>';
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnApprove = document.getElementById('btnSmartApprove');
+            const btnReturn = document.getElementById('btnReturn');
+            const remarksInput = document.getElementById('adminRemarks');
+            const justificationLabel = document.getElementById('justificationLabel');
+            
+            const currentRole = document.body.getAttribute('data-role');
+            const formStatus = document.body.getAttribute('data-status');
+            const totalLoad = Number(document.body.getAttribute('data-load')) || 0;
+            const facEmployment = document.body.getAttribute('data-fac-employment') || 'Full-Time';
+            const hasSignature = document.body.getAttribute('data-has-signature') === 'true';
+            
+            const hasPracticum = document.body.getAttribute('data-has-practicum') === 'true'; 
+            const isPracticumCoord = document.body.getAttribute('data-practicum') === 'true'; 
+            
+            const overloadLimit = facEmployment === 'Part-Time' ? 11 : 15;
+            const isOverloaded = totalLoad > overloadLimit;
 
-            if (action === 'RETURN' && remarks.trim() === '') {
-                alert("Remarks required to return form to the faculty.");
-                return;
+            let activeBtnText = "Endorse / Approve"; 
+            let actionToSend = "";
+
+            if (formStatus === 'PENDING_PRACTICUM' && isPracticumCoord) {
+                activeBtnText = "Validate";
+                actionToSend = "VALIDATE";
+            } else if (currentRole === 'Program-Chair') {
+                activeBtnText = hasPracticum ? "Endorse to Practicum" : "Endorse to Dean";
+                actionToSend = "ENDORSE";
+            } else if (currentRole === 'Dean') {
+                activeBtnText = "Approve";
+                actionToSend = "APPROVE";
+            } else if (currentRole === 'VPAA') {
+                activeBtnText = "Note";
+                actionToSend = "NOTE";
+            } else if (currentRole === 'HR' || currentRole === 'HRMO') {
+                activeBtnText = "Finalize";
+                actionToSend = "NOTE"; 
             }
 
-            try {
-                const response = await fetch(`/ata/approve/${formId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer dummy_test_token_123` },
-                    body: JSON.stringify({ action, remarks, targetStatus }) 
-                });
-
-                if (response.ok) {
-                    window.location.href = '/ata/pending';
-                } else {
-                    alert("Failed to update status.");
+            const updateButtonState = () => {
+                if (!hasSignature) {
+                    btnApprove.style.backgroundColor = '#6c757d'; 
+                    btnApprove.style.cursor = 'not-allowed';
+                    btnApprove.innerHTML = `<i class="fas fa-signature"></i> Setup E-Signature First`;
+                    btnApprove.style.pointerEvents = 'none';
+                    return; 
                 }
-            } catch (err) { alert("Network error."); }
-        }
 
-        // Attach listeners safely based on which buttons rendered
-        if (document.getElementById('rejectBtn')) {
-            document.getElementById('rejectBtn').addEventListener('click', () => submitDecision('RETURN'));
-        }
-        
-        // Chair Listeners
-        if (document.getElementById('endorsePracticumBtn')) {
-            document.getElementById('endorsePracticumBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_PRACTICUM'));
-            document.getElementById('skipToDeanBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_DEAN'));
-        } 
-        
-        // General Endorse to Dean Listener (Used by Chair and Practicum Coordinator)
-        if (document.getElementById('endorseDeanBtn')) {
-            document.getElementById('endorseDeanBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_DEAN'));
-        }
+                if (currentRole === 'Program-Chair' && formStatus === 'PENDING_CHAIR' && isOverloaded) {
+                    justificationLabel.style.display = 'block';
+                    if (remarksInput.value.trim().length < 5) {
+                        btnApprove.style.backgroundColor = '#6c757d'; 
+                        btnApprove.style.cursor = 'not-allowed';
+                        btnApprove.innerHTML = `<i class="fas fa-lock"></i> Add Justification to Endorse`;
+                        btnApprove.style.pointerEvents = 'none'; 
+                    } else {
+                        btnApprove.style.backgroundColor = '#28a745'; 
+                        btnApprove.style.cursor = 'pointer';
+                        btnApprove.innerHTML = `<i class="fas fa-check"></i> ${activeBtnText}`;
+                        btnApprove.style.pointerEvents = 'auto'; 
+                    }
+                    return; 
+                }
 
-        // Dean Listener
-        if (document.getElementById('endorseVpaaBtn')) {
-            document.getElementById('endorseVpaaBtn').addEventListener('click', () => submitDecision('ENDORSE', 'PENDING_VPAA'));
-        }
+                btnApprove.style.backgroundColor = '#28a745';
+                btnApprove.style.cursor = 'pointer';
+                btnApprove.innerHTML = `<i class="fas fa-check"></i> ${activeBtnText}`;
+                btnApprove.style.pointerEvents = 'auto'; 
+            };
+
+            updateButtonState();
+            if (remarksInput) remarksInput.addEventListener('input', updateButtonState);
+
+            btnApprove.addEventListener('click', async () => {
+                if (!actionToSend) return alert("System could not determine the correct action for your role.");
+
+                const origText = btnApprove.innerHTML;
+                btnApprove.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                btnApprove.style.pointerEvents = 'none';
+
+                try {
+                    const response = await fetch(`/ata/approve/<%= form._id %>`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: actionToSend, remarks: remarksInput ? remarksInput.value : "" })
+                    });
+
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        const rawText = await response.text();
+                        console.error("SERVER RETURNED NON-JSON:", rawText);
+                        alert("CRITICAL ERROR: Server did not return JSON data. Check the terminal console!\n\nResponse Snippet: " + rawText.substring(0, 100));
+                        btnApprove.innerHTML = origText;
+                        btnApprove.style.pointerEvents = 'auto';
+                        return;
+                    }
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        if (result.stayOnPage) {
+                            alert("Endorsed as Chair!\n\nThe system detected you are also the Practicum Coordinator for this form. The page will now refresh so you can Validate it.");
+                            location.reload(); 
+                        } else {
+                            window.location.href = '/ata/pending'; 
+                        }
+                    } else {
+                        alert("Error: " + (result.error || "Failed to process."));
+                        btnApprove.innerHTML = origText;
+                        btnApprove.style.pointerEvents = 'auto';
+                    }
+                } catch (error) {
+                    console.error("FETCH ERROR:", error);
+                    alert("A fatal network error occurred! Error: " + error.message);
+                    btnApprove.innerHTML = origText;
+                    btnApprove.style.pointerEvents = 'auto';
+                }
+            });
+
+            if (btnReturn) {
+                btnReturn.addEventListener('click', async () => {
+                    const remarks = remarksInput ? remarksInput.value : '';
+                    if (remarks.trim().length < 5) return alert("Please provide a reason in the remarks field before returning.");
+                    
+                    const origText = btnReturn.innerHTML;
+                    btnReturn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Returning...';
+                    btnReturn.style.pointerEvents = 'none';
+
+                    try {
+                        const response = await fetch(`/ata/approve/<%= form._id %>`, {
+                            method: 'PUT', 
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'RETURN', remarks: remarks })
+                        });
+                        if (response.ok) window.location.href = '/ata/pending';
+                        else alert("Failed to return form.");
+                    } catch (error) { alert("Network error."); }
+                    finally { btnReturn.innerHTML = origText; btnReturn.style.pointerEvents = 'auto'; }
+                });
+            }
+        });
     </script>
 </body>
 </html>

@@ -3,13 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <title>Pending Approvals</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+    <style>
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.8); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .signature-modal {
+            background: #2b2b2b; padding: 30px; border-radius: 10px; width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); color: white; display: flex; flex-direction: column; gap: 15px;
+        }
+        .signature-preview-box {
+            background: white; border-radius: 5px; height: 100px; display: flex; 
+            justify-content: center; align-items: center; overflow: hidden;
+        }
+    </style>
 </head>
-<body class="dashboard-bg">
-    <main class="main-content" style="padding: 40px;">
+<body class="dashboard-bg"
+      data-role="<%= role %>"
+      data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>"
+      data-practicum="<%= typeof user !== 'undefined' && user.isPracticumCoordinator ? 'true' : 'false' %>"
+      data-user-sig="<%= typeof user !== 'undefined' && user.signatureImage ? user.signatureImage : '' %>">
+      
+    <%- include('../partials/sideMenuBar') %>
+    
+    <main class="main-content" style="padding: 40px; margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh;">
         
         <div class="dashboard-title">
-            Forms to Approve (<%= role %> - <%= college %>)
+            <% if (typeof isHistory !== 'undefined' && isHistory) { %>
+                <i class="fas fa-history"></i> Processed & Approved Forms (<%= role %> - <%= college %>)
+            <% } else { %>
+                Forms to Approve (<%= role %> - <%= college %>)
+            <% } %>
         </div>
 
         <div class="form-cards-container" style="margin-top: 20px;">
@@ -21,26 +48,74 @@
                             <th style="padding: 10px;">Faculty Name</th>
                             <th style="padding: 10px;">College</th>
                             <th style="padding: 10px;">Term</th>
-                            <th style="padding: 10px;">Teaching Units</th>
-                            <th style="padding: 10px;">Status</th>
+                            <th style="padding: 10px;">Approval Progress</th>
+                            <th style="padding: 10px;">
+                                <%= (typeof isHistory !== 'undefined' && isHistory) ? 'Current Status' : 'Awaiting Action From' %>
+                            </th>
                             <th style="padding: 10px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% if (forms.length === 0) { %>
                             <tr>
-                                <td colspan="6" style="padding: 20px; text-align: center;">No pending forms for your department!</td>
+                                <td colspan="6" style="padding: 40px; text-align: center; color: #a0a0a0; font-style: italic;">
+                                    <% if (typeof isHistory !== 'undefined' && isHistory) { %>
+                                        <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                        Your approved history is currently empty.
+                                    <% } else { %>
+                                        <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                        No pending forms require your attention!
+                                    <% } %>
+                                </td>
                             </tr>
                         <% } else { %>
                             <% forms.forEach(form => { %>
-                                <tr style="border-bottom: 1px solid #444;">
-                                    <td style="padding: 10px;"><%= form.facultyName %></td>
-                                    <td style="padding: 10px;"><%= form.college %></td>
-                                    <td style="padding: 10px;"><%= form.term %> <%= form.academicYear %></td>
-                                    <td style="padding: 10px;"><%= form.totalTeachingUnits %></td>
-                                    <td style="padding: 10px;"><span class="pending-badge"><%= form.status %></span></td>
-                                    <td style="padding: 10px;">
-                                        <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none;">Review</a>
+                                <tr style="border-bottom: 1px solid #333;">
+                                    <td style="padding: 15px 10px;"><%= form.facultyName %></td>
+                                    <td style="padding: 15px 10px;"><%= form.college %></td>
+                                    <td style="padding: 15px 10px;"><%= form.term %> <%= form.academicYear %></td>
+                                    
+                                    <td style="padding: 15px 10px; font-size: 0.85rem; max-width: 250px;">
+                                        <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
+                                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                <% form.approvalHistory.forEach(log => { %>
+                                                    <div style="color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                        <i class="fas fa-check-circle" style="color: #28a745; margin-right: 4px;"></i>
+                                                        <strong style="color: #ddd;"><%= log.approverName || log.approverRole %></strong> 
+                                                        <span style="font-size: 0.75rem;">(<%= log.approvalStatus %>)</span>
+                                                    </div>
+                                                <% }) %>
+                                            </div>
+                                        <% } else { %>
+                                            <span style="color: #777; font-style: italic;">No signatures yet</span>
+                                        <% } %>
+                                    </td>
+
+                                    <td style="padding: 15px 10px;">
+                                        <% 
+                                            let displayStatus = form.status.replace('PENDING_', 'Awaiting ');
+                                            if (displayStatus === 'Awaiting PRACTICUM') displayStatus = 'Awaiting Practicum';
+                                            if (displayStatus === 'Awaiting CHAIR') displayStatus = 'Awaiting Chair';
+                                            if (displayStatus === 'Awaiting DEAN') displayStatus = 'Awaiting Dean';
+                                            
+                                            let badgeColor = (form.status === 'FINALIZED') ? '#28a745' : '#ffc107';
+                                            let textColor = (form.status === 'FINALIZED') ? '#fff' : '#000';
+                                        %>
+                                        <span class="pending-badge" style="background-color: <%= badgeColor %>; color: <%= textColor %>; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">
+                                            <% if (form.status === 'FINALIZED') { %>
+                                                <i class="fas fa-check-double"></i> Finalized
+                                            <% } else { %>
+                                                <i class="fas fa-clock"></i> <%= displayStatus %>
+                                            <% } %>
+                                        </span>
+                                    </td>
+
+                                    <td style="padding: 15px 10px;">
+                                        <% if (typeof isHistory !== 'undefined' && isHistory) { %>
+                                            <a href="/ata/view-submission/<%= form._id %>" class="form-btn secondary-btn" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">View Form</a>
+                                        <% } else { %>
+                                            <a href="/ata/view/<%= form._id %>" class="form-btn primary-btn" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">Review</a>
+                                        <% } %>
                                     </td>
                                 </tr>
                             <% }) %>
@@ -48,12 +123,279 @@
                     </tbody>
                 </table>
 
-                <div style="margin-top: 30px;">
-                    <a href="/dashboard/window" class="form-btn secondary-btn" style="text-decoration: none;">Back to Dashboard</a>
+                <div style="margin-top: 30px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <a href="/ata/dashboard/window" class="form-btn secondary-btn" style="text-decoration: none;">Back to Dashboard</a>
+                    
+                    <button id="openSignatureModal" class="form-btn" style="background: <%= user.signatureImage ? '#17a2b8' : '#28a745' %>; color: white; border: none; cursor: pointer;">
+                        <i class="fas fa-signature"></i> <%= user.signatureImage ? 'Change E-Signature' : 'Setup E-Signature' %>
+                    </button>
+
+                    <% if (user.signatureImage) { %>
+                        <button type="button" id="mainPreviewSigBtn" class="form-btn" style="background: #6c757d; color: white; border: none; cursor: pointer;">
+                            <i class="fas fa-file-pdf"></i> Preview E-Signature
+                        </button>
+                        
+                        <button type="button" id="mainDeleteSigBtn" class="form-btn" style="background: #dc3545; color: white; border: none; cursor: pointer;">
+                            <i class="fas fa-trash"></i> Delete E-Signature
+                        </button>
+                    <% } %>
                 </div>
 
             </div>
         </div>
     </main>
+
+    <div class="modal-overlay" id="sigModalOverlay">
+        <div class="signature-modal">
+            <h2 style="margin: 0; font-size: 1.5rem; border-bottom: 2px solid #b30000; padding-bottom: 10px;">
+                <i class="fas fa-lock"></i> VIP Signature Vault
+            </h2>
+            
+            <p style="font-size: 0.9rem; color: #ccc;">
+                Draw your signature below. This will be securely saved to your profile and automatically stamped on ATA forms when you click "Approve".
+            </p>
+
+            <% if (user.signatureImage) { %>
+                <div style="font-size: 0.8rem; color: #aaa;">Current Saved Signature:</div>
+                <div class="signature-preview-box">
+                    <img src="<%= user.signatureImage %>" style="max-height: 80px;">
+                </div>
+            <% } %>
+
+            <div style="font-size: 0.8rem; color: #aaa; margin-top: 10px;">Draw New Signature:</div>
+            <div style="background: #e9ecef; border-radius: 5px; padding: 5px;">
+                <canvas id="vipSignatureCanvas" width="440" height="150" style="cursor: crosshair;"></canvas>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <button type="button" id="clearVipSigBtn" class="form-btn secondary-btn small-btn" style="background: #444; border: none; padding: 8px 15px; color: white;">
+                    <i class="fas fa-eraser"></i> Clear Canvas
+                </button>
+                <button type="button" id="deleteVipSigBtn" class="form-btn secondary-btn small-btn" 
+                        style="background: <%= user.signatureImage ? '#dc3545' : '#6c757d' %>; border: none; padding: 8px 15px; color: white; cursor: <%= user.signatureImage ? 'pointer' : 'not-allowed' %>;"
+                        <%= user.signatureImage ? '' : 'disabled' %>>
+                        <i class="fas fa-trash"></i> Delete
+                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="closeVipSigBtn" class="form-btn secondary-btn small-btn" style="background: #dc3545; border: none; padding: 8px 15px; color: white;">Cancel</button>
+                    
+                    <button type="button" id="previewVipSigBtn" class="form-btn secondary-btn small-btn" style="background: #17a2b8; border: none; padding: 8px 15px; color: white;">
+                        <i class="fas fa-file-pdf"></i> Preview on Form
+                    </button>
+                    
+                    <button type="button" id="saveVipSigBtn" class="form-btn primary-btn small-btn" style="background: #28a745; border: none; padding: 8px 15px; color: white;">
+                        <i class="fas fa-save"></i> Save Signature
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/ATA/js/ata_client.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.getElementById('sigModalOverlay');
+            const openBtn = document.getElementById('openSignatureModal');
+            const closeBtn = document.getElementById('closeVipSigBtn');
+            const clearBtn = document.getElementById('clearVipSigBtn');
+            const saveBtn = document.getElementById('saveVipSigBtn');
+            const previewBtn = document.getElementById('previewVipSigBtn');
+            const canvas = document.getElementById('vipSignatureCanvas');
+            const deleteBtn = document.getElementById('deleteVipSigBtn');
+            
+            let signaturePad;
+
+           // 👇 FIXED: Priority Hierarchy!
+            let effectiveRole = '<%= role %>';
+            const isPracticumCoord = <%= user.isPracticumCoordinator ? 'true' : 'false' %>;
+            
+            // Only switch to Practicum preview if they are NOT a major admin!
+            if (isPracticumCoord && effectiveRole !== 'Program-Chair' && effectiveRole !== 'Dean' && effectiveRole !== 'VPAA') {
+                effectiveRole = 'Practicum-Coordinator';
+            }
+
+            if (openBtn) {
+                openBtn.addEventListener('click', () => {
+                    overlay.style.display = 'flex';
+                    if (!signaturePad && typeof SignaturePad !== 'undefined') {
+                        signaturePad = new SignaturePad(canvas, { penColor: "rgb(0, 0, 0)", backgroundColor: "rgba(0,0,0,0)" });
+                    }
+                });
+            }
+
+            closeBtn.addEventListener('click', () => overlay.style.display = 'none');
+            clearBtn.addEventListener('click', () => { if (signaturePad) signaturePad.clear(); });
+            
+            // 🔴 MODAL DELETE BUTTON LOGIC
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    if (!confirm("Are you sure you want to completely delete your saved e-signature?")) return;
+                    
+                    const origText = deleteBtn.innerHTML;
+                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                    deleteBtn.disabled = true;
+
+                    try {
+                        const response = await fetch('/ata/settings/signature', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ signatureImage: "" }) 
+                        });
+
+                        if (response.ok) {
+                            alert("Signature successfully deleted from your Vault.");
+                            location.reload(); 
+                        } else {
+                            alert("Failed to delete signature.");
+                            deleteBtn.innerHTML = origText;
+                            deleteBtn.disabled = false;
+                        }
+                    } catch (error) {
+                        alert("Network error occurred.");
+                        deleteBtn.innerHTML = origText;
+                        deleteBtn.disabled = false;
+                    }
+                });
+            }
+
+            // 🟢 MODAL PREVIEW BUTTON LOGIC
+            previewBtn.addEventListener('click', async () => {
+                const sigToPreview = (signaturePad && !signaturePad.isEmpty()) ? signaturePad.toDataURL("image/png") : "<%= user.signatureImage || '' %>";
+                
+                if (!sigToPreview) {
+                    alert("Please draw a signature first to preview it!");
+                    return;
+                }
+
+                const origText = previewBtn.innerHTML;
+                previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                previewBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/ata/preview-vip-signature', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        // 👇 FIXED: Uses the smart role!
+                        body: JSON.stringify({ signatureImage: sigToPreview, role: effectiveRole })
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        window.open(URL.createObjectURL(blob), '_blank');
+                    } else {
+                        const errorMsg = await response.text();
+                        alert("Preview failed: " + errorMsg);
+                    }
+                } catch (error) {
+                    alert("Network error occurred.");
+                } finally {
+                    previewBtn.innerHTML = origText;
+                    previewBtn.disabled = false;
+                }
+            });
+
+            // 🔵 SAVE BUTTON LOGIC
+            saveBtn.addEventListener('click', async () => {
+                if (!signaturePad || signaturePad.isEmpty()) {
+                    alert("Please draw a signature before saving!");
+                    return;
+                }
+
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                saveBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/ata/settings/signature', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ signatureImage: signaturePad.toDataURL("image/png") })
+                    });
+
+                    const responseData = await response.json().catch(() => ({})); 
+
+                    if (response.ok) {
+                        alert("Signature saved securely to your Vault!");
+                        location.reload(); 
+                    } else {
+                        alert("Server Rejected Save:\n" + (responseData.error || response.statusText || "Unknown Error"));
+                    }
+                } catch (error) {
+                    alert("Network error occurred.");
+                } finally {
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Signature';
+                    saveBtn.disabled = false;
+                }
+            });
+
+            // =========================================================
+            // 🌟 MAIN DASHBOARD BUTTON LOGIC (Outside the Modal)
+            // =========================================================
+            const mainPreviewBtn = document.getElementById('mainPreviewSigBtn');
+            const mainDeleteBtn = document.getElementById('mainDeleteSigBtn');
+
+            // 1. Dashboard Preview Button
+            if (mainPreviewBtn) {
+                mainPreviewBtn.addEventListener('click', async () => {
+                    const origText = mainPreviewBtn.innerHTML;
+                    mainPreviewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                    mainPreviewBtn.disabled = true;
+
+                    try {
+                        const response = await fetch('/ata/preview-vip-signature', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            // 👇 FIXED: Uses the smart role!
+                            body: JSON.stringify({ signatureImage: "<%= user.signatureImage || '' %>", role: effectiveRole })
+                        });
+
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            window.open(URL.createObjectURL(blob), '_blank');
+                        } else {
+                            alert("Preview failed: " + await response.text());
+                        }
+                    } catch (error) {
+                        alert("Network error occurred.");
+                    } finally {
+                        mainPreviewBtn.innerHTML = origText;
+                        mainPreviewBtn.disabled = false;
+                    }
+                });
+            }
+
+            // 2. Dashboard Delete Button
+            if (mainDeleteBtn) {
+                mainDeleteBtn.addEventListener('click', async () => {
+                    if (!confirm("Are you sure you want to completely delete your saved e-signature?")) return;
+                    
+                    const origText = mainDeleteBtn.innerHTML;
+                    mainDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                    mainDeleteBtn.disabled = true;
+
+                    try {
+                        const response = await fetch('/ata/settings/signature', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ signatureImage: "" }) 
+                        });
+
+                        if (response.ok) {
+                            alert("Signature successfully deleted from your Vault.");
+                            location.reload(); 
+                        } else {
+                            alert("Failed to delete signature.");
+                            mainDeleteBtn.innerHTML = origText;
+                            mainDeleteBtn.disabled = false;
+                        }
+                    } catch (error) {
+                        alert("Network error occurred.");
+                        mainDeleteBtn.innerHTML = origText;
+                        mainDeleteBtn.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { mainDB } from '../../database/mongo-dbconnect.js';
 
 // ==========================================
 // 1. EMBEDDED SUBDOCUMENTS (Mapping to the PDF Sections)
@@ -51,15 +52,18 @@ const sectionG_Schema = new mongoose.Schema({
 
 // Handles State Machine Audit Trail
 const approvalHistorySchema = new mongoose.Schema({
-    // 👇 Updated the enum list to match your actual User roles 👇
     approverRole: { 
         type: String, 
-        enum: ['Program-Chair', 'Practicum-Coordinator', 'Dean', 'VPAA', 'HRMO'] 
+        // 👇 FIXED: Added 'HR' so the database accepts Vince's signature!
+        enum: ['Program-Chair', 'Practicum-Coordinator', 'Dean', 'VPAA', 'HR', 'HRMO'] 
     },
-    approvalStatus: { type: String, enum: ['ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED'] },
+    approverName: { type: String }, 
+    approvalStatus: { type: String, enum: ['ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED', 'FINALIZED'] },
     remarks: String, 
+    signatureImage: String,
     date: { type: Date, default: Date.now } 
 });
+
 // ==========================================
 // 2. MAIN ATA FORM SCHEMA
 // ==========================================
@@ -70,13 +74,21 @@ const ataFormSchema = new mongoose.Schema({
     facultyName: String,
     position: String,
     college: String,
+    employmentStatus: String,
     employmentType: String,
     address: String,
+    facultySignature: String,
     
     // Form Metadata
     term: { type: String, default: "2nd Term 2025-2026" },
     academicYear: { type: String, default: "2025-2026" },
-    status: { type: String, default: 'DRAFT' },
+    
+    // 👇 FIXED: Strictly defined the allowed statuses, including 'PENDING_HR'
+    status: { 
+        type: String, 
+        enum: ['DRAFT', 'PENDING_CHAIR', 'PENDING_PRACTICUM', 'PENDING_DEAN', 'PENDING_VPAA', 'PENDING_HR', 'FINALIZED', 'RETURNED'],
+        default: 'DRAFT' 
+    },
     
     // Math Engine Totals
     totalTeachingUnits: { type: Number, default: 0 },
@@ -96,5 +108,5 @@ const ataFormSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-const ATAForm = mongoose.model('ATAForm', ataFormSchema);
+const ATAForm = mainDB.model('ATAForm', ataFormSchema);
 export default ATAForm;
