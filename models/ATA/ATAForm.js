@@ -58,7 +58,7 @@ const approvalHistorySchema = new mongoose.Schema({
         enum: ['Professor','Program-Chair', 'Practicum-Coordinator', 'Dean', 'VPAA', 'HR', 'HRMO'] 
     },
     approverName: { type: String }, 
-    approvalStatus: { type: String, enum: ['RESUBMITTED','ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED', 'FINALIZED'] },
+    approvalStatus: { type: String, enum: ['RESUBMITTED','ENDORSED', 'VALIDATED', 'APPROVED', 'NOTED', 'RETURNED', 'FINALIZED', 'ARCHIVED'] },
     remarks: String, 
     signatureImage: String,
     date: { type: Date, default: Date.now } 
@@ -86,7 +86,7 @@ const ataFormSchema = new mongoose.Schema({
     // 👇 FIXED: Strictly defined the allowed statuses, including 'PENDING_HR'
     status: { 
         type: String, 
-        enum: ['DRAFT', 'PENDING_CHAIR', 'PENDING_PRACTICUM', 'PENDING_DEAN', 'PENDING_VPAA', 'PENDING_HR', 'FINALIZED', 'RETURNED'],
+        enum: ['DRAFT', 'PENDING_CHAIR', 'PENDING_PRACTICUM', 'PENDING_DEAN', 'PENDING_VPAA', 'PENDING_HR', 'FINALIZED', 'RETURNED', 'ARCHIVED'],
         default: 'DRAFT' 
     },
     
