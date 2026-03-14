@@ -4,6 +4,37 @@
   <meta charset="UTF-8" />
   <title>TWS - Create Teaching Workload Sheet</title>
   <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+  <style>
+    .tws-inline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .tws-added-list {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .tws-added-item {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .tws-added-item b {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .tws-added-meta {
+      font-size: 12px;
+      opacity: 0.92;
+      line-height: 1.45;
+    }
+  </style>
 </head>
 
 <body class="tws-app-body">
@@ -25,7 +56,6 @@
       <div class="tws-card-header">
         <div class="tws-card-title">Create Teaching Workload Sheet</div>
 
-        <!-- mimic "Filter / Search / Refresh" like your UI -->
         <div class="pc-actions">
           <button class="pc-chip" type="button">Filter by Department</button>
           <button class="pc-chip" type="button">Search...</button>
@@ -33,7 +63,6 @@
         </div>
       </div>
 
-      <!-- SUBJECT TABLE -->
       <div class="tws-table tws-workload-table">
         <div class="tws-row tws-head tws-workload-row">
           <div>Course Code</div>
@@ -78,38 +107,41 @@
         <% }) %>
       </div>
 
-      <!-- optional: show list of added subjects (para sure ka na na-add) -->
-      <div style="margin-top:12px; opacity:.95; font-size:12px;">
-        <b>Added Subjects:</b>
+      <div class="tws-added-list">
+        <div style="font-size:13px; font-weight:800;">Added Subjects</div>
+
         <% if (!tws.createdWorkload || tws.createdWorkload.length === 0) { %>
-          <span> none</span>
+          <div style="font-size:12px; opacity:.9;">No subjects added yet.</div>
         <% } else { %>
-          <span>
-            <%= tws.createdWorkload.map(x => x.code).join(", ") %>
-          </span>
+          <% tws.createdWorkload.forEach(item => { %>
+            <div class="tws-added-item">
+              <b><%= item.code %> - <%= item.title %></b>
+              <div class="tws-added-meta">
+                <div><strong>Schedule:</strong> <%= item.timeSlot || "—" %></div>
+                <div><strong>Section / Room:</strong> <%= item.sectionRoom || "—" %></div>
+                <div><strong>Units:</strong> <%= Number(item.units || 0).toFixed(2) %></div>
+              </div>
+            </div>
+          <% }) %>
         <% } %>
       </div>
 
     </section>
 
-    <!-- Footer buttons -->
     <div class="tws-footer-actions">
-  <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Back</a>
-  <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
-</div>
+      <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Back</a>
+      <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
+    </div>
 
   </div>
   </main>
 </div>
 
-<!-- POPUP MODAL -->
 <div class="tws-modal-bg" id="addModal">
   <div class="tws-modal">
     <div class="tws-modal-title" id="modalTitle">Add Subject</div>
 
-    <!-- REAL SUBMIT FORM -->
     <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/add">
-      <!-- hidden fields (subject info) -->
       <input type="hidden" name="code" id="m_code" />
       <input type="hidden" name="title" id="m_title" />
       <input type="hidden" name="units" id="m_units" />
@@ -126,22 +158,46 @@
         <option value="Sun">Sun</option>
       </select>
 
-      <label>Choose Time Slot</label>
-      <select name="timeSlot" required>
-        <option value="">-- Select --</option>
-        <option>7:00 AM - 8:15 AM</option>
-        <option>8:15 AM - 9:30 AM</option>
-        <option>9:30 AM - 10:45 AM</option>
-        <option>10:45 AM - 12:00 PM</option>
-        <option>1:15 PM - 2:30 PM</option>
-        <option>2:30 PM - 3:45 PM</option>
-        <option>3:45 PM - 5:00 PM</option>
-        <option>5:00 PM - 6:15 PM</option>
-        <option>6:15 PM - 7:30 PM</option>
-        <option>7:30 PM - 8:45 PM</option>
-      </select>
+      <div class="tws-inline-grid">
+  <div>
+    <label>Start Time</label>
+    <select name="startTime" required>
+      <option value="">-- Select Start Time --</option>
+      <option value="7:00 AM">7:00 AM</option>
+      <option value="8:15 AM">8:15 AM</option>
+      <option value="9:30 AM">9:30 AM</option>
+      <option value="10:45 AM">10:45 AM</option>
+      <option value="12:00 PM">12:00 PM</option>
+      <option value="1:15 PM">1:15 PM</option>
+      <option value="2:30 PM">2:30 PM</option>
+      <option value="3:45 PM">3:45 PM</option>
+      <option value="5:00 PM">5:00 PM</option>
+      <option value="6:15 PM">6:15 PM</option>
+      <option value="7:30 PM">7:30 PM</option>
+      <option value="8:45 PM">8:45 PM</option>
+    </select>
+  </div>
 
-      <label>Choose Section</label>
+  <div>
+    <label>End Time</label>
+    <select name="endTime" required>
+      <option value="">-- Select End Time --</option>
+      <option value="8:15 AM">8:15 AM</option>
+      <option value="9:30 AM">9:30 AM</option>
+      <option value="10:45 AM">10:45 AM</option>
+      <option value="12:00 PM">12:00 PM</option>
+      <option value="1:15 PM">1:15 PM</option>
+      <option value="2:30 PM">2:30 PM</option>
+      <option value="3:45 PM">3:45 PM</option>
+      <option value="5:00 PM">5:00 PM</option>
+      <option value="6:15 PM">6:15 PM</option>
+      <option value="7:30 PM">7:30 PM</option>
+      <option value="8:45 PM">8:45 PM</option>
+      <option value="10:00 PM">10:00 PM</option>
+    </select>
+  </div>
+</div>
+      <label style="margin-top:10px;">Choose Section</label>
       <select name="sectionRoom" required>
         <option value="">-- Select --</option>
         <option>A1531 | R611</option>
@@ -149,9 +205,16 @@
         <option>A1533 | R613</option>
       </select>
 
+      <div style="font-size:11px; opacity:.85; margin-top:10px; line-height:1.45;">
+        Example formats:
+        <br />
+        7:00 AM
+        <br />
+        10:45 AM
+      </div>
+
       <div class="tws-modal-actions">
         <button class="tws-modal-cancel" type="button" onclick="closeModal()">Cancel</button>
-        <!-- SUBMIT => adds subject => redirects back SAME PAGE -->
         <button class="tws-modal-add" type="submit">+ Add Subject</button>
       </div>
     </form>
@@ -165,9 +228,9 @@ function openModal(code, title, units){
   document.getElementById("m_code").value = code;
   document.getElementById("m_title").value = title;
   document.getElementById("m_units").value = units;
-
   document.getElementById("addModal").style.display = "flex";
 }
+
 function closeModal(){
   document.getElementById("addModal").style.display = "none";
 }

@@ -4,6 +4,7 @@ const facultySchema = new Schema(
   {
     name: { type: String, default: "" },
     empId: { type: String, default: "" },
+    email: { type: String, default: "" },
     dept: { type: String, default: "" },
     acadYear: { type: String, default: "" },
     term: { type: String, default: "" },
@@ -49,7 +50,15 @@ const twsSchema = new Schema(
     },
 
     assignedFacultyId: { type: String, default: "" },
+    assignedFacultyEmail: { type: String, default: "" },
     assignedFacultyName: { type: String, default: "" },
+
+    facultySigned: { type: Boolean, default: false },
+    facultySignedAt: { type: Date, default: null },
+    facultySignatureImage: { type: String, default: "" },
+    facultySignerName: { type: String, default: "" },
+    facultySignerEmpId: { type: String, default: "" },
+    facultySignerEmail: { type: String, default: "" },
 
     status: {
       type: String,

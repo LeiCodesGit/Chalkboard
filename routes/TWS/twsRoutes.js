@@ -5,9 +5,11 @@ import TWSApprovalStatus from "../../models/TWS/twsApprovalStatus.js";
 import User from "../../models/user.js";
 import mongoose from "mongoose";
 import SUBJECTS from "../../config/twsSubjects.js";
+import puppeteer from "puppeteer";
 import {
   getSessionUser, getSessionUserId, getSessionUserRole,
-  buildFacultyName, defaultFacultyFromUser, computeTotals,
+  buildFacultyName, normalizeEmail, facultyMatchesTws,
+  defaultFacultyFromUser, computeTotals,
   normalizeLoads, normalizeTwsForView, approverLabel, asyncHandler,
 } from "../../utils/twsHelpers.js";
 import {
@@ -83,6 +85,20 @@ function requireHROrAdmin(req, res, next) {
   next();
 }
 
+function requireProfessor(req, res, next) {
+  const user = getSessionUser(req);
+  const role = getSessionUserRole(user);
+
+  if (!user) return res.redirect("/login");
+
+  if (role !== "Professor") {
+    return res.status(403).send("Forbidden: Professor access only.");
+  }
+
+  req.twsUser = user;
+  next();
+}
+
 async function getOwnedTwsOr404(req, res) {
   const userId = getSessionUserId(req.twsUser);
 
@@ -125,23 +141,20 @@ async function getAccessibleTwsOr404(req, res) {
   }
 
   // Professor can view TWS assigned to them
-  if (role === "Professor") {
+    if (role === "Professor") {
     const tws = await TWS.findById(req.params.id);
     if (!tws) {
       res.status(404).send("TWS not found");
       return null;
     }
-    const empId = req.twsUser?.employeeId || "";
-    const name = buildFacultyName(req.twsUser);
-    const isAssigned =
-      tws.assignedFacultyId === empId ||
-      tws.assignedFacultyName === name ||
-      tws.faculty?.empId === empId ||
-      tws.faculty?.name === name;
+
+    const isAssigned = facultyMatchesTws(tws, req.twsUser);
+
     if (!isAssigned) {
       res.status(403).send("Forbidden: this TWS is not assigned to you.");
       return null;
     }
+
     return tws;
   }
 
@@ -179,6 +192,44 @@ async function batchApprovals(twsDocs) {
   const map = {};
   approvals.forEach((a) => { map[String(a.twsID)] = a; });
   return map;
+}
+
+async function getSignatoryNamesByDepartment(dept) {
+  let deanName = "";
+  let programChairName = "";
+
+  if (!dept) {
+    return { deanName, programChairName };
+  }
+
+  const [deanUser, chairUser] = await Promise.all([
+    UserModel.findOne({ role: "Dean", department: dept }).lean(),
+    UserModel.findOne({ role: "Program-Chair", department: dept }).lean(),
+  ]);
+
+  if (deanUser) deanName = buildFacultyName(deanUser);
+  if (chairUser) programChairName = buildFacultyName(chairUser);
+
+  return { deanName, programChairName };
+}
+
+function buildPdfFilename(tws) {
+  const facultyName = String(tws?.faculty?.name || "faculty")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^\w\-]/g, "");
+
+  const term = String(tws?.term || tws?.faculty?.term || "term")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^\w\-]/g, "");
+
+  const schoolYear = String(tws?.schoolYear || tws?.faculty?.acadYear || "school-year")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^\w\-]/g, "");
+
+  return `TWS_${facultyName}_${term}_${schoolYear}.pdf`;
 }
 
 /* ======================================================
@@ -228,16 +279,16 @@ router.get(
     }
 
     // Professor => Faculty dashboard
-    if (role === "Professor") {
+        if (role === "Professor") {
       const facultyName = buildFacultyName(req.twsUser);
       const employeeId = req.twsUser?.employeeId || "";
+      const facultyEmail = normalizeEmail(req.twsUser?.email || "");
 
       const docs = await TWS.find({
         $or: [
-          { assignedFacultyId: employeeId },
-          { assignedFacultyName: facultyName },
-          { "faculty.empId": employeeId },
-          { "faculty.name": facultyName },
+          ...(employeeId ? [{ assignedFacultyId: employeeId }, { "faculty.empId": employeeId }] : []),
+          ...(facultyEmail ? [{ assignedFacultyEmail: facultyEmail }, { "faculty.email": facultyEmail }] : []),
+          ...(facultyName ? [{ assignedFacultyName: facultyName }, { "faculty.name": facultyName }] : []),
         ],
       })
         .sort({ createdAt: -1 })
@@ -341,12 +392,23 @@ router.post(
 
     const action = req.body.action || "next";
 
-    // Validate (skip on save-as-draft)
     if (action !== "save") {
       const { valid, errors } = validateFacultyInfo(req.body);
       if (!valid) {
+        const fallbackView = normalizeTwsForView(tws);
+        fallbackView.faculty = {
+          ...fallbackView.faculty,
+          name: req.body.name || "",
+          empId: req.body.empId || "",
+          email: req.body.email || "",
+          dept: req.body.dept || "",
+          acadYear: req.body.acadYear || "",
+          term: req.body.term || "",
+          empStatus: req.body.empStatus || "",
+        };
+
         return res.status(400).render("TWS/twsFacultyInfo", {
-          tws: normalizeTwsForView(tws),
+          tws: fallbackView,
           currentPageCategory: "tws",
           user: req.twsUser,
           validationErrors: errors,
@@ -354,9 +416,12 @@ router.post(
       }
     }
 
+    const normalizedEmail = normalizeEmail(req.body.email || "");
+
     tws.faculty = {
       name: req.body.name || "",
       empId: req.body.empId || "",
+      email: normalizedEmail,
       dept: req.body.dept || "",
       acadYear: req.body.acadYear || "",
       term: req.body.term || "",
@@ -366,6 +431,7 @@ router.post(
     tws.term = req.body.term || "";
     tws.schoolYear = req.body.acadYear || "";
     tws.assignedFacultyId = req.body.empId || "";
+    tws.assignedFacultyEmail = normalizedEmail;
     tws.assignedFacultyName = req.body.name || "";
 
     await tws.save();
@@ -411,9 +477,12 @@ router.post(
       return res.status(400).send(`Validation failed: ${errors.join(" ")}`);
     }
 
-    const { code, title, units, day, timeSlot, sectionRoom } = req.body;
+    const { code, title, units, day, startTime, endTime, sectionRoom } = req.body;
+
     const normalizedDay = String(day || "").trim();
-    const normalizedTimeRange = String(timeSlot || "").trim();
+    const normalizedStartTime = String(startTime || "").trim();
+    const normalizedEndTime = String(endTime || "").trim();
+    const normalizedTimeRange = `${normalizedStartTime} - ${normalizedEndTime}`;
     const normalizedTimeSlot = normalizedDay
       ? `${normalizedDay} ${normalizedTimeRange}`
       : normalizedTimeRange;
@@ -435,9 +504,11 @@ router.post(
         description: title || "",
         units: Number(units || 0),
         day: normalizedDay,
+        startTime: normalizedStartTime,
+        endTime: normalizedEndTime,
+        time: normalizedTimeRange,
         timeSlot: normalizedTimeSlot,
         sectionRoom: sectionRoom || "",
-        time: normalizedTimeRange,
         section,
         designatedRoom,
         department: tws.faculty?.dept || "",
@@ -657,6 +728,7 @@ router.post(
       tws.status = "Sent to Faculty";
       tws.sentToFacultyAt = new Date();
       tws.assignedFacultyId = tws.faculty?.empId || "";
+      tws.assignedFacultyEmail = normalizeEmail(tws.faculty?.email || "");
       tws.assignedFacultyName = tws.faculty?.name || "";
       await tws.save();
 
@@ -700,45 +772,208 @@ router.post(
   })
 );
 
+router.get(
+  "/signature-settings",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const liveUser = await UserModel.findById(getSessionUserId(req.twsUser)).lean();
+
+    return res.render("TWS/twsSignatureSettings", {
+      currentPageCategory: "tws",
+      user: {
+        ...req.twsUser,
+        signatureImage: liveUser?.signatureImage || req.twsUser?.signatureImage || "",
+      },
+    });
+  })
+);
+
+router.post(
+  "/signature-settings",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const { signatureImage } = req.body;
+
+    if (!signatureImage || !String(signatureImage).startsWith("data:image/")) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid signature image.",
+      });
+    }
+
+    const liveUser = await UserModel.findById(getSessionUserId(req.twsUser));
+    if (!liveUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    liveUser.signatureImage = signatureImage;
+    await liveUser.save();
+
+   if (req.session?.user) {
+  req.session.user.signatureImage = "";
+}
+if (req.session?.account) {
+  req.session.account.signatureImage = "";
+}
+    return res.json({
+      success: true,
+      message: "E-signature saved successfully.",
+    });
+  })
+);
+
+router.post(
+  "/signature-settings/clear",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const liveUser = await UserModel.findById(getSessionUserId(req.twsUser));
+    if (!liveUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    liveUser.signatureImage = "";
+    await liveUser.save();
+
+    if (req.session?.user) {
+  req.session.user.signatureImage = signatureImage;
+}
+if (req.session?.account) {
+  req.session.account.signatureImage = signatureImage;
+}
+    return res.json({
+      success: true,
+      message: "E-signature removed successfully.",
+    });
+  })
+);
+
+router.get(
+  "/pdf/:id",
+  requireLoggedIn,
+  asyncHandler(async (req, res) => {
+    const tws = await getAccessibleTwsOr404(req, res);
+    if (!tws) return;
+
+    if (!["Approved", "Archived"].includes(tws.status)) {
+      return res
+        .status(400)
+        .send("PDF download is only available for final approved or archived TWS records.");
+    }
+
+    const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
+    const approval = await TWSApprovalStatus.findOne({ twsID: tws._id }).lean();
+
+    const { deanName, programChairName } = await getSignatoryNamesByDepartment(
+      tws.faculty?.dept || ""
+    );
+
+    const twsView = normalizeTwsForView(tws, courses, approval);
+    twsView.deanName = deanName;
+    twsView.programChairName = programChairName;
+
+    const html = await new Promise((resolve, reject) => {
+      req.app.render(
+        "TWS/twsPdf",
+        {
+          tws: twsView,
+          user: req.twsUser,
+          currentPageCategory: "tws",
+          generatedAt: new Date(),
+        },
+        (err, renderedHtml) => {
+          if (err) return reject(err);
+          resolve(renderedHtml);
+        }
+      );
+    });
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: "networkidle0" });
+
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: {
+          top: "18mm",
+          right: "12mm",
+          bottom: "18mm",
+          left: "12mm",
+        },
+      });
+
+      tws.pdf = pdfBuffer;
+      await tws.save();
+
+      const filename = buildPdfFilename(tws);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.send(pdfBuffer);
+    } finally {
+      await browser.close();
+    }
+  })
+);
+
 /* ======================================================
    FACULTY SIGNATURE
 ====================================================== */
 router.post(
   "/signature",
-  requireLoggedIn,
+  requireProfessor,
   asyncHandler(async (req, res) => {
     const { id } = req.body;
-    if (!id) return res.redirect("/tws/dashboard");
+    if (!id) return res.status(400).send("TWS ID is required.");
 
     const tws = await TWS.findById(id);
-    if (!tws) return res.redirect("/tws/dashboard");
+    if (!tws) return res.status(404).send("TWS not found.");
 
-    const role = getSessionUserRole(req.twsUser);
-    if (role !== "Professor") {
-      return res.status(403).send("Forbidden: only Faculty/Professor can sign TWS.");
+    const isAssigned = facultyMatchesTws(tws, req.twsUser);
+    if (!isAssigned) {
+      return res.status(403).send("Forbidden: this TWS is not assigned to you.");
     }
 
-    // Object-level auth: only the assigned faculty can sign
-    const empId = req.twsUser?.employeeId || "";
-    const name = buildFacultyName(req.twsUser);
-    const isAssigned = tws.assignedFacultyId === empId || tws.assignedFacultyName === name;
-    if (!isAssigned) return res.status(403).send("Forbidden: this TWS is not assigned to you.");
+    const liveUser = await UserModel.findById(getSessionUserId(req.twsUser)).lean();
+    const signatureImage = liveUser?.signatureImage || "";
 
-    try { transitionOrThrow(tws.status, "Sent to Dean"); } catch (e) {
-      return res.redirect(`/tws/summary/${tws._id}?error=${encodeURIComponent(e.message)}`);
-    }
+    if (!signatureImage) {
+  return res
+    .status(400)
+    .send("No saved signature found in your account. Please upload your signature first.");
+}
 
+    tws.facultySigned = true;
+    tws.facultySignedAt = new Date();
+    tws.facultySignatureImage = signatureImage;
+    tws.facultySignerName = buildFacultyName(req.twsUser);
+    tws.facultySignerEmpId = req.twsUser?.employeeId || "";
+    tws.facultySignerEmail = normalizeEmail(req.twsUser?.email || "");
     tws.status = "Sent to Dean";
     tws.sentToDeanAt = new Date();
+
     await tws.save();
 
     await TWSApprovalStatus.findOneAndUpdate(
       { twsID: tws._id },
       {
-        status: "Pending",
-        remarks: "Faculty signed and sent to Dean",
-        approvedBy: "",
-        approvalDate: null,
+        $set: {
+          twsID: tws._id,
+          status: "Pending Dean Approval",
+          updatedBy: buildFacultyName(req.twsUser) || req.twsUser?.email || "Professor",
+          remarks: "Signed by faculty and forwarded to Dean.",
+        },
       },
       { upsert: true, new: true }
     );
@@ -749,40 +984,36 @@ router.post(
 
 router.post(
   "/faculty-return/:id",
-  requireLoggedIn,
+  requireProfessor,
   asyncHandler(async (req, res) => {
-    const tws = await getAnyTwsOr404(req, res);
-    if (!tws) return;
+    const tws = await TWS.findById(req.params.id);
+    if (!tws) return res.status(404).send("TWS not found.");
 
-    const role = getSessionUserRole(req.twsUser);
-    if (role !== "Professor") {
-      return res.status(403).send("Forbidden: only Faculty/Professor can return TWS for revision.");
-    }
-
-    const empId = req.twsUser?.employeeId || "";
-    const name = buildFacultyName(req.twsUser);
-    const isAssigned =
-      tws.assignedFacultyId === empId ||
-      tws.assignedFacultyName === name ||
-      tws.faculty?.empId === empId ||
-      tws.faculty?.name === name;
-    if (!isAssigned) return res.status(403).send("Forbidden: this TWS is not assigned to you.");
-
-    try { transitionOrThrow(tws.status, "Returned to Program Chair"); } catch (e) {
-      return res.redirect(`/tws/summary/${tws._id}?error=${encodeURIComponent(e.message)}`);
+    const isAssigned = facultyMatchesTws(tws, req.twsUser);
+    if (!isAssigned) {
+      return res.status(403).send("Forbidden: this TWS is not assigned to you.");
     }
 
     tws.status = "Returned to Program Chair";
+    tws.facultySigned = false;
+    tws.facultySignedAt = null;
+    tws.facultySignatureImage = "";
+    tws.facultySignerName = "";
+    tws.facultySignerEmpId = "";
+    tws.facultySignerEmail = "";
+    tws.sentToDeanAt = null;
+
     await tws.save();
 
-    const remarks = String(req.body?.remarks || "").trim();
     await TWSApprovalStatus.findOneAndUpdate(
       { twsID: tws._id },
       {
-        status: "Returned",
-        remarks: remarks || "Returned for revision by Faculty",
-        approvedBy: buildFacultyName(req.twsUser) || "Faculty",
-        approvalDate: new Date(),
+        $set: {
+          twsID: tws._id,
+          status: "Returned to Program Chair",
+          updatedBy: buildFacultyName(req.twsUser) || req.twsUser?.email || "Professor",
+          remarks: "Returned by faculty for revision.",
+        },
       },
       { upsert: true, new: true }
     );
@@ -900,11 +1131,13 @@ router.post(
     const remarks = req.body.remarks || "";
 
     if (action === "approve") {
-      try { transitionOrThrow(tws.status, "Approved"); } catch (e) {
-        return res.status(400).send(e.message);
-      }
-      tws.status = "Approved";
-      tws.approvedAt = new Date();
+  if (!tws.facultySigned || !tws.facultySignatureImage) {
+    return res.status(400).send("This TWS cannot be approved yet because the faculty signature is missing.");
+  }
+
+  tws.status = "Approved";
+  tws.approvedAt = new Date();
+
       await tws.save();
 
       await TWSApprovalStatus.findOneAndUpdate(
@@ -1023,11 +1256,12 @@ router.get(
       role === "Dean"
         ? { status: "Archived" }
         : role === "Professor"
-        ? {
+                ? {
             status: "Archived",
             $or: [
-              { assignedFacultyId: req.twsUser?.employeeId || "" },
-              { assignedFacultyName: buildFacultyName(req.twsUser) },
+              ...(req.twsUser?.employeeId ? [{ assignedFacultyId: req.twsUser.employeeId }, { "faculty.empId": req.twsUser.employeeId }] : []),
+              ...(req.twsUser?.email ? [{ assignedFacultyEmail: normalizeEmail(req.twsUser.email) }, { "faculty.email": normalizeEmail(req.twsUser.email) }] : []),
+              ...(buildFacultyName(req.twsUser) ? [{ assignedFacultyName: buildFacultyName(req.twsUser) }, { "faculty.name": buildFacultyName(req.twsUser) }] : []),
             ],
           }
         : { userID: userId, status: "Archived" };

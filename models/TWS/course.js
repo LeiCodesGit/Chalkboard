@@ -15,10 +15,15 @@ const courseSchema = new Schema(
     units: { type: Number, default: 0 },
 
     designatedRoom: { type: String, default: "" },
-    time: { type: String, default: "" },
+
     day: { type: String, default: "" },
 
+    startTime: { type: String, default: "" },
+    endTime: { type: String, default: "" },
+
+    time: { type: String, default: "" },
     timeSlot: { type: String, default: "" },
+
     sectionRoom: { type: String, default: "" },
 
     department: { type: String, default: "" },

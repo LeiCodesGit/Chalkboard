@@ -19,10 +19,30 @@ export function buildFacultyName(user) {
   return parts.join(" ").trim();
 }
 
+export function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+export function facultyMatchesTws(tws, user) {
+  const empId = String(user?.employeeId || "").trim();
+  const email = normalizeEmail(user?.email || "");
+  const name = buildFacultyName(user);
+
+  return (
+    (empId && tws?.assignedFacultyId === empId) ||
+    (email && normalizeEmail(tws?.assignedFacultyEmail) === email) ||
+    (empId && tws?.faculty?.empId === empId) ||
+    (email && normalizeEmail(tws?.faculty?.email) === email) ||
+    (!!name && tws?.assignedFacultyName === name) ||
+    (!!name && tws?.faculty?.name === name)
+  );
+}
+
 export function defaultFacultyFromUser(user) {
   return {
     name: buildFacultyName(user),
     empId: user?.employeeId || "",
+    email: normalizeEmail(user?.email || ""),
     dept: user?.department || "",
     acadYear: "",
     term: "",
@@ -61,13 +81,31 @@ export function normalizeLoads(loads) {
   }));
 }
 
+function buildDisplayTimeSlot(course) {
+  const day = String(course.day || "").trim();
+  const startTime = String(course.startTime || "").trim();
+  const endTime = String(course.endTime || "").trim();
+
+  if (day && startTime && endTime) {
+    return `${day} ${startTime} - ${endTime}`;
+  }
+
+  if (startTime && endTime) {
+    return `${startTime} - ${endTime}`;
+  }
+
+  return course.timeSlot || course.time || "";
+}
+
 export function normalizeCourseForView(c) {
   return {
     code: c.courseCode || "",
     title: c.courseTitle || c.description || "",
     units: Number(c.units || 0),
     day: c.day || "",
-    timeSlot: c.timeSlot || c.time || "",
+    startTime: c.startTime || "",
+    endTime: c.endTime || "",
+    timeSlot: buildDisplayTimeSlot(c),
     sectionRoom:
       c.sectionRoom || [c.section, c.designatedRoom].filter(Boolean).join(" | "),
   };

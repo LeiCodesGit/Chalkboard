@@ -16,11 +16,30 @@
 
       <div class="page-title">TWS - Faculty</div>
 
+      <% const hasSavedSignature = !!(user && user.signatureImage); %>
+
+      <% if (!hasSavedSignature) { %>
+        <div class="panel" style="margin-bottom:16px; border:1px solid rgba(255,255,255,.12);">
+          <div style="display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:700; margin-bottom:4px;">No saved e-signature yet</div>
+              <div style="font-size:13px; opacity:.82;">
+                Please set up your signature first before signing any TWS.
+              </div>
+            </div>
+            <a class="btn btn-green" href="/tws/signature-settings">Set Up E-Signature</a>
+          </div>
+        </div>
+      <% } %>
+
       <!-- ===== Teaching Workload Sheets ===== -->
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">Teaching Workload Sheets</div>
           <div class="panel-actions">
+            <a class="btn btn-green" href="/tws/signature-settings">
+              <%= hasSavedSignature ? "Manage E-Signature" : "Set Up E-Signature" %>
+            </a>
             <button class="btn btn-purple" type="button">&#9965; Filter by Department</button>
             <a class="btn" href="/tws/dashboard">Refresh</a>
           </div>
@@ -54,6 +73,21 @@
                 timeZone: "Asia/Manila",
               });
             }
+
+            function formatDateTimePH(value) {
+              if (!value) return "";
+              var date = new Date(value);
+              if (isNaN(date.getTime())) return "";
+              return date.toLocaleString("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+                timeZone: "Asia/Manila",
+              });
+            }
           %>
 
           <% (list || []).forEach(function(t) {
@@ -62,12 +96,18 @@
                var st = (t.status || 'Draft').toLowerCase();
                var statusLabel = t.status || 'Draft';
                var badge = 's-draft';
-               if (st === 'approved')                        badge = 's-approved';
+
+               if (st === 'approved') badge = 's-approved';
                else if (st === 'submitted' || st === 'sent to dean') badge = 's-submitted';
-               else if (st === 'sent to faculty') { badge = 's-for-review'; statusLabel = 'For Signing'; }
+               else if (st === 'sent to faculty') {
+                 badge = 's-for-review';
+                 statusLabel = t.facultySigned ? 'Signed' : 'For Signing';
+               }
                else if (st.includes('chair') || st.includes('review')) badge = 's-for-review';
-               else if (st.includes('returned'))             badge = 's-returned';
-               var canSignNow = st === 'sent to faculty';
+               else if (st.includes('returned')) badge = 's-returned';
+
+               var canSignNow = st === 'sent to faculty' && !t.facultySigned;
+               var signedAtText = formatDateTimePH(t.facultySignedAt);
           %>
             <div class="trow">
               <div><%= (t.faculty && t.faculty.acadYear) ? t.faculty.acadYear : (t.schoolYear || '—') %></div>
@@ -75,15 +115,54 @@
               <div><%= dateStr %></div>
               <div>
                 <span class="status-badge <%= badge %>"><%= statusLabel %></span>
+                <% if (t.facultySigned && signedAtText) { %>
+                  <div style="font-size:11px; opacity:.75; margin-top:4px;">
+                    Signed: <%= signedAtText %> (PHT)
+                  </div>
+                <% } %>
               </div>
               <div class="tcell-right">
-                <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>
-                <% if (canSignNow) { %>
-                  <form method="POST" action="/tws/signature" style="display:inline;">
-                    <input type="hidden" name="id" value="<%= t.id %>" />
-                    <button class="pill pill-edit" type="submit" style="cursor:pointer;">Sign</button>
-                  </form>
-                <% } %>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
+                  <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>
+
+                  <% if (canSignNow) { %>
+                    <% if (hasSavedSignature) { %>
+                      <form method="POST" action="/tws/signature" style="display:inline;">
+                        <input type="hidden" name="id" value="<%= t.id %>" />
+                        <button
+                          class="pill pill-edit"
+                          type="submit"
+                          style="cursor:pointer;"
+                          onclick="return confirm('Use your saved e-signature for this TWS?')"
+                        >
+                          Sign
+                        </button>
+                      </form>
+                    <% } else { %>
+                      <a class="pill pill-edit" href="/tws/signature-settings" style="text-decoration:none;">
+                        Set Signature First
+                      </a>
+                    <% } %>
+
+                    <form method="POST" action="/tws/faculty-return/<%= t.id %>" style="display:inline;">
+                      <button
+                        class="pill pill-delete"
+                        type="submit"
+                        style="cursor:pointer;"
+                        onclick="return confirm('Return this TWS to Program Chair?')"
+                      >
+                        Return
+                      </button>
+                    </form>
+                  <% } else if (t.facultySigned || st === 'sent to dean' || st === 'approved') { %>
+                    <span
+                      class="pill"
+                      style="background:#dff6e4; color:#19692c; border:1px solid #bfe8c8;"
+                    >
+                      Signed
+                    </span>
+                  <% } %>
+                </div>
               </div>
             </div>
           <% }) %>
@@ -94,7 +173,9 @@
       <div class="panel">
         <div class="panel-title" style="margin-bottom:14px;">TWS - Faculty Signature</div>
         <hr class="divider" />
-        <% const signable = (list || []).filter(function(t){ return (t.status || '').toLowerCase() === 'sent to faculty'; }); %>
+
+        <% const signable = (list || []).filter(function(t){ return (t.status || '').toLowerCase() === 'sent to faculty' && !t.facultySigned; }); %>
+
         <form id="sigForm" method="POST" action="/tws/signature">
           <div class="sig-section">
             <div class="sig-field">
@@ -107,18 +188,39 @@
                 value="<%= (typeof user !== 'undefined' && user) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '' %>"
                 readonly
               />
+
               <div class="sig-label" style="margin-top:10px;">TWS For Signing</div>
               <select class="sig-input" name="id" style="height:auto; padding:10px;" <%= signable.length ? '' : 'disabled' %>>
                 <% if (!signable.length) { %>
                   <option value="">No TWS pending signature</option>
                 <% } %>
                 <% signable.forEach(function(t){ %>
-                  <option value="<%= t.id %>"><%= t.faculty?.name || 'Faculty' %> - <%= t.faculty?.term || 'Term' %> - <%= t.faculty?.acadYear || 'SY' %></option>
+                  <option value="<%= t.id %>">
+                    <%= t.faculty?.name || 'Faculty' %> - <%= t.faculty?.term || 'Term' %> - <%= t.faculty?.acadYear || 'SY' %>
+                  </option>
                 <% }) %>
               </select>
+
               <div class="sig-date" id="sigDate"></div>
+
+              <div style="font-size:12px; opacity:.78; margin-top:10px; line-height:1.5;">
+                Note: Signing will use your saved e-signature from your account profile.
+              </div>
             </div>
-            <button class="sig-update-btn" type="submit" <%= signable.length ? '' : 'disabled style="opacity:.6; cursor:not-allowed;"' %>>Sign Selected TWS</button>
+
+            <% if (hasSavedSignature) { %>
+              <button
+                class="sig-update-btn"
+                type="submit"
+                <%= signable.length ? '' : 'disabled style="opacity:.6; cursor:not-allowed;"' %>
+              >
+                Sign Selected TWS
+              </button>
+            <% } else { %>
+              <a class="sig-update-btn" href="/tws/signature-settings" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+                Set Up Signature First
+              </a>
+            <% } %>
           </div>
         </form>
       </div>

@@ -7,6 +7,12 @@
 
   <link rel="stylesheet" href="/common/css/variables.css" />
   <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+  <style>
+    .tws-block {
+      grid-column: var(--col, auto);
+      grid-row: var(--row, auto) / span var(--span, 1);
+    }
+  </style>
 </head>
 
 <body class="tws-app-body">
@@ -47,11 +53,22 @@
                 <div style="display:grid; grid-template-columns: 180px 1fr; gap:10px 14px; font-size:12px;">
                   <div style="font-weight:800;">Faculty Name:</div><div><%= tws.faculty?.name || "—" %></div>
                   <div style="font-weight:800;">Employee ID:</div><div><%= tws.faculty?.empId || "—" %></div>
+                  <div style="font-weight:800;">Faculty Email:</div><div><%= tws.faculty?.email || "—" %></div>
                   <div style="font-weight:800;">Department:</div><div><%= tws.faculty?.dept || "—" %></div>
                   <div style="font-weight:800;">Academic Year:</div><div><%= tws.faculty?.acadYear || "—" %></div>
                   <div style="font-weight:800;">Term:</div><div><%= tws.faculty?.term || "—" %></div>
                   <div style="font-weight:800;">Employment Status:</div><div><%= tws.faculty?.empStatus || "—" %></div>
                   <div style="font-weight:800;">Current Status:</div><div><%= tws.status || "Draft" %></div>
+
+                  <% if (tws.facultySigned) { %>
+                    <div style="font-weight:800;">Faculty Signature Status:</div>
+                    <div>
+                      Signed
+                      <% if (tws.facultySignedAt) { %>
+                        • <%= new Date(tws.facultySignedAt).toLocaleString("en-US", { timeZone: "Asia/Manila" }) %> (PHT)
+                      <% } %>
+                    </div>
+                  <% } %>
                 </div>
 
                 <div class="tws-card-title" style="margin-top:18px;">Teaching Load Summary</div>
@@ -111,16 +128,26 @@
                   </button>
                 <% } %>
 
+                <% if (tws.status === "Approved" || tws.status === "Archived") { %>
+                  <a
+                    href="/tws/pdf/<%= tws.id %>"
+                    class="tws-btn-white"
+                    style="text-decoration:none; text-align:center; width:100%;"
+                  >
+                    Download PDF
+                  </a>
+                <% } %>
+
                 <% if (canEdit) { %>
-                <button
-                  type="submit"
-                  name="action"
-                  value="edit"
-                  class="tws-btn-white"
-                  style="cursor:pointer; width:100%;"
-                >
-                  Edit
-                </button>
+                  <button
+                    type="submit"
+                    name="action"
+                    value="edit"
+                    class="tws-btn-white"
+                    style="cursor:pointer; width:100%;"
+                  >
+                    Edit
+                  </button>
                 <% } %>
 
                 <a href="/tws/dashboard" class="tws-btn-white" style="text-decoration:none; text-align:center; width:100%;">
@@ -134,6 +161,7 @@
                     formmethod="POST"
                     class="tws-btn-white"
                     style="cursor:pointer; width:100%;"
+                    onclick="return confirm('Use your saved e-signature for this TWS?')"
                   >
                     Sign TWS
                   </button>
@@ -144,6 +172,7 @@
                     formmethod="POST"
                     class="tws-btn-white"
                     style="cursor:pointer; width:100%;"
+                    onclick="return confirm('Return this TWS for revision?')"
                   >
                     Return for Revision
                   </button>
@@ -176,6 +205,7 @@
                     "7:00 AM", "8:15 AM", "9:30 AM", "10:45 AM", "12:00 PM",
                     "1:15 PM", "2:30 PM", "3:45 PM", "5:00 PM", "6:15 PM", "7:30 PM", "8:45 PM"
                   ];
+                  const SLOT_MINUTES = 75;
                 %>
 
                 <div class="tws-cell tws-head tws-corner"></div>
@@ -209,18 +239,41 @@
 
                   function parseSchedule(item) {
                     const rawDay = String(item.day || "").trim();
+                    const rawStart = String(item.startTime || "").trim();
+                    const rawEnd = String(item.endTime || "").trim();
                     const rawSlot = String(item.timeSlot || "").trim();
-                    const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
-                    if (!slotMatch) return null;
 
-                    const day = rawDay || slotMatch[1] || "";
-                    const startStr = (slotMatch[2] || "").trim();
-                    const endStr = (slotMatch[3] || "").trim();
+                    let day = rawDay;
+                    let startStr = rawStart;
+                    let endStr = rawEnd;
+
+                    if ((!startStr || !endStr) && rawSlot) {
+                      const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+                      if (slotMatch) {
+                        day = day || slotMatch[1] || "";
+                        startStr = startStr || (slotMatch[2] || "").trim();
+                        endStr = endStr || (slotMatch[3] || "").trim();
+                      }
+                    }
+
                     const startMin = toMinutes(startStr);
                     const endMin = toMinutes(endStr);
 
-                    if (!dayMap[day] || startMin === null || endMin === null) return null;
-                    return { day: day, startStr: startStr, endStr: endStr, startMin: startMin, endMin: endMin };
+                    if (!dayMap[day] || startMin === null || endMin === null || endMin <= startMin) {
+                      return null;
+                    }
+
+                    const durationMinutes = endMin - startMin;
+                    const span = Math.max(1, Math.ceil(durationMinutes / SLOT_MINUTES));
+
+                    return {
+                      day: day,
+                      startStr: startStr,
+                      endStr: endStr,
+                      startMin: startMin,
+                      endMin: endMin,
+                      span: span
+                    };
                   }
 
                   const parsedBlocks = (tws?.createdWorkload || []).map(function(item) {
@@ -251,9 +304,13 @@
                     const row = timeMap[p.startStr] || 2;
                     const colorClass = block.isConflict ? "tws-block-conflict" : "tws-block-assigned";
                 %>
-                  <div class="tws-block <%= colorClass %>" data-col="<%= col %>" data-row="<%= row %>">
+                  <div
+                    class="tws-block <%= colorClass %>"
+                    style="--col: <%= col %>; --row: <%= row %>; --span: <%= p.span %>;"
+                  >
                     <div class="tws-block-code"><%= block.item.code || "—" %></div>
                     <div class="tws-block-sub"><%= block.item.sectionRoom || "" %></div>
+                    <div class="tws-block-sub"><%= p.startStr %> - <%= p.endStr %></div>
                   </div>
                 <%
                   });
@@ -280,6 +337,9 @@
                   <div class="ld-row" style="gap:10px;">
                     <div style="max-width:220px;">
                       <b><%= subject.code || "—" %></b>
+                      <div style="opacity:.9; font-size:11px; margin-top:2px;">
+                        <%= subject.timeSlot || "No schedule" %> • <%= subject.sectionRoom || "—" %>
+                      </div>
                     </div>
                     <span><%= Number(subject.units || 0).toFixed(2) %></span>
                   </div>
@@ -351,17 +411,5 @@
       </div>
     </main>
   </div>
-
-  <script>
-    (function () {
-      var blocks = document.querySelectorAll('.tws-timetable .tws-block[data-col][data-row]');
-      blocks.forEach(function (block) {
-        var col = Number(block.getAttribute('data-col') || 0);
-        var row = Number(block.getAttribute('data-row') || 0);
-        if (col > 0) block.style.gridColumn = String(col);
-        if (row > 0) block.style.gridRow = String(row);
-      });
-    })();
-  </script>
 </body>
 </html>

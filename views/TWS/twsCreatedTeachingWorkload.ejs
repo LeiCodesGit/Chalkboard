@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <title>TWS - Created Teaching Workload Sheet</title>
   <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+  <style>
+    .tws-block {
+      grid-column: var(--col, auto);
+      grid-row: var(--row, auto) / span var(--span, 1);
+    }
+  </style>
 </head>
 
 <body class="tws-app-body">
@@ -29,7 +35,6 @@
 
           <div class="tws-schedule-layout">
 
-            <!-- TIMETABLE GRID -->
             <div class="tws-timetable">
               <%
                 const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -37,15 +42,14 @@
                   "7:00 AM","8:15 AM","9:30 AM","10:45 AM","12:00 PM",
                   "1:15 PM","2:30 PM","3:45 PM","5:00 PM","6:15 PM","7:30 PM","8:45 PM"
                 ];
+                const SLOT_MINUTES = 75;
               %>
 
-              <!-- HEADER ROW -->
               <div class="tws-cell tws-head tws-corner"></div>
               <% days.forEach(d => { %>
                 <div class="tws-cell tws-head"><%= d %></div>
               <% }) %>
 
-              <!-- BODY ROWS -->
               <% times.forEach((t) => { %>
                 <div class="tws-cell tws-time" style="grid-column: 1;"><%= t %></div>
                 <% for (let c = 0; c < 7; c++) { %>
@@ -53,7 +57,6 @@
                 <% } %>
               <% }) %>
 
-              <!-- Dynamic schedule blocks from course data -->
               <%
                 const dayMap = { "Mon": 2, "Tue": 3, "Wed": 4, "Thu": 5, "Fri": 6, "Sat": 7, "Sun": 8 };
                 const timeMap = {};
@@ -73,22 +76,34 @@
 
                 function parseSchedule(workloadItem) {
                   const rawDay = String(workloadItem.day || "").trim();
+                  const rawStart = String(workloadItem.startTime || "").trim();
+                  const rawEnd = String(workloadItem.endTime || "").trim();
                   const rawSlot = String(workloadItem.timeSlot || "").trim();
 
-                  // Supports:
-                  // 1) "Mon 7:00 AM - 8:15 AM"
-                  // 2) day="Mon" and timeSlot="7:00 AM - 8:15 AM"
-                  const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
-                  if (!slotMatch) return null;
+                  let day = rawDay;
+                  let startStr = rawStart;
+                  let endStr = rawEnd;
 
-                  const day = rawDay || slotMatch[1] || "";
-                  const startStr = (slotMatch[2] || "").trim();
-                  const endStr = (slotMatch[3] || "").trim();
+                  if ((!startStr || !endStr) && rawSlot) {
+                    const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+                    if (slotMatch) {
+                      day = day || slotMatch[1] || "";
+                      startStr = startStr || (slotMatch[2] || "").trim();
+                      endStr = endStr || (slotMatch[3] || "").trim();
+                    }
+                  }
+
                   const startMin = toMinutes(startStr);
                   const endMin = toMinutes(endStr);
 
-                  if (!dayMap[day] || startMin === null || endMin === null) return null;
-                  return { day, startStr, endStr, startMin, endMin };
+                  if (!dayMap[day] || startMin === null || endMin === null || endMin <= startMin) {
+                    return null;
+                  }
+
+                  const durationMinutes = endMin - startMin;
+                  const span = Math.max(1, Math.ceil(durationMinutes / SLOT_MINUTES));
+
+                  return { day, startStr, endStr, startMin, endMin, span };
                 }
 
                 const parsedBlocks = (tws?.createdWorkload || []).map((item) => {
@@ -100,7 +115,6 @@
                   };
                 });
 
-                // Mark overlaps on same day as conflict.
                 for (let i = 0; i < parsedBlocks.length; i++) {
                   for (let j = i + 1; j < parsedBlocks.length; j++) {
                     const a = parsedBlocks[i].parsed;
@@ -123,16 +137,19 @@
                   const row = timeMap[p.startStr] || 2;
                   const colorClass = block.isConflict ? "tws-block-conflict" : "tws-block-assigned";
               %>
-              <div class="tws-block <%= colorClass %>" style="grid-column: <%= col %>; grid-row: <%= row %>;">
+              <div
+                class="tws-block <%= colorClass %>"
+                style="--col: <%= col %>; --row: <%= row %>; --span: <%= p.span %>;"
+              >
                 <div class="tws-block-code"><%= s.code %></div>
                 <div class="tws-block-sub"><%= s.sectionRoom || "" %></div>
+                <div class="tws-block-sub"><%= p.startStr %> - <%= p.endStr %></div>
               </div>
               <%
                 });
               %>
             </div>
 
-            <!-- LOAD DETAILS -->
             <div class="tws-load-details">
               <div class="ld-title" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>Load Details</span>
@@ -158,7 +175,6 @@
 
               <% (tws?.createdWorkload || []).forEach(s => { %>
                 <div style="padding: 8px 0;">
-                  <!-- ✅ SUBJECT DISPLAY -->
                   <div class="ld-row" style="gap:10px;">
                     <div style="max-width: 220px;">
                       <b><%= s.code %></b> - <%= s.title %>
@@ -181,7 +197,6 @@
 
           </div>
 
-          <!-- SIGNATURES -->
           <div class="tws-signatures">
             <div class="sig-box">
               <div class="sig-line"></div>
