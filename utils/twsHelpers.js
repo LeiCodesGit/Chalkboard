@@ -101,7 +101,7 @@ function buildDisplayTimeSlot(course) {
   return course.timeSlot || course.time || "";
 }
 
-export function normalizeCourseForView(c) {
+function normalizeCourseForView(c) {
   return {
     code: c.courseCode || "",
     title: c.courseTitle || c.description || "",

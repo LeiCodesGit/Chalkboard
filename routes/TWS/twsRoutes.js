@@ -621,7 +621,6 @@ router.get(
     const twsView = normalizeTwsForView(tws, courses, approval);
     twsView.deanName = deanName;
     twsView.programChairName = programChairName;
-    const assetBaseUrl = `${req.protocol}://${req.get("host")}`;
 
     res.render("TWS/twsCreatedTeachingWorkload", {
       tws: twsView,
@@ -780,9 +779,6 @@ router.post(
       tws.assignedFacultyId = tws.faculty?.empId || "";
       tws.assignedFacultyEmail = normalizeEmail(tws.faculty?.email || "");
       tws.assignedFacultyName = tws.faculty?.name || "";
-      tws.assignedFacultyId = tws.faculty?.empId || "";
-      tws.assignedFacultyEmail = normalizeEmail(tws.faculty?.email || "");
-      tws.assignedFacultyName = tws.faculty?.name || "";
 
       tws.facultySigned = false;
       tws.facultySignedAt = null;
@@ -815,7 +811,7 @@ router.post(
           approvedBy: "",
           approvalDate: null,
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
 
       return res.redirect(doneRedirect);
@@ -870,7 +866,7 @@ router.post(
           approvedBy: "",
           approvalDate: null,
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
 
       return res.redirect(doneRedirect);
@@ -1100,7 +1096,7 @@ router.post(
           remarks: "Signed by faculty. Waiting for Program Chair endorsement.",
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     );
 
     return res.redirect("/tws/dashboard");
@@ -1157,7 +1153,7 @@ router.post(
           remarks: "Returned by faculty for revision.",
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     );
 
     return res.redirect("/tws/dashboard");
@@ -1191,7 +1187,7 @@ router.post(
       {
         remarks: "Sent to HR archive",
       },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     return res.redirect("/tws/dean");
@@ -1315,7 +1311,7 @@ router.post(
           approvedBy: approverLabel(req.twsUser),
           approvalDate: new Date(),
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
 
       return res.redirect("/tws/dean");
@@ -1342,7 +1338,7 @@ router.post(
           approvedBy: approverLabel(req.twsUser),
           approvalDate: new Date(),
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
 
       return res.redirect("/tws/dean");
@@ -1369,7 +1365,7 @@ router.post(
           approvedBy: approverLabel(req.twsUser),
           approvalDate: new Date(),
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
 
       return res.redirect("/tws/dean");
@@ -1607,7 +1603,7 @@ router.post(
       await TWSApprovalStatus.findOneAndUpdate(
         { twsID: tws._id },
         { status: "Not Submitted", remarks: "Sent to Faculty by Program Chair", approvedBy: "", approvalDate: null },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
       return res.redirect("/tws/program-chair");
     }
@@ -1655,7 +1651,7 @@ router.post(
       await TWSApprovalStatus.findOneAndUpdate(
         { twsID: tws._id },
         { status: "Pending", remarks: "Endorsed by Program Chair", approvedBy: approverLabel(req.twsUser), approvalDate: new Date() },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
       return res.redirect("/tws/program-chair");
     }
@@ -1695,7 +1691,7 @@ router.post(
       await TWSApprovalStatus.findOneAndUpdate(
         { twsID: tws._id },
         { status: "Returned", remarks: "Returned by Program Chair", approvedBy: approverLabel(req.twsUser), approvalDate: new Date() },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
       return res.redirect("/tws/program-chair");
     }
