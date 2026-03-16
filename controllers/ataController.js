@@ -753,10 +753,29 @@ export const viewAtaPdf = async (req, res) => {
         if (adminUnits > 0) {
             fillText('text_36xvyn', adminUnits); 
         }
+        try { 
+            if (form.term) pdfForm.getDropdown('TERM').select(form.term.replace(" Term", "").toUpperCase()); 
+        } catch (e) { console.log("Failed to map TERM"); }
         
-        fillText('TERM', form.term.split(' ')[0]); 
-        try { pdfForm.getDropdown('dropdown_87etxp').select(form.academicYear); } 
-        catch (e) { fillText('AY', form.academicYear); } 
+        try { 
+            if (form.academicYear) pdfForm.getDropdown('AY').select(form.academicYear); 
+        } catch (e) { console.log("Failed to map AY"); }
+
+        try { 
+            if (form.term) fillText('TERM1', form.term.replace(" Term", "").toUpperCase()); 
+        } catch(e) {}
+
+        if (form.academicYear) {
+            const years = form.academicYear.split('-'); // Splits "2025-2026" into ["2025", "2026"]
+            if (years.length === 2) {
+                fillText('YEAR1', years[0]);
+                try {
+                    pdfForm.getDropdown('dropdown_87etxp').select(years[1]); 
+                } catch(e) {
+                    fillText('dropdown_87etxp', years[1]);
+                }
+            }
+        }
 
         try {
             if (form.employmentType === 'Full-Time') pdfForm.getCheckBox('checkbox_7vfdl').check();
@@ -1116,10 +1135,28 @@ export const previewAtaPdf = async (req, res) => {
         if (adminUnits > 0) {
             fillText('text_36xvyn', adminUnits); 
         }
+        try { 
+            if (formData.term) pdfForm.getDropdown('TERM').select(formData.term.replace(" Term", "").toUpperCase()); 
+        } catch (e) { console.log("Failed to map TERM preview"); }
         
-        fillText('TERM', (formData.term || "2nd Term").split(' ')[0]); 
-        try { pdfForm.getDropdown('dropdown_87etxp').select(formData.academicYear || "2025-2026"); } 
-        catch (e) { fillText('AY', formData.academicYear); } 
+        try { 
+            if (formData.academicYear) pdfForm.getDropdown('AY').select(formData.academicYear); 
+        } catch (e) { console.log("Failed to map AY preview"); }
+        try { 
+            if (formData.term) fillText('TERM1', formData.term.replace(" Term", "").toUpperCase()); 
+        } catch(e) {}
+
+        if (formData.academicYear) {
+            const years = formData.academicYear.split('-'); 
+            if (years.length === 2) {
+                fillText('YEAR1', years[0]); 
+                try {
+                    pdfForm.getDropdown('dropdown_87etxp').select(years[1]); 
+                } catch(e) {
+                    fillText('dropdown_87etxp', years[1]); 
+                }
+            }
+        }
 
         try {
             if (formData.employmentType === 'Full-Time') pdfForm.getCheckBox('checkbox_7vfdl').check();
@@ -1300,7 +1337,32 @@ export const previewAtaPdf = async (req, res) => {
         res.status(500).json({ error: "Failed to generate preview." });
     }
 };
+// ==========================================
+// 🗄️ 8. ARCHIVED FORMS ENGINE
+// ==========================================
+export const getArchivedATAs = async (req, res) => {
+    try {
+        // Since we will use requireAuth middleware, req.user is guaranteed to exist!
+        const sessionData = req.user; 
+        
+        // Fetch ALL forms that have been finalized by HR
+        const archivedForms = await ATAForm.find({ status: 'FINALIZED' })
+            .sort({ updatedAt: -1 }) 
+            .lean();
 
+        // Render the Archive Page
+        res.render('ATA/archived-atas', {
+            user: sessionData, 
+            role: sessionData.role,
+            forms: archivedForms,
+            totalCount: archivedForms.length,
+            currentPageCategory: 'ata' 
+        });
+    } catch (error) {
+        console.error("Error loading archived ATAs:", error);
+        res.status(500).send("Failed to load archive.");
+    }
+};
 // ==========================================
 // 🩻 PDF X-RAY 
 // ==========================================

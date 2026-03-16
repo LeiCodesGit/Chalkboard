@@ -49,6 +49,38 @@ if (backButton) {
 }
 
 // ==========================================
+// 1.2 DYNAMIC ACADEMIC YEAR GENERATOR
+// ==========================================
+// ==========================================
+// 1.5 SMART ACADEMIC YEAR INPUT
+// ==========================================
+document.addEventListener("DOMContentLoaded", function() {
+    const ayInput = document.getElementById("academicYear");
+    
+    if (ayInput) {
+        // Real-time formatting while typing
+        ayInput.addEventListener("input", function(e) {
+            // Strip out any letters (only allow numbers and hyphens)
+            this.value = this.value.replace(/[^\d-]/g, '');
+            
+            // If they type exactly 4 numbers (and aren't pressing backspace), magically add the rest!
+            if (this.value.length === 4 && !this.value.includes('-') && e.inputType !== 'deleteContentBackward') {
+                const startYear = parseInt(this.value);
+                this.value = `${startYear}-${startYear + 1}`;
+            }
+        });
+
+        // Backup formatting (if they copy-paste or click away)
+        ayInput.addEventListener("blur", function() {
+            const val = this.value.trim();
+            if (/^\d{4}$/.test(val)) {
+                const startYear = parseInt(val);
+                this.value = `${startYear}-${startYear + 1}`;
+            }
+        });
+    }
+});
+// ==========================================
 // 2. USER STATE (Strict Validation & Security)
 // ==========================================
 const rawRole = document.body.getAttribute('data-role');
@@ -380,7 +412,8 @@ window.getSectionWarning = function(step) {
     if (step === 1 && !needsYellow) {
         const step1Inputs = [
             document.getElementById('facultyName'), document.getElementById('position'),
-            document.getElementById('college'), document.getElementById('address')
+            document.getElementById('college'), document.getElementById('address'),
+            document.getElementById('term'), document.getElementById('academicYear')
         ];
         const filledCount = step1Inputs.filter(i => i && i.value.trim() !== '').length;
         if (filledCount < step1Inputs.length) needsYellow = true; 
@@ -514,8 +547,8 @@ if (nextBtn) {
                 employmentStatus: document.getElementById('employmentStatus')?.value || "",
                 employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
                 facultySignature: signaturePad && !signaturePad.isEmpty() ? signaturePad.toDataURL("image/png") : "",
-                term: "2nd Term 2025-2026", 
-                academicYear: "2025-2026", 
+                term: document.getElementById('term')?.value || "", 
+                academicYear: document.getElementById('academicYear')?.value || "", 
                 action: "SUBMIT",
                 justification: document.getElementById('justificationText')?.value || "", // 👈 GRABS THE ADMIN REMARKS!
                 sectionA_AdminUnits: Number(document.getElementById('teachingUnits1')?.value) || 0,
@@ -1040,8 +1073,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 facultySignature: signaturePad && !signaturePad.isEmpty() ? signaturePad.toDataURL("image/png") : "",
                 employmentStatus: document.getElementById('employmentStatus')?.value || "",
                 employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
-                term: "2nd Term", 
-                academicYear: "2025-2026", 
+                term: document.getElementById('term')?.value || "", 
+                academicYear: document.getElementById('academicYear')?.value || "", 
                 sectionA_AdminUnits: Number(document.getElementById('teachingUnits1')?.value) || 0,
                 sectionB_WithinCollege: [],
                 sectionC_OtherCollege: [],
@@ -1131,6 +1164,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fillInput('college', data.college);
         fillInput('address', data.address);
         fillInput('employmentStatus', data.employmentStatus);
+        fillInput('term', data.term);
+        fillInput('academicYear', data.academicYear);
         
         if (data.employmentType === 'Part-Time') {
             const ptRadio = document.getElementById('radioPartTime');

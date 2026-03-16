@@ -48,7 +48,7 @@
         const currentRole = typeof role !== 'undefined' ? role : 'Professor';
         const isExecutive = ['VPAA', 'HR', 'HRMO'].includes(currentRole);
         const isAdmin = ['Program-Chair', 'Dean', 'Admin', 'VPAA', 'HR', 'HRMO'].includes(currentRole);
-        const canViewArchived = ['Program-Chair', 'Dean', 'VPAA', 'HR', 'HRMO'].includes(currentRole);
+        const canViewArchived = ['HR', 'HRMO'].includes(currentRole);
         const isPracCoord = typeof user !== 'undefined' && user.isPracticumCoordinator;
       %>
 

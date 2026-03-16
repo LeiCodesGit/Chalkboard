@@ -1,5 +1,8 @@
 import express from 'express';
-import { submitATA, approveATA, getPendingApprovals, viewATAForm, viewAtaPdf, renderNewATA, getAdminHistory, previewAtaPdf, discoverPdfFields, saveVipSignature, previewVipSignaturePdf } from '../../controllers/ataController.js';
+import { submitATA, approveATA, getPendingApprovals, 
+  viewATAForm, viewAtaPdf, renderNewATA, getAdminHistory, previewAtaPdf, 
+  discoverPdfFields, saveVipSignature, previewVipSignaturePdf, 
+  getArchivedATAs } from '../../controllers/ataController.js';
 import { requireAuth, checkRole } from '../../middleware/ata_authMiddleware.js';
 
 
@@ -31,6 +34,9 @@ router.get('/admin-history', requireAuth, checkRole(...adminRoles), getAdminHist
 router.get('/pdf/:id', requireAuth, viewAtaPdf);
 // When they click "Start New ATA Form", run the new function!
 router.get('/new', requireAuth, renderNewATA);
+
+// Archived ATAs (HR Only)
+router.get('/archived-atas', requireAuth, checkRole('HR', 'HRMO'), getArchivedATAs);
 
 router.get('/pdf-xray', discoverPdfFields);
 
