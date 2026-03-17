@@ -196,15 +196,29 @@ const calculateUnits = (formData) => {
 // ==========================================
 export const renderNewATA = async (req, res) => {
     try {
+        // 👇 1. Extract the session ID safely
+        let sessionUserID = "unknown";
+        if (req.user) {
+            if (req.user._id && req.user._id.$oid) sessionUserID = req.user._id.$oid;
+            else if (req.user._id) sessionUserID = req.user._id.toString();
+            else if (req.user.id) sessionUserID = req.user.id;
+            else if (req.user.employeeId) sessionUserID = req.user.employeeId;
+        }
+
         const User = mainDB.model('User');
+        
+        // 👇 2. CRITICAL FIX: Fetch the LIVE user from the DB so we get the signature!
+        const liveUser = await User.findById(sessionUserID);
+        
         const coordinators = await User.find({ isPracticumCoordinator: true });
         const coordinatorNames = coordinators.map(c => `${c.firstName} ${c.lastName}`.trim());
 
         res.render('ATA/new-ata', { 
-            user: req.user, 
-            role: req.user.role, 
-            employmentType: req.user.employmentType,
-            isPracticumCoordinator: req.user.isPracticumCoordinator,
+            // 👇 3. Pass the LIVE USER to the EJS template!
+            user: liveUser || req.user, 
+            role: liveUser ? liveUser.role : req.user.role, 
+            employmentType: liveUser ? liveUser.employmentType : req.user.employmentType,
+            isPracticumCoordinator: liveUser ? liveUser.isPracticumCoordinator : req.user.isPracticumCoordinator,
             coordinators: coordinatorNames,
             currentPageCategory: 'ata'
         });
@@ -245,24 +259,14 @@ export const submitATA = async (req, res) => {
         let newStatus = 'DRAFT';
         let initialHistory = []; 
         
-        // 🚀 Auto-Routing Logic (Kept exactly as you wrote it)
+        // 🚀 Auto-Routing Logic
         if (formData.action === 'SUBMIT') {
             const routingRole = liveUser.role || "Professor"; 
             const hasPracticum = formData.sectionE_Practicum && formData.sectionE_Practicum.length > 0;
             const adminFullName = `${liveUser.firstName || ''} ${liveUser.lastName || ''}`.trim();
             
-            if (routingRole === 'Dean') {
-                newStatus = 'PENDING_VPAA'; 
-                initialHistory.push({
-                    approverRole: 'Dean',
-                    approverName: adminFullName,
-                    approvalStatus: 'APPROVED',
-                    remarks: formData.justification || "Approved by Dean upon submission.",
-                    signatureImage: liveUser.signatureImage || "",
-                    date: Date.now()
-                });
-            } 
-            else if (routingRole === 'Program-Chair') {
+            if (routingRole === 'Program-Chair') {
+                // Chairs auto-endorse their own forms to the Dean (or Practicum)
                 newStatus = hasPracticum ? 'PENDING_PRACTICUM' : 'PENDING_DEAN';
                 initialHistory.push({
                     approverRole: 'Program-Chair',
@@ -274,6 +278,7 @@ export const submitATA = async (req, res) => {
                 });
             } 
             else {
+                // EVERYONE ELSE (Professors AND Deans) goes to the Program Chair first!
                 newStatus = 'PENDING_CHAIR'; 
             }
         }
@@ -392,7 +397,13 @@ export const approveATA = async (req, res) => {
                 case 'PENDING_CHAIR':
                     if (primaryRole === 'Program-Chair' && action === 'ENDORSE') {
                         const hasPracticum = form.sectionE_Practicum && form.sectionE_Practicum.length > 0;
-                        newStatus = hasPracticum ? 'PENDING_PRACTICUM' : 'PENDING_DEAN';
+                        
+                        // 👇 SMART ROUTING: If the form belongs to a Dean, skip the Dean queue!
+                        if (form.position === 'Dean') {
+                            newStatus = hasPracticum ? 'PENDING_PRACTICUM' : 'PENDING_VPAA';
+                        } else {
+                            newStatus = hasPracticum ? 'PENDING_PRACTICUM' : 'PENDING_DEAN';
+                        }
                         historyStatus = 'ENDORSED';
                     } else return res.status(403).json({ error: "Invalid action for Chair." });
                     break;
@@ -402,7 +413,6 @@ export const approveATA = async (req, res) => {
                         historyStatus = 'VALIDATED';
                         appliedRole = 'Practicum-Coordinator'; 
                         
-                        // 👇 SAFETY PATCH: Uses (form.sectionE_Practicum || [])
                         const requiredCoordinators = [...new Set(
                             (form.sectionE_Practicum || [])
                                 .filter(row => row.coordinator && row.coordinator.trim() !== '')
@@ -418,7 +428,8 @@ export const approveATA = async (req, res) => {
                         const allSigned = requiredCoordinators.every(reqName => signedCoordinators.includes(reqName));
 
                         if (allSigned) {
-                            newStatus = 'PENDING_DEAN'; 
+                            // 👇 SMART ROUTING: If the form belongs to a Dean, skip the Dean queue!
+                            newStatus = (form.position === 'Dean') ? 'PENDING_VPAA' : 'PENDING_DEAN'; 
                         } else {
                             newStatus = 'PENDING_PRACTICUM'; 
                         }
@@ -523,8 +534,15 @@ export const getPendingApprovals = async (req, res) => {
         let queryConditions = [];
 
         if (userRole === 'Program-Chair') {
-            queryConditions.push({ status: 'PENDING_CHAIR', college: userProgram });
-        } 
+            // 👇 SMART QUERY: Grabs their own program OR the Dean's form
+            queryConditions.push({ 
+                status: 'PENDING_CHAIR', 
+                $or: [
+                    { college: userProgram }, // e.g., 'CpE'
+                    { position: 'Dean' }      // The Dean's form
+                ]
+            });
+        }
         if (isPracticumCoordinator) {
             queryConditions.push({ 
                 status: 'PENDING_PRACTICUM',
@@ -627,7 +645,14 @@ export const getAdminHistory = async (req, res) => {
         let queryConditions = [];
 
         if (userRole === 'Program-Chair') {
-            queryConditions.push({ college: userProgram, 'approvalHistory.approverRole': 'Program-Chair' });
+            // 👇 SMART QUERY: Ensures the Dean's form stays in their history after approval
+            queryConditions.push({ 
+                'approvalHistory.approverRole': 'Program-Chair',
+                $or: [
+                    { college: userProgram },
+                    { position: 'Dean' }
+                ]
+            });
         }
         if (isPracticumCoordinator) {
             queryConditions.push({ 
@@ -761,19 +786,25 @@ export const viewAtaPdf = async (req, res) => {
             if (form.academicYear) pdfForm.getDropdown('AY').select(form.academicYear); 
         } catch (e) { console.log("Failed to map AY"); }
 
-        try { 
-            if (form.term) fillText('TERM1', form.term.replace(" Term", "").toUpperCase()); 
+       try { 
+            if (form.term) {
+                const cleanTerm = form.term.replace(" Term", "").toUpperCase();
+                // Treat TERM1 as a dropdown!
+                try { pdfForm.getDropdown('TERM1').select(cleanTerm); } 
+                catch (e) { fillText('TERM1', cleanTerm); }
+            }
         } catch(e) {}
 
         if (form.academicYear) {
-            const years = form.academicYear.split('-'); // Splits "2025-2026" into ["2025", "2026"]
+            const years = form.academicYear.split('-'); // Splits "2026-2027" into ["2026", "2027"]
             if (years.length === 2) {
-                fillText('YEAR1', years[0]);
-                try {
-                    pdfForm.getDropdown('dropdown_87etxp').select(years[1]); 
-                } catch(e) {
-                    fillText('dropdown_87etxp', years[1]);
-                }
+                // Treat YEAR1 as a dropdown (Stamps "2026")
+                try { pdfForm.getDropdown('YEAR1').select(years[0]); } 
+                catch (e) { fillText('YEAR1', years[0]); }
+                
+                // Selects "2027"
+                try { pdfForm.getDropdown('dropdown_87etxp').select(years[1]); } 
+                catch(e) { fillText('dropdown_87etxp', years[1]); }
             }
         }
 
@@ -947,6 +978,44 @@ export const viewAtaPdf = async (req, res) => {
                 }
             }
         }
+        // 👇 MULTI-COORDINATOR SMART STAMPER
+        if (form.sectionE_Practicum && form.sectionE_Practicum.length > 0) {
+            const pracBoxes = ['text_176plma','text_177kwyx','text_178bleo','text_179hjnh','text_180znjo','text_181jcgm','text_182hixs','text_183eow', 'text_184ccue','text_185nzmw'];
+            
+            const allPracLogs = form.approvalHistory.filter(log => log.approverRole === 'Practicum-Coordinator');
+
+            for (let i = 0; i < form.sectionE_Practicum.length; i++) {
+                const row = form.sectionE_Practicum[i];
+                
+                if (i < 10 && row.coordinator && row.coordinator.trim() !== '') {
+                    const matchingLog = allPracLogs.find(log => 
+                        log.approverName.toLowerCase() === row.coordinator.trim().toLowerCase()
+                    );
+                    if (matchingLog) {
+                        await stampAdminSignature(matchingLog, pracBoxes[i], 45, -8, 0.12);
+                    }
+                }
+            }
+        }
+
+        // 👇 NEW: SECTION C AUTO-STAMPER FOR PROGRAM CHAIR
+        if (chairLog && form.sectionC_OtherCollege && form.sectionC_OtherCollege.length > 0) {
+            const sectionCSigBoxes = [
+                'text_135vkpf', 'text_136xvan', 'text_137jepq', 'text_138qntu', 'text_139xse', 
+                'text_140zwmd', 'text_141xurk', 'text_142xqwx', 'text_143qipa', 'text_144qixn'
+            ];
+            
+            for (let i = 0; i < form.sectionC_OtherCollege.length; i++) {
+                const row = form.sectionC_OtherCollege[i];
+                
+                // Only stamp if the row actually has a course typed in!
+                if (i < 10 && row.courseCode && row.courseCode.trim() !== '') {
+                    // Stamps the Chair's signature scaled down to 12% to fit the table perfectly
+                    await stampAdminSignature(chairLog, sectionCSigBoxes[i], 10, -5, 0.12);
+                }
+            }
+        }
+        // 👆 END OF SECTION C AUTO-STAMPER
 
         // PERFECTED OVERLOAD JUSTIFICATION LOGIC
         const regularLoad = form.totalEffectiveUnits || 0;
@@ -1143,18 +1212,21 @@ export const previewAtaPdf = async (req, res) => {
             if (formData.academicYear) pdfForm.getDropdown('AY').select(formData.academicYear); 
         } catch (e) { console.log("Failed to map AY preview"); }
         try { 
-            if (formData.term) fillText('TERM1', formData.term.replace(" Term", "").toUpperCase()); 
+            if (formData.term) {
+                const cleanTerm = formData.term.replace(" Term", "").toUpperCase();
+                try { pdfForm.getDropdown('TERM1').select(cleanTerm); } 
+                catch (e) { fillText('TERM1', cleanTerm); }
+            }
         } catch(e) {}
 
         if (formData.academicYear) {
             const years = formData.academicYear.split('-'); 
             if (years.length === 2) {
-                fillText('YEAR1', years[0]); 
-                try {
-                    pdfForm.getDropdown('dropdown_87etxp').select(years[1]); 
-                } catch(e) {
-                    fillText('dropdown_87etxp', years[1]); 
-                }
+                try { pdfForm.getDropdown('YEAR1').select(years[0]); } 
+                catch (e) { fillText('YEAR1', years[0]); }
+                
+                try { pdfForm.getDropdown('dropdown_87etxp').select(years[1]); } 
+                catch(e) { fillText('dropdown_87etxp', years[1]); }
             }
         }
 

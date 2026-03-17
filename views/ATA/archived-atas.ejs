@@ -5,185 +5,332 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapúa MCM - Archived ATAs</title>
     <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    
+    <link rel="stylesheet" href="/common/css/variables.css">
     <link rel="stylesheet" href="/ATA/css/style.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
     <style>
-        /* ── Base Layout ──────────────────────────────── */
-        body.dashboard-bg {
-            display: block !important;
+        /* ====================================================================
+           NUKE PREVIOUS STYLE.CSS INTERFERENCE
+           ==================================================================== */
+        body, html {
+            background-color: #f4f5f7 !important;
+            background-image: none !important; 
+            color: #333333;
+            margin: 0 !important;
             padding: 0 !important;
-        }
-        .main-content {
-            padding: 20px !important; 
-            height: 100vh;
-            box-sizing: border-box;
-            overflow: hidden; 
-            position: relative;
-            z-index: 2;
-        }
-        .archive-container {
-            height: 100%; 
-            width: 100%;  
-            display: flex;
-            flex-direction: column;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-            box-sizing: border-box;
-        }
-        .inner-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0 0 15px 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #444;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden !important; 
+            display: block !important;
         }
 
-        /* ── Filter Bar ──────────────────────────────── */
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            flex-shrink: 0;
+        .main-content {
+            position: absolute !important;
+            top: 0 !important;
+            left: 260px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: calc(100vw - 260px) !important;
+            height: 100vh !important;
+            max-width: none !important;
+            background-color: #f4f5f7 !important;
+            background-image: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important; 
+            justify-content: flex-start !important; 
+            z-index: 10;
         }
-        .filter-bar input,
-        .filter-bar select {
-            background: #2b2b2b;
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 5px;
-            padding: 9px 13px;
-            font-size: 0.88rem;
-            outline: none;
+
+        /* ====================================================================
+           BLACKBOARD LEARN "COURSES" THEME (LIGHT, CARD-BASED)
+           ==================================================================== */
+        *, *::before, *::after { box-sizing: border-box !important; }
+
+        /* --- 1. Top Header --- */
+        .bb-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 20px 30px !important; /* Reduced padding for wider stretch */
+            background: #ffffff !important;
+            border-bottom: 1px solid #e0e0e0 !important;
+            flex-shrink: 0 !important;
+            width: 100% !important;
+        }
+
+        .bb-title {
+            font-size: 28px;
+            font-weight: 400; 
+            color: #222;
+            margin: 0;
+            letter-spacing: -0.5px;
+            text-align: left;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .bb-total-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #444;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 8px 12px;
+            cursor: default;
+        }
+        .bb-total-btn i { font-size: 20px; color: #666; }
+
+        /* Professional Back Button */
+        .btn-top-back {
+            background-color: #ffffff;
+            color: #333;
+            border: 1px solid #ccc;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .btn-top-back:hover { 
+            background-color: #f8f9fa; 
+            border-color: #aaa; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- 2. Toolbar & Filters --- */
+        .bb-toolbar-wrapper {
+            background: #ffffff !important;
+            padding: 20px 30px 15px 30px !important; /* Reduced padding for wider stretch */
+            flex-shrink: 0 !important;
+            width: 100% !important;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .bb-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        /* Search Box */
+        .bb-search-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid #777;
+            border-radius: 3px;
+            padding: 0 15px;
+            flex: 1;
+            max-width: 500px; /* Widened search box */
+            background: #fff;
+            height: 40px;
             transition: border-color 0.2s;
         }
-        .filter-bar input:focus, .filter-bar select:focus { border-color: #17a2b8; }
+        .bb-search-box:focus-within { border-color: #222; box-shadow: 0 0 0 1px #222; }
+        .bb-search-box i { color: #666; margin-right: 10px; font-size: 16px; }
+        .bb-search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 15px;
+            color: #222;
+        }
 
-        /* ── Accordion Folders ───────────────────────── */
-        .scrollable-folders {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-right: 10px;
+        /* Floating Label Dropdowns */
+        .bb-filter-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex: 1; /* Allows dropdowns to stretch */
+            max-width: 300px;
         }
-        .program-folder {
-            margin-bottom: 15px;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: border-color 0.3s;
+        .bb-filter-group label {
+            position: absolute;
+            top: -8px;
+            left: 10px;
+            background: #fff;
+            padding: 0 4px;
+            font-size: 11px;
+            color: #666;
+            z-index: 1;
         }
-        .program-folder:hover {
-            border-color: #17a2b8;
+        .bb-filter-select {
+            border: 1px solid #777;
+            border-radius: 3px;
+            padding: 0 35px 0 15px;
+            font-size: 15px;
+            color: #333;
+            background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="5" viewBox="0 0 10 5"><path fill="%23333" d="M0 0l5 5 5-5z"/></svg>') no-repeat right 15px center;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            outline: none;
+            width: 100%;
+            height: 40px;
+            cursor: pointer;
         }
-        .folder-header {
-            padding: 15px 20px;
-            background: #2a2a2a;
+        .bb-filter-select:focus { border-color: #222; box-shadow: 0 0 0 1px #222; }
+
+        .bb-results-text {
+            font-size: 14px;
+            color: #444;
+            margin-top: 15px;
+            text-align: left;
+            width: 100%;
+        }
+
+        /* --- 3. Scrollable Cards Area --- */
+        .bb-scroll-area {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            padding: 20px 30px 40px 30px !important; /* Reduced side padding */
+            background: #f4f5f7 !important;
+            width: 100% !important;
+            display: block !important;
+        }
+
+        .bb-course-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-left-width: 6px; 
+            border-radius: 4px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: box-shadow 0.2s, transform 0.2s;
+            width: 100%;
+            display: block;
+        }
+        .bb-course-card:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+
+        .bb-card-header {
+            padding: 20px 25px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             user-select: none;
-            transition: background 0.3s;
         }
-        .folder-header:hover { background: #333; }
-        
-        .folder-title {
-            font-size: 1.2rem;
+
+        .bb-card-title {
+            font-size: 18px; /* Slightly larger for the stretched layout */
             font-weight: 600;
-            color: #fff;
+            color: #222;
+            margin-bottom: 6px;
+            text-align: left;
+        }
+
+        .bb-card-subtitle {
+            font-size: 13px;
+            color: #555;
             display: flex;
             align-items: center;
-            gap: 10px;
         }
-        .folder-badge {
-            background: #17a2b8;
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
+        .bb-card-subtitle span.divider {
+            margin: 0 10px;
+            color: #ccc;
         }
-        
+
+        .bb-card-icon {
+            color: #777;
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        /* --- 4. The Folded Table --- */
         .folder-body {
             display: none; 
-            padding: 0;
-            border-top: 1px solid #444;
-            background: #1a1a1a;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+            width: 100%;
         }
         .folder-body.open {
             display: block; 
         }
 
-        /* ── Inner Table ─────────────────────────────── */
-        .archive-table {
+        .bb-table {
             width: 100%;
             border-collapse: collapse;
-            color: #ddd;
         }
-        .archive-table th {
-            padding: 12px 20px;
+        .bb-table th {
             text-align: left;
-            color: #888;
+            padding: 12px 25px;
+            font-size: 12px;
             font-weight: 600;
-            font-size: 0.85rem;
-            background: #222;
+            color: #666;
+            border-bottom: 1px solid #ddd;
+            background: #f4f5f7;
             text-transform: uppercase;
         }
-        .archive-table td {
-            padding: 15px 20px;
-            border-bottom: 1px solid #333;
+        .bb-table td {
+            padding: 15px 25px;
             vertical-align: middle;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #333;
         }
-        .archive-table tr:last-child td { border-bottom: none; }
-        .archive-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .bb-table tr:hover td { background: #ffffff; }
 
-        /* ── Buttons ─────────────────────────────────── */
-        .btn-action {
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 0.85rem;
+        /* --- Buttons inside the table --- */
+        .btn-view {
+            background-color: #333;
+            color: #fff !important;
+            padding: 6px 16px;
+            border-radius: 3px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        .btn-view:hover { background-color: #000; }
+
+        .btn-outline {
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ccc;
+            padding: 5px 12px;
+            border-radius: 3px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             text-decoration: none;
-            color: #fff;
-            border: none;
-            transition: background 0.2s;
-            font-family: inherit;
         }
-        .btn-view { background: #17a2b8; }
-        .btn-view:hover { background: #138496; }
-        .btn-download { background: #28a745; }
-        .btn-download:hover { background: #218838; }
-        
-        .bottom-actions {
-            flex-shrink: 0; 
-            padding-top: 15px;
-            margin-top: 15px;
-            border-top: 2px solid #444;
-            display: flex;
-            gap: 15px;
-        }
+        .btn-outline:hover { background-color: #f4f5f7; border-color: #aaa; }
+
     </style>
 </head>
 
-<body class="dashboard-bg" 
-      data-role="<%= typeof role !== 'undefined' ? role : 'Admin' %>"
+<body data-role="<%= typeof role !== 'undefined' ? role : 'Admin' %>"
       data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>"
-      data-practicum="<%= (typeof user !== 'undefined' && user.isPracticumCoordinator) ? 'true' : 'false' %>"
-      data-user-sig="<%= (typeof user !== 'undefined' && user.signatureImage) ? user.signatureImage : '' %>">
+      data-practicum="<%= (typeof user !== 'undefined' && user.isPracticumCoordinator) ? 'true' : 'false' %>">
 
     <% 
         if (typeof role !== 'undefined') {
@@ -201,64 +348,96 @@
         <% }
     %>
 
-    <main class="main-content" style="margin-left: 260px; width: calc(100vw - 260px);">
+    <main class="main-content">
 
-        <div class="archive-container">
+        <div class="bb-header">
+            <h1 class="bb-title">Archived ATA Forms</h1>
             
-            <div class="inner-title">
-                <div>
-                    <i class="fas fa-box-archive" style="color: #17a2b8;"></i> HR Archived ATAs
+            <div class="header-actions">
+                <div class="bb-total-btn">
+                    <i class="fas fa-book-open"></i> Total Records: <span id="totalCountBadge" style="margin-left: 5px; font-weight: bold; color: #222;"><%= totalCount %></span>
                 </div>
-                <div style="font-size: 1rem; color: #aaa; font-weight: normal;">
-                    Total Records: <span id="totalCountBadge" style="color: #17a2b8; font-weight: bold;"><%= totalCount %></span>
-                </div>
-            </div>
-
-            <div class="filter-bar">
-                <input type="text" id="searchInput" placeholder="🔍 Search faculty name..." oninput="applyFilters()">
-                
-                <select id="yearFilter" onchange="applyFilters()">
-                    <option value="">All Academic Years</option>
-                    <option value="2025-2026">2025–2026</option>
-                    <option value="2024-2025">2024–2025</option>
-                </select>
-
-                <select id="termFilter" onchange="applyFilters()">
-                    <option value="">All Terms</option>
-                    <option value="1st Term">1st Term</option>
-                    <option value="2nd Term">2nd Term</option>
-                    <option value="Summer">Summer</option>
-                </select>
-            </div>
-
-            <div class="scrollable-folders" id="accordionContainer">
-                </div>
-
-            <div class="bottom-actions">
-                <a href="/admin/ata" class="form-btn secondary-btn" style="text-decoration: none;">
+                <a href="<%= (typeof role !== 'undefined' && ['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) ? '/admin/ata' : '/ata/dashboard/window' %>" class="btn-top-back">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
             </div>
-
         </div>
+
+        <div class="bb-toolbar-wrapper">
+            <div class="bb-toolbar">
+                <div class="bb-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search Faculty Name" oninput="applyFilters()">
+                </div>
+
+                <div class="bb-filter-group">
+                    <label>Terms</label>
+                    <select id="yearFilter" class="bb-filter-select" onchange="applyFilters()">
+                        <option value="">All Academic Years</option>
+                    </select>
+                </div>
+
+                <div class="bb-filter-group">
+                    <label>Filters</label>
+                    <select id="programFilter" class="bb-filter-select" onchange="applyFilters()">
+                        <option value="">All Programs</option>
+                        <optgroup label="College of Engineering & Architecture (CEA)">
+                            <option value="CpE">Computer Engineering (CpE)</option>
+                            <option value="CE">Civil Engineering (CE)</option>
+                            <option value="EE">Electrical Engineering (EE)</option>
+                            <option value="ECE">Electronics Engineering (ECE)</option>
+                            <option value="IE">Industrial Engineering (IE)</option> 
+                            <option value="ME">Mechanical Engineering (ME)</option>
+                            <option value="AR">Architecture (AR)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="bb-filter-group" style="max-width: 200px;">
+                    <select id="termFilter" class="bb-filter-select" onchange="applyFilters()">
+                        <option value="">All Terms</option>
+                        <option value="1ST">1st Term</option>
+                        <option value="2ND">2nd Term</option>
+                        <option value="3RD">3rd Term</option>
+                        <option value="MIDYEAR">Midyear</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="bb-results-text">
+                <span id="resultsCountText"><%= totalCount %></span> results
+            </div>
+        </div>
+
+        <div class="bb-scroll-area" id="accordionContainer">
+            </div>
 
     </main>
 
     <script src="/ATA/js/ata_client.js"></script>
+    
     <script>
     window.__FORMS__ = <%- JSON.stringify(forms) %>;
+
+    const bbColors = ['#00bcd4', '#ffc107', '#20c997', '#9c27b0', '#007bff', '#e83e8c', '#fd7e14', '#28a745'];
 
     function toggleFolder(folderId) {
         const body = document.getElementById(folderId);
         const icon = document.getElementById('icon-' + folderId);
-        
+        let openFolders = JSON.parse(localStorage.getItem('ata_open_folders') || '[]');
+
         if (body.classList.contains('open')) {
             body.classList.remove('open');
-            icon.classList.replace('fa-folder-open', 'fa-folder');
+            icon.style.transform = 'rotate(0deg)'; // Arrow points down
+            openFolders = openFolders.filter(id => id !== folderId);
         } else {
             body.classList.add('open');
-            icon.classList.replace('fa-folder', 'fa-folder-open');
+            icon.style.transform = 'rotate(180deg)'; // Arrow points up
+            if (!openFolders.includes(folderId)) openFolders.push(folderId);
         }
+        
+        localStorage.setItem('ata_open_folders', JSON.stringify(openFolders));
     }
 
     function renderAccordion(formsToRender) {
@@ -267,9 +446,9 @@
 
         if (formsToRender.length === 0) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 50px; color: #777;">
-                    <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                    <p>No archived records match your search.</p>
+                <div style="text-align: center; padding: 60px; color: #888; width: 100%;">
+                    <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color: #ccc;"></i>
+                    <p style="font-size: 16px;">No archived records match your search.</p>
                 </div>
             `;
             return;
@@ -284,26 +463,35 @@
             groupedData[groupName].push(form);
         });
 
-        Object.keys(groupedData).sort().forEach((groupName, index) => {
+        const openFolders = JSON.parse(localStorage.getItem('ata_open_folders') || '[]');
+        let colorIndex = 0;
+
+        Object.keys(groupedData).sort().forEach((groupName) => {
             const formsInGroup = groupedData[groupName];
-            const folderId = `folder-${index}`;
+            const folderId = `folder-${groupName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            
+            const isOpen = openFolders.includes(folderId);
+            const folderClass = isOpen ? 'folder-body open' : 'folder-body';
+            const iconTransform = isOpen ? 'transform: rotate(180deg);' : 'transform: rotate(0deg);';
+            
+            const cardColor = bbColors[colorIndex % bbColors.length];
+            colorIndex++;
 
             const rowsHtml = formsInGroup.map(form => {
-                const dateArchived = new Date(form.archivedAt || form.updatedAt).toLocaleDateString();
+                const dateArchived = new Date(form.archivedAt || form.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                 const safeName = (form.facultyName || "Faculty").replace(/\s+/g, '_');
                 
                 return `
                     <tr>
-                        <td style="font-weight: bold; color: #fff; font-size: 1.05rem;">${form.facultyName}</td>
-                        <td>${form.term} <span style="color:#aaa; font-size: 0.85rem;">(${form.academicYear})</span></td>
-                        <td style="color: #aaa;">${dateArchived}</td>
+                        <td style="font-weight: 600; color: #222;">${form.facultyName}</td>
+                        <td>${form.term} <span style="color:#777; font-size: 12px; margin-left: 5px;">(${form.academicYear})</span></td>
+                        <td style="color: #555;">${dateArchived}</td>
                         <td>
-                            <div style="display: flex; gap: 8px;">
-                                <a href="/ata/view-submission/${form._id}" class="btn-action btn-view">
-                                    <i class="fas fa-eye"></i> View
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <a href="/ata/view-submission/${form._id}" class="btn-view">
+                                    View
                                 </a>
-                                
-                                <button data-form-id="${form._id}" data-safe-name="${safeName}" class="btn-action btn-download smart-download-btn">
+                                <button data-form-id="${form._id}" data-safe-name="${safeName}" class="btn-outline smart-download-btn">
                                     <i class="fas fa-download"></i> <span>Download</span>
                                 </button>
                             </div>
@@ -312,29 +500,42 @@
                 `;
             }).join('');
 
+            // Card HTML with Chevron instead of Star
             const folderHtml = `
-                <div class="program-folder">
-                    <div class="folder-header" onclick="toggleFolder('${folderId}')">
-                        <div class="folder-title">
-                            <i id="icon-${folderId}" class="fas fa-folder" style="color: #17a2b8;"></i> 
-                            ${groupName}
+                <div class="bb-course-card" style="border-left-color: ${cardColor};">
+                    <div class="bb-card-header" onclick="toggleFolder('${folderId}')">
+                        <div>
+                            <div style="font-size: 11px; color: #666; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Mapúa MCM | ${groupName}</div>
+                            <div class="bb-card-title">${groupName} Archived Records</div>
+                            <div class="bb-card-subtitle">
+                                <span class="status">Open</span>
+                                <span class="divider">|</span>
+                                <span>Total Forms: ${formsInGroup.length}</span>
+                                <span class="divider">|</span>
+                                <span>Click to expand</span>
+                            </div>
                         </div>
-                        <div class="folder-badge">${formsInGroup.length} Records</div>
+                        <div class="bb-card-icon">
+                            <i id="icon-${folderId}" class="fas fa-chevron-down" style="${iconTransform}"></i>
+                        </div>
                     </div>
-                    <div id="${folderId}" class="folder-body">
-                        <table class="archive-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 35%">Faculty Name</th>
-                                    <th style="width: 25%">Term & Year</th>
-                                    <th style="width: 20%">Date Archived</th>
-                                    <th style="width: 20%">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rowsHtml}
-                            </tbody>
-                        </table>
+                    
+                    <div id="${folderId}" class="${folderClass}">
+                        <div style="padding: 0 20px 20px 20px;">
+                            <table class="bb-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 35%">Faculty Name</th>
+                                        <th style="width: 25%">Term & Year</th>
+                                        <th style="width: 20%">Date Archived</th>
+                                        <th style="width: 20%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             `;
@@ -342,37 +543,88 @@
         });
     }
 
+    function populateFilterDropdowns() {
+        const yearSelect = document.getElementById('yearFilter');
+        const uniqueYears = new Set();
+        
+        window.__FORMS__.forEach(form => {
+            if (form.academicYear && form.academicYear.trim() !== "") {
+                uniqueYears.add(form.academicYear);
+            }
+        });
+
+        const sortedYears = Array.from(uniqueYears).sort().reverse();
+        yearSelect.innerHTML = '<option value="">All Academic Years</option>';
+        sortedYears.forEach(year => {
+            yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
+        });
+    }
+
     function applyFilters() {
-        const search = document.getElementById('searchInput').value.toLowerCase().trim();
-        const year = document.getElementById('yearFilter').value;
-        const term = document.getElementById('termFilter').value;
+        const searchInput = document.getElementById('searchInput');
+        const yearInput = document.getElementById('yearFilter');
+        const termInput = document.getElementById('termFilter');
+        const programInput = document.getElementById('programFilter'); 
+
+        const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const year = yearInput ? yearInput.value : '';
+        const term = termInput ? termInput.value : '';
+        const program = programInput ? programInput.value : ''; 
+
+        localStorage.setItem('ata_archive_search', search);
+        localStorage.setItem('ata_archive_year', year);
+        localStorage.setItem('ata_archive_term', term);
+        localStorage.setItem('ata_archive_program', program); 
 
         const filtered = window.__FORMS__.filter(f => {
             const nameMatch = !search || (f.facultyName || '').toLowerCase().includes(search);
             const yearMatch = !year   || f.academicYear === year;
             const termMatch = !term   || (f.term || '').includes(term);
-            return nameMatch && yearMatch && termMatch;
+            const formProgram = f.program || f.college || '';
+            const programMatch = !program || formProgram === program; 
+
+            return nameMatch && yearMatch && termMatch && programMatch;
         });
 
         document.getElementById('totalCountBadge').innerText = filtered.length;
+        document.getElementById('resultsCountText').innerText = filtered.length;
+        
         renderAccordion(filtered);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        renderAccordion(window.__FORMS__);
+        populateFilterDropdowns(); 
+        
+        const savedSearch = localStorage.getItem('ata_archive_search');
+        const savedYear = localStorage.getItem('ata_archive_year');
+        const savedTerm = localStorage.getItem('ata_archive_term');
+        const savedProgram = localStorage.getItem('ata_archive_program'); 
+        
+        if (savedSearch) document.getElementById('searchInput').value = savedSearch;
+        if (savedYear) document.getElementById('yearFilter').value = savedYear;
+        if (savedTerm) document.getElementById('termFilter').value = savedTerm;
+        if (savedProgram) document.getElementById('programFilter').value = savedProgram; 
+
+        applyFilters(); 
+        
+        setTimeout(() => {
+            const savedScroll = localStorage.getItem('ata_archive_scroll');
+            const scrollContainer = document.getElementById('accordionContainer'); 
+            if (savedScroll && scrollContainer) {
+                scrollContainer.scrollTop = parseInt(savedScroll); 
+            }
+        }, 50);
     });
 
-    // 👇 EVENT DELEGATION: Listens for clicks on ANY smart-download-btn, even newly generated ones!
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.smart-download-btn');
-        if (!btn) return; // If they clicked something else, ignore it.
+        if (!btn) return; 
 
         const icon = btn.querySelector('i');
         const text = btn.querySelector('span');
         const formId = btn.getAttribute('data-form-id');
         const safeName = btn.getAttribute('data-safe-name');
 
-        // 1. Turn on Loading State
         btn.disabled = true;
         btn.style.opacity = '0.7';
         btn.style.cursor = 'not-allowed';
@@ -380,11 +632,9 @@
         text.innerText = 'Wait...';
 
         try {
-            // 2. Fetch the PDF in the background
             const response = await fetch(`/ata/pdf/${formId}`);
             if (!response.ok) throw new Error('Download failed');
             
-            // 3. Force browser to save the blob
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -394,14 +644,11 @@
             document.body.appendChild(a);
             a.click();
             
-            // Clean up memory
             window.URL.revokeObjectURL(url);
             a.remove();
         } catch (error) {
-            console.error("Error downloading PDF:", error);
             alert("Failed to download PDF. Please check your connection and try again.");
         } finally {
-            // 4. Turn off Loading State
             btn.disabled = false;
             btn.style.opacity = '1';
             btn.style.cursor = 'pointer';
@@ -409,7 +656,13 @@
             text.innerText = 'Download';
         }
     });
+
+    const scrollContainer = document.getElementById('accordionContainer');
+    if (scrollContainer) {
+        scrollContainer.addEventListener('scroll', () => {
+            localStorage.setItem('ata_archive_scroll', scrollContainer.scrollTop);
+        });
+    }
     </script>
 </body>
 </html>
-
