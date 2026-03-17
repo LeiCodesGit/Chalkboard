@@ -115,7 +115,9 @@ body {
 }
 
 .search-box input:focus {
-    border-color: #555;
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(160, 26, 30, 0.1);
 }
 
 /* ── Term dropdown ── */
@@ -253,13 +255,13 @@ body {
     text-decoration: none;
     color: inherit;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    transition: box-shadow 0.2s, transform 0.15s;
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .course-card:hover {
-    box-shadow: 0 6px 20px rgba(0,0,0,0.10);
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* Card banner area */

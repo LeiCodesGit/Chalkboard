@@ -128,7 +128,11 @@
         const isChair = userRole === 'Program-Chair';
         const isDean = userRole === 'Dean';
         const isHR = userRole === 'HR';
+        const isHRMO = userRole === 'HRMO';
         const isAdmin = userRole === 'Admin' || userRole === 'Super-Admin';
+        const isVPAA = userRole === 'VPAA';
+        const isPracticum = userRole === 'Practicum-Coordinator';
+        const isTech = userRole === 'Technical';
     %>
     <ul class="sidebar-menu">
         <li>
@@ -143,7 +147,7 @@
                 <span class="menu-text">TWS</span>
             </a>
         </li>
-        <% if (isProf || isChair || isAdmin) { %>
+        <% if (isProf || isChair || isAdmin || isPracticum || isDean || isVPAA || isHR || isHRMO) { %>
         <li>
             <a href="/ata" class="<%= (locals.currentPageCategory === 'ata') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">fact_check</span>
@@ -159,7 +163,7 @@
             </a>
         </li>
         <% } %>
-        <% if (isProf || isChair || isAdmin) { %>
+        <% if (isProf || isChair || isAdmin || isDean || isHR || isHRMO || isTech || isVPAA || isPracticum) { %>
         <li>
             <a href="/tla" class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">assignment</span>

@@ -1,7 +1,8 @@
 import express from "express";
-import { mainDB } from "../../database/mongo-dbconnect.js"; 
+import { mainDB } from "../../database/mongo-dbconnect.js";
 import userSchema from "../../models/user.js";
 import { isAuthenticated, authorizeRoles } from "../../middleware/authMiddleware.js";
+import { requireLogin, requireApprovalRole, requireHRRole, getAdminTLA, postHRArchive } from "../../controllers/tlaController.js";
 
 const adminRoutes = express.Router();
 
@@ -14,6 +15,12 @@ adminRoutes.get("/institution", isAuthenticated, authorizeRoles("Admin", "HR", "
         user: req.session.user
     });
 });
+
+// TLA admin page — consolidated review queue + HR archive
+adminRoutes.get("/tla", requireLogin, requireApprovalRole, getAdminTLA);
+
+// HR archive action (POST) — moved from removed tlaHRRoutes
+adminRoutes.post("/tla/archive/:id", requireLogin, requireHRRole, postHRArchive);
 
 adminRoutes.get("/config/users", async (req, res) => {
     try {

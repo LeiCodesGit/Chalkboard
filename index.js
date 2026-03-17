@@ -136,6 +136,10 @@ app.use("/tla/form", formRoutes);
 app.use("/tla/approval", approvalRoutes);
 app.get("/tla", (req, res) => res.redirect("/tla/courses"));
 
+// Redirects for removed TLA routes
+app.get("/tla/admin-overview", (req, res) => res.redirect("/admin/tla"));
+app.get("/tla/hr", (req, res) => res.redirect("/admin/tla"));
+
 // TLA APIs
 app.use("/api/tla/approval",      tlaApprovalApiRoutes);
 app.use("/api/tla/pre-digital",   tlaPreDigitalRoutes);

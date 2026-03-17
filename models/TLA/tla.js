@@ -8,7 +8,11 @@ const tlaSchema = new Schema({
   facultyFacilitating: String,
   courseOutcomes: String,
   mediatingOutcomes: String,
-  status: { type: String, enum: ["Draft", "Pending", "Approved", "Returned", "Archived"], default: "Draft" },
+  status: {
+    type: String,
+    enum: ["Draft", "Pending", "Tech-Approved", "Chair-Approved", "Dean-Approved", "Approved", "Returned", "Archived"],
+    default: "Draft"
+  },
   weekNumber: Number,
   pdf: Buffer
 },{ timestamps:true });

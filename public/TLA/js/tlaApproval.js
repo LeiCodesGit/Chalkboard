@@ -1,17 +1,18 @@
 /* ═══════════════════════════════════════════════════════════
    TLA Approval Page — Client-side JS
+   Updated: Multi-step organizational approval chain
    ═══════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ─── Status indicator color sync ───────────────────────
+    // ─── Status / verdict indicator color sync ─────────────
     const statusSelect = document.getElementById('approval-status');
     const statusDot    = document.getElementById('status-indicator');
 
     function syncStatusColor() {
         if (!statusSelect || !statusDot) return;
         const val = statusSelect.value;
-        statusDot.className = 'status-indicator'; // reset
+        statusDot.className = 'status-indicator';
         if (val === 'Approved')  statusDot.classList.add('indicator-approved');
         else if (val === 'Returned') statusDot.classList.add('indicator-returned');
         else if (val === 'Pending')  statusDot.classList.add('indicator-pending');
@@ -19,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (statusSelect) {
         statusSelect.addEventListener('change', syncStatusColor);
-        syncStatusColor(); // set initial
+        syncStatusColor();
     }
 
     // ─── Signature upload ──────────────────────────────────
@@ -29,44 +30,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (sigBox && sigInput) {
         sigBox.addEventListener('click', () => sigInput.click());
-
         sigInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (ev) => {
                 sigBox.innerHTML = `<img src="${ev.target.result}" alt="Signature" class="signature-img">`;
-                sigBox.appendChild(sigInput); // keep the hidden input in the DOM
+                sigBox.appendChild(sigInput);
                 if (sigRemove) sigRemove.style.display = 'flex';
             };
             reader.readAsDataURL(file);
         });
     }
 
-    // ─── Signature remove ──────────────────────────────────────────
     if (sigRemove) {
         sigRemove.addEventListener('click', () => {
             sigBox.innerHTML = '<span class="signature-placeholder">Click to upload signature</span>';
-            sigBox.appendChild(sigInput); // keep the hidden input in the DOM
-            sigInput.value = ''; // clear file selection
+            sigBox.appendChild(sigInput);
+            if (sigInput) sigInput.value = '';
             sigRemove.style.display = 'none';
         });
-
-        // Show remove button if a signature is already loaded
         if (sigBox && sigBox.querySelector('.signature-img')) {
             sigRemove.style.display = 'flex';
         }
     }
 
-    // ─── Save as PDF ───────────────────────────────────────
+    // ─── Save as PDF (browser print) ───────────────────────
     const btnPdf = document.getElementById('btn-save-pdf');
     if (btnPdf) {
-        btnPdf.addEventListener('click', () => {
-            // For now, use the browser print-to-PDF
-            // Future: POST to a server endpoint to generate a proper PDF
-            window.print();
-        });
+        btnPdf.addEventListener('click', () => window.print());
     }
 
     // ─── Save as Draft ─────────────────────────────────────
@@ -74,79 +66,105 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnDraft) {
         btnDraft.addEventListener('click', async () => {
             const tlaID = APPROVAL_DATA.tlaID;
-            if (!tlaID) {
-                alert('No TLA loaded to save.');
-                return;
-            }
+            if (!tlaID) { alert('No TLA loaded.'); return; }
 
             const payload = {
-                tlaID,
                 comment: document.getElementById('approval-comments')?.value || '',
-                status:  statusSelect?.value || 'Pending',
                 action:  'draft'
             };
 
             try {
                 const res = await fetch('/tla/approval/' + tlaID, {
-                    method: 'POST',
+                    method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body:    JSON.stringify(payload)
                 });
-
                 if (res.ok) {
-                    alert('Draft saved successfully.');
+                    showToast('Draft saved successfully.', 'success');
                 } else {
                     const text = await res.text();
-                    alert('Failed to save draft: ' + text);
+                    showToast('Failed to save draft: ' + text, 'error');
                 }
             } catch (err) {
                 console.error('Save draft error:', err);
-                alert('An error occurred while saving the draft.');
+                showToast('An error occurred while saving the draft.', 'error');
             }
         });
     }
 
-    // ─── Submit ────────────────────────────────────────────
+    // ─── Submit Verdict ────────────────────────────────────
     const btnSubmit = document.getElementById('btn-submit');
     if (btnSubmit) {
         btnSubmit.addEventListener('click', async () => {
-            const tlaID = APPROVAL_DATA.tlaID;
-            if (!tlaID) {
-                alert('No TLA loaded to submit.');
-                return;
-            }
+            const tlaID  = APPROVAL_DATA.tlaID;
+            if (!tlaID) { alert('No TLA loaded.'); return; }
 
-            const status  = statusSelect?.value || 'Pending';
-            const comment = document.getElementById('approval-comments')?.value || '';
+            const verdict  = statusSelect?.value || 'Approved';
+            const comment  = document.getElementById('approval-comments')?.value || '';
+            const stepLabel = {
+                technical:    'Technical Assessment',
+                programChair: 'Program Chair Approval',
+                dean:         "Dean's Approval",
+                hr:           'HR Archival'
+            }[APPROVAL_DATA.activeStep] || 'Verdict';
 
-            if (!confirm(`Are you sure you want to submit this TLA as "${status}"?`)) return;
+            if (!confirm(`Submit "${verdict}" for ${stepLabel}?`)) return;
 
             const payload = {
-                tlaID,
                 comment,
-                status,
+                verdict,
                 action: 'submit'
             };
 
             try {
                 const res = await fetch('/tla/approval/' + tlaID, {
-                    method: 'POST',
+                    method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body:    JSON.stringify(payload)
                 });
 
                 if (res.ok) {
-                    alert('Submitted successfully.');
-                    window.location.href = '/tla/overview';
+                    const data = await res.json().catch(() => ({}));
+                    showToast('Submitted successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/tla/admin-overview';
+                    }, 1200);
                 } else {
                     const text = await res.text();
-                    alert('Submission failed: ' + text);
+                    showToast('Submission failed: ' + text, 'error');
                 }
             } catch (err) {
                 console.error('Submit error:', err);
-                alert('An error occurred while submitting.');
+                showToast('An error occurred while submitting.', 'error');
             }
         });
     }
+
+    // ─── Toast notification helper ─────────────────────────
+    function showToast(message, type = 'info') {
+        let toast = document.getElementById('tla-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'tla-toast';
+            toast.style.cssText = `
+                position: fixed; bottom: 24px; right: 24px;
+                padding: 12px 22px; border-radius: 8px;
+                font-size: 14px; font-weight: 600;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+                z-index: 9999; transition: opacity 0.3s;
+                color: #fff;
+            `;
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.style.background = type === 'success' ? '#1a7f4e'
+                               : type === 'error'   ? '#a00100'
+                               :                      '#002455';
+        toast.style.opacity = '1';
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+    }
+});
+
 
 });

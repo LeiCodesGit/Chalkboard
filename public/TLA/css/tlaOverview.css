@@ -232,7 +232,7 @@ body {
     cursor: pointer;
     text-decoration: none;
     color: inherit;
-    transition: background 0.15s;
+    transition: all 0.2s ease;
 }
 
 .form-item:last-child {
@@ -240,11 +240,12 @@ body {
 }
 
 .form-item:hover {
-    background: #f7f7f7;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Disabled week row (no TLA submitted yet — nothing to review) */
-.form-item-disabled {
+.form-item.form-item-disabled {
     opacity: 0.45;
     pointer-events: none;
     cursor: default;
@@ -343,15 +344,15 @@ body {
 /* Role badge shown under approver name */
 .panel-role-badge {
     display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    padding: 4px 16px;
+    background: var(--accent-primary, #a01a1e);
     color: #fff;
-    background: var(--color-mapua-red, #c0392b);
-    padding: 3px 14px;
-    border-radius: 12px;
-    text-align: center;
-    margin: 4px auto 8px;
+    border-radius: 16px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
 }
 
 /* Info / Schedule sections */

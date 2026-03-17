@@ -282,23 +282,32 @@ body {
 }
 
 .step-dot.step-approved {
-    background: #28a745;
-    border-color: #28a745;
+    background: #10b981;
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .step-dot.step-ongoing {
-    background: #ffc107;
-    border-color: #ffc107;
+    background: #f59e0b;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    animation: pulse 2s infinite;
 }
 
 .step-dot.step-pending {
-    background: #bbb;
-    border-color: #bbb;
+    background: #d1d5db;
+    border-color: #d1d5db;
 }
 
 .step-dot.step-rejected {
-    background: #dc3545;
-    border-color: #dc3545;
+    background: #ef4444;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
+    50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1); }
 }
 
 /* Connecting line */
@@ -407,6 +416,7 @@ body {
     background: var(--color-white);
     color: var(--text-on-light);
     cursor: pointer;
+    transition: border-color 0.2s;
     -webkit-appearance: none;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
@@ -417,7 +427,8 @@ body {
 
 .status-select:focus {
     outline: none;
-    border-color: var(--accent-secondary);
+    border-color: var(--accent-primary, #a01a1e);
+    box-shadow: 0 0 0 3px rgba(160, 26, 30, 0.1);
 }
 
 /* ── Signature Box ── */
@@ -499,8 +510,13 @@ body {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.25s;
+    transition: all 0.2s ease;
     font-family: inherit;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-action .material-symbols-outlined {
@@ -572,3 +588,121 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ROLE-BASED ACTION PANEL  (added for multi-step approval)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Role Action Panel ── */
+.role-action-panel {
+    background: rgba(0, 36, 85, 0.06);
+    border: 1.5px solid rgba(0, 36, 85, 0.18);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.action-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-mapua-blue);
+    margin-bottom: 6px;
+}
+
+.action-panel-title .material-symbols-outlined { font-size: 18px; }
+
+.action-panel-hint {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+/* ── Read-Only Panel ── */
+.readonly-panel {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1.5px solid rgba(0, 0, 0, 0.10);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.readonly-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.readonly-title .material-symbols-outlined { font-size: 18px; }
+
+.readonly-hint {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+/* ── Archive Button (HR step) ── */
+.btn-archive-submit {
+    width: 100%;
+    padding: 12px;
+    background: var(--color-mapua-red);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-archive-submit:hover {
+    background: var(--red-hover);
+}
+
+.btn-archive-submit:active {
+    transform: scale(0.98);
+}
+
+.hr-archive-form {
+    width: 100%;
+}
+
+/* ── Step detail line in tracker ── */
+.step-detail {
+    font-size: 10px;
+    color: #888;
+    margin-top: 2px;
+}
+
+/* ── Macro status chip in header ── */
+.macro-status-chip {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: #888;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.chip-pending             { background: #e07b22; }
+.chip-tech-approved       { background: #2563eb; }
+.chip-chair-approved      { background: #7c3aed; }
+.chip-practicum-approved  { background: #4f46e5; }
+.chip-dean-approved       { background: #0f766e; }
+.chip-vpaa-noted          { background: #0891b2; }
+.chip-archived            { background: #1a7f4e; }
+.chip-returned            { background: #a00100; }
+
