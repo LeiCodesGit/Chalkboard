@@ -77,6 +77,30 @@
       color: var(--tws-text);
       border-color: rgba(255,255,255,0.35);
     }
+
+    .tws-search-wrap {
+      margin: 8px 0 12px;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .tws-search-input {
+      width: min(420px, 100%);
+      height: 38px;
+      border: 1px solid var(--tws-border);
+      border-radius: 999px;
+      padding: 0 14px;
+      background: #fff;
+      color: var(--tws-text);
+      outline: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .tws-search-input:focus {
+      border-color: var(--tws-secondary);
+      box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.08);
+    }
   </style>
 </head>
 
@@ -104,6 +128,16 @@
           </div>
         </div>
 
+        <div class="tws-search-wrap">
+          <input
+            id="subjectSearch"
+            class="tws-search-input"
+            type="search"
+            placeholder="Search by course code or title"
+            aria-label="Search subjects"
+          />
+        </div>
+
         <div class="tws-table tws-workload-table">
           <div class="tws-row tws-head tws-workload-row">
             <div>Course Code</div>
@@ -122,7 +156,7 @@
           <% (subjects || []).forEach(function(s) {
                const alreadyAdded = (tws.createdWorkload || []).some(function(x) { return x.code === s.code; });
           %>
-            <div class="tws-row tws-workload-row">
+            <div class="tws-row tws-workload-row js-subject-row" data-search="<%= String((s.code || '') + ' ' + (s.title || '')).toLowerCase() %>">
               <div><%= s.code %></div>
               <div><%= s.title %></div>
               <div><%= Number(s.units).toFixed(2) %></div>
@@ -154,6 +188,12 @@
               </div>
             </div>
           <% }) %>
+
+          <% if (subjects && subjects.length) { %>
+            <div class="tws-row tws-workload-row" id="noSubjectMatchRow" style="display:none;">
+              <div style="grid-column: 1 / -1; text-align:center;">No matching course found.</div>
+            </div>
+          <% } %>
         </div>
 
         <div class="tws-added-list">
@@ -421,6 +461,28 @@ document.querySelectorAll(".open-edit-modal-btn").forEach((btn) => {
     );
   });
 });
+
+const subjectSearchInput = document.getElementById("subjectSearch");
+const subjectRows = Array.from(document.querySelectorAll(".js-subject-row"));
+const noSubjectMatchRow = document.getElementById("noSubjectMatchRow");
+
+function filterSubjectRows() {
+  const query = String(subjectSearchInput?.value || "").trim().toLowerCase();
+  let visibleCount = 0;
+
+  subjectRows.forEach((row) => {
+    const haystack = row.dataset.search || "";
+    const matched = !query || haystack.includes(query);
+    row.style.display = matched ? "" : "none";
+    if (matched) visibleCount += 1;
+  });
+
+  if (noSubjectMatchRow) {
+    noSubjectMatchRow.style.display = visibleCount === 0 ? "" : "none";
+  }
+}
+
+subjectSearchInput?.addEventListener("input", filterSubjectRows);
 </script>
 
 </body>
