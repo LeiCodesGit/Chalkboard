@@ -25,6 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "cookie-parser": "^1.4.7",
+    "cookie-parser": "^1.4.7",
     "docx-preview": "^0.3.7",
     "docxtemplater": "^3.68.3",
     "dotenv": "^17.3.1",

@@ -94,6 +94,8 @@ import scheduleSyllabusRoutes from "./routes/Syllabus/scheduleSyllabusRoutes.js"
 
 // ATA
 import ataPages from "./routes/ATA/ataPages.js";
+import ataApiRoutes from "./routes/ATA/ataRoutes.js";
+import ataAuthRoutes from "./routes/ATA/authRoutes.js";
 
 //TWS
 import twsRoutes from "./routes/TWS/twsRoutes.js";
@@ -162,7 +164,8 @@ app.use("/faculty", courseOverviewFacultyRoutes);
 
 // ATA Pages
 app.use("/ata", ataPages);
-
+app.use("/ata", ataApiRoutes); 
+app.use("/ata/auth", ataAuthRoutes);
 // TWS
 app.use("/tws", twsRoutes);
 

@@ -30,9 +30,20 @@
   --tws-text-dark: var(--text-on-light);
 }
 
-*{ box-sizing: border-box; }
-a{ color: inherit; text-decoration: none; }
-button, input, select{ font-family: inherit; }
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
 
 
 /* ======================================================
@@ -40,7 +51,7 @@ button, input, select{ font-family: inherit; }
    Used in: twsLandingWelcome.ejs
 ====================================================== */
 
-.tws-landing-body{
+.tws-landing-body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--tws-text);
@@ -49,13 +60,13 @@ button, input, select{ font-family: inherit; }
     url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-.tws-layout{
+.tws-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
-.tws-sidebar{
+.tws-sidebar {
   height: 100vh;
   position: sticky;
   top: 0;
@@ -63,36 +74,36 @@ button, input, select{ font-family: inherit; }
 }
 
 /* keep sidebar partial inside the column */
-.tws-sidebar > *{
+.tws-sidebar>* {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
 }
 
-.tws-main{
+.tws-main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 0;
 }
 
-.tws-center{
+.tws-center {
   width: min(900px, 92%);
   margin-top: 70px;
   text-align: center;
 }
 
 /* Landing title pill */
-.tws-title-pill{
+.tws-title-pill {
   background: var(--tws-pill);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(660px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
 }
 
-.tws-title-pill h1{
+.tws-title-pill h1 {
   margin: 0;
   font-size: 34px;
   font-weight: 800;
@@ -100,24 +111,25 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Landing main glass panel */
-.tws-panel{
+.tws-panel {
   background: var(--tws-glass);
   border-radius: 18px;
   padding: 18px 22px 22px 22px;
   width: min(780px, 100%);
   margin: 0 auto;
   box-shadow: var(--tws-shadow);
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
 }
 
-.tws-panel h2{
+.tws-panel h2 {
   margin: 8px 0 10px 0;
   font-size: 15px;
   font-weight: 800;
   opacity: 0.98;
 }
 
-.tws-panel p{
+.tws-panel p {
   margin: 0 auto;
   max-width: 690px;
   font-size: 12px;
@@ -126,7 +138,7 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Landing Get Started button */
-.tws-btn{
+.tws-btn {
   display: inline-block;
   margin-top: 16px;
   background: var(--tws-green);
@@ -134,33 +146,33 @@ button, input, select{ font-family: inherit; }
   padding: 12px 46px;
   border-radius: 999px;
   font-weight: 800;
-  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.tws-btn:hover{
+.tws-btn:hover {
   transform: translateY(-1px);
   opacity: 0.96;
 }
 
 /* Landing info box */
-.tws-info-box{
+.tws-info-box {
   margin: 16px auto 0 auto;
   width: min(780px, 100%);
-  background: rgba(0,0,0,0.60);
-  border: 2px solid rgba(255,255,255,0.75);
+  background: rgba(0, 0, 0, 0.60);
+  border: 2px solid rgba(255, 255, 255, 0.75);
   border-radius: 14px;
   padding: 14px 18px;
   text-align: left;
 }
 
-.tws-info-box h3{
+.tws-info-box h3 {
   margin: 0 0 8px 0;
   font-size: 14px;
   font-weight: 900;
 }
 
-.tws-info-box ul{
+.tws-info-box ul {
   margin: 0;
   padding-left: 18px;
   font-size: 12px;
@@ -173,7 +185,7 @@ button, input, select{ font-family: inherit; }
    Used in: twsProgramChair.ejs
 ====================================================== */
 
-.pc-body{
+.pc-body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--tws-text);
@@ -182,64 +194,64 @@ button, input, select{ font-family: inherit; }
     url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-.pc-layout{
+.pc-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
-.pc-sidebar{
+.pc-sidebar {
   height: 100vh;
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
-.pc-sidebar > *{
+.pc-sidebar>* {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
 }
 
-.pc-main{
+.pc-main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 
-.pc-center{
+.pc-center {
   width: min(1040px, 92%);
   margin-top: 60px;
 }
 
-.pc-title-pill{
+.pc-title-pill {
   background: var(--tws-pill);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(760px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
   text-align: center;
 }
 
-.pc-title-pill h1{
+.pc-title-pill h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
 }
 
 /* Program Chair cards */
-.pc-card{
+.pc-card {
   background: var(--tws-card);
   border-radius: 14px;
   border: 2px solid var(--tws-border);
-  box-shadow: 0 14px 28px rgba(0,0,0,0.30);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.30);
   padding: 14px;
   margin: 0 auto 14px auto;
   max-width: 980px;
 }
 
-.pc-card-header{
+.pc-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -247,23 +259,23 @@ button, input, select{ font-family: inherit; }
   margin-bottom: 10px;
 }
 
-.pc-card-title{
+.pc-card-title {
   font-weight: 900;
   font-size: 14px;
 }
 
-.pc-glass{
+.pc-glass {
   width: min(1000px, 100%);
   margin: 0 auto;
 }
 
 .pc-card-wide,
-.pc-card-small{
+.pc-card-small {
   max-width: 980px;
 }
 
 /* Program Chair top action chips */
-.pc-actions{
+.pc-actions {
   display: flex;
   gap: 10px;
 }
@@ -280,12 +292,12 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Program Chair table layout */
-.pc-table{
+.pc-table {
   display: grid;
   gap: 2px;
 }
 
-.pc-row{
+.pc-row {
   display: grid;
   grid-template-columns: 1.4fr 1.1fr 1fr 0.55fr 1.2fr 1.25fr;
   gap: 10px;
@@ -295,33 +307,33 @@ button, input, select{ font-family: inherit; }
   border-bottom: 1px solid rgba(255,255,255,0.11);
 }
 
-.pc-table-small .pc-row{
+.pc-table-small .pc-row {
   grid-template-columns: 1.4fr 1.1fr 0.55fr 1.25fr;
 }
 
-.pc-head{
+.pc-head {
   font-weight: 800;
   opacity: 0.9;
 }
 
-.pc-empty{
+.pc-empty {
   opacity: 0.85;
   padding: 10px 0;
 }
 
-.pc-action-col{
+.pc-action-col {
   text-align: right;
 }
 
 /* Program Chair buttons */
-.pc-btns{
+.pc-btns {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
 
-.pc-btn{
+.pc-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -331,29 +343,29 @@ button, input, select{ font-family: inherit; }
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.65);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   cursor: pointer;
   line-height: 1;
   white-space: nowrap;
   text-align: center;
 }
 
-.pc-white{
+.pc-white {
   background: var(--tws-white);
   color: var(--tws-text-dark);
 }
 
-.pc-blue{
+.pc-blue {
   background: var(--tws-blue);
   color: var(--tws-text);
   border-color: rgba(255,255,255,0.35);
 }
 
-.pc-form-inline{
+.pc-form-inline {
   display: inline-flex;
 }
 
-.pc-btns-right{
+.pc-btns-right {
   justify-content: flex-end;
 }
 
@@ -364,7 +376,7 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Program Chair status colors */
-.pc-status-text{
+.pc-status-text {
   font-weight: 800;
 }
 
@@ -372,7 +384,7 @@ button, input, select{ font-family: inherit; }
 .pc-red{ color: var(--status-returned); }
 
 /* Program Chair next button */
-.pc-next-wrap{
+.pc-next-wrap {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
@@ -381,7 +393,7 @@ button, input, select{ font-family: inherit; }
   margin-right: auto;
 }
 
-.pc-next{
+.pc-next {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -393,7 +405,7 @@ button, input, select{ font-family: inherit; }
   border-radius: 999px;
   font-weight: 800;
   font-size: 12px;
-  border: 1px solid rgba(255,255,255,0.65);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   line-height: 1;
   white-space: nowrap;
   text-align: center;
@@ -412,7 +424,7 @@ button, input, select{ font-family: inherit; }
    - other shared TWS pages
 ====================================================== */
 
-.tws-app-body{
+.tws-app-body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--tws-text);
@@ -421,82 +433,82 @@ button, input, select{ font-family: inherit; }
     url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-.tws-app-layout{
+.tws-app-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
-.tws-app-sidebar{
+.tws-app-sidebar {
   height: 100vh;
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
-.tws-app-sidebar > *{
+.tws-app-sidebar>* {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
 }
 
-.tws-app-main{
+.tws-app-main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-width: 0;
 }
 
-.tws-app-center{
+.tws-app-center {
   width: min(1040px, 92%);
   margin-top: 60px;
   min-width: 0;
 }
 
-.tws-app-title-pill{
+.tws-app-title-pill {
   background: var(--tws-pill);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(760px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
   text-align: center;
 }
 
-.tws-app-title-pill h1{
+.tws-app-title-pill h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
 }
 
 /* Shared app cards */
-.tws-card{
+.tws-card {
   background: var(--tws-card);
   border-radius: 14px;
   border: 2px solid var(--tws-border);
-  box-shadow: 0 14px 28px rgba(0,0,0,0.30);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.30);
   padding: 14px;
   margin: 0 auto 14px auto;
   max-width: 980px;
   overflow: hidden;
 }
 
-.tws-app-glass{
+.tws-app-glass {
   width: min(1000px, 100%);
   margin: 0 auto;
 }
 
 .tws-card-wide,
-.tws-card-guidelines{
+.tws-card-guidelines {
   max-width: 980px;
 }
 
-.tws-action-col{
+.tws-action-col {
   text-align: right;
 }
 
 /* Shared app card header */
-.tws-card-header{
+.tws-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -504,12 +516,12 @@ button, input, select{ font-family: inherit; }
   margin-bottom: 10px;
 }
 
-.tws-card-title{
+.tws-card-title {
   font-weight: 900;
   font-size: 14px;
 }
 
-.tws-create-pill{
+.tws-create-pill {
   background: var(--tws-green);
   color: var(--tws-text);
   border-radius: 999px;
@@ -519,12 +531,12 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Shared app table */
-.tws-table{
+.tws-table {
   display: grid;
   gap: 2px;
 }
 
-.tws-row{
+.tws-row {
   display: grid;
   grid-template-columns: 1fr 0.55fr 0.9fr 0.9fr 1fr;
   gap: 10px;
@@ -534,20 +546,20 @@ button, input, select{ font-family: inherit; }
   border-bottom: 1px solid rgba(255,255,255,0.11);
 }
 
-.tws-head{
+.tws-head {
   font-weight: 800;
   opacity: 0.9;
 }
 
 /* Shared app buttons */
-.tws-btns{
+.tws-btns {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.tws-btn-white{
+.tws-btn-white {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -559,7 +571,7 @@ button, input, select{ font-family: inherit; }
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.65);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
@@ -568,7 +580,7 @@ button, input, select{ font-family: inherit; }
 
 /* Dashboard-only smaller action buttons
    Used in: twsCreatePage.ejs */
-.tws-dashboard-btns{
+.tws-dashboard-btns {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -576,12 +588,12 @@ button, input, select{ font-family: inherit; }
   align-items: center;
 }
 
-.tws-dashboard-delete-form{
+.tws-dashboard-delete-form {
   display: inline-flex;
   margin: 0;
 }
 
-.tws-dashboard-action-btn{
+.tws-dashboard-action-btn {
   min-width: 60px;
   height: 28px;
   padding: 0 5px;
@@ -596,25 +608,25 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Shared app special rows */
-.tws-workload-row{
+.tws-workload-row {
   grid-template-columns: 1fr 1.2fr 0.55fr 0.55fr 0.75fr;
 }
 
-.tws-workload-col-head{
+.tws-workload-col-head {
   text-align: center;
 }
 
-.tws-workload-action-cell{
+.tws-workload-action-cell {
   justify-content: center;
 }
 
-.tws-workload-action-cell form{
+.tws-workload-action-cell form {
   display: inline-flex;
 }
 
 
 /* Shared app helper text */
-.tws-guidelines{
+.tws-guidelines {
   margin: 10px 0 0 0;
   padding-left: 18px;
   font-size: 12px;
@@ -623,7 +635,7 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Shared app next button */
-.tws-next-wrap{
+.tws-next-wrap {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
@@ -632,7 +644,7 @@ button, input, select{ font-family: inherit; }
   margin-right: auto;
 }
 
-.tws-next{
+.tws-next {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -644,7 +656,7 @@ button, input, select{ font-family: inherit; }
   border-radius: 999px;
   font-weight: 800;
   font-size: 12px;
-  border: 1px solid rgba(255,255,255,0.65);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   line-height: 1;
   white-space: nowrap;
   text-align: center;
@@ -655,11 +667,11 @@ button, input, select{ font-family: inherit; }
    Used in: twsCreateTeachingWorkloadPopup.ejs
 ====================================================== */
 
-.tws-modal-bg{
+.tws-modal-bg {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   align-items: center;
   justify-content: center;
   z-index: 9999;
@@ -670,17 +682,17 @@ button, input, select{ font-family: inherit; }
   padding: 18px;
   width: 360px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow: 0 22px 44px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.5);
 }
 
-.tws-modal-title{
+.tws-modal-title {
   font-weight: 900;
   font-size: 14px;
   margin-bottom: 10px;
 }
 
-.tws-modal label{
+.tws-modal label {
   display: block;
   font-size: 12px;
   font-weight: 800;
@@ -688,7 +700,7 @@ button, input, select{ font-family: inherit; }
   margin-top: 10px;
 }
 
-.tws-modal select{
+.tws-modal select {
   width: 100%;
   padding: 9px 12px;
   margin-top: 6px;
@@ -711,12 +723,12 @@ button, input, select{ font-family: inherit; }
   color: var(--text-muted);
 }
 
-.tws-modal select:focus{
-  border-color: rgba(255,255,255,0.35);
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
+.tws-modal select:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
 }
 
-.tws-modal-actions{
+.tws-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -733,7 +745,7 @@ button, input, select{ font-family: inherit; }
   cursor: pointer;
 }
 
-.tws-modal-add{
+.tws-modal-add {
   background: var(--tws-green);
   color: var(--tws-text);
   border: none;
@@ -754,7 +766,7 @@ button, input, select{ font-family: inherit; }
 ====================================================== */
 
 /* Stepper */
-.tws-stepper{
+.tws-stepper {
   margin-top: 10px;
   display: flex;
   align-items: center;
@@ -762,7 +774,7 @@ button, input, select{ font-family: inherit; }
   flex-wrap: wrap;
 }
 
-.tws-step{
+.tws-step {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -771,40 +783,40 @@ button, input, select{ font-family: inherit; }
   opacity: 0.95;
 }
 
-.tws-dot{
+.tws-dot {
   width: 22px;
   height: 22px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255,255,255,0.65);
-  background: rgba(255,255,255,0.10);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.10);
   font-size: 12px;
 }
 
-.tws-step-done .tws-dot{
+.tws-step-done .tws-dot {
   background: var(--tws-green);
-  border-color: rgba(255,255,255,0.30);
+  border-color: rgba(255, 255, 255, 0.30);
 }
 
-.tws-step-pending .tws-dot{
+.tws-step-pending .tws-dot {
   background: rgba(255, 214, 107, 0.65);
-  border-color: rgba(255,255,255,0.30);
+  border-color: rgba(255, 255, 255, 0.30);
 }
 
-.tws-step-wait .tws-dot{
-  background: rgba(255,255,255,0.20);
+.tws-step-wait .tws-dot {
+  background: rgba(255, 255, 255, 0.20);
 }
 
-.tws-line{
+.tws-line {
   width: 48px;
   height: 2px;
-  background: rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.45);
 }
 
 /* Status metrics */
-.tws-metrics{
+.tws-metrics {
   margin-top: 14px;
   display: grid;
   grid-template-columns: 160px 1fr;
@@ -814,43 +826,43 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Dean approval routing box */
-.tws-routing-box{
-  background: rgba(0,0,0,0.45);
-  border: 2px solid rgba(255,255,255,0.65);
+.tws-routing-box {
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.65);
   border-radius: 14px;
   padding: 14px;
 }
 
-.tws-routing-top{
+.tws-routing-top {
   text-align: center;
   padding: 6px 0 12px;
 }
 
-.tws-routing-approvedby{
+.tws-routing-approvedby {
   font-size: 12px;
   font-weight: 900;
   opacity: 0.95;
 }
 
-.tws-routing-role{
+.tws-routing-role {
   font-size: 18px;
   font-weight: 900;
   margin-top: 4px;
 }
 
-.tws-routing-small{
+.tws-routing-small {
   font-size: 12px;
   opacity: 0.9;
   margin-top: 4px;
 }
 
-.tws-routing-bottom{
+.tws-routing-bottom {
   margin-top: 10px;
   display: grid;
   gap: 10px;
 }
 
-.tws-routing-label{
+.tws-routing-label {
   font-size: 12px;
   font-weight: 900;
   display: flex;
@@ -858,13 +870,13 @@ button, input, select{ font-family: inherit; }
   gap: 8px;
 }
 
-.tws-routing-line{
+.tws-routing-line {
   height: 2px;
   width: 100%;
-  background: rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.45);
 }
 
-.tws-routing-actions{
+.tws-routing-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -872,7 +884,7 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Approval action pills */
-.tws-pill-btn{
+.tws-pill-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -882,19 +894,19 @@ button, input, select{ font-family: inherit; }
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.60);
+  border: 1px solid rgba(255, 255, 255, 0.60);
   line-height: 1;
   white-space: nowrap;
   text-align: center;
 }
 
-.tws-pill-green{
+.tws-pill-green {
   background: var(--tws-green);
   color: var(--tws-text);
   border-color: rgba(255,255,255,0.25);
 }
 
-.tws-pill-white{
+.tws-pill-white {
   background: var(--tws-white);
   color: var(--tws-text-dark);
 }
@@ -912,9 +924,9 @@ button, input, select{ font-family: inherit; }
   flex-wrap: wrap;
 }
 
-.tws-btn-white:disabled{
-  opacity:.55;
-  cursor:not-allowed;
+.tws-btn-white:disabled {
+  opacity: .55;
+  cursor: not-allowed;
 }
 
 
@@ -993,7 +1005,7 @@ button, input, select{ font-family: inherit; }
 }
 
 /* 2-column layout: timetable + details */
-.tws-schedule-layout{
+.tws-schedule-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
   gap: 18px;
@@ -1003,8 +1015,8 @@ button, input, select{ font-family: inherit; }
 }
 
 /* If screen is small, stack vertically so nothing overlaps */
-@media (max-width: 980px){
-  .tws-schedule-layout{
+@media (max-width: 980px) {
+  .tws-schedule-layout {
     grid-template-columns: 1fr;
   }
 }
@@ -1021,24 +1033,24 @@ button, input, select{ font-family: inherit; }
   grid-template-rows: repeat(13, var(--tws-row-h));
   grid-auto-rows: 0;
 
-  border: 1px solid rgba(255,255,255,0.35);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0, 0, 0, 0.25);
 
   /* stops browser from stretching rows and creating gaps */
   align-content: start;
 }
 
 /* Timetable cells */
-.tws-timetable .tws-cell{
-  border-right: 1px solid rgba(255,255,255,0.22);
-  border-bottom: 1px solid rgba(255,255,255,0.22);
+.tws-timetable .tws-cell {
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
 
-  color: rgba(255,255,255,0.9);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
   text-align: center;
   padding: 0 6px;
@@ -1058,22 +1070,22 @@ button, input, select{ font-family: inherit; }
 .tws-timetable .tws-cell:nth-child(80),
 .tws-timetable .tws-cell:nth-child(88),
 .tws-timetable .tws-cell:nth-child(96),
-.tws-timetable .tws-cell:nth-child(104){
+.tws-timetable .tws-cell:nth-child(104) {
   border-right: none;
 }
 
 /* Timetable headers */
-.tws-timetable .tws-head{
-  background: rgba(0,0,0,0.35);
+.tws-timetable .tws-head {
+  background: rgba(0, 0, 0, 0.35);
   font-weight: 800;
 }
 
-.tws-timetable .tws-corner{
-  background: rgba(0,0,0,0.35);
+.tws-timetable .tws-corner {
+  background: rgba(0, 0, 0, 0.35);
 }
 
-.tws-timetable .tws-time{
-  background: rgba(0,0,0,0.35);
+.tws-timetable .tws-time {
+  background: rgba(0, 0, 0, 0.35);
   font-weight: 800;
   font-size: 11px;
   grid-column: 1 !important;
@@ -1099,7 +1111,7 @@ button, input, select{ font-family: inherit; }
   text-align: center;
   font-size: 10px;
   font-weight: 800;
-  border: 1px solid rgba(0,0,0,0.25);
+  border: 1px solid rgba(0, 0, 0, 0.25);
   overflow: hidden;
   max-width: 100%;
   min-width: 0;
@@ -1137,13 +1149,16 @@ button, input, select{ font-family: inherit; }
     --tws-row-h: 40px;
     grid-template-columns: 62px repeat(7, minmax(0, 1fr));
   }
-  .tws-timetable .tws-cell{
+
+  .tws-timetable .tws-cell {
     font-size: 11px;
   }
-  .tws-timetable .tws-time{
+
+  .tws-timetable .tws-time {
     font-size: 10px;
   }
-  .tws-timetable .tws-block{
+
+  .tws-timetable .tws-block {
     font-size: 10px;
   }
 
@@ -1171,48 +1186,48 @@ button, input, select{ font-family: inherit; }
 }
 
 /* Load details panel */
-.tws-load-details{
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.25);
+.tws-load-details {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 10px;
   padding: 14px;
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
   overflow: hidden;
 }
 
-.tws-load-details .ld-title{
+.tws-load-details .ld-title {
   font-weight: 900;
   text-align: center;
   margin-bottom: 10px;
 }
 
-.tws-load-details .ld-row{
+.tws-load-details .ld-row {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   font-size: 12px;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   align-items: flex-start;
 }
 
 /* wrap long left text nicely */
-.tws-load-details .ld-row{
+.tws-load-details .ld-row {
   flex-wrap: wrap;
 }
 
-.tws-load-details .ld-row span{
+.tws-load-details .ld-row span {
   margin-left: auto;
   white-space: nowrap;
 }
 
-.tws-load-details .ld-divider{
+.tws-load-details .ld-divider {
   margin: 10px 0;
-  border-top: 1px solid rgba(255,255,255,0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 /* Signature section */
-.tws-signatures{
+.tws-signatures {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 40px;
@@ -1221,22 +1236,22 @@ button, input, select{ font-family: inherit; }
   overflow: hidden;
 }
 
-@media (max-width: 720px){
-  .tws-signatures{
+@media (max-width: 720px) {
+  .tws-signatures {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 }
 
-.sig-box{
+.sig-box {
   text-align: center;
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
   min-width: 0;
 }
 
-.sig-line{
+.sig-line {
   height: 1px;
-  background: rgba(255,255,255,0.6);
+  background: rgba(255, 255, 255, 0.6);
   margin: 0 auto 10px;
   width: 70%;
 }

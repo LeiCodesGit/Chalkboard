@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapúa MCM - Archived ATAs</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Filter Bar ──────────────────────────────── */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .filter-bar input,
+        .filter-bar select {
+            background: #2b2b2b;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 9px 13px;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .filter-bar input { width: 230px; }
+        .filter-bar input:focus,
+        .filter-bar select:focus { border-color: #b30000; }
+        .filter-bar select option { background: #2b2b2b; }
+
+        /* ── Summary Strip ───────────────────────────── */
+        .summary-strip {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+        .strip-card {
+            background: #2b2b2b;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 16px 24px;
+            min-width: 160px;
+        }
+        .strip-card .label {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+        }
+        .strip-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #17a2b8;
+            line-height: 1;
+        }
+
+        /* ── Table ───────────────────────────────────── */
+        .archive-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #ddd;
+            font-size: 0.9rem;
+        }
+        .archive-table thead tr {
+            border-bottom: 2px solid #555;
+        }
+        .archive-table th {
+            padding: 12px 10px;
+            text-align: left;
+            color: #888;
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .archive-table td {
+            padding: 14px 10px;
+            border-bottom: 1px solid #2a2a2a;
+            vertical-align: middle;
+        }
+        .archive-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+        /* ── Badges ──────────────────────────────────── */
+        .badge-archived {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            background: #0c4a6e;
+            color: #bae6fd;
+        }
+        .badge-fulltime {
+            background: #1a3a2a;
+            color: #6ee7b7;
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-parttime {
+            background: #3a1a2a;
+            color: #f9a8d4;
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* ── View PDF Button ─────────────────────────── */
+        .btn-view-pdf {
+            background: #17a2b8;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-view-pdf:hover { background: #138496; color: #fff; }
+
+        /* ── Approval Trail ──────────────────────────── */
+        .trail-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .trail-item {
+            font-size: 0.77rem;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .trail-item i { color: #28a745; font-size: 0.68rem; }
+        .trail-item.returned i { color: #dc3545; }
+
+        /* ── Empty State ─────────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 70px 20px;
+            color: #555;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 14px;
+            display: block;
+            color: #3a3a3a;
+        }
+        .empty-state p { font-size: 0.95rem; font-style: italic; }
+
+        /* ── Loading ─────────────────────────────────── */
+        .loading-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        .loading-state i { font-size: 2rem; }
+    </style>
+</head>
+
+<body data-role="<%= typeof role !== 'undefined' ? role : '' %>"
+      data-employment="<%= typeof employmentType !== 'undefined' ? employmentType : '' %>"
+      data-practicum="<%= typeof isPracticumCoordinator !== 'undefined' ? isPracticumCoordinator : 'false' %>">
+
+    <%- include('../partials/sideMenuBar') %>
+
+    <main style="margin-left: 260px; width: calc(100vw - 260px); min-height: 100vh; padding: 40px; box-sizing: border-box;">
+
+        <!-- ── Page Header ───────────────────────────── -->
+        <div class="dashboard-title" style="margin-bottom: 6px;">
+            <i class="fas fa-box-archive" style="color: #17a2b8; margin-right: 10px;"></i>
+            Archived ATAs
+        </div>
+        <p style="color: #777; font-size: 0.88rem; margin-bottom: 28px;">
+            Viewing as <strong style="color: #ccc;"><%= user.name %></strong> | <%= role %> &nbsp;·&nbsp;
+            All ATA forms with status <span style="color:#17a2b8; font-weight:700;">ARCHIVED</span> are shown below.
+            Click <strong>View PDF</strong> to open the full ATA document.
+        </p>
+
+        <!-- ── Summary Strip ─────────────────────────── -->
+        <div class="summary-strip">
+            <div class="strip-card">
+                <div class="label"><i class="fas fa-archive"></i> &nbsp;Total Archived</div>
+                <div class="value" id="totalCount"><%= totalCount %></div>
+            </div>
+            <div class="strip-card" style="border-color: #1a3a3a;">
+                <div class="label"><i class="fas fa-filter"></i> &nbsp;Showing</div>
+                <div class="value" id="showingCount" style="color: #aaa;"><%= totalCount %></div>
+            </div>
+        </div>
+
+        <!-- ── Filter Bar ─────────────────────────────── -->
+        <div class="filter-bar">
+            <input type="text"
+                   id="searchInput"
+                   placeholder="🔍  Search faculty name..."
+                   oninput="applyFilters()">
+
+            <select id="collegeFilter" onchange="applyFilters()">
+                <option value="">All Colleges / Programs</option>
+                <option value="CEA">CEA</option>
+                <option value="CpE">CpE</option>
+                <option value="CE">CE</option>
+                <option value="EE">EE</option>
+                <option value="ECE">ECE</option>
+                <option value="IE">IE</option>
+                <option value="ME">ME</option>
+                <option value="AR">AR</option>
+            </select>
+
+            <select id="yearFilter" onchange="applyFilters()">
+                <option value="">All Academic Years</option>
+                <option value="2025-2026">2025–2026</option>
+                <option value="2024-2025">2024–2025</option>
+                <option value="2023-2024">2023–2024</option>
+            </select>
+
+            <select id="termFilter" onchange="applyFilters()">
+                <option value="">All Terms</option>
+                <option value="1st Term">1st Term</option>
+                <option value="2nd Term">2nd Term</option>
+                <option value="Summer">Summer</option>
+            </select>
+
+            <select id="employmentFilter" onchange="applyFilters()">
+                <option value="">All Employment Types</option>
+                <option value="Full-Time">Full-Time</option>
+                <option value="Part-Time">Part-Time</option>
+            </select>
+        </div>
+
+        <!-- ── Table Card ────────────────────────────── -->
+        <div class="form-card-scrollable" style="padding: 0; overflow: visible;">
+
+            <div id="loadingState" class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p style="margin-top: 10px; font-style: italic; color: #666;">Loading archived forms...</p>
+            </div>
+
+            <table class="archive-table" id="archiveTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Faculty Name</th>
+                        <th>College / Program</th>
+                        <th>Position</th>
+                        <th>Employment</th>
+                        <th>Term</th>
+                        <th>Approval Trail</th>
+                        <th>Archived On</th>
+                        <th style="text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="archiveBody">
+                    <!-- Populated by JS from window.__FORMS__ -->
+                </tbody>
+            </table>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-box-open"></i>
+                <p>No archived ATA forms found matching your filters.</p>
+            </div>
+
+        </div>
+
+        <!-- ── Footer Nav ─────────────────────────────── -->
+        <div style="margin-top: 32px; display: flex; gap: 12px; align-items: center;">
+            <a href="/ata/dashboard/window" class="form-btn secondary-btn" style="text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="/ata/pending" class="form-btn secondary-btn" style="text-decoration: none; background: #444;">
+                <i class="fas fa-inbox"></i> Go to Inbox
+            </a>
+        </div>
+
+    </main>
+
+    <script src="/ATA/js/ata_client.js"></script>
+    <script>
+    // ══════════════════════════════════════════════════════
+    // Seed data from EJS into JS — avoids a second fetch
+    // ══════════════════════════════════════════════════════
+    window.__FORMS__ = <%- JSON.stringify(forms) %>;
+
+    // ── Helpers ───────────────────────────────────────────
+    function fmtDate(d) {
+        if (!d) return '—';
+        return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // ── Render ────────────────────────────────────────────
+    function renderTable(forms) {
+        const tbody   = document.getElementById('archiveBody');
+        const table   = document.getElementById('archiveTable');
+        const empty   = document.getElementById('emptyState');
+        const loading = document.getElementById('loadingState');
+
+        loading.style.display = 'none';
+        document.getElementById('showingCount').textContent = forms.length;
+
+        if (!forms || forms.length === 0) {
+            table.style.display = 'none';
+            empty.style.display = 'block';
+            return;
+        }
+
+        table.style.display = '';
+        empty.style.display = 'none';
+
+        tbody.innerHTML = forms.map((form, idx) => {
+            // Approval trail
+            let trailHtml = `<span style="color:#555; font-style:italic; font-size:0.77rem;">None</span>`;
+            if (form.approvalHistory && form.approvalHistory.length > 0) {
+                trailHtml = `<div class="trail-wrap">` +
+                    form.approvalHistory.map(log => {
+                        const isReturn = log.approvalStatus === 'RETURNED';
+                        return `<div class="trail-item${isReturn ? ' returned' : ''}">
+                            <i class="fas ${isReturn ? 'fa-undo' : 'fa-check-circle'}"></i>
+                            <strong style="color:#ddd;">${log.approverName || log.approverRole || '—'}</strong>
+                            <span style="color:#555;">(${log.approvalStatus || '—'})</span>
+                        </div>`;
+                    }).join('') +
+                `</div>`;
+            }
+
+            // Employment badge
+            const empBadge = form.employmentType === 'Part-Time'
+                ? `<span class="badge-parttime">Part-Time</span>`
+                : `<span class="badge-fulltime">Full-Time</span>`;
+
+            // archivedAt — stored on the form when HR sets status to ARCHIVED
+            const archivedOn = fmtDate(form.archivedAt || form.updatedAt);
+
+            return `
+            <tr>
+                <td style="color: #555; font-size: 0.8rem;">${idx + 1}</td>
+                <td style="font-weight: 600; color: #fff;">
+                    ${form.facultyName || '—'}
+                    <div style="font-size: 0.76rem; color: #666; margin-top: 2px;">
+                        ID: ${form.userID || '—'}
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight: 600; color: #ccc;">${form.college || '—'}</div>
+                    <div style="font-size: 0.78rem; color: #777;">${form.program || ''}</div>
+                </td>
+                <td style="color: #aaa;">${form.position || '—'}</td>
+                <td>${empBadge}</td>
+                <td>
+                    <div style="color: #ccc;">${form.term || '—'}</div>
+                    <div style="font-size: 0.78rem; color: #666;">${form.academicYear || ''}</div>
+                </td>
+                <td>${trailHtml}</td>
+                <td style="color: #777; font-size: 0.82rem; white-space: nowrap;">${archivedOn}</td>
+                <td style="text-align: center;">
+                    <a href="/ata/pdf/${form._id}" target="_blank" class="btn-view-pdf">
+                        <i class="fas fa-file-pdf"></i> View PDF
+                    </a>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ── Filter Logic ──────────────────────────────────────
+    function applyFilters() {
+        const search     = document.getElementById('searchInput').value.toLowerCase().trim();
+        const college    = document.getElementById('collegeFilter').value;
+        const year       = document.getElementById('yearFilter').value;
+        const term       = document.getElementById('termFilter').value;
+        const employment = document.getElementById('employmentFilter').value;
+
+        const filtered = window.__FORMS__.filter(f => {
+            const nameMatch  = !search     || (f.facultyName || '').toLowerCase().includes(search);
+            const colMatch   = !college    || f.college === college || f.program === college;
+            const yearMatch  = !year       || f.academicYear === year;
+            const termMatch  = !term       || (f.term || '').includes(term);
+            const empMatch   = !employment || f.employmentType === employment;
+            return nameMatch && colMatch && yearMatch && termMatch && empMatch;
+        });
+
+        renderTable(filtered);
+    }
+
+    // ── Init ──────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        renderTable(window.__FORMS__);
+    });
+    </script>
+</body>
+</html>
