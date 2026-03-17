@@ -374,6 +374,13 @@ select {
   display: none;
 }
 
+#facultyArchiveGrid,
+#deanArchiveGrid,
+#hrArchiveGrid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, max-content));
+  justify-content: start;
+}
+
 @media (max-width: 1180px) {
   .tws-board-main {
     padding: 18px;

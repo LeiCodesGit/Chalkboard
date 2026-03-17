@@ -123,14 +123,14 @@
                     type="submit"
                     name="action"
                     value="sendToDean"
-                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                    style="border:none; cursor:pointer; background:#22c55e; color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
                   >
                     Send to Dean
                   </button>
                 <% } %>
 
                 <% if (isChair && !canSendToFaculty && !canSendToDean) { %>
-                  <div style="width:100%; border-radius:12px; background: rgba(255,255,255,0.12); color:#fff; padding:10px 12px; font-size:12px; text-align:left;">
+                  <div class="tws-status-note">
                     Current status is <b><%= currentStatus %></b>.
                     <% if (isProgramChair && currentStatus === "Sent to Faculty" && !tws.facultySigned) { %>
                       Waiting for faculty signature before sending to Dean.
@@ -139,6 +139,7 @@
                     <% } %>
                   </div>
                 <% } %>
+ 
 
                 <% if (isDean && tws.status === "Approved") { %>
                   <button

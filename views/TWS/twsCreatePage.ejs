@@ -24,7 +24,11 @@
         <div class="tws-dash-card">
           <div class="tws-dash-table">
 
-            <div class="tws-dash-row tws-dash-head">
+            <div
+              class="tws-dash-row tws-dash-head"
+              style="grid-template-columns: 1.4fr 1fr 0.8fr 1fr 1fr 1fr;"
+            >
+              <div>Faculty Name</div>
               <div>Academic Year</div>
               <div>Term</div>
               <div>Date Created</div>
@@ -33,7 +37,10 @@
             </div>
 
             <% if (!list || list.length === 0) { %>
-              <div class="tws-dash-row tws-dash-empty">
+              <div
+                class="tws-dash-row tws-dash-empty"
+                style="grid-template-columns: 1.4fr 1fr 0.8fr 1fr 1fr 1fr;"
+              >
                 <div style="grid-column: 1 / -1; text-align: center;">
                   No TWS yet. Click “Create New TWS”.
                 </div>
@@ -54,7 +61,11 @@
             %>
 
             <% (list || []).forEach(tws => { %>
-              <div class="tws-dash-row">
+              <div
+                class="tws-dash-row"
+                style="grid-template-columns: 1.4fr 1fr 0.8fr 1fr 1fr 1fr;"
+              >
+                <div><%= tws.faculty?.name || "—" %></div>
                 <div><%= tws.faculty?.acadYear || tws.schoolYear || "" %></div>
                 <div><%= tws.faculty?.term || tws.term || "" %></div>
                 <div><%= formatDatePH(tws.createdAt) %></div>
@@ -82,7 +93,10 @@
 
         <div class="tws-dash-footer">
           <a class="tws-dash-btn-create" href="/tws/create">+ Create New TWS</a>
-          <a class="tws-dash-btn-refresh" href="/tws/dashboard">Refresh</a>
+          <div style="display:flex; gap:10px;">
+            <a class="tws-dash-btn-refresh" href="/tws/dashboard">Refresh</a>
+            <a class="tws-dash-btn-refresh" href="/tws/program-chair">Back</a>
+          </div>
         </div>
 
       </div>
