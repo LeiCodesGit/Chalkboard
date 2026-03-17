@@ -4,7 +4,8 @@ import Course from "../../models/TWS/course.js";
 import TWSApprovalStatus from "../../models/TWS/twsApprovalStatus.js";
 import User from "../../models/user.js";
 import mongoose from "mongoose";
-import SUBJECTS from "../../config/twsSubjects.js";
+import Subject from "../../models/TWS/subject.js";
+import { calculateTwsLoadsFromCourses } from "../../utils/twsLoadCalculator.js";
 import puppeteer from "puppeteer";
 import {
   getSessionUser, getSessionUserId, getSessionUserRole,
@@ -275,11 +276,40 @@ function buildPdfFilename(tws) {
   return `TWS_${facultyName}_${term}_${schoolYear}.pdf`;
 }
 
+async function refreshTwsComputedLoads(twsId) {
+  const [tws, courses] = await Promise.all([
+    TWS.findById(twsId),
+    Course.find({ twsID: twsId }).lean(),
+  ]);
+
+  if (!tws) return null;
+
+  const computed = calculateTwsLoadsFromCourses(courses);
+
+  tws.totals = computed.totals;
+  tws.teachingHours = computed.teachingHours;
+  tws.totalHours = computed.totalHours;
+  tws.academicUnits = computed.academicUnits;
+  tws.totalUnits = computed.totalUnits;
+
+  await tws.save();
+  return tws;
+}
+
 /* ======================================================
    LANDING
 ====================================================== */
 router.get("/", requireLoggedIn, (req, res) => {
-  res.render("TWS/twsLandingWelcome", {
+  const role = getSessionUserRole(req.twsUser);
+
+  if (role === "Dean") return res.redirect("/tws/dean");
+  if (role === "Program-Chair") return res.redirect("/tws/program-chair");
+  if (role === "Professor") return res.redirect("/tws/dashboard");
+  if (["HR", "Admin", "Super-Admin"].includes(role)) {
+    return res.redirect("/tws/hr-archive");
+  }
+
+  return res.render("TWS/twsLandingWelcome", {
     currentPageCategory: "tws",
     user: req.twsUser,
   });
@@ -322,22 +352,22 @@ router.get(
     }
 
     // Professor => Faculty dashboard
-        if (role === "Professor") {
+    if (role === "Professor") {
       const facultyName = buildFacultyName(req.twsUser);
       const employeeId = req.twsUser?.employeeId || "";
       const facultyEmail = normalizeEmail(req.twsUser?.email || "");
 
-      const docs = await TWS.find({
+      const facultyMatcher = {
         $or: [
           ...(employeeId ? [{ assignedFacultyId: employeeId }, { "faculty.empId": employeeId }] : []),
           ...(facultyEmail ? [{ assignedFacultyEmail: facultyEmail }, { "faculty.email": facultyEmail }] : []),
           ...(facultyName ? [{ assignedFacultyName: facultyName }, { "faculty.name": facultyName }] : []),
         ],
-      })
-        .sort({ createdAt: -1 })
-        .lean();
+      };
 
-      const list = docs.map((tws) => ({
+      const docs = await TWS.find(facultyMatcher).sort({ createdAt: -1 }).lean();
+
+      const normalized = docs.map((tws) => ({
         ...tws,
         id: String(tws._id),
         faculty: tws.faculty || {},
@@ -345,7 +375,8 @@ router.get(
       }));
 
       return res.render("TWS/twsFacultyDashboard", {
-        list,
+        list: normalized.filter((tws) => tws.status !== "Archived"),
+        archivedList: normalized.filter((tws) => tws.status === "Archived"),
         currentPageCategory: "tws",
         user: req.twsUser,
       });
@@ -418,8 +449,44 @@ router.get(
     const tws = await getEditableTwsOr404(req, res);
     if (!tws) return;
 
+    const viewerRole = getSessionUserRole(req.twsUser);
+    const viewerDept = req.twsUser?.department || "";
+
+    const professorFilter = { role: "Professor" };
+    if (viewerRole === "Program-Chair" && viewerDept) {
+      professorFilter.department = viewerDept;
+    }
+
+    const professorDocs = await UserModel.find(professorFilter)
+      .sort({ lastName: 1, firstName: 1, email: 1 })
+      .lean();
+
+    const professors = professorDocs.map((prof) => ({
+      id: String(prof._id),
+      name: buildFacultyName(prof),
+      empId: prof.employeeId || "",
+      email: normalizeEmail(prof.email || ""),
+      dept: prof.department || "",
+      program: prof.program || "",
+    }));
+
+    let selectedProfessorId = "";
+    const currentFacultyEmail = normalizeEmail(tws.faculty?.email || "");
+    const currentFacultyEmpId = String(tws.faculty?.empId || "").trim();
+
+    const matchedProfessor = professors.find((prof) =>
+      (currentFacultyEmail && prof.email === currentFacultyEmail) ||
+      (currentFacultyEmpId && prof.empId === currentFacultyEmpId)
+    );
+
+    if (matchedProfessor) {
+      selectedProfessorId = matchedProfessor.id;
+    }
+
     res.render("TWS/twsFacultyInfo", {
       tws: normalizeTwsForView(tws),
+      professors,
+      selectedProfessorId,
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -434,48 +501,91 @@ router.post(
     if (!tws) return;
 
     const action = req.body.action || "next";
+    const viewerRole = getSessionUserRole(req.twsUser);
+    const viewerDept = req.twsUser?.department || "";
 
-    if (action !== "save") {
-      const { valid, errors } = validateFacultyInfo(req.body);
-      if (!valid) {
-        const fallbackView = normalizeTwsForView(tws);
-        fallbackView.faculty = {
-          ...fallbackView.faculty,
-          name: req.body.name || "",
-          empId: req.body.empId || "",
-          email: req.body.email || "",
-          dept: req.body.dept || "",
-          acadYear: req.body.acadYear || "",
-          term: req.body.term || "",
-          empStatus: req.body.empStatus || "",
-        };
+    const professorFilter = {
+      _id: req.body.selectedProfessorId || null,
+      role: "Professor",
+    };
 
-        return res.status(400).render("TWS/twsFacultyInfo", {
-          tws: fallbackView,
-          currentPageCategory: "tws",
-          user: req.twsUser,
-          validationErrors: errors,
-        });
-      }
+    if (viewerRole === "Program-Chair" && viewerDept) {
+      professorFilter.department = viewerDept;
     }
 
-    const normalizedEmail = normalizeEmail(req.body.email || "");
+    const selectedProfessor = await UserModel.findOne(professorFilter).lean();
 
-    tws.faculty = {
-      name: req.body.name || "",
-      empId: req.body.empId || "",
-      email: normalizedEmail,
-      dept: req.body.dept || "",
+    const professorDocs = await UserModel.find(
+      viewerRole === "Program-Chair" && viewerDept
+        ? { role: "Professor", department: viewerDept }
+        : { role: "Professor" }
+    )
+      .sort({ lastName: 1, firstName: 1, email: 1 })
+      .lean();
+
+    const professors = professorDocs.map((prof) => ({
+      id: String(prof._id),
+      name: buildFacultyName(prof),
+      empId: prof.employeeId || "",
+      email: normalizeEmail(prof.email || ""),
+      dept: prof.department || "",
+      program: prof.program || "",
+    }));
+
+    const facultyPayload = {
+      selectedProfessorId: req.body.selectedProfessorId || "",
+      name: selectedProfessor ? buildFacultyName(selectedProfessor) : "",
+      empId: selectedProfessor?.employeeId || "",
+      email: normalizeEmail(selectedProfessor?.email || ""),
+      dept: selectedProfessor?.department || "",
+      program: selectedProfessor?.program || "",
       acadYear: req.body.acadYear || "",
       term: req.body.term || "",
       empStatus: req.body.empStatus || "",
     };
 
-    tws.term = req.body.term || "";
-    tws.schoolYear = req.body.acadYear || "";
-    tws.assignedFacultyId = req.body.empId || "";
-    tws.assignedFacultyEmail = normalizedEmail;
-    tws.assignedFacultyName = req.body.name || "";
+    const { valid, errors } = validateFacultyInfo(facultyPayload);
+
+    if (!valid) {
+      const fallbackView = normalizeTwsForView(tws);
+      fallbackView.faculty = {
+        ...fallbackView.faculty,
+        name: facultyPayload.name,
+        empId: facultyPayload.empId,
+        email: facultyPayload.email,
+        dept: facultyPayload.dept,
+        program: facultyPayload.program,
+        acadYear: facultyPayload.acadYear,
+        term: facultyPayload.term,
+        empStatus: facultyPayload.empStatus,
+      };
+
+      return res.status(400).render("TWS/twsFacultyInfo", {
+        tws: fallbackView,
+        professors,
+        selectedProfessorId: facultyPayload.selectedProfessorId,
+        currentPageCategory: "tws",
+        user: req.twsUser,
+        validationErrors: errors,
+      });
+    }
+
+    tws.faculty = {
+      name: facultyPayload.name,
+      empId: facultyPayload.empId,
+      email: facultyPayload.email,
+      dept: facultyPayload.dept,
+      program: facultyPayload.program,
+      acadYear: facultyPayload.acadYear,
+      term: facultyPayload.term,
+      empStatus: facultyPayload.empStatus,
+    };
+
+    tws.term = facultyPayload.term;
+    tws.schoolYear = facultyPayload.acadYear;
+    tws.assignedFacultyId = facultyPayload.empId;
+    tws.assignedFacultyEmail = facultyPayload.email;
+    tws.assignedFacultyName = facultyPayload.name;
 
     await tws.save();
 
@@ -499,9 +609,20 @@ router.get(
 
     const courses = await Course.find({ twsID: tws._id }).sort({ createdAt: 1 }).lean();
 
+    const twsDept = tws.faculty?.dept || "";
+    const twsProgram = tws.faculty?.program || "";
+
+    const subjects = await Subject.find({ isActive: true })
+      .sort({ code: 1, title: 1 })
+      .lean();
+    
+    console.log("TWS Dept:", twsDept);
+    console.log("TWS Program:", twsProgram);
+    console.log("Subjects found:", subjects);
+    
     res.render("TWS/twsCreateTeachingWorkloadPopup", {
       tws: normalizeTwsForView(tws, courses),
-      subjects: SUBJECTS,
+      subjects,
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -520,15 +641,19 @@ router.post(
       return res.status(400).send(`Validation failed: ${errors.join(" ")}`);
     }
 
-    const { code, title, units, day, startTime, endTime, sectionRoom } = req.body;
+    const code = String(req.body.code || "").trim().toUpperCase();
+    const day = String(req.body.day || "").trim();
+    const startTime = String(req.body.startTime || "").trim();
+    const endTime = String(req.body.endTime || "").trim();
+    const sectionRoom = String(req.body.sectionRoom || "").trim();
 
-    const normalizedDay = String(day || "").trim();
-    const normalizedStartTime = String(startTime || "").trim();
-    const normalizedEndTime = String(endTime || "").trim();
-    const normalizedTimeRange = `${normalizedStartTime} - ${normalizedEndTime}`;
-    const normalizedTimeSlot = normalizedDay
-      ? `${normalizedDay} ${normalizedTimeRange}`
-      : normalizedTimeRange;
+    const subject = await Subject.findOne({ code, isActive: true }).lean();
+    if (!subject) {
+      return res.status(404).send("Selected subject was not found in the database.");
+    }
+
+    const normalizedTimeRange = `${startTime} - ${endTime}`;
+    const normalizedTimeSlot = day ? `${day} ${normalizedTimeRange}` : normalizedTimeRange;
 
     const exists = await Course.findOne({
       twsID: tws._id,
@@ -536,27 +661,79 @@ router.post(
     });
 
     if (!exists) {
-      const [section = "", designatedRoom = ""] = String(sectionRoom || "")
+      const [section = "", designatedRoom = ""] = sectionRoom
         .split("|")
         .map((x) => x.trim());
 
       await Course.create({
         twsID: tws._id,
-        courseCode: code || "",
-        courseTitle: title || "",
-        description: title || "",
-        units: Number(units || 0),
-        day: normalizedDay,
-        startTime: normalizedStartTime,
-        endTime: normalizedEndTime,
+        courseCode: subject.code || "",
+        courseTitle: subject.title || "",
+        description: subject.title || "",
+        units: Number(subject.units || 0),
+        day,
+        startTime,
+        endTime,
         time: normalizedTimeRange,
         timeSlot: normalizedTimeSlot,
-        sectionRoom: sectionRoom || "",
+        sectionRoom,
         section,
         designatedRoom,
         department: tws.faculty?.dept || "",
       });
+
+      await refreshTwsComputedLoads(tws._id);
     }
+
+    return res.redirect(`/tws/create-teaching-workload/${tws._id}`);
+  })
+);
+
+router.post(
+  "/create-teaching-workload/:id/update",
+  requireProgramChairOrDean,
+  asyncHandler(async (req, res) => {
+    const tws = await getEditableTwsOr404(req, res);
+    if (!tws) return;
+
+    const { valid, errors } = validateCourseAdd(req.body);
+    if (!valid) {
+      return res.status(400).send(`Validation failed: ${errors.join(" ")}`);
+    }
+
+    const code = String(req.body.code || "").trim().toUpperCase();
+    const day = String(req.body.day || "").trim();
+    const startTime = String(req.body.startTime || "").trim();
+    const endTime = String(req.body.endTime || "").trim();
+    const sectionRoom = String(req.body.sectionRoom || "").trim();
+
+    const existingCourse = await Course.findOne({
+      twsID: tws._id,
+      courseCode: code,
+    });
+
+    if (!existingCourse) {
+      return res.status(404).send("Course entry not found for this TWS.");
+    }
+
+    const normalizedTimeRange = `${startTime} - ${endTime}`;
+    const normalizedTimeSlot = day ? `${day} ${normalizedTimeRange}` : normalizedTimeRange;
+
+    const [section = "", designatedRoom = ""] = sectionRoom
+      .split("|")
+      .map((x) => x.trim());
+
+    existingCourse.day = day;
+    existingCourse.startTime = startTime;
+    existingCourse.endTime = endTime;
+    existingCourse.time = normalizedTimeRange;
+    existingCourse.timeSlot = normalizedTimeSlot;
+    existingCourse.sectionRoom = sectionRoom;
+    existingCourse.section = section;
+    existingCourse.designatedRoom = designatedRoom;
+
+    await existingCourse.save();
+    await refreshTwsComputedLoads(tws._id);
 
     return res.redirect(`/tws/create-teaching-workload/${tws._id}`);
   })
@@ -569,7 +746,7 @@ router.post(
     const tws = await getEditableTwsOr404(req, res);
     if (!tws) return;
 
-    const code = String(req.body?.code || "").trim();
+    const code = String(req.body?.code || "").trim().toUpperCase();
     if (!code) {
       return res.redirect(`/tws/create-teaching-workload/${tws._id}`);
     }
@@ -578,6 +755,8 @@ router.post(
       twsID: tws._id,
       courseCode: code,
     });
+
+    await refreshTwsComputedLoads(tws._id);
 
     return res.redirect(`/tws/create-teaching-workload/${tws._id}`);
   })
@@ -1034,7 +1213,7 @@ router.get(
       const filename = buildPdfFilename(tws);
 
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
       return res.send(pdfBuffer);
     } finally {
       await browser.close();
@@ -1201,25 +1380,15 @@ router.get(
   "/dean",
   requireDean,
   asyncHandler(async (req, res) => {
-    const userId = getSessionUserId(req.twsUser);
-
-    const pendingDocs = await TWS.find({
-      status: "Sent to Dean",
-    })
-      .sort({ createdAt: -1 })
+    const activeDocs = await TWS.find({ status: { $ne: "Archived" } })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .lean();
 
-    const approvedDocs = await TWS.find({
-      status: "Approved",
-    })
-      .sort({ updatedAt: -1 })
+    const archivedDocs = await TWS.find({ status: "Archived" })
+      .sort({ archivedAt: -1, updatedAt: -1, createdAt: -1 })
       .lean();
 
-    const personalDocs = await TWS.find({ userID: userId }).sort({ createdAt: -1 }).lean();
-
-    // Batch approval lookup (N+1 fix)
-    const allDocs = [...pendingDocs, ...approvedDocs, ...personalDocs];
-    const approvalMap = await batchApprovals(allDocs);
+    const approvalMap = await batchApprovals([...activeDocs, ...archivedDocs]);
 
     const mapTws = (defaultStatus) => (tws) => ({
       ...tws,
@@ -1229,9 +1398,8 @@ router.get(
     });
 
     res.render("TWS/twsDean", {
-      pending: pendingDocs.map(mapTws("Pending")),
-      details: approvedDocs.map(mapTws("Approved")),
-      personal: personalDocs.map(mapTws("Draft")),
+      list: activeDocs.map(mapTws("Pending")),
+      archivedList: archivedDocs.map(mapTws("Archived")),
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -1484,16 +1652,23 @@ router.get(
   "/hr-archive",
   requireHROrAdmin,
   asyncHandler(async (req, res) => {
-    const docs = await TWS.find({ status: "Archived" }).sort({ createdAt: -1 }).lean();
+    const activeDocs = await TWS.find({ status: { $ne: "Archived" } })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .lean();
 
-    const list = docs.map((tws) => ({
+    const archivedDocs = await TWS.find({ status: "Archived" })
+      .sort({ archivedAt: -1, updatedAt: -1, createdAt: -1 })
+      .lean();
+
+    const normalize = (tws) => ({
       ...tws,
       id: String(tws._id),
       faculty: tws.faculty || {},
-    }));
+    });
 
     return res.render("TWS/twsHRArchive", {
-      list,
+      list: activeDocs.map(normalize),
+      archivedList: archivedDocs.map(normalize),
       currentPageCategory: "tws",
       user: req.twsUser,
     });
@@ -1507,23 +1682,21 @@ router.get(
   "/program-chair",
   requireProgramChair,
   asyncHandler(async (req, res) => {
-    const userId = getSessionUserId(req.twsUser);
     const dept = req.twsUser?.department || "";
+    const userId = String(getSessionUserId(req.twsUser) || "");
 
-    // Submitted TWS in the chair's department that need review
-    const submittedDocs = await TWS.find({
-      status: { $in: ["Sent to Faculty", "Sent to Dean", "Returned to Program Chair"] },
-      "faculty.dept": dept,
-    }).sort({ createdAt: -1 }).lean();
+    const allDocs = await TWS.find({
+      $or: [
+        { "faculty.dept": dept },
+        { userID: userId },
+      ],
+    })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .lean();
 
-    // Personal TWS created by this Program Chair
-    const personalDocs = await TWS.find({ userID: userId }).sort({ createdAt: -1 }).lean();
-
-    // Batch approval lookups (N+1 fix)
-    const allDocs = [...submittedDocs, ...personalDocs];
     const approvalMap = await batchApprovals(allDocs);
 
-    const mapTws = (tws) => ({
+    const normalizeDoc = (tws) => ({
       ...tws,
       id: String(tws._id),
       faculty: tws.faculty || {},
@@ -1531,9 +1704,14 @@ router.get(
       approval: approvalMap[String(tws._id)] || { status: "Not Submitted" },
     });
 
+    const normalizedDocs = allDocs.map(normalizeDoc);
+
+    const activeList = normalizedDocs.filter((tws) => tws.status !== "Archived");
+    const archivedList = normalizedDocs.filter((tws) => tws.status === "Archived");
+
     res.render("TWS/twsProgramChair", {
-      submitted: submittedDocs.map(mapTws),
-      personal: personalDocs.map(mapTws),
+      list: activeList,
+      archivedList,
       currentPageCategory: "tws",
       user: req.twsUser,
       errorMessage: req.query?.error ? String(req.query.error) : "",

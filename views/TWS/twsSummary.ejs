@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TWS - Summary And Preview</title>
+  <title>TWS - Summary</title>
 
   <link rel="stylesheet" href="/common/css/variables.css" />
   <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
@@ -25,7 +25,7 @@
       <div class="tws-app-center">
 
         <div class="tws-app-title-pill">
-          <h1>TWS - Summary And Preview</h1>
+          <h1>Teaching Workload Sheet Summary</h1>
         </div>
 
         <section class="tws-card tws-created-sheet">
@@ -51,7 +51,7 @@
             <div style="display:flex; gap:18px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
               <div style="flex: 1; min-width: 520px;">
 
-                <div class="tws-card-title" style="margin-bottom:10px;">Faculty Information</div>
+                <div class="tws-card-title" style="margin-bottom:10px;">Instructor Information</div>
 
                 <div style="display:grid; grid-template-columns: 180px 1fr; gap:10px 14px; font-size:12px;">
                   <div style="font-weight:800;">Faculty Name:</div><div><%= tws.faculty?.name || "—" %></div>
@@ -94,13 +94,13 @@
                   <% } %>
                 </div>
 
-                <div class="tws-card-title" style="margin-top:18px;">Teaching Load Summary</div>
+                <div class="tws-card-title" style="margin-top:18px;">Teaching Load Overview</div>
 
                 <div style="display:grid; grid-template-columns: 180px 1fr 220px 1fr; gap:10px 14px; font-size:12px; margin-top:10px;">
-                  <div style="font-weight:800;">Total Units:</div><div><%= tws.totals?.totalUnits ?? 0 %></div>
-                  <div style="font-weight:800;">Total Hours (Lec/Lab):</div><div><%= tws.totals?.totalHours ?? 0 %></div>
+                  <div style="font-weight:800;">Total Units:</div><div><%= Number(tws.totals?.totalUnits || 0).toFixed(2) %></div>
+                  <div style="font-weight:800;">Total Hours:</div><div><%= Number(tws.totals?.totalHours || 0).toFixed(2) %></div>
 
-                  <div style="font-weight:800;">Equivalent Load:</div><div><%= tws.totals?.equivLoad ?? 0 %></div>
+                  <div style="font-weight:800;">Equivalent Load:</div><div><%= Number(tws.totals?.equivLoad || 0).toFixed(2) %></div>
                   <div style="font-weight:800;">Approval Status:</div><div><%= tws.approval?.status || "Not Submitted" %></div>
                 </div>
               </div>
@@ -145,7 +145,8 @@
                     type="submit"
                     formaction="/tws/send-to-hr/<%= tws.id %>"
                     formmethod="POST"
-                    style="border:none; cursor:pointer; background: var(--tws-green); color:#fff; border-radius:999px; padding: 14px 22px; font-weight:900; width:100%;"
+                    class="tws-btn-white"
+                    style="width:100%; font-weight:900;"
                   >
                     Send Approved TWS to HR Archive
                   </button>
@@ -154,14 +155,16 @@
                 <% if (canDownloadPdf) { %>
                   <a
                     href="/tws/pdf/<%= tws.id %>"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     class="tws-btn-white"
                     style="text-decoration:none; text-align:center; width:100%;"
                   >
-                    Download PDF
+                    View PDF
                   </a>
                 <% } else { %>
                   <button class="tws-btn-white" type="button" disabled style="width:100%;">
-                    Download PDF (Final Approval Required)
+                    View PDF (Final Approval Required)
                   </button>
                 <% } %>
 
@@ -222,7 +225,7 @@
               </div>
             <% } %>
 
-            <div class="tws-card-title" style="margin-top:18px;">Teaching Load Summary (Table View)</div>
+            <div class="tws-card-title" style="margin-top:18px;">Weekly Schedule</div>
 
             <div class="tws-schedule-layout" style="margin-top:10px;">
               <div class="tws-timetable">
@@ -363,8 +366,8 @@
                 <div class="ld-title">Load Details</div>
 
                 <div class="ld-row">
-                  Tracking Hours
-                  <span><%= Number(tws?.totals?.totalHours || 0).toFixed(2) %></span>
+                  Total Teaching Hours
+                  <span><%= Number(tws?.teachingHours || tws?.totals?.totalHours || 0).toFixed(2) %></span>
                 </div>
 
                 <div class="ld-divider"></div>
@@ -391,7 +394,7 @@
 
                 <div class="ld-row">
                   <b>Total Hours</b>
-                  <span><b><%= Number(tws?.totals?.totalHours || 0).toFixed(2) %></b></span>
+                  <span><b><%= Number(tws?.totalHours || tws?.totals?.totalHours || 0).toFixed(2) %></b></span>
                 </div>
 
                 <div class="ld-row" style="border-bottom:none; padding-bottom:0;">
@@ -400,27 +403,27 @@
                 </div>
 
                 <div class="ld-row">
-                  Academic
+                  Academic Units
                   <span><%= Number(tws?.academicUnits || tws?.totals?.totalUnits || 0).toFixed(2) %></span>
                 </div>
 
                 <div class="ld-row">
-                  PE
+                  PE Units
                   <span><%= Number(tws?.peUnits || 0).toFixed(2) %></span>
                 </div>
 
                 <div class="ld-row">
-                  Values
+                  Values Units
                   <span>0.00</span>
                 </div>
 
                 <div class="ld-row">
-                  NSTP
+                  NSTP Units
                   <span><%= Number(tws?.nstpUnits || 0).toFixed(2) %></span>
                 </div>
 
                 <div class="ld-row">
-                  Deloading
+                  Deloading Units
                   <span><%= Number(tws?.deloadingUnits || 0).toFixed(2) %></span>
                 </div>
 
@@ -428,22 +431,8 @@
 
                 <div class="ld-row">
                   <b>Total Units</b>
-                  <span><b><%= Number(tws?.totals?.totalUnits || 0).toFixed(2) %></b></span>
+                  <span><b><%= Number(tws?.totalUnits || tws?.totals?.totalUnits || 0).toFixed(2) %></b></span>
                 </div>
-              </div>
-            </div>
-
-            <div class="tws-signatures" style="margin-top:18px;">
-              <div class="sig-box">
-                <div class="sig-line"></div>
-                <div class="sig-name">Name: <%= tws?.deanName || "" %></div>
-                <div class="sig-role">DEAN</div>
-              </div>
-
-              <div class="sig-box">
-                <div class="sig-line"></div>
-                <div class="sig-name">Name: <%= tws?.programChairName || "" %></div>
-                <div class="sig-role">Program Chair</div>
               </div>
             </div>
 
@@ -455,4 +444,3 @@
   </div>
 </body>
 </html>
-

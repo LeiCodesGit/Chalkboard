@@ -6,6 +6,7 @@ const facultySchema = new Schema(
     empId: { type: String, default: "" },
     email: { type: String, default: "" },
     dept: { type: String, default: "" },
+    program: { type: String, default: "" },
     acadYear: { type: String, default: "" },
     term: { type: String, default: "" },
     empStatus: { type: String, default: "" },

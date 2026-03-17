@@ -7,35 +7,82 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 }
 
+function isValidAcademicYear(value) {
+  const text = String(value || "").trim();
+  if (!/^\d{4}\s*-\s*\d{4}$/.test(text)) return false;
+
+  const parts = text.split("-").map((x) => Number(String(x).trim()));
+  if (parts.length !== 2) return false;
+
+  const [startYear, endYear] = parts;
+  return endYear === startYear + 1;
+}
+
 /**
  * Validate faculty info fields.
  * Returns { valid: boolean, errors: string[] }
  */
 export function validateFacultyInfo(body) {
   const errors = [];
+  const selectedProfessorId = (body.selectedProfessorId || "").trim();
   const name = (body.name || "").trim();
   const empId = (body.empId || "").trim();
   const email = (body.email || "").trim();
   const dept = (body.dept || "").trim();
   const acadYear = (body.acadYear || "").trim();
   const term = (body.term || "").trim();
+  const empStatus = (body.empStatus || "").trim();
 
-  if (!name || name.length < 2) errors.push("Faculty name is required (min 2 chars).");
-  if (name.length > 200) errors.push("Faculty name must be under 200 characters.");
+  const validTerms = ["1st Term", "2nd Term", "3rd Term", "Summer"];
+  const validStatuses = ["Full-Time", "Part-Time", "Contractual"];
 
-  if (!empId && !email) {
-    errors.push("Please provide at least an Employee ID or Email.");
+  if (!selectedProfessorId) {
+    errors.push("Please select a professor.");
   }
 
-  if (empId.length > 50) errors.push("Employee ID must be under 50 characters.");
+  if (!name || name.length < 2) {
+    errors.push("Faculty name is required.");
+  }
 
-  if (email && !isValidEmail(email)) {
+  if (name.length > 200) {
+    errors.push("Faculty name must be under 200 characters.");
+  }
+
+  if (!empId) {
+    errors.push("Employee ID is required.");
+  }
+
+  if (empId.length > 50) {
+    errors.push("Employee ID must be under 50 characters.");
+  }
+
+  if (!email) {
+    errors.push("Faculty email is required.");
+  } else if (!isValidEmail(email)) {
     errors.push("Faculty email is invalid.");
   }
 
-  if (!dept) errors.push("Department is required.");
-  if (!acadYear) errors.push("Academic year is required.");
-  if (!term) errors.push("Term is required.");
+  if (!dept) {
+    errors.push("Department is required.");
+  }
+
+  if (!acadYear) {
+    errors.push("Academic year is required.");
+  } else if (!isValidAcademicYear(acadYear)) {
+    errors.push("Academic year must follow this format: 2025 - 2026");
+  }
+
+  if (!term) {
+    errors.push("Term is required.");
+  } else if (!validTerms.includes(term)) {
+    errors.push(`Term must be one of: ${validTerms.join(", ")}`);
+  }
+
+  if (!empStatus) {
+    errors.push("Employee status is required.");
+  } else if (!validStatuses.includes(empStatus)) {
+    errors.push(`Employee status must be one of: ${validStatuses.join(", ")}`);
+  }
 
   return { valid: errors.length === 0, errors };
 }
