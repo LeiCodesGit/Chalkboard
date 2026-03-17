@@ -26,6 +26,24 @@
     --text-on-dark: var(--color-white);
     --text-on-light: var(--color-charcoal);
     --text-muted: #a0a0a0;
+
+    /* --- SHARED SURFACE TOKENS --- */
+    --surface-overlay-dark: rgba(0, 0, 0, 0.30);
+    --surface-glass: rgba(90, 95, 105, 0.42);
+    --surface-pill: rgba(90, 95, 105, 0.62);
+    --surface-card-dark: rgba(0, 0, 0, 0.58);
+    --surface-border-strong: rgba(255, 255, 255, 0.68);
+    --surface-elevated-light: rgba(255, 255, 255, 0.92);
+
+    /* --- SHARED STATUS TOKENS --- */
+    --status-draft: #9ca3af;
+    --status-for-review: var(--accent-secondary);
+    --status-returned: #fb923c;
+    --status-approved: #18b06b;
+    --status-submitted: var(--accent-secondary);
+    --status-rejected: #cc2222;
+    --status-for-signing: #b8860b;
+    --status-reviewed: #2a8080;
 }
 
 /* --- DARK MODE --- */

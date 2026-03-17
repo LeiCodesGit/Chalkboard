@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMCM Chalkboard | Login</title>
+    <title>Chalkboard | Login</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
 
     <!--inside the public file, for colors-->
     <link rel="stylesheet" href="/common/css/variables.css"> 
@@ -22,7 +23,7 @@
         }
 
         #logo img {
-            max-width: 350px;
+            max-width: 500px;
             margin-bottom: 50px;
         }
 
@@ -126,7 +127,7 @@
 <body>
 
     <section id="logo">
-        <img src="/common/img/mmcmLogo.png" alt="MMCM Logo">
+        <img src="/common/img/mmcmChalkboard.png" alt="MMCM Logo">
     </section>
 
     <section id="credentials">
@@ -176,14 +177,17 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    if (result.role === 'Admin') {
+                    if (result.role === 'Admin' || result.role === 'Super-Admin') {
                         window.location.href = '/admin/institution';
                     } else if (result.role === 'Professor') {
                         window.location.href = '/institution';
                     } else if (result.role === 'Program-Chair') {
-                        window.location.href = '/progchair/institution';
+                        window.location.href = '/progChair/institution';
+                    } else if (result.role === 'Dean') {
+                        window.location.href = '/dean/institution';
+                    } else if (result.role === 'HR') {
+                        window.location.href = '/admin/institution';
                     } else {
-                        // Add all the users here:
                         window.location.href = '/institution';
                     }
                 } else {

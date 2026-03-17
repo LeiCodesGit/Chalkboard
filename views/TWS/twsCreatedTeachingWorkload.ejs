@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <title>TWS - Created Teaching Workload Sheet</title>
+  <link rel="stylesheet" href="/common/css/variables.css" />
   <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+  <style>
+    .tws-block {
+      grid-column: var(--col, auto);
+      grid-row: var(--row, auto) / span var(--span, 1);
+    }
+  </style>
 </head>
 
 <body class="tws-app-body">
@@ -18,81 +25,155 @@
 
         <div class="tws-app-title-pill">
           <h1>TWS: Teaching Workload Sheet</h1>
+          <div style="opacity:.9; font-size:12px; margin-top:4px;">
+            Faculty: <b><%= (tws?.faculty?.name || "—") %></b>
+            <% if (tws?.faculty?.dept) { %> • Dept: <b><%= tws.faculty.dept %></b><% } %>
+          </div>
         </div>
 
-        <section class="tws-card tws-card-wide">
+        <section class="tws-card tws-card-wide tws-created-sheet">
           <div class="tws-card-title">Created Teaching Workload Sheet</div>
 
           <div class="tws-schedule-layout">
 
-            <!-- TIMETABLE GRID -->
             <div class="tws-timetable">
               <%
                 const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
                 const times = [
-                  "7:00 AM",
-                  "8:15 AM",
-                  "9:30 AM",
-                  "10:45 AM",
-                  "12:00 PM",
-                  "1:15 PM",
-                  "2:30 PM",
-                  "3:45 PM",
-                  "5:00 PM",
-                  "6:15 PM",
-                  "7:30 PM",
-                  "8:45 PM"
+                  "7:00 AM","8:15 AM","9:30 AM","10:45 AM","12:00 PM",
+                  "1:15 PM","2:30 PM","3:45 PM","5:00 PM","6:15 PM","7:30 PM","8:45 PM"
                 ];
+                const SLOT_MINUTES = 75;
               %>
 
-              <!-- HEADER ROW -->
               <div class="tws-cell tws-head tws-corner"></div>
               <% days.forEach(d => { %>
                 <div class="tws-cell tws-head"><%= d %></div>
               <% }) %>
 
-              <!-- BODY ROWS (TIME ALWAYS FIRST COLUMN) -->
-              <% times.forEach((t) => { %>
-                <!-- Time column -->
-                <div class="tws-cell tws-time" style="grid-column: 1;"><%= t %></div>
-
-                <!-- 7 day slots -->
+              <% times.forEach((t, rowIndex) => {
+                   const row = rowIndex + 2;
+              %>
+                <div class="tws-cell tws-time" style="--row: <%= row %>;"><%= t %></div>
                 <% for (let c = 0; c < 7; c++) { %>
-                  <div class="tws-cell tws-slot"></div>
+                  <div class="tws-cell tws-slot" style="--row: <%= row %>; --col: <%= c + 2 %>;"></div>
                 <% } %>
               <% }) %>
 
-              <!-- SAMPLE BLOCKS
-                Grid columns: 1=time col, 2=Mon ... 8=Sun
-                Grid rows: 1=header, 2=7:00, 3=8:15, 4=9:30, ...
-              -->
-              <div class="tws-block highlight-yellow" style="grid-column: 3; grid-row: 2;">
-                <div class="tws-block-code">GE104A</div>
-                <div class="tws-block-sub">R603</div>
-              </div>
+              <%
+                const dayMap = { "Mon": 2, "Tue": 3, "Wed": 4, "Thu": 5, "Fri": 6, "Sat": 7, "Sun": 8 };
+                const dayAlias = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+                const GRID_START_MINUTES = 7 * 60;
+                const GRID_MIN_ROW = 2;
+                const GRID_MAX_SLOT = times.length - 1;
 
-              <div class="tws-block highlight-blue" style="grid-column: 4; grid-row: 2;">
-                <div class="tws-block-code">CPE2114</div>
-                <div class="tws-block-sub">R405</div>
-              </div>
+                function toMinutes(timeStr) {
+                  if (!timeStr) return null;
+                  const m = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+                  if (!m) return null;
+                  let hour = Number(m[1]);
+                  const minute = Number(m[2]);
+                  const ampm = m[3].toUpperCase();
+                  if (ampm === "PM" && hour !== 12) hour += 12;
+                  if (ampm === "AM" && hour === 12) hour = 0;
+                  return hour * 60 + minute;
+                }
 
-              <div class="tws-block highlight-purple" style="grid-column: 6; grid-row: 2;">
-                <div class="tws-block-code">GE1033</div>
-                <div class="tws-block-sub">A504</div>
-              </div>
+                function parseSchedule(workloadItem) {
+                  const rawDay = String(workloadItem.day || "").trim();
+                  const rawStart = String(workloadItem.startTime || "").trim();
+                  const rawEnd = String(workloadItem.endTime || "").trim();
+                  const rawSlot = String(workloadItem.timeSlot || "").trim();
 
-              <!-- NSTP placed at 12:00 PM row (row 6) -->
-              <div class="tws-block highlight-green" style="grid-column: 5; grid-row: 6;">
-                <div class="tws-block-code">NSTP</div>
-                <div class="tws-block-sub">TWS</div>
-              </div>
+                  let day = rawDay;
+                  let startStr = rawStart;
+                  let endStr = rawEnd;
 
+                  if ((!startStr || !endStr) && rawSlot) {
+                    const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+                    if (slotMatch) {
+                      day = day || slotMatch[1] || "";
+                      startStr = startStr || (slotMatch[2] || "").trim();
+                      endStr = endStr || (slotMatch[3] || "").trim();
+                    }
+                  }
+
+                  const startMin = toMinutes(startStr);
+                  const endMin = toMinutes(endStr);
+                  const normalizedDay = dayAlias[String(day).slice(0, 3).toLowerCase()] || day;
+
+                  if (!dayMap[normalizedDay] || startMin === null || endMin === null || endMin <= startMin) {
+                    return null;
+                  }
+
+                  const startSlot = Math.round((startMin - GRID_START_MINUTES) / SLOT_MINUTES);
+                  const endSlot = Math.round((endMin - GRID_START_MINUTES) / SLOT_MINUTES);
+                  const clampedStartSlot = Math.max(0, Math.min(GRID_MAX_SLOT, startSlot));
+                  const clampedEndSlot = Math.max(
+                    clampedStartSlot + 1,
+                    Math.min(times.length, endSlot)
+                  );
+                  const row = clampedStartSlot + GRID_MIN_ROW;
+                  const span = Math.max(1, clampedEndSlot - clampedStartSlot);
+
+                  return { day: normalizedDay, startStr, endStr, startMin, endMin, row, span };
+                }
+
+                const parsedBlocks = (tws?.createdWorkload || []).map((item) => {
+                  const parsed = parseSchedule(item);
+                  return {
+                    item,
+                    parsed,
+                    isConflict: false,
+                  };
+                });
+
+                for (let i = 0; i < parsedBlocks.length; i++) {
+                  for (let j = i + 1; j < parsedBlocks.length; j++) {
+                    const a = parsedBlocks[i].parsed;
+                    const b = parsedBlocks[j].parsed;
+                    if (!a || !b) continue;
+                    if (a.day !== b.day) continue;
+                    const overlaps = a.startMin < b.endMin && b.startMin < a.endMin;
+                    if (overlaps) {
+                      parsedBlocks[i].isConflict = true;
+                      parsedBlocks[j].isConflict = true;
+                    }
+                  }
+                }
+
+                parsedBlocks.forEach((block) => {
+                  const s = block.item;
+                  const p = block.parsed;
+                  if (!p) return;
+                  const col = dayMap[p.day];
+                  const row = p.row;
+                  const colorClass = block.isConflict ? "tws-block-conflict" : "tws-block-assigned";
+                  const compactSectionRoom = String(s.sectionRoom || "").replace(/\s*\|\s*/g, "|");
+                  const compactTimeRange = `${p.startStr} - ${p.endStr}`.replace(/\s*-\s*/g, "-");
+              %>
+              <div
+                class="tws-block <%= colorClass %>"
+                style="--col: <%= col %>; --row: <%= row %>; --span: <%= p.span %>;"
+              >
+                <div class="tws-block-code"><%= s.code %></div>
+                <div class="tws-block-sub"><%= compactSectionRoom %></div>
+                <div class="tws-block-sub"><%= compactTimeRange %></div>
+              </div>
+              <%
+                });
+              %>
             </div>
 
-            <!-- LOAD DETAILS -->
             <div class="tws-load-details">
-              <div class="ld-title">Load Details</div>
+              <div class="ld-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Load Details</span>
+                <% if (!isViewOnly) { %>
+                <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>" style="text-decoration:none;">
+                  + Add Subject
+                </a>
+                <% } %>
+              </div>
 
               <div class="ld-row">
                 Tracking Hours
@@ -101,10 +182,23 @@
 
               <div class="ld-divider"></div>
 
+              <% if (!tws?.createdWorkload || tws.createdWorkload.length === 0) { %>
+                <div style="opacity:.9; font-size:12px; padding: 10px 0;">
+                  No subjects yet.
+                </div>
+              <% } %>
+
               <% (tws?.createdWorkload || []).forEach(s => { %>
-                <div class="ld-row">
-                  <%= s.code %> - <%= s.title %>
-                  <span><%= Number(s.units || 0).toFixed(2) %></span>
+                <div style="padding: 8px 0;">
+                  <div class="ld-row" style="gap:10px;">
+                    <div style="max-width: 220px;">
+                      <b><%= s.code %></b> - <%= s.title %>
+                      <div style="opacity:.9; font-size:11px; margin-top:2px;">
+                        <%= (String(s.timeSlot || "").trim() ? String(s.timeSlot || "").trim() + " (PHT)" : "No schedule (PHT)") %> • <%= s.sectionRoom || "— room" %>
+                      </div>
+                    </div>
+                    <span><%= Number(s.units || 0).toFixed(2) %></span>
+                  </div>
                 </div>
               <% }) %>
 
@@ -116,19 +210,18 @@
               </div>
             </div>
 
-          </div><!-- /tws-schedule-layout -->
+          </div>
 
-          <!-- SIGNATURES -->
           <div class="tws-signatures">
-            <div class="sig-box">
-              <div class="sig-line"></div>
-              <div class="sig-name">Name: <%= tws?.deanName || "test" %></div>
-              <div class="sig-role">DEAN</div>
-            </div>
+              <div class="sig-box">
+                <div class="sig-line"></div>
+                  <div class="sig-name">Name: <%= tws?.deanSignerName || tws?.deanName || "" %></div>
+                <div class="sig-role">DEAN</div>
+              </div>
 
             <div class="sig-box">
               <div class="sig-line"></div>
-              <div class="sig-name">Name: <%= tws?.programChairName || "" %></div>
+                <div class="sig-name">Name: <%= tws?.programChairSignerName || tws?.programChairName || "" %></div>
               <div class="sig-role">Program Chair</div>
             </div>
           </div>
@@ -136,8 +229,12 @@
         </section>
 
         <div class="tws-footer-actions">
-          <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>">Back</a>
-          <a class="tws-next" href="/tws/faculty/<%= tws.id %>">Next</a>
+          <% if (isViewOnly) { %>
+            <a class="tws-btn-white" href="<%= viewBackUrl || '/tws/dashboard' %>">Back</a>
+          <% } else { %>
+            <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>">Back</a>
+            <a class="tws-next" href="/tws/summary/<%= tws.id %>">Next</a>
+          <% } %>
         </div>
 
       </div>

@@ -1,35 +1,57 @@
 /* ======================================================
    TWS STYLE (ONE FILE ONLY)
-   - Landing page: twsLandingWelcome.ejs
-   - Program Chair: twsProgramChair.ejs
-   - App pages: dashboard, faculty info, teaching load, summary, etc.
-   - Modal popup for Add Subject
+   Covers:
+   1) Shared / Global styles
+   2) Landing page
+   3) Program Chair page
+   4) Shared app pages (dashboard, faculty info, teaching load, summary)
+   5) Modal popup
+   6) Status / Approval / Archived pages
+   7) Created Teaching Workload page
+====================================================== */
+
+
+/* ======================================================
+   1) SHARED / GLOBAL
 ====================================================== */
 
 /* ---------- VARIABLES ---------- */
 :root{
-  --tws-bg-overlay: rgba(0,0,0,0.30);
-  --tws-glass: rgba(110, 120, 135, 0.42);
-  --tws-pill: rgba(110, 120, 135, 0.62);
-  --tws-card: rgba(0,0,0,0.58);
-  --tws-border: rgba(255,255,255,0.68);
+  --tws-bg-overlay: var(--surface-overlay-dark);
+  --tws-glass: var(--surface-glass);
+  --tws-pill: var(--surface-pill);
+  --tws-card: var(--surface-card-dark);
+  --tws-border: var(--surface-border-strong);
   --tws-shadow: 0 16px 30px rgba(0,0,0,0.32);
-  --tws-green: #18b06b;
-  --tws-blue: #2e6cff;
-  --tws-white: rgba(255,255,255,0.92);
-  --tws-text: #fff;
-  --tws-text-dark: #111;
+  --tws-green: var(--status-approved);
+  --tws-blue: var(--accent-secondary);
+  --tws-white: var(--surface-elevated-light);
+  --tws-text: var(--text-on-dark);
+  --tws-text-dark: var(--text-on-light);
 }
 
-*{ box-sizing: border-box; }
-a{ color: inherit; text-decoration: none; }
-button, input, select{ font-family: inherit; }
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
 
 
 /* ======================================================
-   LANDING PAGE (twsLandingWelcome.ejs)
+   2) LANDING PAGE
+   Used in: twsLandingWelcome.ejs
 ====================================================== */
-.tws-landing-body{
+
+.tws-landing-body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--tws-text);
@@ -38,13 +60,13 @@ button, input, select{ font-family: inherit; }
     url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-.tws-layout{
+.tws-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
-.tws-sidebar{
+.tws-sidebar {
   height: 100vh;
   position: sticky;
   top: 0;
@@ -52,61 +74,62 @@ button, input, select{ font-family: inherit; }
 }
 
 /* keep sidebar partial inside the column */
-.tws-sidebar > *{
+.tws-sidebar>* {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
 }
 
-.tws-main{
+.tws-main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 0;
 }
 
-.tws-center{
+.tws-center {
   width: min(900px, 92%);
   margin-top: 70px;
   text-align: center;
 }
 
-/* Title pill */
-.tws-title-pill{
+/* Landing title pill */
+.tws-title-pill {
   background: var(--tws-pill);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(660px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
 }
 
-.tws-title-pill h1{
+.tws-title-pill h1 {
   margin: 0;
   font-size: 34px;
   font-weight: 800;
   letter-spacing: 0.4px;
 }
 
-/* Main glass panel */
-.tws-panel{
+/* Landing main glass panel */
+.tws-panel {
   background: var(--tws-glass);
   border-radius: 18px;
   padding: 18px 22px 22px 22px;
   width: min(780px, 100%);
   margin: 0 auto;
   box-shadow: var(--tws-shadow);
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
 }
 
-.tws-panel h2{
+.tws-panel h2 {
   margin: 8px 0 10px 0;
   font-size: 15px;
   font-weight: 800;
   opacity: 0.98;
 }
 
-.tws-panel p{
+.tws-panel p {
   margin: 0 auto;
   max-width: 690px;
   font-size: 12px;
@@ -114,42 +137,42 @@ button, input, select{ font-family: inherit; }
   opacity: 0.95;
 }
 
-/* Get Started button */
-.tws-btn{
+/* Landing Get Started button */
+.tws-btn {
   display: inline-block;
   margin-top: 16px;
   background: var(--tws-green);
-  color: #fff;
+  color: var(--tws-text);
   padding: 12px 46px;
   border-radius: 999px;
   font-weight: 800;
-  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.tws-btn:hover{
+.tws-btn:hover {
   transform: translateY(-1px);
   opacity: 0.96;
 }
 
-/* Info box */
-.tws-info-box{
+/* Landing info box */
+.tws-info-box {
   margin: 16px auto 0 auto;
   width: min(780px, 100%);
-  background: rgba(0,0,0,0.60);
-  border: 2px solid rgba(255,255,255,0.75);
+  background: rgba(0, 0, 0, 0.60);
+  border: 2px solid rgba(255, 255, 255, 0.75);
   border-radius: 14px;
   padding: 14px 18px;
   text-align: left;
 }
 
-.tws-info-box h3{
+.tws-info-box h3 {
   margin: 0 0 8px 0;
   font-size: 14px;
   font-weight: 900;
 }
 
-.tws-info-box ul{
+.tws-info-box ul {
   margin: 0;
   padding-left: 18px;
   font-size: 12px;
@@ -158,75 +181,77 @@ button, input, select{ font-family: inherit; }
 
 
 /* ======================================================
-   PROGRAM CHAIR (twsProgramChair.ejs)
+   3) PROGRAM CHAIR PAGE
+   Used in: twsProgramChair.ejs
 ====================================================== */
-.pc-body{
+
+.pc-body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #fff;
+  color: var(--tws-text);
   background:
     linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
     url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-.pc-layout{
+.pc-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
-.pc-sidebar{
+.pc-sidebar {
   height: 100vh;
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
-.pc-sidebar > *{
+.pc-sidebar>* {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
 }
 
-.pc-main{
+.pc-main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 
-.pc-center{
+.pc-center {
   width: min(1040px, 92%);
   margin-top: 60px;
 }
 
-.pc-title-pill{
+.pc-title-pill {
   background: var(--tws-pill);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(760px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
   text-align: center;
 }
 
-.pc-title-pill h1{
+.pc-title-pill h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
 }
 
-/* The main dark cards */
-.pc-card{
+/* Program Chair cards */
+.pc-card {
   background: var(--tws-card);
   border-radius: 14px;
   border: 2px solid var(--tws-border);
-  box-shadow: 0 14px 28px rgba(0,0,0,0.30);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.30);
   padding: 14px;
   margin: 0 auto 14px auto;
   max-width: 980px;
 }
 
-.pc-card-header{
+.pc-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -234,12 +259,23 @@ button, input, select{ font-family: inherit; }
   margin-bottom: 10px;
 }
 
-.pc-card-title{
+.pc-card-title {
   font-weight: 900;
   font-size: 14px;
 }
 
-.pc-actions{
+.pc-glass {
+  width: min(1000px, 100%);
+  margin: 0 auto;
+}
+
+.pc-card-wide,
+.pc-card-small {
+  max-width: 980px;
+}
+
+/* Program Chair top action chips */
+.pc-actions {
   display: flex;
   gap: 10px;
 }
@@ -247,7 +283,7 @@ button, input, select{ font-family: inherit; }
 .pc-chip{
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.45);
-  color: #fff;
+  color: var(--tws-text);
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 12px;
@@ -255,64 +291,100 @@ button, input, select{ font-family: inherit; }
   cursor: pointer;
 }
 
-/* Rows */
-.pc-table{
+/* Program Chair table layout */
+.pc-table {
   display: grid;
-  gap: 10px;
+  gap: 2px;
 }
 
-.pc-row{
+.pc-row {
   display: grid;
   grid-template-columns: 1.4fr 1.1fr 1fr 0.55fr 1.2fr 1.25fr;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   font-size: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.11);
 }
 
-.pc-table-small .pc-row{
+.pc-table-small .pc-row {
   grid-template-columns: 1.4fr 1.1fr 0.55fr 1.25fr;
 }
 
-.pc-head{
+.pc-head {
   font-weight: 800;
   opacity: 0.9;
 }
 
-.pc-empty{
+.pc-empty {
   opacity: 0.85;
   padding: 10px 0;
 }
 
-/* Buttons group */
-.pc-btns{
+.pc-action-col {
+  text-align: right;
+}
+
+/* Program Chair buttons */
+.pc-btns {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
 
-.pc-btn{
+.pc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   border-radius: 999px;
-  padding: 7px 14px;
   font-size: 12px;
-  font-weight: 900;
-  border: 1px solid rgba(255,255,255,0.65);
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.65);
   cursor: pointer;
   line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
-.pc-white{
+.pc-white {
   background: var(--tws-white);
   color: var(--tws-text-dark);
 }
 
-.pc-blue{
+.pc-blue {
   background: var(--tws-blue);
-  color: #fff;
+  color: var(--tws-text);
   border-color: rgba(255,255,255,0.35);
 }
 
-.pc-next-wrap{
+.pc-form-inline {
+  display: inline-flex;
+}
+
+.pc-btns-right {
+  justify-content: flex-end;
+}
+
+.pc-btn-disabled{
+  opacity: .55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Program Chair status colors */
+.pc-status-text {
+  font-weight: 800;
+}
+
+.pc-yellow{ color: var(--status-for-signing); }
+.pc-red{ color: var(--status-returned); }
+
+/* Program Chair next button */
+.pc-next-wrap {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
@@ -321,86 +393,122 @@ button, input, select{ font-family: inherit; }
   margin-right: auto;
 }
 
-.pc-next{
+.pc-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   background: var(--tws-white);
   color: var(--tws-text-dark);
   border-radius: 999px;
-  padding: 12px 34px;
-  font-weight: 900;
-  font-size: 20px;
-  border: 1px solid rgba(255,255,255,0.6);
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
 
 /* ======================================================
-   APP PAGES (dashboard, faculty, load, summary)
+   4) SHARED APP PAGES
+   Used in:
+   - twsCreatePage.ejs
+   - twsFacultyDashboard.ejs
+   - twsFacultyInfo.ejs
+   - twsTeachingLoad.ejs
+   - twsSummary.ejs
+   - twsArchived.ejs
+   - other shared TWS pages
 ====================================================== */
-.tws-app-body{
+
+.tws-app-body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #fff;
+  color: var(--tws-text);
   background:
     linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
     url("/TWS/img/background.png") no-repeat center center / cover fixed;
 }
 
-.tws-app-layout{
+.tws-app-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
-.tws-app-sidebar{
+.tws-app-sidebar {
   height: 100vh;
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
-.tws-app-sidebar > *{
+.tws-app-sidebar>* {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
 }
 
-.tws-app-main{
+.tws-app-main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  min-width: 0;
 }
 
-.tws-app-center{
+.tws-app-center {
   width: min(1040px, 92%);
   margin-top: 60px;
+  min-width: 0;
 }
 
-.tws-app-title-pill{
+.tws-app-title-pill {
   background: var(--tws-pill);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(760px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
   text-align: center;
 }
 
-.tws-app-title-pill h1{
+.tws-app-title-pill h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
 }
 
-.tws-card{
+/* Shared app cards */
+.tws-card {
   background: var(--tws-card);
   border-radius: 14px;
   border: 2px solid var(--tws-border);
-  box-shadow: 0 14px 28px rgba(0,0,0,0.30);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.30);
   padding: 14px;
   margin: 0 auto 14px auto;
   max-width: 980px;
+  overflow: hidden;
 }
 
-.tws-card-header{
+.tws-app-glass {
+  width: min(1000px, 100%);
+  margin: 0 auto;
+}
+
+.tws-card-wide,
+.tws-card-guidelines {
+  max-width: 980px;
+}
+
+.tws-action-col {
+  text-align: right;
+}
+
+/* Shared app card header */
+.tws-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -408,56 +516,117 @@ button, input, select{ font-family: inherit; }
   margin-bottom: 10px;
 }
 
-.tws-card-title{
+.tws-card-title {
   font-weight: 900;
   font-size: 14px;
 }
 
-.tws-create-pill{
+.tws-create-pill {
   background: var(--tws-green);
-  color: #fff;
+  color: var(--tws-text);
   border-radius: 999px;
   padding: 8px 14px;
   font-size: 12px;
   font-weight: 900;
 }
 
-.tws-table{
+/* Shared app table */
+.tws-table {
   display: grid;
-  gap: 10px;
+  gap: 2px;
 }
 
-.tws-row{
+.tws-row {
   display: grid;
   grid-template-columns: 1fr 0.55fr 0.9fr 0.9fr 1fr;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   font-size: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.11);
 }
 
-.tws-head{
+.tws-head {
   font-weight: 800;
   opacity: 0.9;
 }
 
-.tws-btns{
+/* Shared app buttons */
+.tws-btns {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.tws-btn-white{
+.tws-btn-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   background: var(--tws-white);
   color: var(--tws-text-dark);
   border-radius: 999px;
-  padding: 7px 14px;
   font-size: 12px;
-  font-weight: 900;
-  border: 1px solid rgba(255,255,255,0.65);
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
 }
 
-.tws-guidelines{
+/* Dashboard-only smaller action buttons
+   Used in: twsCreatePage.ejs */
+.tws-dashboard-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.tws-dashboard-delete-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.tws-dashboard-action-btn {
+  min-width: 60px;
+  height: 28px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tws-btn-danger{
+  background: var(--status-rejected);
+  color: var(--tws-text);
+  border-color: rgba(255,255,255,0.35);
+}
+
+/* Shared app special rows */
+.tws-workload-row {
+  grid-template-columns: 1fr 1.2fr 0.55fr 0.55fr 0.75fr;
+}
+
+.tws-workload-col-head {
+  text-align: center;
+}
+
+.tws-workload-action-cell {
+  justify-content: center;
+}
+
+.tws-workload-action-cell form {
+  display: inline-flex;
+}
+
+
+/* Shared app helper text */
+.tws-guidelines {
   margin: 10px 0 0 0;
   padding-left: 18px;
   font-size: 12px;
@@ -465,7 +634,8 @@ button, input, select{ font-family: inherit; }
   opacity: 0.95;
 }
 
-.tws-next-wrap{
+/* Shared app next button */
+.tws-next-wrap {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
@@ -474,45 +644,55 @@ button, input, select{ font-family: inherit; }
   margin-right: auto;
 }
 
-.tws-next{
+.tws-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   background: var(--tws-white);
   color: var(--tws-text-dark);
   border-radius: 999px;
-  padding: 12px 34px;
-  font-weight: 900;
-  font-size: 20px;
-  border: 1px solid rgba(255,255,255,0.6);
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
 /* ======================================================
-   MODAL (ADD SUBJECT POPUP) - can be used in create/load page
+   5) MODAL
+   Used in: twsCreateTeachingWorkloadPopup.ejs
 ====================================================== */
-.tws-modal-bg{
+
+.tws-modal-bg {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
 
 .tws-modal{
-  background: #1e1e1e;
+  background: var(--page-bg-dark);
   padding: 18px;
   width: 360px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow: 0 22px 44px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.5);
 }
 
-.tws-modal-title{
+.tws-modal-title {
   font-weight: 900;
   font-size: 14px;
   margin-bottom: 10px;
 }
 
-.tws-modal label{
+.tws-modal label {
   display: block;
   font-size: 12px;
   font-weight: 800;
@@ -520,18 +700,35 @@ button, input, select{ font-family: inherit; }
   margin-top: 10px;
 }
 
-.tws-modal select{
+.tws-modal select {
   width: 100%;
-  padding: 9px 10px;
+  padding: 9px 12px;
   margin-top: 6px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(255,255,255,0.08);
-  color: #fff;
+  color: var(--tws-text);
   outline: none;
+  appearance: auto;
 }
 
-.tws-modal-actions{
+/* dropdown options */
+.tws-modal select option{
+  background: var(--page-bg-dark);
+  color: var(--tws-text);
+}
+
+/* default placeholder option like -- Select -- */
+.tws-modal select option[value=""]{
+  color: var(--text-muted);
+}
+
+.tws-modal select:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.tws-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -540,7 +737,7 @@ button, input, select{ font-family: inherit; }
 
 .tws-modal-cancel{
   background: rgba(255,255,255,0.22);
-  color: #fff;
+  color: var(--tws-text);
   border: none;
   padding: 8px 16px;
   border-radius: 999px;
@@ -548,31 +745,28 @@ button, input, select{ font-family: inherit; }
   cursor: pointer;
 }
 
-.tws-modal-add{
+.tws-modal-add {
   background: var(--tws-green);
-  color: #fff;
+  color: var(--tws-text);
   border: none;
   padding: 8px 16px;
   border-radius: 999px;
   font-weight: 900;
   cursor: pointer;
 }
+
 
 /* ======================================================
-Status / Approval / Archived
+   6) STATUS / APPROVAL / ARCHIVED
+   Used in:
+   - twsSubmissionStatus.ejs
+   - twsApprovalRouting_dean.ejs
+   - twsArchived.ejs
+   - review / archive related pages
 ====================================================== */
 
-.tws-footer-actions{
-  margin-top: 16px;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 /* Stepper */
-.tws-stepper{
+.tws-stepper {
   margin-top: 10px;
   display: flex;
   align-items: center;
@@ -580,7 +774,7 @@ Status / Approval / Archived
   flex-wrap: wrap;
 }
 
-.tws-step{
+.tws-step {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -589,40 +783,40 @@ Status / Approval / Archived
   opacity: 0.95;
 }
 
-.tws-dot{
+.tws-dot {
   width: 22px;
   height: 22px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255,255,255,0.65);
-  background: rgba(255,255,255,0.10);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.10);
   font-size: 12px;
 }
 
-.tws-step-done .tws-dot{
+.tws-step-done .tws-dot {
   background: var(--tws-green);
-  border-color: rgba(255,255,255,0.30);
+  border-color: rgba(255, 255, 255, 0.30);
 }
 
-.tws-step-pending .tws-dot{
+.tws-step-pending .tws-dot {
   background: rgba(255, 214, 107, 0.65);
-  border-color: rgba(255,255,255,0.30);
+  border-color: rgba(255, 255, 255, 0.30);
 }
 
-.tws-step-wait .tws-dot{
-  background: rgba(255,255,255,0.20);
+.tws-step-wait .tws-dot {
+  background: rgba(255, 255, 255, 0.20);
 }
 
-.tws-line{
+.tws-line {
   width: 48px;
   height: 2px;
-  background: rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.45);
 }
 
-/* Metrics */
-.tws-metrics{
+/* Status metrics */
+.tws-metrics {
   margin-top: 14px;
   display: grid;
   grid-template-columns: 160px 1fr;
@@ -631,44 +825,44 @@ Status / Approval / Archived
   opacity: 0.95;
 }
 
-/* Approval Routing box */
-.tws-routing-box{
-  background: rgba(0,0,0,0.45);
-  border: 2px solid rgba(255,255,255,0.65);
+/* Dean approval routing box */
+.tws-routing-box {
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.65);
   border-radius: 14px;
   padding: 14px;
 }
 
-.tws-routing-top{
+.tws-routing-top {
   text-align: center;
   padding: 6px 0 12px;
 }
 
-.tws-routing-approvedby{
+.tws-routing-approvedby {
   font-size: 12px;
   font-weight: 900;
   opacity: 0.95;
 }
 
-.tws-routing-role{
+.tws-routing-role {
   font-size: 18px;
   font-weight: 900;
   margin-top: 4px;
 }
 
-.tws-routing-small{
+.tws-routing-small {
   font-size: 12px;
   opacity: 0.9;
   margin-top: 4px;
 }
 
-.tws-routing-bottom{
+.tws-routing-bottom {
   margin-top: 10px;
   display: grid;
   gap: 10px;
 }
 
-.tws-routing-label{
+.tws-routing-label {
   font-size: 12px;
   font-weight: 900;
   display: flex;
@@ -676,56 +870,69 @@ Status / Approval / Archived
   gap: 8px;
 }
 
-.tws-routing-line{
+.tws-routing-line {
   height: 2px;
   width: 100%;
-  background: rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.45);
 }
 
-.tws-routing-actions{
+.tws-routing-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-/* Pills for approval buttons */
-.tws-pill-btn{
+/* Approval action pills */
+.tws-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 108px;
+  padding: 0 14px;
   border-radius: 999px;
-  padding: 8px 16px;
-  font-weight: 900;
-  border: 1px solid rgba(255,255,255,0.60);
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.60);
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
 }
 
-.tws-pill-green{
+.tws-pill-green {
   background: var(--tws-green);
-  color: #fff;
+  color: var(--tws-text);
   border-color: rgba(255,255,255,0.25);
 }
 
-.tws-pill-white{
+.tws-pill-white {
   background: var(--tws-white);
   color: var(--tws-text-dark);
 }
 
+/* Footer button row */
 .tws-footer-actions{
   display:flex;
   justify-content:flex-end;
-  gap:12px;
+  align-items:center;
+  gap:10px;
   margin-top:14px;
   max-width:980px;
   margin-left:auto;
   margin-right:auto;
+  flex-wrap: wrap;
 }
 
-.tws-btn-white:disabled{
-  opacity:.55;
-  cursor:not-allowed;
+.tws-btn-white:disabled {
+  opacity: .55;
+  cursor: not-allowed;
 }
+
 
 /* ======================================================
-   CREATED TWS PAGE (timetable + load details + signatures)
-   Safe add-on: only affects classes used in created-teaching-workload.ejs
+   7) CREATED TEACHING WORKLOAD PAGE
+   Used in: twsCreatedTeachingWorkload.ejs
 ====================================================== */
 
 /* Prevent grid children from overflowing their columns */
@@ -735,57 +942,122 @@ Status / Approval / Archived
   min-width: 0;
 }
 
+/* Wider canvas and larger cells for the created workload sheet page */
+.tws-created-sheet{
+  max-width: 1180px;
+  padding: 18px;
+}
+
+.tws-created-sheet .tws-schedule-layout{
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+}
+
+.tws-created-sheet .tws-timetable{
+  --tws-row-h: 52px;
+  grid-template-columns: 84px repeat(7, minmax(0, 1fr));
+}
+
+.tws-created-sheet .tws-timetable .tws-cell{
+  font-size: 13px;
+}
+
+.tws-created-sheet .tws-timetable .tws-time{
+  font-size: 12px;
+}
+
+.tws-created-sheet .tws-timetable .tws-block{
+  padding: 4px 5px;
+  font-size: 10px;
+  line-height: 1.05;
+  border-radius: 7px;
+  gap: 0;
+}
+
+.tws-created-sheet .tws-block-code{
+  font-size: 10px;
+}
+
+.tws-created-sheet .tws-block-sub{
+  font-size: 9px;
+  line-height: 1.05;
+}
+
+@media (max-width: 1200px){
+  .tws-created-sheet{
+    max-width: 1060px;
+  }
+
+  .tws-created-sheet .tws-schedule-layout{
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .tws-created-sheet .tws-timetable{
+    --tws-row-h: 46px;
+    grid-template-columns: 76px repeat(7, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px){
+  .tws-created-sheet .tws-schedule-layout{
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 2-column layout: timetable + details */
-.tws-schedule-layout{
+.tws-schedule-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
   gap: 18px;
   align-items: start;
   margin-top: 12px;
+  overflow: hidden;
 }
 
 /* If screen is small, stack vertically so nothing overlaps */
-@media (max-width: 980px){
-  .tws-schedule-layout{
+@media (max-width: 980px) {
+  .tws-schedule-layout {
     grid-template-columns: 1fr;
   }
 }
 
-/* --- Timetable grid --- */
+/* Timetable grid */
 .tws-timetable{
+  --tws-row-h: 44px;
   position: relative;
   display: grid;
+  isolation: isolate;
 
   /* 1 time column + 7 day columns */
   grid-template-columns: 72px repeat(7, minmax(0, 1fr));
-  grid-auto-rows: 44px;
+  grid-template-rows: repeat(13, var(--tws-row-h));
+  grid-auto-rows: 0;
 
-  border: 1px solid rgba(255,255,255,0.35);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0, 0, 0, 0.25);
 
-  /* stops browser from stretching rows and creating “gaps” */
+  /* stops browser from stretching rows and creating gaps */
   align-content: start;
 }
 
-/* Cells */
-.tws-timetable .tws-cell{
-  border-right: 1px solid rgba(255,255,255,0.22);
-  border-bottom: 1px solid rgba(255,255,255,0.22);
+/* Timetable cells */
+.tws-timetable .tws-cell {
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
 
-  color: rgba(255,255,255,0.9);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
   text-align: center;
   padding: 0 6px;
   white-space: nowrap;
 }
 
-/* Remove right border ONLY for the last day column (Sunday) */
-/* This is safer than nth-child(8n) because your blocks are also children */
+/* Remove right border for the last day column */
 .tws-timetable .tws-cell:nth-child(8),
 .tws-timetable .tws-cell:nth-child(16),
 .tws-timetable .tws-cell:nth-child(24),
@@ -798,147 +1070,196 @@ Status / Approval / Archived
 .tws-timetable .tws-cell:nth-child(80),
 .tws-timetable .tws-cell:nth-child(88),
 .tws-timetable .tws-cell:nth-child(96),
-.tws-timetable .tws-cell:nth-child(104){
+.tws-timetable .tws-cell:nth-child(104) {
   border-right: none;
 }
 
-/* Header row */
-.tws-timetable .tws-head{
-  background: rgba(0,0,0,0.35);
+/* Timetable headers */
+.tws-timetable .tws-head {
+  background: rgba(0, 0, 0, 0.35);
   font-weight: 800;
 }
 
-/* Top-left corner */
-.tws-timetable .tws-corner{
-  background: rgba(0,0,0,0.35);
+.tws-timetable .tws-corner {
+  background: rgba(0, 0, 0, 0.35);
 }
 
-/* Time column (FORCE column 1) */
-.tws-timetable .tws-time{
-  background: rgba(0,0,0,0.35);
+.tws-timetable .tws-time {
+  background: rgba(0, 0, 0, 0.35);
   font-weight: 800;
   font-size: 11px;
   grid-column: 1 !important;
+  grid-row: var(--row, auto);
 }
 
-/* Empty slots */
 .tws-timetable .tws-slot{
+  grid-column: var(--col, auto);
+  grid-row: var(--row, auto);
   background: rgba(0,0,0,0.12);
 }
 
-/* --- Subject blocks overlay (grid overlay) --- */
+/* Subject blocks */
 .tws-timetable .tws-block{
+  position: relative;
   z-index: 5;
+  margin: 0;
   border-radius: 6px;
-  padding: 6px;
+  padding: 4px 5px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-
-  border: 1px solid rgba(0,0,0,0.25);
+  border: 1px solid rgba(0, 0, 0, 0.25);
   overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
+  gap: 0;
+  box-shadow: none;
+  background-clip: padding-box;
 }
 
-/* Labels inside block */
-.tws-block-code{ font-weight: 900; }
-.tws-block-sub{ font-weight: 800; opacity: 0.9; }
+.tws-block-code,
+.tws-block-sub{
+  font-weight: 800;
+  opacity: 0.9;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.05;
+}
 
-/* Colors (only for timetable blocks) */
-.tws-timetable .highlight-yellow{ background: #e6d57a; color: #111; }
-.tws-timetable .highlight-blue{ background: #2a86d6; color: #111; }
-.tws-timetable .highlight-purple{ background: #7a4aa8; color: #111; }
-.tws-timetable .highlight-green{ background: #00c26a; color: #111; }
+.tws-block-code{ font-weight: 900; font-size: 10px; }
+.tws-block-sub{ font-size: 9px; }
 
-/* Responsive: slightly smaller */
+/* Timetable block colors */
+.tws-timetable .highlight-yellow{ background: var(--status-for-signing); color: var(--tws-text-dark); }
+.tws-timetable .highlight-blue{ background: var(--accent-secondary); color: var(--tws-text); }
+.tws-timetable .highlight-purple{ background: var(--accent-primary-hover); color: var(--tws-text); }
+.tws-timetable .highlight-green{ background: var(--status-approved); color: var(--tws-text); }
+
+/* Semantic timetable coloring */
+.tws-timetable .tws-block-assigned{ background: var(--status-approved); color: var(--tws-text); }
+.tws-timetable .tws-block-conflict{ background: var(--status-rejected); color: var(--tws-text); }
+
+/* Small screen tweaks */
 @media (max-width: 520px){
   .tws-timetable{
+    --tws-row-h: 40px;
     grid-template-columns: 62px repeat(7, minmax(0, 1fr));
-    grid-auto-rows: 40px;
   }
-  .tws-timetable .tws-cell{
+
+  .tws-timetable .tws-cell {
     font-size: 11px;
   }
-  .tws-timetable .tws-time{
+
+  .tws-timetable .tws-time {
     font-size: 10px;
   }
-  .tws-timetable .tws-block{
+
+  .tws-timetable .tws-block {
     font-size: 10px;
+  }
+
+  .tws-created-sheet .tws-timetable{
+    --tws-row-h: 42px;
+    grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  }
+
+  .tws-created-sheet .tws-timetable .tws-cell{
+    font-size: 11px;
+  }
+
+  .tws-created-sheet .tws-timetable .tws-time{
+    font-size: 10px;
+  }
+
+  .tws-created-sheet .tws-timetable .tws-block{
+    font-size: 9px;
+    padding: 4px;
+  }
+
+  .tws-created-sheet .tws-block-sub{
+    font-size: 8px;
   }
 }
 
-/* --- Load details panel --- */
-.tws-load-details{
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.25);
+/* Load details panel */
+.tws-load-details {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 10px;
   padding: 14px;
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
   overflow: hidden;
 }
 
-.tws-load-details .ld-title{
+.tws-load-details .ld-title {
   font-weight: 900;
   text-align: center;
   margin-bottom: 10px;
 }
 
-.tws-load-details .ld-row{
+.tws-load-details .ld-row {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   font-size: 12px;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   align-items: flex-start;
 }
 
 /* wrap long left text nicely */
-.tws-load-details .ld-row{
+.tws-load-details .ld-row {
   flex-wrap: wrap;
 }
 
-.tws-load-details .ld-row span{
+.tws-load-details .ld-row span {
   margin-left: auto;
   white-space: nowrap;
 }
 
-.tws-load-details .ld-divider{
+.tws-load-details .ld-divider {
   margin: 10px 0;
-  border-top: 1px solid rgba(255,255,255,0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-/* --- Signatures inside card bottom --- */
-.tws-signatures{
+/* Signature section */
+.tws-signatures {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 40px;
   margin-top: 18px;
   padding-top: 14px;
+  overflow: hidden;
 }
 
-@media (max-width: 720px){
-  .tws-signatures{
+@media (max-width: 720px) {
+  .tws-signatures {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 }
 
-.sig-box{
+.sig-box {
   text-align: center;
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
   min-width: 0;
 }
 
-.sig-line{
+.sig-line {
   height: 1px;
-  background: rgba(255,255,255,0.6);
+  background: rgba(255, 255, 255, 0.6);
   margin: 0 auto 10px;
   width: 70%;
 }
 
-.sig-name{ font-size: 12px; font-weight: 800; }
+.sig-name{
+  font-size: 12px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .sig-role{ font-size: 12px; font-weight: 900; margin-top: 4px; }

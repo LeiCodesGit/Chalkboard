@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Curriculum Manager</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="/common/css/style.css">
     
     <style>
         :root {
@@ -213,6 +216,12 @@
         <div class="spinner"></div>
         <div class="loading-text">Saving to Database...</div>
     </div>
+
+     <!-- Sidebar Navigation -->
+    <div class="page-layout">
+        <aside class="sidebar">
+            <%- include('../partials/sideMenuBar') %>
+        </aside>
 
     <div class="container">
         <h1>Curriculum Manager</h1>
