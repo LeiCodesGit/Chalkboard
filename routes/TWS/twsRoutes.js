@@ -616,10 +616,6 @@ router.get(
       .sort({ code: 1, title: 1 })
       .lean();
     
-    console.log("TWS Dept:", twsDept);
-    console.log("TWS Program:", twsProgram);
-    console.log("Subjects found:", subjects);
-    
     res.render("TWS/twsCreateTeachingWorkloadPopup", {
       tws: normalizeTwsForView(tws, courses),
       subjects,
@@ -734,6 +730,11 @@ router.post(
 
     await existingCourse.save();
     await refreshTwsComputedLoads(tws._id);
+
+    const from = String(req.query?.from || req.body?.from || "").trim().toLowerCase();
+    if (from === "created") {
+      return res.redirect(`/tws/created-teaching-workload/${tws._id}`);
+    }
 
     return res.redirect(`/tws/create-teaching-workload/${tws._id}`);
   })

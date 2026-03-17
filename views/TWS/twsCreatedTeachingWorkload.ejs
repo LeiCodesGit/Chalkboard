@@ -245,20 +245,15 @@
                   const compactTimeRange = `${p.startStr} - ${p.endStr}`.replace(/\s*-\s*/g, "-");
               %>
               <div
-                class="tws-block tws-block-clickable <%= colorClass %>"
+                class="tws-block <%= isViewOnly ? '' : 'tws-block-clickable js-edit-subject' %> <%= colorClass %>"
                 style="--col: <%= col %>; --row: <%= row %>; --span: <%= p.span %>;"
-
-                  class="tws-block tws-block-clickable js-edit-subject <%= colorClass %>"
-                  style="--col: <%= col %>; --row: <%= row %>; --span: <%= p.span %>;"
-                  data-code="<%= s.code || '' %>"
-                  data-title="<%= s.title || '' %>"
-                  data-units="<%= Number(s.units || 0).toFixed(2) %>"
-                  data-day="<%= s.day || '' %>"
-                  data-start="<%= s.startTime || '' %>"
-                  data-end="<%= s.endTime || '' %>"
-                  data-section-room="<%= s.sectionRoom || '' %>"
-                  title="<%= isViewOnly ? 'View only' : 'Click to edit subject' %>"
-                >
+                data-code="<%= s.code || '' %>"
+                data-title="<%= s.title || '' %>"
+                data-units="<%= Number(s.units || 0).toFixed(2) %>"
+                data-day="<%= s.day || p.day || '' %>"
+                data-start="<%= s.startTime || p.startStr || '' %>"
+                data-end="<%= s.endTime || p.endStr || '' %>"
+                data-section-room="<%= s.sectionRoom || '' %>"
                 title="<%= isViewOnly ? 'View only' : 'Click to edit subject' %>"
               >
                 <div class="tws-block-code"><%= s.code %></div>
@@ -371,7 +366,7 @@
     <div class="tws-modal">
       <div class="tws-modal-title" id="editModalTitle">Edit Subject</div>
 
-      <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/update">
+      <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/update?from=created">
         <input type="hidden" name="code" id="edit_code" />
         <input type="hidden" name="title" id="edit_title" />
         <input type="hidden" name="units" id="edit_units" />
