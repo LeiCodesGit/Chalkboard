@@ -52,11 +52,12 @@ coursesOverviewRouter.get('/search', async (req, res) => {
     try {
         const query = req.query.q || '';
         const userId = req.query.userId || '';
+        const userRole = req.session.user ? req.session.user.role?.toLowerCase() : '';
 
         const filter = {};
 
-        // Only filter by userID if userId is a valid ObjectId
-        if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        // Only filter by userID if user is NOT a dean and userId is valid
+        if (userRole !== 'dean' && userId && mongoose.Types.ObjectId.isValid(userId)) {
             filter.userID = new mongoose.Types.ObjectId(userId);
         }
 
@@ -111,6 +112,9 @@ coursesOverviewRouter.get('/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
         const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
+        const userRole = req.session.user ? req.session.user.role?.toLowerCase() : '';
+
+        console.log(`📚 COURSE OVERVIEW - userId: ${userId}, role: "${userRole}", sessionUser:`, req.session.user);
 
         // Safety check: Avoid Mongoose CastError if userId is "undefined" or invalid ObjectID
         if (userId === "undefined" || !mongoose.Types.ObjectId.isValid(userId)) {
@@ -118,7 +122,11 @@ coursesOverviewRouter.get('/:userId', async (req, res) => {
             return res.redirect("/login");
         }
 
-        let userCourses = await Syllabus.find({ userID: userId });
+        // Deans see ALL courses, faculty see only their own
+        const courseFilter = userRole === 'dean' ? {} : { userID: userId };
+        console.log(`🔍 Course filter:`, courseFilter);
+        let userCourses = await Syllabus.find(courseFilter);
+        console.log(`✅ Courses found: ${userCourses.length}`);
 
         if (mainDB.models.User) {
             await Syllabus.populate(userCourses, { path: 'assignedInstructor' });
@@ -151,11 +159,12 @@ coursesOverviewRouter.get('/:userId', async (req, res) => {
             courses: formattedCourses,
             userId: userId,
             searchQuery: req.query.search || '',
-            currentPageCategory: 'syllabus' //
+            currentPageCategory: 'syllabus',
+            user: req.session.user //
         });
     } catch (error) {
         console.error("Dashboard error:", error);
-        res.render('Syllabus/courseOverview', { courses: [], userId: req.params.userId, searchQuery: '', currentPageCategory: 'syllabus' });
+        res.render('Syllabus/courseOverview', { courses: [], userId: req.params.userId, searchQuery: '', currentPageCategory: 'syllabus', user: req.session.user });
     }
 });
 

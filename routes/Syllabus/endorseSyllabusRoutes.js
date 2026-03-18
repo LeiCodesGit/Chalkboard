@@ -433,10 +433,14 @@ endorseSyllabusRouter.get('/endorse', async (req, res) => {
         // Fetch PC Approved (Pending Endorsement) and Program Chair Endorsed
         const approvals = await SyllabusApprovalStatus.find({
             $or: [
-                { status: 'Approved', approvedBy: 'PC_Approved' }, // Now in DB as Approved
-                { status: 'Approved', approvedBy: 'Program Chair' }
+                { status: 'Approved', approvedBy: 'PC_Approved' }, // Ready to endorse
+                { status: 'Approved', approvedBy: 'Program Chair' }, // Endorsed to PC
+                { status: 'Endorsed' } // Already endorsed
             ]
         });
+        console.log(`📋 ENDORSE QUEUE - Found ${approvals.length} approvals matching criteria`);
+        approvals.forEach(a => console.log(`   - syllabusID: ${a.syllabusID}, status: ${a.status}, approvedBy: ${a.approvedBy}`));
+        
         let drafts = [];
 
         if (approvals.length > 0) {
@@ -483,6 +487,8 @@ endorseSyllabusRouter.get('/endorse', async (req, res) => {
 
         const pendingCount = drafts.filter(d => d.status === 'Pending').length;
         const endorsedHistoryCount = drafts.filter(d => d.status === 'Endorsed').length;
+
+        console.log(`✅ ENDORSE QUEUE RENDER - drafts: ${drafts.length}, pending: ${pendingCount}, endorsed: ${endorsedHistoryCount}`);
 
         const statusOrder = { 'Pending': 1, 'Endorsed': 2, 'PC_Approved': 2, 'Rejected': 3 };
         drafts.sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));

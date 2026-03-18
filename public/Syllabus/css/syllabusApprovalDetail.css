@@ -519,6 +519,129 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
+   DOCUMENT CONTENT STYLING
+   ═══════════════════════════════════════════════════════════ */
+
+/* Main document preview content */
+.ad-doc-content {
+    background: #fff;
+    padding: 2rem;
+    overflow-y: auto;
+    max-height: 75vh;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    color: #333;
+}
+
+/* Section heading styles */
+.ad-section-heading {
+    color: #800000;
+    border-bottom: 2px solid #800000;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+/* Table styles */
+.ad-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2.5rem;
+    font-size: 0.9rem;
+}
+
+.ad-data-table-wide {
+    font-size: 0.95rem;
+}
+
+.ad-data-table thead {
+    background-color: #fce4e4;
+    color: #800000;
+}
+
+.ad-data-table th,
+.ad-data-table td {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.ad-data-table th {
+    font-weight: 600;
+    text-align: center;
+}
+
+.ad-data-table tbody tr:nth-child(odd) {
+    background-color: #fafafa;
+}
+
+/* Alert/placeholder styles */
+.ad-no-content {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 2.5rem;
+}
+
+/* Signature block for PDF */
+.ad-signature-block {
+    display: none;
+    margin-top: 4rem;
+    width: 100%;
+    page-break-inside: avoid;
+}
+
+.ad-signature-block-content {
+    width: 350px;
+    text-align: left;
+}
+
+.ad-signature-label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.ad-signature-img-container {
+    height: 80px;
+    margin-bottom: 5px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+}
+
+.ad-signature-name {
+    font-weight: bold;
+    text-decoration: underline;
+    text-transform: uppercase;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.ad-signature-title {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #555;
+    font-style: italic;
+}
+
+/* Concept map image */
+.ad-concept-map {
+    margin-bottom: 2.5rem;
+    text-align: center;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.ad-concept-map img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════
    PRINT / PDF EXPORT STYLES
    ═══════════════════════════════════════════════════════════ */
 @media print {
@@ -555,6 +678,19 @@
         box-shadow: none !important;
         padding: 0 !important;
         margin: 0 !important;
+    }
+    
+    /* Make document content full width for print */
+    .ad-doc-content {
+        max-height: none !important;
+        overflow: visible !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+    
+    /* Display signature block on PDF */
+    .ad-signature-block {
+        display: block !important;
     }
     
     /* Make sure page breaks inside tables are avoided */

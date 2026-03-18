@@ -68,10 +68,193 @@
                 <h2 class="ad-section-title">Basic Information</h2>
 
                 <!-- ── Document Read-Only Preview ── -->
-                <div class="ad-document-preview">
-                    <div class="ad-no-data-placeholder">
-                        <p>[FORMS FROM THE RESPECTIVE GROUPS (EX. TLA FORMS, SYLLABUS FORMS)]</p>
+                <div class="ad-document-preview ad-doc-content">
+                    
+                    <h3 class="ad-section-heading">Course Details</h3>
+                    <table class="ad-data-table ad-data-table-wide">
+                        <tr><td style="font-weight:bold; width: 30%; background:#f9f9f9;">Course Code</td><td><%= locals.courseCode %></td></tr>
+                        <tr><td style="font-weight:bold; background:#f9f9f9;">Course Title</td><td><%= locals.courseName %></td></tr>
+                        <tr><td style="font-weight:bold; background:#f9f9f9;">Section</td><td><%= locals.courseSection %></td></tr>
+                        <tr><td style="font-weight:bold; background:#f9f9f9;">Academic Year</td><td><%= locals.academicYear %></td></tr>
+                    </table>
+
+                    <h3 class="ad-section-heading">Program Educational Objectives (PEO)</h3>
+                    <% if (locals.peos && locals.peos.length > 0 && locals.peos[0].description) { %>
+                        <table class="ad-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:10%; text-align: center;">PEO</th>
+                                    <th style="text-align: left;">Description</th>
+                                    <th style="width:20%; text-align: center;">Mission Mapping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.peos[0].description.forEach(function(desc, index) { 
+                                     const rating = locals.peos[0].rating && locals.peos[0].rating[index];
+                                %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center;"><%= index + 1 %></td>
+                                        <td><%= desc %></td>
+                                        <td style="text-align:center;">
+                                            <% if (rating && rating.length === 3) { %>
+                                                <%= (rating[0]==='1'?'A ':'') + (rating[1]==='1'?'B ':'') + (rating[2]==='1'?'C':'') || '-' %>
+                                            <% } else { %>
+                                                <%= rating || '-' %>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No program educational objectives provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Student Outcomes (SO)</h3>
+                    <% if (locals.seos && locals.seos.length > 0 && locals.seos[0].description) { %>
+                        <table class="ad-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:10%; text-align: center;">SO</th>
+                                    <th style="text-align: left;">Description</th>
+                                    <th style="width:20%; text-align: center;">PEO Mapping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.seos[0].description.forEach(function(desc, index) { 
+                                     const rating = locals.seos[0].rating && locals.seos[0].rating[index];
+                                     const letter = String.fromCharCode(97 + index);
+                                %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center;"><%= letter %></td>
+                                        <td><%= desc %></td>
+                                        <td style="text-align:center;">
+                                            <% if (rating && rating.length === 3) { %>
+                                                <%= (rating[0]==='1'?'1 ':'') + (rating[1]==='1'?'2 ':'') + (rating[2]==='1'?'3':'') || '-' %>
+                                            <% } else { %>
+                                                <%= rating || '-' %>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No student outcomes provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Outcomes (CO)</h3>
+                    <% if (locals.cos && locals.cos.length > 0) { %>
+                        <table class="ad-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:15%; text-align: center;">CO. No</th>
+                                    <th style="text-align: left;">Description</th>
+                                    <th style="width:25%; text-align: left;">Thinking Skills</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.cos.forEach(function(co) { %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center;"><%= co.coNumber %></td>
+                                        <td><%= co.description %></td>
+                                        <td><%= co.thinkingSkills %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No course outcomes provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Mapping</h3>
+                    <% if (locals.mappings && locals.mappings.length > 0) { %>
+                        <table class="ad-data-table" style="text-align: center;">
+                            <thead>
+                                <tr>
+                                    <th>CO</th>
+                                    <th>a</th>
+                                    <th>b</th>
+                                    <th>c</th>
+                                    <th>d</th>
+                                    <th>e</th>
+                                    <th>f</th>
+                                    <th>g</th>
+                                    <th>h</th>
+                                    <th>i</th>
+                                    <th>j</th>
+                                    <th>k</th>
+                                    <th>l</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.mappings.forEach(function(m) { %>
+                                    <tr>
+                                        <td style="font-weight:bold; background:#f9f9f9;">CO<%= m.numberOfCO %></td>
+                                        <% for(let i=0; i<12; i++) { %>
+                                            <td><%= m.fromAtoL && m.fromAtoL[i] ? m.fromAtoL[i] : '-' %></td>
+                                        <% } %>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No course mappings provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Concept Map</h3>
+                    <% if (locals.syl && locals.syl.conceptMap) { %>
+                        <div class="ad-concept-map">
+                            <img src="<%= locals.syl.conceptMap %>" alt="Concept Map">
+                        </div>
+                    <% } else { %>
+                        <p class="ad-no-content">No concept map image provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Schedule</h3>
+                    <% if (locals.schedules && locals.schedules.length > 0) { %>
+                        <table class="ad-data-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">Week</th>
+                                    <th style="width: 30%;">Topic</th>
+                                    <th style="width: 30%;">TLA </th>
+                                    <th style="width: 30%;">Assessment Task</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.schedules.forEach(function(s) { %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center; background:#f9f9f9;">Wk <%= s.week %></td>
+                                        <td><%= s.coverageTopic || '-' %></td>
+                                        <td>
+                                            <div style="margin-bottom:0.25rem;"><strong>Mode:</strong> <%= s.tlaMode || '-' %></div>
+                                            <div><strong>Activity:</strong> <%= s.tlaActivities || '-' %></div>
+                                        </td>
+                                        <td>
+                                            <div style="margin-bottom:0.25rem;"><strong>Mode:</strong> <%= s.assessmentTaskMode || '-' %></div>
+                                            <div><strong>Task:</strong> <%= s.assessmentTaskTask || '-' %></div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No schedule provided.</p>
+                    <% } %>
+
+                    <!-- ── Signature Block for PDF Export ── -->
+                    <div id="document-signature-section" class="ad-signature-block">
+                        <div class="ad-signature-block-content">
+                            <p class="ad-signature-label">Archived by:</p>
+                            <div id="preview-signature-img-container" class="ad-signature-img-container">
+                                <!-- Signature image will be placed here -->
+                            </div>
+                            <p id="preview-signatory-name" class="ad-signature-name">HR ADMIN</p>
+                            <p class="ad-signature-title">HR Administrator</p>
+                        </div>
                     </div>
+
                 </div>
             </section>
 
