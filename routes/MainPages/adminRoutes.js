@@ -24,6 +24,7 @@ adminRoutes.get("/institution", isAuthenticated, authorizeRoles("Admin", "HR"), 
             user: req.session.user
         });
     }
+});
 
 
 // Admin sidebar points to /admin/tws; forward it to the TWS HR/Admin view.
