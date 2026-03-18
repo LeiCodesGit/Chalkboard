@@ -104,9 +104,8 @@
 
     <!-- Note: Header and Footer are handled by Puppeteer in syllabusPdfController.js -->
 
-    <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="font-size: 16pt; margin: 0; text-transform: uppercase; font-weight: bold;">COLLEGE OF ENGINEERING AND ARCHITECTURE</h1>
-    </div>
+    <!-- College Title (first page only) -->
+    <h1 style="text-align: center; font-size: 14pt; font-weight: bold; margin: 10px 0 20px 0; text-transform: uppercase;">COLLEGE OF ENGINEERING AND ARCHITECTURE</h1>
 
     <!-- Vision & Mission -->
     <div class="vm-section">
@@ -391,26 +390,36 @@
 
     <!-- Signatures -->
     <h2 class="section-title">Approvals</h2>
-    <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-        <div style="width: 45%;">
-            <p style="font-size: 8pt; margin-bottom: 25px;"><strong>PREPARED BY:</strong></p>
+    <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 8pt;">
+        <div style="width: 30%;">
+            <p style="margin-bottom: 25px;"><strong>PREPARED BY:</strong></p>
             <div style="border-bottom: 1px solid #000; text-align: center; min-height: 40px;">
                 <% if (syl.assignedInstructor && syl.assignedInstructor.signature) { %>
                     <img src="<%= syl.assignedInstructor.signature %>" style="max-height: 40px;">
                 <% } %>
             </div>
             <p style="font-size: 9pt; font-weight: bold; text-align: center; margin: 3px 0;"><%= syl.assignedInstructor ? (syl.assignedInstructor.firstName + ' ' + syl.assignedInstructor.lastName).toUpperCase() : 'FACULTY' %></p>
-            <p style="font-size: 8pt; text-align: center; color: #666;">Course Coordinator</p>
+            <p style="text-align: center; color: #666;">Course Coordinator</p>
         </div>
-        <div style="width: 45%;">
-            <p style="font-size: 8pt; margin-bottom: 25px;"><strong>APPROVED BY:</strong></p>
+        <div style="width: 30%;">
+            <p style="margin-bottom: 25px;"><strong>ENDORSED BY:</strong></p>
             <div style="border-bottom: 1px solid #000; text-align: center; min-height: 40px;">
                 <% if (approval && approval.PC_Signature) { %>
                     <img src="<%= approval.PC_Signature %>" style="max-height: 40px;">
                 <% } %>
             </div>
             <p style="font-size: 9pt; font-weight: bold; text-align: center; margin: 3px 0;"><%= (approval && approval.PC_SignatoryName) ? approval.PC_SignatoryName.toUpperCase() : 'PROGRAM CHAIR' %></p>
-            <p style="font-size: 8pt; text-align: center; color: #666;">Program Chair</p>
+            <p style="text-align: center; color: #666;">Program Chair</p>
+        </div>
+        <div style="width: 30%;">
+            <p style="margin-bottom: 25px;"><strong>APPROVED BY:</strong></p>
+            <div style="border-bottom: 1px solid #000; text-align: center; min-height: 40px;">
+                <% if (approval && approval.Dean_Signature) { %>
+                    <img src="<%= approval.Dean_Signature %>" style="max-height: 40px;">
+                <% } %>
+            </div>
+            <p style="font-size: 9pt; font-weight: bold; text-align: center; margin: 3px 0;"><%= (approval && approval.Dean_SignatoryName) ? approval.Dean_SignatoryName.toUpperCase() : 'DEAN' %></p>
+            <p style="text-align: center; color: #666;">Dean</p>
         </div>
     </div>
 

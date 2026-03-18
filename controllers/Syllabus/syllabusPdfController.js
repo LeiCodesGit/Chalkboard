@@ -153,8 +153,8 @@ export async function generateSyllabusPdf(req, res) {
             headerTemplate: headerTemplate,
             footerTemplate: footerTemplate,
             margin: {
-                top: '60mm', // Adjusted for header space
-                bottom: '35mm', // Adjusted for footer space
+                top: '35mm',
+                bottom: '35mm',
                 left: '15mm',
                 right: '15mm'
             }
