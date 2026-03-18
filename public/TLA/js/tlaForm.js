@@ -37,10 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const file = input.files[0];
             if (!file) return;
 
-            // Validate image only
-            if (!file.type || !file.type.startsWith('image/')) {
+            // Validate PNG only
+            if (file.type !== 'image/png') {
                 if (errEl) {
-                    errEl.textContent = 'Only image files are accepted for signatures.';
+                    errEl.textContent = 'Only PNG files are accepted for signatures.';
                     errEl.style.display = 'block';
                 }
                 input.value = '';
@@ -81,13 +81,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 const legacyField = document.getElementById('professorSignature');
                 if (legacyField && prefix !== 'post') legacyField.value = dataUrl;
 
-                // Upload to server
+                // Upload PNG file to server via multipart endpoint
                 const tlaId = document.querySelector('[name="_tlaId"]');
                 if (tlaId && tlaId.value) {
-                    fetch('/tla/form/' + tlaId.value + '/signature', {
+                    var formData = new FormData();
+                    formData.append('signatureFile', file);
+                    formData.append('signatureType', prefix);
+
+                    fetch('/tla/form/' + tlaId.value + '/signature-file', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ signatureImage: dataUrl, signatureType: prefix })
+                        body: formData
                     })
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
@@ -107,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Remove button
         if (removeBtn) {
             removeBtn.addEventListener('click', function () {
-            area.innerHTML = '<span class="sig-placeholder" id="' + prefix + '-sig-placeholder">Click to upload signature image</span>';
+            area.innerHTML = '<span class="sig-placeholder" id="' + prefix + '-sig-placeholder">Click to upload PNG signature</span>';
                 area.appendChild(input);
                 input.value = '';
                 const sigField = document.getElementById(sigFieldId);

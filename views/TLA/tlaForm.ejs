@@ -131,11 +131,10 @@
                 </div>
                 
                 <%
-                    // Post-digital unlocks only after Dean approval.
-                    const postApprovedStatuses = ['Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Approved'];
-                    const postUnlocked = status && postApprovedStatuses.includes(status.status);
-                    const postDisabled = !postUnlocked;
-                %>
+                // Post-digital unlocks only when Program-Chair sets accessible = true.
+                const postUnlocked = postDigital && postDigital.accessible === true;
+                const postDisabled = !postUnlocked;
+            %>
 
                 <div class="form-sections-row">
                     <div class="form-section half-section">
@@ -165,7 +164,7 @@
                                    <%= isLocked ? 'disabled' : '' %>>
                         </div>
                         <div class="signature-block" id="pre-signature-block">
-                            <label>SIGNATURE <span class="sig-format-hint">(Image file)</span></label>
+                            <label>SIGNATURE <span class="sig-format-hint">(PNG only)</span></label>
                             <div class="signature-upload-area" id="pre-sig-area">
                                 <% const existingSig = (tla && tla.professorSignature) ? tla.professorSignature : ''; %>
                                 <% if (existingSig) { %>
@@ -173,7 +172,7 @@
                                 <% } else { %>
                                     <span class="sig-placeholder" id="pre-sig-placeholder">Click to upload signature image</span>
                                 <% } %>
-                                <input type="file" accept="image/*" class="sig-file-input" id="pre-sig-input" <%= isLocked ? 'disabled' : '' %>>
+                                <input type="file" accept=".png" class="sig-file-input" id="pre-sig-input" <%= isLocked ? 'disabled' : '' %>>
                             </div>
                             <% if (!isLocked) { %>
                             <div class="sig-actions">
@@ -194,11 +193,7 @@
 
                         <% if (postDisabled) { %>
                         <div class="post-lock-notice">
-                            <% if (status && (status.status === 'Pending' || status.status === 'Chair-Approved')) { %>
-                                &#9203; Waiting for Dean approval before Post-Digital Session can be filled.
-                            <% } else { %>
-                                &#128274; Post-Digital Session becomes available after Dean approval.
-                            <% } %>
+                            &#128274; Post-Digital Session becomes available after Program Chair approves the Pre-Digital Session.
                         </div>
                         <% } %>
 
@@ -227,7 +222,7 @@
                                    <%= postDisabled ? 'disabled' : '' %>>
                         </div>
                         <div class="signature-block" id="post-signature-block">
-                            <label>SIGNATURE <span class="sig-format-hint">(Image file)</span></label>
+                            <label>SIGNATURE <span class="sig-format-hint">(PNG only)</span></label>
                             <div class="signature-upload-area" id="post-sig-area">
                                 <% const existingPostSig = (tla && tla.professorPostSignature) ? tla.professorPostSignature : ''; %>
                                 <% if (existingPostSig) { %>
@@ -235,7 +230,7 @@
                                 <% } else { %>
                                     <span class="sig-placeholder" id="post-sig-placeholder">Click to upload signature image</span>
                                 <% } %>
-                                <input type="file" accept="image/*" class="sig-file-input" id="post-sig-input" <%= postDisabled ? 'disabled' : '' %>>
+                                <input type="file" accept=".png" class="sig-file-input" id="post-sig-input" <%= postDisabled ? 'disabled' : '' %>>
                             </div>
                             <% if (!postDisabled) { %>
                             <div class="sig-actions">

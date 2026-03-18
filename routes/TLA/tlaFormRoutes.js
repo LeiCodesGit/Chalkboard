@@ -10,7 +10,9 @@ import {
     previewTlaPdf,
     viewTlaPdf,
     viewTlaPdfApproval,
-    uploadSignature
+    uploadSignature,
+    uploadSignatureFile,
+    signatureUpload
 } from "../../controllers/tlaController.js";
 
 const formRoutes = express.Router();
@@ -39,8 +41,11 @@ formRoutes.get('/pdf-approval/:id', requireLogin, viewTlaPdfApproval);
 // GET /tla/form/pdf-xray – visualize all form field names in the TLA PDF template
 formRoutes.get('/pdf-xray', requireLogin, discoverTlaPdfFields);
 
-// POST /tla/form/:id/signature – upload professor PNG signature
+// POST /tla/form/:id/signature – upload professor PNG signature (base64 JSON)
 formRoutes.post('/:id/signature', requireLogin, uploadSignature);
+
+// POST /tla/form/:id/signature-file – upload professor PNG signature (multipart file)
+formRoutes.post('/:id/signature-file', requireLogin, signatureUpload.single('signatureFile'), uploadSignatureFile);
 
 // POST /tla/form/:id  – update existing TLA
 formRoutes.post("/:id", requireLogin, updateTLA);

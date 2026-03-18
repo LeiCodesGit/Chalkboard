@@ -8,14 +8,40 @@ import Syllabus from '../models/Syllabus/syllabus.js';
 import SyllabusApprovalStatus from '../models/Syllabus/syllabusApprovalStatus.js';
 import userSchema from '../models/user.js';
 import { mainDB } from '../database/mongo-dbconnect.js';
-import { readFileSync } from 'fs';
+import { readFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import multer from 'multer';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PDF_TEMPLATE = join(__dirname, '../templates/TLA_TEMPLATE_BLANK.pdf');
 const User = mainDB.model("User", userSchema);
+
+// ── Signature file upload (PNG only) ──────────────────────────────────────────
+const SIGNATURE_DIR = join(__dirname, '../public/uploads/signatures');
+mkdirSync(SIGNATURE_DIR, { recursive: true });
+
+const signatureStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, SIGNATURE_DIR),
+    filename: (req, file, cb) => {
+        const tlaId = req.params.id || 'unknown';
+        const type  = req.body.signatureType === 'post' ? 'post' : 'pre';
+        cb(null, `${tlaId}_${type}_${Date.now()}.png`);
+    }
+});
+
+export const signatureUpload = multer({
+    storage: signatureStorage,
+    limits: { fileSize: 2 * 1024 * 1024 },  // 2 MB
+    fileFilter: (_req, file, cb) => {
+        if (file.mimetype === 'image/png') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only PNG files are allowed for signatures.'));
+        }
+    }
+});
 
 // ===============================================================================
 //  ROLE DEFINITIONS
@@ -477,7 +503,7 @@ export async function getFormById(req, res) {
 
         const [preDigital, postDigital, status] = await Promise.all([
             Pre_Main.findOne({ tlaID: tla._id }),
-            Post_Main.findOne({ tlaID: tla._id }),
+            Post_Main.findOne({ tlaID: tla._id }).lean(),   // .lean() so 'accessible' field is preserved
             Status_Main.findOne({ tlaID: tla._id })
         ]);
 
@@ -605,9 +631,10 @@ export async function updateTLA(req, res) {
         const isInChain    = ['Pending', 'Chair-Approved', 'Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved'].includes(tla.status);
 
         if (isPostSubmit) {
-            const canSubmitPost = ['Dean-Approved', 'HR-Approved'].includes(tla.status);
-            if (!canSubmitPost) {
-                return res.status(403).send('Post-digital submission is only allowed after Dean approval.');
+            const approvalStatus = await Status_Main.findOne({ tlaID: id });
+            const preDigitalApproved = approvalStatus?.programChair?.status === 'Approved';
+            if (!preDigitalApproved) {
+                return res.status(403).send('Post-digital submission is only allowed after Pre-Digital Session is approved by Program Chair.');
             }
 
             const postDraft = {
@@ -1070,6 +1097,17 @@ export async function postApprovalAction(req, res) {
                 TLA_B2.findByIdAndUpdate(tlaID,   { status: nextTlaStatus })
             ]);
 
+            // When Program-Chair approves Pre-Digital, unlock Post-Digital Session
+            if (step === 'programChair' && verdict === 'Approved') {
+                const accessFlag = { $set: { accessible: true } };
+                const upsertOpts = { upsert: true, strict: false };
+                await Promise.all([
+                    Post_Main.findOneAndUpdate({ tlaID }, accessFlag, upsertOpts),
+                    Post_B1.findOneAndUpdate({ tlaID },  accessFlag, upsertOpts),
+                    Post_B2.findOneAndUpdate({ tlaID },  accessFlag, upsertOpts)
+                ]);
+            }
+
             if (req.headers['content-type']?.includes('application/json')) {
                 return res.json({ success: true, status: nextMacro, verdict });
             }
@@ -1129,7 +1167,8 @@ export async function postHRArchive(req, res) {
 // ===============================================================================
 //  PROFESSOR SIGNATURE UPLOAD  (POST)
 //  POST /tla/form/:id/signature
-//  Body (JSON): { signatureImage: "data:image/png;base64,..." }
+//  Body (JSON): { signatureImage: "data:image/png;base64,...", signatureType }
+//  PNG only.
 // ===============================================================================
 
 export async function uploadSignature(req, res) {
@@ -1144,9 +1183,9 @@ export async function uploadSignature(req, res) {
             return res.status(403).json({ error: 'Forbidden' });
         }
 
-        // Validate image data URL
-        if (!signatureImage || typeof signatureImage !== 'string' || !signatureImage.startsWith('data:image/')) {
-            return res.status(400).json({ error: 'Only image uploads are accepted for signatures.' });
+        // Validate PNG data URL only
+        if (!signatureImage || typeof signatureImage !== 'string' || !signatureImage.startsWith('data:image/png')) {
+            return res.status(400).json({ error: 'Only PNG images are accepted for signatures.' });
         }
 
         // Size guard: ~2 MB base64 limit
@@ -1168,6 +1207,53 @@ export async function uploadSignature(req, res) {
         return res.json({ success: true, message: 'Signature uploaded successfully.' });
     } catch (error) {
         console.error('uploadSignature error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+}
+
+// ===============================================================================
+//  PROFESSOR SIGNATURE FILE UPLOAD  (POST)
+//  POST /tla/form/:id/signature-file
+//  Multipart form: file field "signatureFile" (PNG only), field "signatureType"
+//  Stores the file on disk and saves a data:image/png;base64 data URL to the TLA
+//  so the existing PDF rendering pipeline picks it up with zero changes.
+// ===============================================================================
+
+export async function uploadSignatureFile(req, res) {
+    try {
+        const { id } = req.params;
+
+        const tla = await TLA_Main.findById(id);
+        if (!tla) return res.status(404).json({ error: 'TLA not found' });
+
+        if (tla.userID.toString() !== req.session.user.id) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded. Please upload a PNG signature.' });
+        }
+
+        // Convert the saved file to a base64 data URL so the existing
+        // signature fields + drawSignatureImage PDF pipeline work unchanged.
+        const fileBuffer = readFileSync(req.file.path);
+        const dataUrl = `data:image/png;base64,${fileBuffer.toString('base64')}`;
+
+        const normalizedType = req.body.signatureType === 'post' ? 'post' : 'pre';
+        const filePath = `/uploads/signatures/${req.file.filename}`;
+        const updateFields = normalizedType === 'post'
+            ? { professorPostSignature: dataUrl, professorPostSignatureFile: filePath }
+            : { professorPreSignature: dataUrl, professorSignature: dataUrl, professorPreSignatureFile: filePath };
+
+        await Promise.all([
+            TLA_Main.findByIdAndUpdate(id, updateFields),
+            TLA_B1.findByIdAndUpdate(id,   updateFields),
+            TLA_B2.findByIdAndUpdate(id,   updateFields)
+        ]);
+
+        return res.json({ success: true, message: 'Signature file uploaded successfully.', filePath });
+    } catch (error) {
+        console.error('uploadSignatureFile error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 }
