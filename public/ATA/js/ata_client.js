@@ -470,19 +470,19 @@ window.updateDotsOnly = function() {
     stepDots.forEach((dot, index) => {
         const stepNumber = index + 1;
         
+        // 1. Reset all states cleanly
         dot.classList.remove('filled', 'active');
-        dot.style.display = "inline-block"; 
-        dot.style.color = ""; 
+        dot.style.display = "flex"; 
+        dot.style.borderColor = ""; // Resets the yellow border if it was applied
 
+        // 2. Handle Hidden/Disabled Steps (like Part-Time Outside Employment)
         if (window.isStepVisible && !window.isStepVisible(stepNumber)) {
             dot.style.opacity = "0.3"; 
             dot.style.cursor = "not-allowed";
             if (stepNumber === 4) dot.setAttribute("title", "This section is for Part-Time employment only.");
             if (stepNumber === 7) {
                 dot.style.display = "none";
-                return;
             }
-            dot.textContent = '○';
             return;
         } else {
             dot.style.opacity = "1"; 
@@ -490,31 +490,31 @@ window.updateDotsOnly = function() {
             dot.removeAttribute("title");
         }
 
+        // 3. Handle Active Step
         if (stepNumber === window.currentStep) {
-            dot.textContent = '●'; 
             dot.classList.add('active'); 
             return;
         }
 
+        // 4. Handle Warnings & Finished States (NO textContent overwrites!)
         const warning = window.getSectionWarning(stepNumber);
 
         if (warning === 'green') {
-            dot.textContent = '●'; 
             dot.classList.add('filled');
+            
         } else if (warning === 'yellow') {
-            dot.textContent = '●'; 
-            dot.style.color = '#ffc107'; // Standard yellow warning
+            // Beautiful yellow warning applied to the border to match new CSS
+            dot.style.borderColor = '#ffc107'; 
             dot.setAttribute("title", "Notice: Missing mandatory fields detected.");
+            
         } else if (warning === 'red-limit') {
-            dot.textContent = '●'; 
-            dot.style.color = 'var(--color-mapua-red, #a00100)'; // Mapúa Red
-            dot.setAttribute("title", "Error: Remedial Effective Units exceed the maximum limit of 6.00.");
-        } else if (warning.startsWith('red')) {
-            dot.textContent = '●'; 
-            dot.style.color = 'var(--color-mapua-red, #a00100)'; // Mapúa Red
-            dot.setAttribute("title", "Action Required: Please scroll to the bottom or accept assignments.");
-        } else {
-            dot.textContent = '○'; 
+            // Converts the aggressive red error into a calm yellow border warning
+            dot.style.borderColor = '#ffc107'; 
+            dot.setAttribute("title", "Notice: Remedial Effective Units exceed the maximum limit of 6.00.");
+            
+        } else if (warning && warning.startsWith('red')) {
+            // Neutralizes the red-scroll warning completely. Just marks it as filled.
+            dot.classList.add('filled'); 
         }
     });
 };
@@ -812,90 +812,20 @@ document.addEventListener('DOMContentLoaded', () => {
             container.addEventListener('scroll', checkScrollBottom);
         }
 
-        window.scrollToMissedContent = function(step, wasVisited) {
-            const currentForm = document.getElementById('form' + step);
-            if (!currentForm) return;
-
-            if (!wasVisited) return; 
-
-            const warning = window.getSectionWarning(step);
-
-            if (warning === 'red-checkbox') {
-                const cbRow = currentForm.querySelector('.acceptance-row');
-                if (cbRow) {
-                    cbRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    cbRow.style.transition = "background-color 0.3s, box-shadow 0.3s";
-                    const orig = cbRow.style.backgroundColor;
-                    
-                    cbRow.style.backgroundColor = "rgba(220, 53, 69, 0.2)";
-                    cbRow.style.boxShadow = "0 0 15px 5px rgba(220, 53, 69, 0.4)";
-                    
-                    setTimeout(() => {
-                        cbRow.style.backgroundColor = orig;
-                        cbRow.style.boxShadow = "none";
-                    }, 2000);
-                }
-            } 
-            else if (warning === 'yellow') {
-                let targetInput = null;
-                const rows = currentForm.querySelectorAll('.course-row, .admin-row, .practicum-row, .employment-row, .remedial-row');
-                for (let row of rows) {
-                    const inputs = Array.from(row.querySelectorAll('input[type="text"], select'));
-                    if(inputs.length > 1) { 
-                        const filledCount = inputs.filter(i => i.value.trim() !== '').length;
-                        if (filledCount > 0 && filledCount < inputs.length) {
-                            targetInput = inputs.find(i => i.value.trim() === '');
-                            break;
-                        }
-                    }
-                }
-                if (step === 1 && !targetInput) {
-                    const step1Inputs = [
-                        document.getElementById('facultyName'), document.getElementById('position'),
-                        document.getElementById('college'), document.getElementById('address')
-                    ];
-                    targetInput = step1Inputs.find(i => i && i.value.trim() === '');
-                    
-                    // 👇 NEW: Highlight the radio buttons if they missed them!
-                    if (!targetInput && !document.querySelector('input[name="employment"]:checked')) {
-                        targetInput = document.querySelector('.radio-group');
-                    }
-                }
-                
-                if (step === 4 && !targetInput) {
-                    targetInput = currentForm.querySelector('.employment-row input[type="text"]');
-                }
-
-                if (targetInput) {
-                    targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetInput.style.transition = "box-shadow 0.3s";
-                    targetInput.style.boxShadow = "0 0 15px 5px #ffc107"; 
-                    setTimeout(() => targetInput.style.boxShadow = "none", 2000);
-                }
+        window.scrollToMissedContent = function(step) {
+    // 👇 AUTO-SCROLL AND RED HIGHLIGHT COMPLETELY DISABLED
+    // We just silently update the system's memory so the dots update, 
+    // but the screen will NEVER auto-scroll or flash red again.
+    
+            if (window.scrolledSteps) {
+                window.scrolledSteps.add(step);
             }
-            else if (warning === 'red-scroll') {
-                // 👇 Universally grab the very last row in the current section!
-                const rows = currentForm.querySelectorAll('.form-row');
-                let redTarget = rows.length > 0 ? rows[rows.length - 1] : null;
-
-                if (redTarget) {
-                    redTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    redTarget.style.transition = "background-color 0.3s, box-shadow 0.3s";
-                    const originalBg = redTarget.style.backgroundColor;
-                    
-                    // Pulse in Mapúa Red!
-                    redTarget.style.backgroundColor = "rgba(160, 1, 0, 0.1)"; 
-                    redTarget.style.boxShadow = "0 0 15px 5px rgba(160, 1, 0, 0.2)";
-                    
-                    setTimeout(() => {
-                        redTarget.style.backgroundColor = originalBg;
-                        redTarget.style.boxShadow = "none";
-                    }, 2000);
-
-                    window.scrolledSteps.add(step);
-                    if (window.updateDotsOnly) window.updateDotsOnly();
-                }
+            
+            if (window.updateDotsOnly) {
+                window.updateDotsOnly();
             }
+            
+            return; // Stops the function right here!
         };
 
         window.updateFormDisplay = function(preventScroll = false) {
