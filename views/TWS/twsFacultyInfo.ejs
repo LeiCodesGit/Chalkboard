@@ -7,6 +7,65 @@
 
   <link rel="stylesheet" href="/common/css/variables.css" />
   <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+
+  <style>
+    .tws-form-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 14px 16px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .tws-form-label {
+      font-weight: 800;
+      color: var(--tws-text);
+    }
+
+    .tws-form-control {
+      width: 100%;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--tws-input-border);
+      background: var(--tws-input-bg);
+      color: var(--tws-input-text);
+      padding: 0 14px;
+      outline: none;
+      font-size: 13px;
+    }
+
+    .tws-form-control:focus {
+      border-color: var(--tws-secondary);
+      box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.08);
+    }
+
+    .tws-form-note {
+      font-size: 12px;
+      color: var(--tws-muted);
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    .tws-validation-box {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(180, 35, 24, 0.08);
+      border: 1px solid rgba(180, 35, 24, 0.2);
+      color: var(--tws-text);
+    }
+
+    .tws-validation-box ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+
+    @media (max-width: 760px) {
+      .tws-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body class="tws-app-body">
@@ -18,90 +77,138 @@
     <main class="tws-app-main">
       <div class="tws-app-center">
 
-        <!-- Header pill -->
         <div class="tws-app-title-pill">
-          <h1>TWS - Faculty Information</h1>
+          <h1>Teaching Workload Sheet - Faculty Information</h1>
         </div>
 
-        <!-- Card -->
         <section class="tws-card">
+          <div class="tws-card-title" style="margin-bottom: 14px;">Faculty Information</div>
 
-          <div class="tws-card-title" style="margin-bottom: 10px;">Faculty Information</div>
+          <% if (typeof validationErrors !== "undefined" && validationErrors && validationErrors.length) { %>
+            <div class="tws-validation-box">
+              <div style="font-weight:800; margin-bottom:6px;">Please fix these first:</div>
+              <ul>
+                <% validationErrors.forEach(function(err) { %>
+                  <li><%= err %></li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
 
           <form method="POST" action="/tws/faculty/<%= tws.id %>">
+            <div class="tws-form-grid">
 
-            <div style="display:grid; grid-template-columns: 160px 1fr; gap: 12px; align-items:center; font-size:12px;">
+              <div class="tws-form-label">Faculty Name:</div>
+              <select name="selectedProfessorId" class="tws-form-control tws-field-select" required>
+                <option value="">Select Faculty</option>
+                <% (professors || []).forEach(function(prof) { %>
+                  <option value="<%= prof.id %>" <%= selectedProfessorId === prof.id ? "selected" : "" %>>
+                    <%= prof.name %>
+                  </option>
+                <% }) %>
+              </select>
 
-              <div style="font-weight:800;">Faculty Name:</div>
-              <input
-                type="text"
-                name="name"
-                value="<%= tws.faculty?.name || '' %>"
-                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
-              />
-
-              <div style="font-weight:800;">Employee ID:</div>
+              <div class="tws-form-label">Employee ID:</div>
               <input
                 type="text"
                 name="empId"
                 value="<%= tws.faculty?.empId || '' %>"
-                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+                class="tws-form-control"
+                readonly
               />
 
-              <div style="font-weight:800;">Department:</div>
+              <div class="tws-form-label">Faculty Email:</div>
+              <input
+                type="email"
+                name="email"
+                value="<%= tws.faculty?.email || '' %>"
+                class="tws-form-control"
+                readonly
+              />
+
+              <div class="tws-form-label">Department:</div>
               <input
                 type="text"
                 name="dept"
                 value="<%= tws.faculty?.dept || '' %>"
-                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+                class="tws-form-control"
+                readonly
               />
 
-              <div style="font-weight:800;">Academic Year:</div>
+              <div class="tws-form-label">Program:</div>
+              <input
+                type="text"
+                name="program"
+                value="<%= tws.faculty?.program || '' %>"
+                class="tws-form-control"
+                readonly
+              />
+
+              <div class="tws-form-label">Academic Year:</div>
               <input
                 type="text"
                 name="acadYear"
                 placeholder="2025 - 2026"
                 value="<%= tws.faculty?.acadYear || '' %>"
-                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
+                class="tws-form-control"
               />
 
-              <div style="font-weight:800;">Term:</div>
-              <input
-                type="text"
-                name="term"
-                placeholder="1st / 2nd / 3rd"
-                value="<%= tws.faculty?.term || '' %>"
-                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
-              />
+              <div class="tws-form-label">Term:</div>
+              <select name="term" class="tws-form-control tws-field-select" required>
+                <option value="">Select Term</option>
+                <option value="1st Term" <%= tws.faculty?.term === "1st Term" ? "selected" : "" %>>1st Term</option>
+                <option value="2nd Term" <%= tws.faculty?.term === "2nd Term" ? "selected" : "" %>>2nd Term</option>
+                <option value="3rd Term" <%= tws.faculty?.term === "3rd Term" ? "selected" : "" %>>3rd Term</option>
+                <option value="Summer" <%= tws.faculty?.term === "Summer" ? "selected" : "" %>>Summer</option>
+              </select>
 
-              <div style="font-weight:800;">Employee Status:</div>
-              <input
-                type="text"
-                name="empStatus"
-                value="<%= tws.faculty?.empStatus || '' %>"
-                style="height: 16px; border-radius: 999px; border: none; background: rgba(255,255,255,0.25); color:#fff; padding: 12px 14px; outline:none;"
-              />
+              <div class="tws-form-label">Employee Status:</div>
+              <select name="empStatus" class="tws-form-control tws-field-select" required>
+                <option value="">Select Status</option>
+                <option value="Full-Time" <%= tws.faculty?.empStatus === "Full-Time" ? "selected" : "" %>>Full-Time</option>
+                <option value="Part-Time" <%= tws.faculty?.empStatus === "Part-Time" ? "selected" : "" %>>Part-Time</option>
+              </select>
             </div>
 
-            <div class="tws-next-wrap" style="margin-top: 16px;">
+            <div class="tws-form-note">
+              Select a faculty member first. The employee ID, email, department, and program will be filled in automatically.
+            </div>
+
+            <div class="tws-footer-actions" style="margin-top: 18px;">
               <a class="tws-btn-white" href="/tws/dashboard">Back</a>
 
-              <button class="tws-btn-white" type="submit" name="action" value="save"
-                style="cursor:pointer;">
+              <button class="tws-btn-white" type="submit" name="action" value="save">
                 Save Draft
               </button>
 
-              <button class="tws-next" type="submit" name="action" value="next"
-                style="cursor:pointer;">
+              <button class="tws-next" type="submit" name="action" value="next">
                 Next
               </button>
             </div>
-
           </form>
         </section>
 
       </div>
     </main>
   </div>
+
+  <script>
+    const professorSelect = document.querySelector('select[name="selectedProfessorId"]');
+    const empIdInput = document.querySelector('input[name="empId"]');
+    const emailInput = document.querySelector('input[name="email"]');
+    const deptInput = document.querySelector('input[name="dept"]');
+    const programInput = document.querySelector('input[name="program"]');
+
+    const professors = JSON.parse(`<%- JSON.stringify(professors || []) %>`);
+    
+    professorSelect?.addEventListener("change", function () {
+      const selected = professors.find((p) => p.id === this.value);
+
+      empIdInput.value = selected ? selected.empId || "" : "";
+      emailInput.value = selected ? selected.email || "" : "";
+      deptInput.value = selected ? selected.dept || "" : "";
+      programInput.value = selected ? selected.program || "" : "";
+    });
+  </script>
 </body>
 </html>

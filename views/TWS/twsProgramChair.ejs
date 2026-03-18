@@ -4,148 +4,242 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TWS - Program Chair</title>
-
   <link rel="stylesheet" href="/common/css/variables.css" />
-  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="/TWS/css/twsDashboard.css" />
 </head>
+<body class="tws-board-page">
+  <%
+    function statusClass(status) {
+      const st = String(status || 'Draft').toLowerCase();
+      if (st === 'approved') return 'tws-status-approved';
+      if (st === 'archived') return 'tws-status-archived';
+      if (st === 'rejected') return 'tws-status-rejected';
+      if (st.includes('returned')) return 'tws-status-returned';
+      if (st.includes('sent')) return 'tws-status-sent';
+      return 'tws-status-draft';
+    }
 
-<body class="tws-app-body">
-  <div class="tws-app-layout">
-    <aside class="tws-app-sidebar">
-      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    function formatDate(value) {
+      if (!value) return '—';
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'Asia/Manila',
+      });
+    }
+  %>
+
+  <div class="tws-board-layout">
+    <aside class="tws-board-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws", user }) %>
     </aside>
 
-    <main class="tws-app-main">
-      <div class="tws-pc-center">
+    <main class="tws-board-main">
+      <div class="tws-board-shell">
+        <div class="tws-board-header">
+          <h1 class="tws-board-title">Teaching Workload Sheet</h1>
+        </div>
 
-        <h1 class="tws-dash-title">Teaching Working Sheet</h1>
+        <div class="tws-board-content">
+          <% if (errorMessage) { %>
+            <div class="tws-board-note"><%= errorMessage %></div>
+          <% } %>
 
-        <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
-          <div style="margin: 0 0 12px 0; background: rgba(220,38,38,0.18); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
-            <b>Action blocked:</b> <%= errorMessage %>
-          </div>
-        <% } %>
-
-        <!-- ===== Submitted Teaching Workload Sheets ===== -->
-        <section class="tws-pc-section">
-          <div class="tws-pc-section-header">Submitted Teaching Workload Sheets</div>
-
-          <div class="tws-pc-card">
-            <div class="tws-pc-table">
-
-              <div class="tws-pc-row tws-pc-head">
-                <div>Faculty Name</div>
-                <div>Department</div>
-                <div>Academic Year</div>
-                <div>Term</div>
-                <div>Status</div>
-                <div>Action</div>
-              </div>
-
-              <% if (!submitted || submitted.length === 0) { %>
-                <div class="tws-pc-row tws-pc-empty">
-                  <div style="grid-column: 1 / -1; text-align: center;">No submitted TWS yet.</div>
-                </div>
-              <% } %>
-
-              <% (submitted || []).forEach(tws => { %>
-                <div class="tws-pc-row">
-                  <div><%= tws.faculty?.name || "" %></div>
-                  <div><%= tws.faculty?.dept || "" %></div>
-                  <div><%= tws.faculty?.acadYear || "" %></div>
-                  <div><%= tws.faculty?.term || "" %></div>
-
-                  <div>
-                    <% 
-                      const st = (tws.approval?.status || "").toLowerCase();
-                      const statusText = tws.approval?.status || "Pending";
-                    %>
-                    <span class="tws-pc-status"><%= statusText %></span>
-                  </div>
-
-                  <div class="tws-pc-actions">
-                    <a class="tws-pc-btn tws-pc-btn-view" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view&from=program-chair">View</a>
-
-                    <% const canChairSendToDean = ["Sent to Faculty", "Returned to Program Chair", "Draft"].includes(tws.status || ""); %>
-                    <% const canChairReturnDraft = ["Returned to Program Chair", "Rejected"].includes(tws.status || ""); %>
-
-                    <% if (canChairSendToDean) { %>
-                    <form method="post" action="/tws/program-chair/action" class="tws-pc-form">
-                      <input type="hidden" name="id" value="<%= tws.id %>" />
-                      <input type="hidden" name="action" value="sendToDean" />
-                      <button class="tws-pc-btn tws-pc-btn-action" type="submit">Send to Dean</button>
-                    </form>
-                    <% } else if (canChairReturnDraft) { %>
-                    <form method="post" action="/tws/program-chair/action" class="tws-pc-form">
-                      <input type="hidden" name="id" value="<%= tws.id %>" />
-                      <input type="hidden" name="action" value="return" />
-                      <button class="tws-pc-btn tws-pc-btn-action" type="submit">Return to Draft</button>
-                    </form>
-                    <% } else { %>
-                      <span class="tws-pc-btn tws-pc-btn-disabled">No Action</span>
-                    <% } %>
-                  </div>
-                </div>
-              <% }) %>
-
+          <div class="tws-board-toolbar">
+            <div class="tws-board-search">
+              <span class="material-symbols-outlined">search</span>
+              <input type="text" id="pcSearch" placeholder="Search Faculty" />
             </div>
+
+            <select class="tws-board-filter" id="pcAcademicYearFilter">
+              <option value="">Academic Year</option>
+            </select>
+
+            <select class="tws-board-filter" id="pcTermFilter">
+              <option value="">Term</option>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+              <option value="Summer">Summer</option>
+            </select>
+
+            <a class="tws-board-create" href="/tws/create">
+              <span class="material-symbols-outlined">add</span>
+              <span>Create TWS</span>
+            </a>
           </div>
 
-          <div class="tws-pc-footer">
-            <a class="tws-dash-btn-refresh" href="/tws/program-chair">Refresh</a>
-          </div>
-        </section>
+          <div class="tws-board-caption"><%= user?.department || 'Department' %> Teaching Workload Sheets</div>
 
-        <!-- ===== Personal Course Load ===== -->
-        <section class="tws-pc-section">
-          <div class="tws-pc-section-header">TWS - Personal Course Load</div>
+          <div class="tws-board-grid" id="pcActiveGrid">
+            <% if (!list || !list.length) { %>
+              <div class="tws-board-empty">No teaching workload sheets found for your department yet.</div>
+            <% } %>
 
-          <div class="tws-pc-card">
-            <div class="tws-pc-table tws-pc-table-small">
+            <% (list || []).forEach(function(tws) {
+                 const currentStatus = tws.status || 'Draft';
+                 const canSendToFaculty = ['Draft', 'Returned to Program Chair'].includes(currentStatus);
+                 const canSendToDean = currentStatus === 'Sent to Faculty' && !!tws.facultySigned;
+            %>
+              <article
+                class="tws-board-card pc-card <%= statusClass(currentStatus) %>"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || user?.department || '—' %> | <%= tws.faculty?.empId || 'No ID' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
 
-              <div class="tws-pc-row tws-pc-head tws-pc-row-small">
-                <div>Faculty Name</div>
-                <div>Department</div>
-                <div>Term</div>
-                <div>Action</div>
-              </div>
+                  <div class="tws-board-card-status">
+                    <strong>Status:</strong>
+                    <span class="<%= statusClass(currentStatus) %>"><%= currentStatus %></span>
+                  </div>
 
-              <% if (!personal || personal.length === 0) { %>
-                <div class="tws-pc-row tws-pc-empty">
-                  <div style="grid-column: 1 / -1; text-align: center;">No items yet.</div>
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-chip-row">
+                      <% if (canSendToFaculty) { %>
+                        <form method="post" action="/tws/program-chair/action" style="display:inline;">
+                          <input type="hidden" name="id" value="<%= tws.id %>" />
+                          <input type="hidden" name="action" value="sendToFaculty" />
+                          <button class="tws-board-chip" type="submit">Send to Faculty</button>
+                        </form>
+                      <% } %>
+
+                      <% if (canSendToDean) { %>
+                        <form method="post" action="/tws/program-chair/action" style="display:inline;">
+                          <input type="hidden" name="id" value="<%= tws.id %>" />
+                          <input type="hidden" name="action" value="sendToDean" />
+                          <button class="tws-board-chip" type="submit">Send to Dean</button>
+                        </form>
+                      <% } %>
+                    </div>
+
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view&from=program-chair" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+                      <a class="tws-board-icon-btn" href="/tws/faculty/<%= tws.id %>" title="Edit">
+                        <span class="material-symbols-outlined">edit</span>
+                      </a>
+                      <form method="POST" action="/tws/<%= tws.id %>/delete" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this TWS?');">
+                        <button class="tws-board-icon-btn -danger" type="submit" title="Delete">
+                          <span class="material-symbols-outlined">delete</span>
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <div class="tws-board-card-date">Updated: <%= formatDate(tws.updatedAt || tws.createdAt) %></div>
                 </div>
-              <% } %>
+              </article>
+            <% }) %>
+          </div>
 
-              <% (personal || []).forEach(tws => { %>
-                <div class="tws-pc-row tws-pc-row-small">
-                  <div><%= tws.faculty?.name || "" %></div>
-                  <div><%= tws.faculty?.dept || "" %></div>
-                  <div><%= tws.faculty?.term || "" %></div>
+          <div class="tws-board-section-title">
+            <button type="button" id="pcArchiveToggle">
+              <span>Archive</span>
+              <span class="material-symbols-outlined" id="pcArchiveIcon">chevron_right</span>
+            </button>
+          </div>
 
-                  <div class="tws-pc-actions">
-                    <a class="tws-pc-btn tws-pc-btn-view" href="/tws/created-teaching-workload/<%= tws.id %>?mode=view&from=program-chair">View</a>
+          <div class="tws-board-grid tws-board-hidden" id="pcArchiveGrid">
+            <% if (!archivedList || !archivedList.length) { %>
+              <div class="tws-board-empty">No archived teaching workload sheets yet.</div>
+            <% } %>
 
-                    <% const canPersonalSendToDean = ["Draft", "Returned to Program Chair"].includes(tws.status || ""); %>
-                    <% if (canPersonalSendToDean) { %>
-                    <form method="post" action="/tws/program-chair/action" class="tws-pc-form">
-                      <input type="hidden" name="id" value="<%= tws.id %>" />
-                      <input type="hidden" name="action" value="sendToDean" />
-                      <button class="tws-pc-btn tws-pc-btn-send" type="submit">Send to Dean</button>
-                    </form>
-                    <% } else { %>
-                      <span class="tws-pc-btn tws-pc-btn-view"><%= tws.status || "No action" %></span>
-                    <% } %>
+            <% (archivedList || []).forEach(function(tws) { %>
+              <article
+                class="tws-board-card pc-archived-card tws-status-archived"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || user?.department || '—' %> | <%= tws.faculty?.empId || 'No ID' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
+                  <div class="tws-board-card-status"><strong>Status:</strong> <span class="tws-status-archived">Archived</span></div>
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-card-date">Archived: <%= formatDate(tws.archivedAt || tws.updatedAt) %></div>
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/summary/<%= tws.id %>?from=program-chair" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
-              <% }) %>
-
-            </div>
+              </article>
+            <% }) %>
           </div>
-        </section>
-
+        </div>
       </div>
     </main>
   </div>
+
+  <script>
+    const pcSearch = document.getElementById('pcSearch');
+    const pcAcademicYearFilter = document.getElementById('pcAcademicYearFilter');
+    const pcTermFilter = document.getElementById('pcTermFilter');
+    const pcArchiveToggle = document.getElementById('pcArchiveToggle');
+    const pcArchiveGrid = document.getElementById('pcArchiveGrid');
+    const pcArchiveIcon = document.getElementById('pcArchiveIcon');
+
+    function populatePcAcademicYears() {
+      const values = new Set();
+      document.querySelectorAll('.pc-card, .pc-archived-card').forEach((card) => {
+        const ay = (card.dataset.acadYear || '').trim();
+        if (ay) values.add(ay);
+      });
+
+      [...values].sort().forEach((ay) => {
+        const option = document.createElement('option');
+        option.value = ay;
+        option.textContent = ay;
+        pcAcademicYearFilter.appendChild(option);
+      });
+    }
+
+    function applyPcFilters() {
+      const search = (pcSearch.value || '').toLowerCase().trim();
+      const term = (pcTermFilter.value || '').toLowerCase();
+      const acadYear = (pcAcademicYearFilter.value || '').toLowerCase();
+
+      document.querySelectorAll('.pc-card, .pc-archived-card').forEach((card) => {
+        const name = (card.dataset.name || '').toLowerCase();
+        const cardTerm = (card.dataset.term || '').toLowerCase();
+        const cardAcadYear = (card.dataset.acadYear || '').toLowerCase();
+
+        const matchesSearch = !search || name.includes(search);
+        const matchesTerm = !term || cardTerm === term;
+        const matchesAcadYear = !acadYear || cardAcadYear === acadYear;
+
+        card.style.display = matchesSearch && matchesTerm && matchesAcadYear ? '' : 'none';
+      });
+    }
+
+    populatePcAcademicYears();
+    pcSearch?.addEventListener('input', applyPcFilters);
+    pcAcademicYearFilter?.addEventListener('change', applyPcFilters);
+    pcTermFilter?.addEventListener('change', applyPcFilters);
+
+    pcArchiveToggle?.addEventListener('click', () => {
+      pcArchiveGrid.classList.toggle('tws-board-hidden');
+      pcArchiveIcon.textContent = pcArchiveGrid.classList.contains('tws-board-hidden') ? 'chevron_right' : 'expand_more';
+    });
+  </script>
 </body>
 </html>

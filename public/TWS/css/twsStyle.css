@@ -1,33 +1,50 @@
 /* ======================================================
-   TWS STYLE (ONE FILE ONLY)
-   Covers:
-   1) Shared / Global styles
-   2) Landing page
-   3) Program Chair page
-   4) Shared app pages (dashboard, faculty info, teaching load, summary)
-   5) Modal popup
-   6) Status / Approval / Archived pages
-   7) Created Teaching Workload page
+   TWS STYLE (THEME-ALIGNED)
+   Uses public/common/css/variables.css tokens
 ====================================================== */
-
 
 /* ======================================================
    1) SHARED / GLOBAL
 ====================================================== */
 
-/* ---------- VARIABLES ---------- */
 :root {
-  --tws-bg-overlay: rgba(0, 0, 0, 0.30);
-  --tws-glass: rgba(110, 120, 135, 0.42);
-  --tws-pill: rgba(110, 120, 135, 0.62);
-  --tws-card: rgba(0, 0, 0, 0.58);
-  --tws-border: rgba(255, 255, 255, 0.68);
-  --tws-shadow: 0 16px 30px rgba(0, 0, 0, 0.32);
-  --tws-green: #18b06b;
-  --tws-blue: #2e6cff;
-  --tws-white: rgba(255, 255, 255, 0.92);
-  --tws-text: #fff;
-  --tws-text-dark: #111;
+  /* PAGE */
+  --tws-bg: #e9ecef;
+
+  /* CARDS */
+  --tws-surface: #f1f3f6;
+  --tws-surface-soft: #e3e7ec;
+
+  /* BORDERS */
+  --tws-border: #cfd4da;
+  --tws-border-strong: #b7bcc3;
+
+  /* SHADOW */
+  --tws-shadow: 0 10px 24px rgba(0,0,0,0.08);
+
+  /* ACCENT COLORS */
+  --tws-primary: var(--accent-primary);
+  --tws-primary-hover: var(--accent-primary-hover);
+  --tws-secondary: var(--accent-secondary);
+
+  /* TEXT */
+  --tws-text: #1e293b;
+  --tws-muted: #64748b;
+
+  /* STATUS */
+  --tws-success: var(--status-approved);
+  --tws-warning: #b98a1d;
+  --tws-danger: #b45309;
+  --tws-danger-dark: #b42318;
+
+  /* BUTTONS */
+  --tws-white-btn: #ffffff;
+  --tws-white-btn-text: #1f2937;
+
+  /* INPUTS */
+  --tws-input-bg: #e6eaef;
+  --tws-input-border: #c3c9d1;
+  --tws-input-text: #1f2937;
 }
 
 * {
@@ -41,23 +58,20 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font-family: inherit;
 }
 
-
 /* ======================================================
    2) LANDING PAGE
-   Used in: twsLandingWelcome.ejs
 ====================================================== */
 
 .tws-landing-body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-family-base, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif);
   color: var(--tws-text);
-  background:
-    linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
-    url("/TWS/img/background.png") no-repeat center center / cover fixed;
+  background: var(--tws-bg);
 }
 
 .tws-layout {
@@ -73,8 +87,7 @@ select {
   z-index: 50;
 }
 
-/* keep sidebar partial inside the column */
-.tws-sidebar>* {
+.tws-sidebar > * {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
@@ -89,44 +102,42 @@ select {
 
 .tws-center {
   width: min(900px, 92%);
-  margin-top: 70px;
+  margin-top: 60px;
   text-align: center;
 }
 
-/* Landing title pill */
 .tws-title-pill {
-  background: var(--tws-pill);
+  background: linear-gradient(135deg, rgba(123, 32, 32, 0.08), rgba(255, 255, 255, 0.95));
+  border: 1px solid var(--tws-border);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(660px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--tws-shadow);
 }
 
 .tws-title-pill h1 {
   margin: 0;
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 800;
-  letter-spacing: 0.4px;
+  color: var(--tws-text);
 }
 
-/* Landing main glass panel */
 .tws-panel {
-  background: var(--tws-glass);
+  background: var(--tws-surface);
+  border: 1px solid var(--tws-border);
   border-radius: 18px;
   padding: 18px 22px 22px 22px;
   width: min(780px, 100%);
   margin: 0 auto;
   box-shadow: var(--tws-shadow);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
 }
 
 .tws-panel h2 {
   margin: 8px 0 10px 0;
   font-size: 15px;
   font-weight: 800;
-  opacity: 0.98;
+  color: var(--tws-text);
 }
 
 .tws-panel p {
@@ -134,19 +145,18 @@ select {
   max-width: 690px;
   font-size: 12px;
   line-height: 1.65;
-  opacity: 0.95;
+  color: var(--tws-muted);
 }
 
-/* Landing Get Started button */
 .tws-btn {
   display: inline-block;
   margin-top: 16px;
-  background: var(--tws-green);
-  color: #fff;
+  background: var(--tws-primary);
+  color: var(--text-on-dark);
   padding: 12px 46px;
   border-radius: 999px;
   font-weight: 800;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 8px 16px rgba(123, 32, 32, 0.16);
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
@@ -155,15 +165,15 @@ select {
   opacity: 0.96;
 }
 
-/* Landing info box */
 .tws-info-box {
   margin: 16px auto 0 auto;
   width: min(780px, 100%);
-  background: rgba(0, 0, 0, 0.60);
-  border: 2px solid rgba(255, 255, 255, 0.75);
+  background: var(--tws-surface);
+  border: 1px solid var(--tws-border);
   border-radius: 14px;
   padding: 14px 18px;
   text-align: left;
+  box-shadow: var(--tws-shadow);
 }
 
 .tws-info-box h3 {
@@ -177,21 +187,18 @@ select {
   padding-left: 18px;
   font-size: 12px;
   line-height: 1.6;
+  color: var(--tws-muted);
 }
-
 
 /* ======================================================
    3) PROGRAM CHAIR PAGE
-   Used in: twsProgramChair.ejs
 ====================================================== */
 
 .pc-body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #fff;
-  background:
-    linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
-    url("/TWS/img/background.png") no-repeat center center / cover fixed;
+  font-family: var(--font-family-base, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif);
+  color: var(--tws-text);
+  background: var(--tws-bg);
 }
 
 .pc-layout {
@@ -207,7 +214,7 @@ select {
   z-index: 50;
 }
 
-.pc-sidebar>* {
+.pc-sidebar > * {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
@@ -225,12 +232,13 @@ select {
 }
 
 .pc-title-pill {
-  background: var(--tws-pill);
+  background: linear-gradient(135deg, rgba(123, 32, 32, 0.08), rgba(255, 255, 255, 0.95));
+  border: 1px solid var(--tws-border);
   border-radius: 18px;
   padding: 14px 18px;
   width: min(760px, 100%);
   margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--tws-shadow);
   text-align: center;
 }
 
@@ -238,14 +246,14 @@ select {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
+  color: var(--tws-text);
 }
 
-/* Program Chair cards */
 .pc-card {
-  background: var(--tws-card);
-  border-radius: 14px;
-  border: 2px solid var(--tws-border);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.30);
+  background: var(--tws-surface);
+  border-radius: 16px;
+  border: 1px solid var(--tws-border);
+  box-shadow: var(--tws-shadow);
   padding: 14px;
   margin: 0 auto 14px auto;
   max-width: 980px;
@@ -262,6 +270,7 @@ select {
 .pc-card-title {
   font-weight: 900;
   font-size: 14px;
+  color: var(--tws-text);
 }
 
 .pc-glass {
@@ -274,16 +283,15 @@ select {
   max-width: 980px;
 }
 
-/* Program Chair top action chips */
 .pc-actions {
   display: flex;
   gap: 10px;
 }
 
 .pc-chip {
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  color: #fff;
+  background: var(--tws-white-btn);
+  border: 1px solid var(--tws-border);
+  color: var(--tws-text);
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 12px;
@@ -291,18 +299,20 @@ select {
   cursor: pointer;
 }
 
-/* Program Chair table layout */
 .pc-table {
   display: grid;
-  gap: 10px;
+  gap: 2px;
 }
 
 .pc-row {
   display: grid;
   grid-template-columns: 1.4fr 1.1fr 1fr 0.55fr 1.2fr 1.25fr;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   font-size: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--tws-border);
+  color: var(--tws-text);
 }
 
 .pc-table-small .pc-row {
@@ -311,11 +321,11 @@ select {
 
 .pc-head {
   font-weight: 800;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .pc-empty {
-  opacity: 0.85;
+  color: var(--tws-muted);
   padding: 10px 0;
 }
 
@@ -323,10 +333,9 @@ select {
   text-align: right;
 }
 
-/* Program Chair buttons */
 .pc-btns {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
@@ -341,7 +350,7 @@ select {
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--tws-border);
   cursor: pointer;
   line-height: 1;
   white-space: nowrap;
@@ -349,14 +358,14 @@ select {
 }
 
 .pc-white {
-  background: var(--tws-white);
-  color: var(--tws-text-dark);
+  background: var(--tws-white-btn);
+  color: var(--tws-white-btn-text);
 }
 
 .pc-blue {
-  background: var(--tws-blue);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.35);
+  background: var(--tws-secondary);
+  color: var(--text-on-dark);
+  border-color: transparent;
 }
 
 .pc-form-inline {
@@ -367,20 +376,24 @@ select {
   justify-content: flex-end;
 }
 
-/* Program Chair status colors */
+.pc-btn-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .pc-status-text {
   font-weight: 800;
 }
 
 .pc-yellow {
-  color: #ffd66b;
+  color: var(--tws-warning);
 }
 
 .pc-red {
-  color: #ff8b8b;
+  color: var(--tws-danger);
 }
 
-/* Program Chair next button */
 .pc-next-wrap {
   display: flex;
   justify-content: flex-end;
@@ -397,37 +410,28 @@ select {
   height: 34px;
   min-width: 108px;
   padding: 0 14px;
-  background: var(--tws-white);
-  color: var(--tws-text-dark);
+  background: var(--tws-white-btn);
+  color: var(--tws-white-btn-text);
   border-radius: 999px;
   font-weight: 800;
   font-size: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--tws-border);
   line-height: 1;
   white-space: nowrap;
   text-align: center;
 }
 
-
 /* ======================================================
    4) SHARED APP PAGES
-   Used in:
-   - twsCreatePage.ejs
-   - twsFacultyDashboard.ejs
-   - twsFacultyInfo.ejs
-   - twsTeachingLoad.ejs
-   - twsSummary.ejs
-   - twsArchived.ejs
-   - other shared TWS pages
 ====================================================== */
 
 .tws-app-body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #fff;
+  font-family: var(--font-family-base, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif);
+  color: var(--tws-text);
   background:
-    linear-gradient(var(--tws-bg-overlay), var(--tws-bg-overlay)),
-    url("/TWS/img/background.png") no-repeat center center / cover fixed;
+    linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)),
+    var(--tws-bg);
 }
 
 .tws-app-layout {
@@ -443,7 +447,7 @@ select {
   z-index: 50;
 }
 
-.tws-app-sidebar>* {
+.tws-app-sidebar > * {
   position: relative !important;
   left: 0 !important;
   width: 100% !important;
@@ -453,20 +457,23 @@ select {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .tws-app-center {
   width: min(1040px, 92%);
   margin-top: 60px;
+  min-width: 0;
 }
 
 .tws-app-title-pill {
-  background: var(--tws-pill);
-  border-radius: 18px;
-  padding: 14px 18px;
+  background: linear-gradient(135deg, #ece7e7, #f7f7f8);
+  border: 1px solid var(--tws-border);
+  border-radius: 20px;
+  padding: 16px 20px;
   width: min(760px, 100%);
-  margin: 0 auto 16px auto;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  margin: 0 auto 18px auto;
+  box-shadow: var(--tws-shadow);
   text-align: center;
 }
 
@@ -474,17 +481,18 @@ select {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
+  color: var(--tws-text);
 }
 
-/* Shared app cards */
 .tws-card {
-  background: var(--tws-card);
-  border-radius: 14px;
-  border: 2px solid var(--tws-border);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.30);
-  padding: 14px;
+  background: #f1f3f6;
+  border-radius: 20px;
+  border: 1px solid var(--tws-border);
+  box-shadow: var(--tws-shadow);
+  padding: 18px;
   margin: 0 auto 14px auto;
   max-width: 980px;
+  overflow: hidden;
 }
 
 .tws-app-glass {
@@ -501,7 +509,6 @@ select {
   text-align: right;
 }
 
-/* Shared app card header */
 .tws-card-header {
   display: flex;
   align-items: center;
@@ -513,41 +520,43 @@ select {
 .tws-card-title {
   font-weight: 900;
   font-size: 14px;
+  color: var(--tws-text);
 }
 
 .tws-create-pill {
-  background: var(--tws-green);
-  color: #fff;
+  background: var(--tws-primary);
+  color: var(--text-on-dark);
   border-radius: 999px;
   padding: 8px 14px;
   font-size: 12px;
   font-weight: 900;
 }
 
-/* Shared app table */
 .tws-table {
   display: grid;
-  gap: 10px;
+  gap: 2px;
 }
 
 .tws-row {
   display: grid;
   grid-template-columns: 1fr 0.55fr 0.9fr 0.9fr 1fr;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   font-size: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--tws-border);
+  color: var(--tws-text);
 }
 
 .tws-head {
   font-weight: 800;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
-/* Shared app buttons */
 .tws-btns {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -555,23 +564,21 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
-  min-width: 108px;
-  padding: 0 14px;
-  background: var(--tws-white);
-  color: var(--tws-text-dark);
+  height: 38px;
+  min-width: 110px;
+  padding: 0 16px;
+  background: #ffffff;
+  color: var(--tws-white-btn-text);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--tws-border);
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   text-align: center;
 }
 
-/* Dashboard-only smaller action buttons
-   Used in: twsCreatePage.ejs */
 .tws-dashboard-btns {
   display: flex;
   gap: 8px;
@@ -594,12 +601,11 @@ select {
 }
 
 .tws-btn-danger {
-  background: #b91c1c;
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.35);
+  background: var(--tws-danger-dark);
+  color: var(--text-on-dark);
+  border-color: transparent;
 }
 
-/* Shared app special rows */
 .tws-workload-row {
   grid-template-columns: 1fr 1.2fr 0.55fr 0.55fr 0.75fr;
 }
@@ -616,17 +622,14 @@ select {
   display: inline-flex;
 }
 
-
-/* Shared app helper text */
 .tws-guidelines {
   margin: 10px 0 0 0;
   padding-left: 18px;
   font-size: 12px;
   line-height: 1.8;
-  opacity: 0.95;
+  color: var(--tws-muted);
 }
 
-/* Shared app next button */
 .tws-next-wrap {
   display: flex;
   justify-content: flex-end;
@@ -640,15 +643,15 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
-  min-width: 108px;
-  padding: 0 14px;
-  background: var(--tws-white);
-  color: var(--tws-text-dark);
+  height: 38px;
+  min-width: 110px;
+  padding: 0 16px;
+  background: var(--tws-primary);
+  color: var(--text-on-dark);
   border-radius: 999px;
   font-weight: 800;
   font-size: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid transparent;
   line-height: 1;
   white-space: nowrap;
   text-align: center;
@@ -656,39 +659,39 @@ select {
 
 /* ======================================================
    5) MODAL
-   Used in: twsCreateTeachingWorkloadPopup.ejs
 ====================================================== */
 
 .tws-modal-bg {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(15, 23, 42, 0.35);
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
 
 .tws-modal {
-  background: #1e1e1e;
+  background: var(--tws-surface);
   padding: 18px;
   width: 360px;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--tws-border);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.14);
 }
 
 .tws-modal-title {
   font-weight: 900;
   font-size: 14px;
   margin-bottom: 10px;
+  color: var(--tws-text);
 }
 
 .tws-modal label {
   display: block;
   font-size: 12px;
   font-weight: 800;
-  opacity: 0.95;
+  color: var(--tws-text);
   margin-top: 10px;
 }
 
@@ -697,27 +700,25 @@ select {
   padding: 9px 12px;
   margin-top: 6px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  border: 1px solid var(--tws-border);
+  background: #fff;
+  color: var(--tws-text);
   outline: none;
   appearance: auto;
 }
 
-/* dropdown options */
 .tws-modal select option {
-  background: #1f1f1f;
-  color: #fff;
+  background: #fff;
+  color: var(--tws-text);
 }
 
-/* default placeholder option like -- Select -- */
 .tws-modal select option[value=""] {
-  color: #d1d5db;
+  color: var(--tws-muted);
 }
 
 .tws-modal select:focus {
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+  border-color: var(--tws-secondary);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.08);
 }
 
 .tws-modal-actions {
@@ -728,9 +729,9 @@ select {
 }
 
 .tws-modal-cancel {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-  border: none;
+  background: var(--tws-white-btn);
+  color: var(--tws-white-btn-text);
+  border: 1px solid var(--tws-border);
   padding: 8px 16px;
   border-radius: 999px;
   font-weight: 900;
@@ -738,8 +739,8 @@ select {
 }
 
 .tws-modal-add {
-  background: var(--tws-green);
-  color: #fff;
+  background: var(--tws-primary);
+  color: var(--text-on-dark);
   border: none;
   padding: 8px 16px;
   border-radius: 999px;
@@ -747,26 +748,21 @@ select {
   cursor: pointer;
 }
 
-
 /* ======================================================
    6) STATUS / APPROVAL / ARCHIVED
-   Used in:
-   - twsSubmissionStatus.ejs
-   - twsApprovalRouting_dean.ejs
-   - twsArchived.ejs
-   - review / archive related pages
 ====================================================== */
 
-.tws-footer-actions {
-  margin-top: 16px;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
+.tws-status-note {
+  width: 100%;
+  border-radius: 12px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+  padding: 10px 12px;
+  font-size: 12px;
+  text-align: left;
 }
 
-/* Stepper */
 .tws-stepper {
   margin-top: 10px;
   display: flex;
@@ -781,7 +777,7 @@ select {
   gap: 8px;
   font-size: 12px;
   font-weight: 800;
-  opacity: 0.95;
+  color: var(--tws-text);
 }
 
 .tws-dot {
@@ -791,45 +787,45 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.65);
-  background: rgba(255, 255, 255, 0.10);
+  border: 2px solid var(--tws-border-strong);
+  background: #fff;
   font-size: 12px;
 }
 
 .tws-step-done .tws-dot {
-  background: var(--tws-green);
-  border-color: rgba(255, 255, 255, 0.30);
+  background: var(--tws-success);
+  color: var(--text-on-dark);
+  border-color: transparent;
 }
 
 .tws-step-pending .tws-dot {
-  background: rgba(255, 214, 107, 0.65);
-  border-color: rgba(255, 255, 255, 0.30);
+  background: var(--tws-warning);
+  color: var(--text-on-light);
+  border-color: transparent;
 }
 
 .tws-step-wait .tws-dot {
-  background: rgba(255, 255, 255, 0.20);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .tws-line {
   width: 48px;
   height: 2px;
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--tws-border);
 }
 
-/* Status metrics */
 .tws-metrics {
   margin-top: 14px;
   display: grid;
   grid-template-columns: 160px 1fr;
   gap: 8px 12px;
   font-size: 12px;
-  opacity: 0.95;
+  color: var(--tws-text);
 }
 
-/* Dean approval routing box */
 .tws-routing-box {
-  background: rgba(0, 0, 0, 0.45);
-  border: 2px solid rgba(255, 255, 255, 0.65);
+  background: var(--tws-surface);
+  border: 1px solid var(--tws-border);
   border-radius: 14px;
   padding: 14px;
 }
@@ -842,18 +838,19 @@ select {
 .tws-routing-approvedby {
   font-size: 12px;
   font-weight: 900;
-  opacity: 0.95;
+  color: var(--tws-text);
 }
 
 .tws-routing-role {
   font-size: 18px;
   font-weight: 900;
   margin-top: 4px;
+  color: var(--tws-text);
 }
 
 .tws-routing-small {
   font-size: 12px;
-  opacity: 0.9;
+  color: var(--tws-muted);
   margin-top: 4px;
 }
 
@@ -874,7 +871,7 @@ select {
 .tws-routing-line {
   height: 2px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--tws-border);
 }
 
 .tws-routing-actions {
@@ -884,7 +881,6 @@ select {
   flex-wrap: wrap;
 }
 
-/* Approval action pills */
 .tws-pill-btn {
   display: inline-flex;
   align-items: center;
@@ -895,102 +891,155 @@ select {
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
-  border: 1px solid rgba(255, 255, 255, 0.60);
+  border: 1px solid var(--tws-border);
   line-height: 1;
   white-space: nowrap;
   text-align: center;
 }
 
 .tws-pill-green {
-  background: var(--tws-green);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--tws-success);
+  color: var(--text-on-dark);
+  border-color: transparent;
 }
 
 .tws-pill-white {
-  background: var(--tws-white);
-  color: var(--tws-text-dark);
+  background: var(--tws-white-btn);
+  color: var(--tws-white-btn-text);
 }
 
-/* Footer button row */
 .tws-footer-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
   margin-top: 14px;
   max-width: 980px;
   margin-left: auto;
   margin-right: auto;
+  flex-wrap: wrap;
 }
 
 .tws-btn-white:disabled {
-  opacity: .55;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
-
 /* ======================================================
    7) CREATED TEACHING WORKLOAD PAGE
-   Used in: twsCreatedTeachingWorkload.ejs
 ====================================================== */
 
-/* Prevent grid children from overflowing their columns */
 .tws-schedule-layout,
 .tws-timetable,
 .tws-load-details {
   min-width: 0;
 }
 
-/* 2-column layout: timetable + details */
+.tws-created-sheet {
+  max-width: 1180px;
+  padding: 18px;
+}
+
+.tws-created-sheet .tws-schedule-layout {
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+}
+
+.tws-created-sheet .tws-timetable {
+  --tws-row-h: 52px;
+  grid-template-columns: 84px repeat(7, minmax(0, 1fr));
+}
+
+.tws-created-sheet .tws-timetable .tws-cell {
+  font-size: 13px;
+}
+
+.tws-created-sheet .tws-timetable .tws-time {
+  font-size: 12px;
+}
+
+.tws-created-sheet .tws-timetable .tws-block {
+  padding: 4px 5px;
+  font-size: 10px;
+  line-height: 1.05;
+  border-radius: 10px;
+  gap: 0;
+}
+
+.tws-created-sheet .tws-block-code {
+  font-size: 10px;
+}
+
+.tws-created-sheet .tws-block-sub {
+  font-size: 9px;
+  line-height: 1.05;
+}
+
+@media (max-width: 1200px) {
+  .tws-created-sheet {
+    max-width: 1060px;
+  }
+
+  .tws-created-sheet .tws-schedule-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .tws-created-sheet .tws-timetable {
+    --tws-row-h: 46px;
+    grid-template-columns: 76px repeat(7, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .tws-created-sheet .tws-schedule-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .tws-schedule-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
   gap: 18px;
   align-items: start;
   margin-top: 12px;
+  overflow: hidden;
 }
 
-/* If screen is small, stack vertically so nothing overlaps */
 @media (max-width: 980px) {
   .tws-schedule-layout {
     grid-template-columns: 1fr;
   }
 }
 
-/* Timetable grid */
 .tws-timetable {
+  --tws-row-h: 44px;
   position: relative;
   display: grid;
-
-  /* 1 time column + 7 day columns */
+  isolation: isolate;
   grid-template-columns: 72px repeat(7, minmax(0, 1fr));
-  grid-auto-rows: 44px;
-
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
+  grid-template-rows: repeat(13, var(--tws-row-h));
+  grid-auto-rows: 0;
+  border: 1px solid var(--tws-border);
+  border-radius: 12px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.25);
-
-  /* stops browser from stretching rows and creating gaps */
+  background: #fff;
   align-content: start;
 }
 
-/* Timetable cells */
 .tws-timetable .tws-cell {
-  border-right: 1px solid rgba(255, 255, 255, 0.22);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  border-right: 1px solid var(--tws-border);
+  border-bottom: 1px solid var(--tws-border);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--tws-text);
   font-size: 12px;
   text-align: center;
   padding: 0 6px;
   white-space: nowrap;
+  background: #fff;
 }
 
-/* Remove right border for the last day column */
 .tws-timetable .tws-cell:nth-child(8),
 .tws-timetable .tws-cell:nth-child(16),
 .tws-timetable .tws-cell:nth-child(24),
@@ -1007,88 +1056,101 @@ select {
   border-right: none;
 }
 
-/* Timetable headers */
 .tws-timetable .tws-head {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(123, 32, 32, 0.06);
   font-weight: 800;
 }
 
 .tws-timetable .tws-corner {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(123, 32, 32, 0.06);
 }
 
 .tws-timetable .tws-time {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(123, 32, 32, 0.06);
   font-weight: 800;
   font-size: 11px;
   grid-column: 1 !important;
+  grid-row: var(--row, auto);
 }
 
 .tws-timetable .tws-slot {
-  background: rgba(0, 0, 0, 0.12);
+  grid-column: var(--col, auto);
+  grid-row: var(--row, auto);
+  background: #fff;
 }
 
-/* Subject blocks */
 .tws-timetable .tws-block {
+  position: relative;
   z-index: 5;
-  border-radius: 6px;
-  padding: 6px;
+  margin: 0;
+  border-radius: 10px;
+  padding: 4px 5px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
+  gap: 0;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  background-clip: padding-box;
+}
+
+.tws-block-code,
+.tws-block-sub {
+  font-weight: 800;
+  opacity: 0.95;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.05;
 }
 
 .tws-block-code {
   font-weight: 900;
+  font-size: 10px;
 }
 
 .tws-block-sub {
-  font-weight: 800;
-  opacity: 0.9;
+  font-size: 9px;
 }
 
-/* Timetable block colors */
 .tws-timetable .highlight-yellow {
-  background: #e6d57a;
-  color: #111;
+  background: var(--tws-warning);
+  color: var(--tws-text);
 }
-
 .tws-timetable .highlight-blue {
-  background: #2a86d6;
-  color: #111;
+  background: var(--tws-secondary);
+  color: var(--text-on-dark);
 }
-
 .tws-timetable .highlight-purple {
-  background: #7a4aa8;
-  color: #111;
+  background: var(--tws-primary-hover);
+  color: var(--text-on-dark);
 }
-
 .tws-timetable .highlight-green {
-  background: #00c26a;
-  color: #111;
+  background: var(--tws-success);
+  color: var(--text-on-dark);
 }
 
-/* Semantic timetable coloring */
 .tws-timetable .tws-block-assigned {
-  background: #00c26a;
-  color: #111;
+  background: rgba(13, 110, 253, 0.12);
+  color: var(--tws-text);
 }
 
 .tws-timetable .tws-block-conflict {
-  background: #d93a2f;
-  color: #fff;
+  background: rgba(220, 38, 38, 0.14);
+  color: var(--tws-text);
+  border-color: rgba(220, 38, 38, 0.22);
 }
 
-/* Small screen tweaks */
 @media (max-width: 520px) {
   .tws-timetable {
+    --tws-row-h: 40px;
     grid-template-columns: 62px repeat(7, minmax(0, 1fr));
-    grid-auto-rows: 40px;
   }
 
   .tws-timetable .tws-cell {
@@ -1102,15 +1164,36 @@ select {
   .tws-timetable .tws-block {
     font-size: 10px;
   }
+
+  .tws-created-sheet .tws-timetable {
+    --tws-row-h: 42px;
+    grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  }
+
+  .tws-created-sheet .tws-timetable .tws-cell {
+    font-size: 11px;
+  }
+
+  .tws-created-sheet .tws-timetable .tws-time {
+    font-size: 10px;
+  }
+
+  .tws-created-sheet .tws-timetable .tws-block {
+    font-size: 9px;
+    padding: 4px;
+  }
+
+  .tws-created-sheet .tws-block-sub {
+    font-size: 8px;
+  }
 }
 
-/* Load details panel */
 .tws-load-details {
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
+  background: rgba(123, 32, 32, 0.04);
+  border: 1px solid var(--tws-border);
+  border-radius: 12px;
   padding: 14px;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--tws-text);
   overflow: hidden;
 }
 
@@ -1126,12 +1209,8 @@ select {
   gap: 10px;
   font-size: 12px;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--tws-border);
   align-items: flex-start;
-}
-
-/* wrap long left text nicely */
-.tws-load-details .ld-row {
   flex-wrap: wrap;
 }
 
@@ -1142,16 +1221,16 @@ select {
 
 .tws-load-details .ld-divider {
   margin: 10px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  border-top: 1px solid var(--tws-border);
 }
 
-/* Signature section */
 .tws-signatures {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 40px;
   margin-top: 18px;
   padding-top: 14px;
+  overflow: hidden;
 }
 
 @media (max-width: 720px) {
@@ -1163,13 +1242,13 @@ select {
 
 .sig-box {
   text-align: center;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--tws-text);
   min-width: 0;
 }
 
 .sig-line {
   height: 1px;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--tws-border-strong);
   margin: 0 auto 10px;
   width: 70%;
 }
@@ -1177,410 +1256,197 @@ select {
 .sig-name {
   font-size: 12px;
   font-weight: 800;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .sig-role {
   font-size: 12px;
   font-weight: 900;
   margin-top: 4px;
+  color: var(--tws-muted);
 }
 
+.tws-table-header,
+.tws-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 120px;
+  align-items: center;
+  gap: 10px;
+}
+
+.tws-table-header {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.tws-table-row {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--tws-border);
+}
+
+.tws-field-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
 
 /* ======================================================
-   8) DASHBOARD — TWS LIST PAGE
-   Used in: twsCreatePage.ejs
+   8) CREATE PAGE DASHBOARD
 ====================================================== */
 
 .tws-dash-center {
   width: min(1040px, 92%);
-  margin: 60px auto 0;
-  display: flex;
-  flex-direction: column;
+  margin-top: 60px;
+  min-width: 0;
 }
 
 .tws-dash-title {
-  font-size: 36px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  color: var(--text-on-dark);
-  text-transform: uppercase;
-  margin: 0 0 20px 0;
+  margin: 0 auto 16px auto;
+  width: min(760px, 100%);
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(123, 32, 32, 0.08), rgba(255, 255, 255, 0.95));
+  border: 1px solid var(--tws-border);
+  box-shadow: var(--tws-shadow);
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--tws-text);
 }
 
-/* Card */
 .tws-dash-card {
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 14px;
-  overflow-y: auto;
-  max-height: 480px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-
-  /* keep scrollbar inside the rounded corners */
-  overflow: hidden;
-  overflow-y: auto;
+  background: var(--tws-surface);
+  border-radius: 16px;
+  border: 1px solid var(--tws-border);
+  box-shadow: var(--tws-shadow);
+  padding: 16px;
+  margin: 0 auto 14px auto;
+  max-width: 980px;
+  overflow-x: auto;
 }
 
-/* Custom scrollbar — blends with the frosted card */
-.tws-dash-card::-webkit-scrollbar {
-  width: 6px;
-}
-
-.tws-dash-card::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 0 14px 14px 0;
-}
-
-.tws-dash-card::-webkit-scrollbar-thumb {
-  background: rgba(39, 39, 39, 0.35);
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: background 0.2s ease;
-}
-
-.tws-dash-card::-webkit-scrollbar-thumb:hover {
-  background: var(--color-mapua-red);
-}
-
-/* Table grid */
 .tws-dash-table {
   display: grid;
+  gap: 0;
+  min-width: 760px;
 }
 
 .tws-dash-row {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr 1fr 0.8fr 0.8fr;
+  grid-template-columns: 1.1fr 0.9fr 1fr 0.9fr 140px;
+  gap: 12px;
   align-items: center;
-  padding: 9px 24px;
-  font-size: 15px;
-  color: var(--text-on-light);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-  text-align: center;
-}
-
-.tws-dash-row:last-child {
-  border-bottom: none;
-}
-
-/* Header row */
-.tws-dash-head {
-  background: var(--color-charcoal);
-  color: var(--text-on-dark);
-  font-weight: 800;
   font-size: 12px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  border-bottom: none;
-  padding: 16px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--tws-border);
+  color: var(--tws-text);
 }
 
-/* Empty state */
+.tws-dash-head {
+  font-weight: 800;
+  opacity: 0.95;
+}
+
 .tws-dash-empty {
-  padding: 30px 24px;
-  color: var(--text-muted);
-  font-size: 13px;
-  border-bottom: none;
+  color: var(--tws-muted);
 }
 
-/* Centered actions column header */
 .tws-dash-col-center {
   text-align: center;
 }
 
-/* Icon action group */
 .tws-dash-actions {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 4px;
-}
-
-/* Icon buttons */
-.tws-icon-btn {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--text-on-light);
-  transition: background 0.15s ease;
-  text-decoration: none;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
-.tws-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.tws-icon-btn .material-icons {
-  font-size: 20px;
-}
-
-/* Danger (delete) icon */
-.tws-icon-btn-danger {
-  color: var(--color-mapua-red);
-}
-
-.tws-icon-btn-danger:hover {
-  background: rgba(160, 1, 0, 0.10);
-}
-
-/* Inline delete form wrapper */
 .tws-icon-form {
   display: inline-flex;
   margin: 0;
-  padding: 0;
 }
 
-/* Footer row with action buttons */
-.tws-dash-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-  padding-bottom: 40px;
-}
-
-/* Green "Create New TWS" button */
-.tws-dash-btn-create {
+.tws-icon-btn {
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 42px;
-  padding: 0 28px;
-  background: var(--tws-green);
-  color: #fff;
   border-radius: 999px;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 6px 18px rgba(24, 176, 107, 0.35);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  text-decoration: none;
+  border: 1px solid var(--tws-border);
+  background: var(--tws-white-btn);
+  color: var(--tws-white-btn-text);
+  cursor: pointer;
+  padding: 0;
 }
 
-.tws-dash-btn-create:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
+.tws-icon-btn .material-icons {
+  font-size: 18px;
+  line-height: 1;
 }
 
-/* White "Refresh" button */
+.tws-icon-btn-danger {
+  color: var(--tws-danger-dark);
+}
+
+.tws-dash-footer {
+  max-width: 980px;
+  margin: 10px auto 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tws-dash-btn-create,
 .tws-dash-btn-refresh {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 42px;
-  padding: 0 28px;
-  background: var(--color-white);
-  color: var(--text-on-light);
+  height: 36px;
+  min-width: 130px;
+  padding: 0 16px;
   border-radius: 999px;
+  font-size: 12px;
   font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  border: 2px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  text-decoration: none;
-}
-
-.tws-dash-btn-refresh:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
-}
-
-
-/* ======================================================
-   9) PROGRAM CHAIR PAGE
-   Used in: twsProgramChair.ejs
-====================================================== */
-
-.tws-pc-center {
-  width: min(1240px, 94%);
-  margin: 60px auto 40px;
-}
-
-.tws-pc-section {
-  margin-bottom: 30px;
-}
-
-.tws-pc-section-header {
-  font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 0.8px;
-  color: var(--text-on-dark);
-  text-transform: uppercase;
-  margin-bottom: 14px;
-  padding-left: 4px;
-}
-
-/* Card */
-.tws-pc-card {
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 14px;
-  overflow: hidden;
-  overflow-y: auto;
-  max-height: 480px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-}
-
-/* Custom scrollbar */
-.tws-pc-card::-webkit-scrollbar {
-  width: 6px;
-}
-
-.tws-pc-card::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 0 14px 14px 0;
-}
-
-.tws-pc-card::-webkit-scrollbar-thumb {
-  background: rgba(39, 39, 39, 0.35);
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: background 0.2s ease;
-}
-
-.tws-pc-card::-webkit-scrollbar-thumb:hover {
-  background: var(--color-mapua-red);
-}
-
-/* Table grid */
-.tws-pc-table {
-  display: grid;
-}
-
-.tws-pc-row {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 0.6fr 0.8fr 1.2fr;
-  align-items: center;
-  padding: 10px 24px;
-  font-size: 14px;
-  color: var(--text-on-light);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  line-height: 1;
+  white-space: nowrap;
   text-align: center;
 }
 
-.tws-pc-row:last-child {
-  border-bottom: none;
-}
-
-/* Small table (4 columns for personal load) */
-.tws-pc-table-small .tws-pc-row-small {
-  grid-template-columns: 1.5fr 1.2fr 0.7fr 1.3fr;
-}
-
-/* Header row */
-.tws-pc-head {
-  background: var(--color-charcoal);
+.tws-dash-btn-create {
+  background: var(--tws-primary);
   color: var(--text-on-dark);
-  font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  border-bottom: none;
-  padding: 14px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  border: 1px solid transparent;
 }
 
-/* Empty state */
-.tws-pc-empty {
-  padding: 28px 24px;
-  color: var(--text-muted);
-  font-size: 14px;
-  border-bottom: none;
+.tws-dash-btn-refresh {
+  background: var(--tws-white-btn);
+  color: var(--tws-white-btn-text);
+  border: 1px solid var(--tws-border);
 }
 
-/* Status badge */
-.tws-pc-status {
-  font-weight: 800;
-  font-size: 13px;
-  text-transform: uppercase;
+@media (max-width: 900px) {
+  .tws-dash-center {
+    width: min(96%, 96%);
+    margin-top: 30px;
+  }
+
+  .tws-dash-title {
+    font-size: 22px;
+  }
+
+  .tws-dash-card {
+    padding: 12px;
+  }
+
+  .tws-dash-table {
+    min-width: 700px;
+  }
 }
 
-/* Action buttons container */
-.tws-pc-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
 
-/* Inline form wrapper */
-.tws-pc-form {
-  display: inline-flex;
-  margin: 0;
-  padding: 0;
-}
 
-/* All button styles */
-.tws-pc-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  min-width: 80px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.1s ease;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-/* View button - light gray */
-.tws-pc-btn-view {
-  background: rgba(200, 200, 200, 0.85);
-  color: var(--text-on-light);
-}
-
-.tws-pc-btn-view:hover {
-  opacity: 0.88;
-}
-
-/* Action button - gray */
-.tws-pc-btn-action {
-  background: rgba(180, 180, 180, 0.85);
-  color: var(--text-on-light);
-}
-
-.tws-pc-btn-action:hover {
-  opacity: 0.88;
-}
-
-/* Send to Dean button - blue */
-.tws-pc-btn-send {
-  background: var(--color-mapua-blue);
-  color: var(--text-on-dark);
-}
-
-.tws-pc-btn-send:hover {
-  background: var(--accent-secondary-hover);
-  opacity: 0.95;
-}
-
-/* Disabled button */
-.tws-pc-btn-disabled {
-  background: rgba(160, 160, 160, 0.5);
-  color: rgba(39, 39, 39, 0.6);
-  cursor: not-allowed;
-}
-
-/* Footer for refresh button */
-.tws-pc-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 14px;
-}

@@ -1,114 +1,249 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TWS - HR Archive</title>
-  <link rel="stylesheet" href="/TWS/css/twsstyles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS - HR / Admin</title>
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsDashboard.css" />
 </head>
-<body>
-  <aside class="tws-sidebar">
-    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
-  </aside>
+<body class="tws-board-page">
+  <%
+    function statusClass(status) {
+      const st = String(status || 'Draft').toLowerCase();
+      if (st === 'approved') return 'tws-status-approved';
+      if (st === 'archived') return 'tws-status-archived';
+      if (st === 'rejected') return 'tws-status-rejected';
+      if (st.includes('returned')) return 'tws-status-returned';
+      if (st.includes('sent')) return 'tws-status-sent';
+      return 'tws-status-draft';
+    }
 
-  <div class="main">
-    <div class="shell">
+    function formatDate(value) {
+      if (!value) return '—';
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'Asia/Manila',
+      });
+    }
+  %>
 
-      <div class="page-title">TWS - HR Archive</div>
+  <div class="tws-board-layout">
+    <aside class="tws-board-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws", user }) %>
+    </aside>
 
-      <!-- Approved Teaching Workload Sheets -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">Approved Teaching Workload Sheets</div>
-          <div class="panel-actions">
-            <div class="search-wrap">
-              <input class="search-bar" type="text" id="hrSearch" placeholder="Search by Name" oninput="filterHR()" />
-              <span class="search-icon">&#128269;</span>
+    <main class="tws-board-main">
+      <div class="tws-board-shell">
+        <div class="tws-board-header">
+          <h1 class="tws-board-title">Teaching Workload Sheet</h1>
+        </div>
+
+        <div class="tws-board-content">
+          <div class="tws-board-toolbar">
+            <div class="tws-board-search">
+              <span class="material-symbols-outlined">search</span>
+              <input type="text" id="hrSearch" placeholder="Search Faculty" />
             </div>
-            <button class="btn btn-purple" type="button">&#9965; Filter by Department</button>
-            <a class="btn" href="/tws/hr-archive">Refresh</a>
+
+            <select class="tws-board-filter" id="hrDepartmentFilter">
+              <option value="">Department</option>
+              <option value="ATYCB">ATYCB</option>
+              <option value="CAS">CAS</option>
+              <option value="CCIS">CCIS</option>
+              <option value="CEA">CEA</option>
+              <option value="CHS">CHS</option>
+            </select>
+
+            <select class="tws-board-filter" id="hrProgramFilter">
+              <option value="">Program</option>
+            </select>
+
+            <select class="tws-board-filter" id="hrAcademicYearFilter">
+              <option value="">Academic Year</option>
+            </select>
+
+            <select class="tws-board-filter" id="hrTermFilter">
+              <option value="">Term</option>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+              <option value="Summer">Summer</option>
+            </select>
+          </div>
+
+          <div class="tws-board-caption">HR / Admin Archive Dashboard</div>
+
+          <div class="tws-board-grid" id="hrActiveGrid">
+            <% if (!list || !list.length) { %>
+              <div class="tws-board-empty">No teaching workload sheets found.</div>
+            <% } %>
+
+            <% (list || []).forEach(function(tws) { %>
+              <article
+                class="tws-board-card hr-card <%= statusClass(tws.status || 'Draft') %>"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-department="<%= tws.faculty?.dept || '' %>"
+                data-program="<%= tws.faculty?.program || tws.program || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || '—' %> | <%= tws.faculty?.program || tws.program || '—' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
+                  <div class="tws-board-card-status"><strong>Status:</strong> <span class="<%= statusClass(tws.status || 'Draft') %>"><%= tws.status || 'Draft' %></span></div>
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-card-date">Updated: <%= formatDate(tws.updatedAt || tws.createdAt) %></div>
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/summary/<%= tws.id %>?from=hr" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+                      <% if ((tws.status || '') === 'Approved') { %>
+                        <form method="POST" action="/tws/send-to-hr/<%= tws.id %>" style="display:inline;">
+                          <button class="tws-board-icon-btn -archive" type="submit" title="Archive">
+                            <span class="material-symbols-outlined">archive</span>
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+
+          <div class="tws-board-section-title">
+            <button type="button" id="hrArchiveToggle">
+              <span>Archive</span>
+              <span class="material-symbols-outlined" id="hrArchiveIcon">expand_more</span>
+            </button>
+          </div>
+
+          <div class="tws-board-grid" id="hrArchiveGrid">
+            <% if (!archivedList || !archivedList.length) { %>
+              <div class="tws-board-empty">No archived teaching workload sheets yet.</div>
+            <% } %>
+
+            <% (archivedList || []).forEach(function(tws) { %>
+              <article
+                class="tws-board-card hr-archived-card tws-status-archived"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-department="<%= tws.faculty?.dept || '' %>"
+                data-program="<%= tws.faculty?.program || tws.program || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || '—' %> | <%= tws.faculty?.program || tws.program || '—' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
+                  <div class="tws-board-card-status"><strong>Status:</strong> <span class="tws-status-archived">Archived</span></div>
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-card-date">Archived: <%= formatDate(tws.archivedAt || tws.updatedAt) %></div>
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/summary/<%= tws.id %>?from=hr" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            <% }) %>
           </div>
         </div>
-
-        <div class="tws-table col-hr">
-          <div class="trow thead">
-            <div>Faculty Name</div>
-            <div>Department</div>
-            <div>Academic Year</div>
-            <div>Term</div>
-            <div>Date Approved</div>
-            <div class="tcell-right">Status</div>
-          </div>
-
-          <% if (!list || !list.length) { %>
-            <div class="trow">
-              <div style="grid-column:1/-1;opacity:.7;padding:10px 0;">No approved TWS records yet.</div>
-            </div>
-          <% } %>
-
-          <%
-            function formatDatePH(value) {
-              var date = value ? new Date(value) : null;
-              if (!date || isNaN(date.getTime())) return "—";
-              return date.toLocaleDateString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-                timeZone: "Asia/Manila",
-              });
-            }
-          %>
-
-          <% (list || []).forEach(function(t) {
-               var approvedDate = t.approval && t.approval.approvedAt
-                 ? formatDatePH(t.approval.approvedAt)
-                 : formatDatePH(t.createdAt);
-          %>
-            <div class="trow hr-row"
-                data-name="<%= (t.faculty.name || '').toLowerCase() %>"
-                 onclick="showDetail(`<%= t.faculty.name || '(Name)' %>`, `<%= t.id %>`, `<%= t.faculty.acadYear || '2025 - 2026' %>`)"
-                 style="cursor:pointer;">
-              <div class="arch-name"><%= t.faculty.name || '—' %></div>
-              <div><%= t.faculty.dept || '—' %></div>
-              <div><%= t.faculty.acadYear || t.schoolYear || '—' %></div>
-              <div><%= t.faculty.term || t.term || '—' %></div>
-              <div><%= approvedDate %></div>
-              <div class="tcell-right">
-                <a class="pill pill-view" href="/tws/summary/<%= t.id %>">View</a>
-              </div>
-            </div>
-          <% }) %>
-        </div>
       </div>
-
-      <!-- Archive Details -->
-      <div class="panel" id="archiveDetail">
-        <div class="panel-title">Archive Details</div>
-        <hr class="divider" />
-        <div class="archive-details">
-          <div>Selected Faculty: <span id="detailFaculty">(Name)</span></div>
-          <div>File Name: <span id="detailFile">(File Name)</span></div>
-          <div>Storage Location: HR Records &gt; TWS &gt; SY 2025 - 2026</div>
-          <div class="muted">Archive files are stored for record-keeping and retrieval.</div>
-        </div>
-      </div>
-
-    </div>
+    </main>
   </div>
 
   <script>
-    function filterHR() {
-      var q = document.getElementById('hrSearch').value.toLowerCase();
-      document.querySelectorAll('.hr-row').forEach(function(row) {
-        row.style.display = row.dataset.name.includes(q) ? '' : 'none';
+    const hrSearch = document.getElementById('hrSearch');
+    const hrDepartmentFilter = document.getElementById('hrDepartmentFilter');
+    const hrProgramFilter = document.getElementById('hrProgramFilter');
+    const hrAcademicYearFilter = document.getElementById('hrAcademicYearFilter');
+    const hrTermFilter = document.getElementById('hrTermFilter');
+    const hrArchiveToggle = document.getElementById('hrArchiveToggle');
+    const hrArchiveGrid = document.getElementById('hrArchiveGrid');
+    const hrArchiveIcon = document.getElementById('hrArchiveIcon');
+
+    function populateHrPrograms() {
+      const values = new Set();
+      document.querySelectorAll('.hr-card, .hr-archived-card').forEach((card) => {
+        const program = (card.dataset.program || '').trim();
+        if (program) values.add(program);
+      });
+      [...values].sort().forEach((program) => {
+        const option = document.createElement('option');
+        option.value = program;
+        option.textContent = program;
+        hrProgramFilter.appendChild(option);
       });
     }
 
-    function showDetail(name, id, sy) {
-      document.getElementById('detailFaculty').textContent = name;
-      document.getElementById('detailFile').textContent   = 'TWS-' + id + '.pdf';
-      document.querySelector('#archiveDetail .archive-details div:nth-child(3)').innerHTML =
-        'Storage Location: HR Records &gt; TWS &gt; SY ' + sy;
+    function populateHrAcademicYears() {
+      const values = new Set();
+      document.querySelectorAll('.hr-card, .hr-archived-card').forEach((card) => {
+        const ay = (card.dataset.acadYear || '').trim();
+        if (ay) values.add(ay);
+      });
+      [...values].sort().forEach((ay) => {
+        const option = document.createElement('option');
+        option.value = ay;
+        option.textContent = ay;
+        hrAcademicYearFilter.appendChild(option);
+      });
     }
+
+    function applyHrFilters() {
+      const search = (hrSearch.value || '').toLowerCase().trim();
+      const department = (hrDepartmentFilter.value || '').toLowerCase();
+      const program = (hrProgramFilter.value || '').toLowerCase();
+      const term = (hrTermFilter.value || '').toLowerCase();
+      const acadYear = (hrAcademicYearFilter.value || '').toLowerCase();
+
+      document.querySelectorAll('.hr-card, .hr-archived-card').forEach((card) => {
+        const name = (card.dataset.name || '').toLowerCase();
+        const dept = (card.dataset.department || '').toLowerCase();
+        const cardProgram = (card.dataset.program || '').toLowerCase();
+        const cardTerm = (card.dataset.term || '').toLowerCase();
+        const cardAcadYear = (card.dataset.acadYear || '').toLowerCase();
+
+        const matches = (!search || name.includes(search))
+          && (!department || dept === department)
+          && (!program || cardProgram === program)
+          && (!term || cardTerm === term)
+          && (!acadYear || cardAcadYear === acadYear);
+
+        card.style.display = matches ? '' : 'none';
+      });
+    }
+
+    populateHrPrograms();
+    populateHrAcademicYears();
+    hrSearch?.addEventListener('input', applyHrFilters);
+    hrDepartmentFilter?.addEventListener('change', applyHrFilters);
+    hrProgramFilter?.addEventListener('change', applyHrFilters);
+    hrAcademicYearFilter?.addEventListener('change', applyHrFilters);
+    hrTermFilter?.addEventListener('change', applyHrFilters);
+
+    hrArchiveToggle?.addEventListener('click', () => {
+      hrArchiveGrid.classList.toggle('tws-board-hidden');
+      hrArchiveIcon.textContent = hrArchiveGrid.classList.contains('tws-board-hidden') ? 'chevron_right' : 'expand_more';
+    });
   </script>
 </body>
 </html>

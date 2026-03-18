@@ -13,8 +13,6 @@ const VALID_TRANSITIONS = {
   "Archived":                   [],
 };
 
-const ALL_STATUSES = Object.keys(VALID_TRANSITIONS);
-
 /**
  * Check if a transition from one status to another is valid.
  */
@@ -63,5 +61,3 @@ export function getStepperState(status) {
       return { step: 0, label: status || "Unknown", isRejected: false, isReturned: false };
   }
 }
-
-export { ALL_STATUSES, VALID_TRANSITIONS };

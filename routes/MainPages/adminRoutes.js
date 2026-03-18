@@ -24,6 +24,12 @@ adminRoutes.get("/institution", isAuthenticated, authorizeRoles("Admin", "HR"), 
             user: req.session.user
         });
     }
+
+
+// Admin sidebar points to /admin/tws; forward it to the TWS HR/Admin view.
+adminRoutes.get("/tws", isAuthenticated, authorizeRoles("Admin", "HR", "Super-Admin"), (req, res) => {
+    return res.redirect("/tws/hr-archive");
+
 });
 
 adminRoutes.get("/config/users", async (req, res) => {

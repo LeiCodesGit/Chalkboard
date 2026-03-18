@@ -3,25 +3,86 @@
  * Server-side validators for all TWS form inputs.
  */
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function isValidAcademicYear(value) {
+  const text = String(value || "").trim();
+  if (!/^\d{4}\s*-\s*\d{4}$/.test(text)) return false;
+
+  const parts = text.split("-").map((x) => Number(String(x).trim()));
+  if (parts.length !== 2) return false;
+
+  const [startYear, endYear] = parts;
+  return endYear === startYear + 1;
+}
+
 /**
  * Validate faculty info fields.
  * Returns { valid: boolean, errors: string[] }
  */
 export function validateFacultyInfo(body) {
   const errors = [];
+  const selectedProfessorId = (body.selectedProfessorId || "").trim();
   const name = (body.name || "").trim();
   const empId = (body.empId || "").trim();
+  const email = (body.email || "").trim();
   const dept = (body.dept || "").trim();
   const acadYear = (body.acadYear || "").trim();
   const term = (body.term || "").trim();
+  const empStatus = (body.empStatus || "").trim();
 
-  if (!name || name.length < 2) errors.push("Faculty name is required (min 2 chars).");
-  if (name.length > 200) errors.push("Faculty name must be under 200 characters.");
-  if (!empId) errors.push("Employee ID is required.");
-  if (empId.length > 50) errors.push("Employee ID must be under 50 characters.");
-  if (!dept) errors.push("Department is required.");
-  if (!acadYear) errors.push("Academic year is required.");
-  if (!term) errors.push("Term is required.");
+  const validTerms = ["1st Term", "2nd Term", "3rd Term", "Summer"];
+  const validStatuses = ["Full-Time", "Part-Time", "Contractual"];
+
+  if (!selectedProfessorId) {
+    errors.push("Please select a professor.");
+  }
+
+  if (!name || name.length < 2) {
+    errors.push("Faculty name is required.");
+  }
+
+  if (name.length > 200) {
+    errors.push("Faculty name must be under 200 characters.");
+  }
+
+  if (!empId) {
+    errors.push("Employee ID is required.");
+  }
+
+  if (empId.length > 50) {
+    errors.push("Employee ID must be under 50 characters.");
+  }
+
+  if (!email) {
+    errors.push("Faculty email is required.");
+  } else if (!isValidEmail(email)) {
+    errors.push("Faculty email is invalid.");
+  }
+
+  if (!dept) {
+    errors.push("Department is required.");
+  }
+
+  if (!acadYear) {
+    errors.push("Academic year is required.");
+  } else if (!isValidAcademicYear(acadYear)) {
+    errors.push("Academic year must follow this format: 2025 - 2026");
+  }
+
+  if (!term) {
+    errors.push("Term is required.");
+  } else if (!validTerms.includes(term)) {
+    errors.push(`Term must be one of: ${validTerms.join(", ")}`);
+  }
+
+  if (!empStatus) {
+    errors.push("Employee status is required.");
+  } else if (!validStatuses.includes(empStatus)) {
+    errors.push(`Employee status must be one of: ${validStatuses.join(", ")}`);
+  }
 
   return { valid: errors.length === 0, errors };
 }
@@ -49,6 +110,23 @@ export function validateLoadRows(loads) {
   return { valid: errors.length === 0, errors };
 }
 
+function parseTime12Hour(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const meridiem = match[3].toUpperCase();
+
+  if (hour < 1 || hour > 12) return null;
+  if (minute < 0 || minute > 59) return null;
+
+  if (meridiem === "PM" && hour !== 12) hour += 12;
+  if (meridiem === "AM" && hour === 12) hour = 0;
+
+  return hour * 60 + minute;
+}
+
 /**
  * Validate course-add payload.
  * Returns { valid: boolean, errors: string[] }
@@ -58,14 +136,33 @@ export function validateCourseAdd(body) {
   const code = (body.code || "").trim();
   const title = (body.title || "").trim();
   const day = (body.day || "").trim();
-  const timeSlot = (body.timeSlot || "").trim();
+  const startTime = (body.startTime || "").trim();
+  const endTime = (body.endTime || "").trim();
   const units = Number(body.units);
+  const sectionRoom = (body.sectionRoom || "").trim();
 
   if (!code) errors.push("Course code is required.");
   if (!title) errors.push("Course title is required.");
   if (!day) errors.push("Day is required.");
-  if (!timeSlot) errors.push("Time slot is required.");
+  if (!startTime) errors.push("Start time is required.");
+  if (!endTime) errors.push("End time is required.");
+  if (!sectionRoom) errors.push("Section and room are required.");
   if (isNaN(units) || units <= 0) errors.push("Units must be greater than 0.");
+
+  const startMinutes = parseTime12Hour(startTime);
+  const endMinutes = parseTime12Hour(endTime);
+
+  if (startTime && startMinutes === null) {
+    errors.push("Start time must be in this format: 7:00 AM");
+  }
+
+  if (endTime && endMinutes === null) {
+    errors.push("End time must be in this format: 10:45 AM");
+  }
+
+  if (startMinutes !== null && endMinutes !== null && endMinutes <= startMinutes) {
+    errors.push("End time must be later than start time.");
+  }
 
   return { valid: errors.length === 0, errors };
 }
@@ -94,7 +191,7 @@ export function validateChairAction(body) {
   const errors = [];
   const action = (body.action || "").trim();
   const id = (body.id || "").trim();
-  const validActions = ["send", "return", "sendToDean"];
+  const validActions = ["send", "return", "sendToDean", "sendToFaculty"];
 
   if (!id) errors.push("TWS ID is required.");
   if (!validActions.includes(action)) errors.push(`Invalid action. Must be one of: ${validActions.join(", ")}.`);

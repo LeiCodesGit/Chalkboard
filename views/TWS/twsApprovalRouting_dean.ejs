@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TWS - Approval Routing</title>
 
+  <link rel="stylesheet" href="/common/css/variables.css" />
   <link rel="stylesheet" href="/TWS/css/twsDeanStyle.css" />
 </head>
 
@@ -28,17 +29,25 @@
               <h2>APPROVED BY:</h2>
               <div style="font-weight:900; margin-top:2px;">DEAN</div>
 
-              <div class="small">Faculty: <b><%= tws.faculty?.name || "—" %></b></div>
-              <div class="small">Department: <b><%= tws.faculty?.dept || "—" %></b></div>
+              <div class="small">Faculty: <b><%= tws.faculty?.name || "-" %></b></div>
+              <div class="small">Department: <b><%= tws.faculty?.dept || "-" %></b></div>
               <div class="small">Current Status: <b><%= tws.status || "Pending" %></b></div>
+              <div class="small">Faculty Signature: <b><%= tws.facultySigned ? "Complete" : "Missing" %></b></div>
+              <div class="small">Program Chair Signature: <b><%= tws.programChairSigned ? "Complete" : "Missing" %></b></div>
             </div>
 
             <div class="twsd-approval-bottom">
               <div class="twsd-approve-line">
-                <span class="twsd-arrow">⬇</span>
+                <span class="twsd-arrow">v</span>
                 <span>Dean Decision</span>
                 <div class="twsd-line"></div>
               </div>
+
+              <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+                <div style="margin: 0 0 12px 0; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+                  <b>Action blocked:</b> <%= errorMessage %>
+                </div>
+              <% } %>
 
               <form method="POST" action="/tws/approval/<%= tws.id %>">
                 <div style="margin: 12px 0 18px 0;">
@@ -56,8 +65,9 @@
                 </div>
               </form>
 
-              <div style="margin-top:16px;">
+              <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
                 <a class="twsd-btn twsd-white" href="/tws/dean" style="text-decoration:none;">Back</a>
+                <a class="twsd-btn twsd-white" href="/tws/signature-settings" style="text-decoration:none;">E-Signature Settings</a>
               </div>
             </div>
 

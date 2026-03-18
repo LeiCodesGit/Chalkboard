@@ -3,7 +3,128 @@
 <head>
   <meta charset="UTF-8" />
   <title>TWS - Create Teaching Workload Sheet</title>
+  <link rel="stylesheet" href="/common/css/variables.css" />
   <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+  <style>
+    .tws-inline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .tws-added-list {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .tws-added-item {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .tws-added-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .tws-added-item b {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .tws-added-meta {
+      font-size: 12px;
+      opacity: 0.92;
+      line-height: 1.45;
+    }
+
+    .tws-added-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .tws-small-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 64px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,0.65);
+      cursor: pointer;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .tws-small-btn-white {
+      background: var(--tws-white);
+      color: var(--tws-text-dark);
+    }
+
+    .tws-small-btn-danger {
+      background: var(--status-rejected);
+      color: var(--tws-text);
+      border-color: rgba(255,255,255,0.35);
+    }
+
+    .tws-search-wrap {
+      margin: 8px 0 12px;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .tws-search-input {
+      width: min(420px, 100%);
+      height: 38px;
+      border: 1px solid var(--tws-border);
+      border-radius: 999px;
+      padding: 0 14px;
+      background: #fff;
+      color: var(--tws-text);
+      outline: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .tws-search-input:focus {
+      border-color: var(--tws-secondary);
+      box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.08);
+    }
+
+    .tws-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .tws-pagination-info {
+      min-width: 100px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--tws-text);
+    }
+
+    .tws-btn-white[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  </style>
 </head>
 
 <body class="tws-app-body">
@@ -14,105 +135,165 @@
   </aside>
 
   <main class="tws-app-main">
-  <div class="tws-app-center">
+    <div class="tws-app-center">
 
-    <div class="tws-app-title-pill">
-      <h1>TWS - Teaching Workload Sheet</h1>
-    </div>
-
-    <section class="tws-card">
-
-      <div class="tws-card-header">
-        <div class="tws-card-title">Create Teaching Workload Sheet</div>
-
-        <!-- mimic "Filter / Search / Refresh" like your UI -->
-        <div class="pc-actions">
-          <button class="pc-chip" type="button">Filter by Department</button>
-          <button class="pc-chip" type="button">Search...</button>
-          <button class="pc-chip" type="button" onclick="location.reload()">Refresh</button>
-        </div>
+      <div class="tws-app-title-pill">
+        <h1>Teaching Workload Sheet</h1>
       </div>
 
-      <!-- SUBJECT TABLE -->
-      <div class="tws-table tws-workload-table">
-        <div class="tws-row tws-head tws-workload-row">
-          <div>Course Code</div>
-          <div>Course Title</div>
-          <div>Units</div>
-          <div class="tws-workload-col-head">Add</div>
-          <div class="tws-workload-col-head">Remove</div>
-        </div>
+      <section class="tws-card">
 
-        <% (subjects || []).forEach(s => { 
-            const alreadyAdded = (tws.createdWorkload || []).some(x => x.code === s.code);
-        %>
-          <div class="tws-row tws-workload-row">
-            <div><%= s.code %></div>
-            <div><%= s.title %></div>
-            <div><%= Number(s.units).toFixed(2) %></div>
+        <div class="tws-card-header">
+          <div class="tws-card-title">Create Teaching Workload Sheet</div>
 
-            <div class="tws-btns tws-workload-action-cell">
-              <button
-                class="tws-btn-white"
-                type="button"
-                <%= alreadyAdded ? "disabled" : "" %>
-                onclick="openModal('<%= s.code %>', '<%= s.title.replace(/'/g, "\\'") %>', '<%= Number(s.units).toFixed(2) %>')"
-              >
-                <%= alreadyAdded ? "Added" : "Add" %>
-              </button>
-            </div>
-
-            <div class="tws-btns tws-workload-action-cell">
-              <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/remove" style="display:inline;" onsubmit="return confirm('Remove this subject from the workload?');">
-                <input type="hidden" name="code" value="<%= s.code %>" />
-                <button
-                  class="tws-btn-white tws-btn-danger"
-                  type="submit"
-                  <%= alreadyAdded ? "" : "disabled" %>
-                >
-                  Remove
-                </button>
-              </form>
-            </div>
+          <div class="pc-actions">
+            <button class="pc-chip" type="button" onclick="location.reload()">Refresh</button>
           </div>
-        <% }) %>
+        </div>
+
+        <div class="tws-search-wrap">
+          <input
+            id="subjectSearch"
+            class="tws-search-input"
+            type="search"
+            placeholder="Search by course code or title"
+            aria-label="Search subjects"
+          />
+        </div>
+
+        <div class="tws-table tws-workload-table">
+          <div class="tws-row tws-head tws-workload-row">
+            <div>Course Code</div>
+            <div>Course Title</div>
+            <div>Units</div>
+            <div class="tws-workload-col-head">Add</div>
+            <div class="tws-workload-col-head">Remove</div>
+          </div>
+
+          <% if (!subjects || !subjects.length) { %>
+            <div class="tws-row">
+              <div style="grid-column: 1 / -1; text-align:center;">No subjects found in the database.</div>
+            </div>
+          <% } %>
+
+          <% (subjects || []).forEach(function(s) {
+               const alreadyAdded = (tws.createdWorkload || []).some(function(x) { return x.code === s.code; });
+          %>
+            <div
+              class="tws-row tws-workload-row js-subject-row"
+              data-search="<%= String((s.code || '') + ' ' + (s.title || '')).toLowerCase() %>"
+            >
+              <div><%= s.code %></div>
+              <div><%= s.title %></div>
+              <div><%= Number(s.units).toFixed(2) %></div>
+
+              <div class="tws-btns tws-workload-action-cell">
+                <button
+                  class="tws-btn-white open-add-modal-btn"
+                  type="button"
+                  <%= alreadyAdded ? "disabled" : "" %>
+                  data-code="<%= s.code %>"
+                  data-title="<%= s.title %>"
+                  data-units="<%= Number(s.units).toFixed(2) %>"
+                >
+                  <%= alreadyAdded ? "Added" : "Add" %>
+                </button>
+              </div>
+
+              <div class="tws-btns tws-workload-action-cell">
+                <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/remove" style="display:inline;" onsubmit="return confirm('Remove this subject from the workload?');">
+                  <input type="hidden" name="code" value="<%= s.code %>" />
+                  <button
+                    class="tws-btn-white tws-btn-danger"
+                    type="submit"
+                    <%= alreadyAdded ? "" : "disabled" %>
+                  >
+                    Remove
+                  </button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+
+          <% if (subjects && subjects.length) { %>
+            <div class="tws-row tws-workload-row" id="noSubjectMatchRow" style="display:none;">
+              <div style="grid-column: 1 / -1; text-align:center;">No matching course found.</div>
+            </div>
+          <% } %>
+        </div>
+
+        <div class="tws-pagination" id="subjectPagination" <%= subjects && subjects.length ? '' : 'style="display:none;"' %>>
+          <button type="button" class="tws-btn-white" id="prevPageBtn">Prev</button>
+          <div class="tws-pagination-info" id="pageInfo">Page 1 of 1</div>
+          <button type="button" class="tws-btn-white" id="nextPageBtn">Next</button>
+        </div>
+
+        <div class="tws-added-list">
+          <div style="font-size:13px; font-weight:800;">Added Subjects</div>
+
+          <% if (!tws.createdWorkload || tws.createdWorkload.length === 0) { %>
+            <div style="font-size:12px; opacity:.9;">No subjects added yet.</div>
+          <% } else { %>
+            <% tws.createdWorkload.forEach(function(item) { %>
+              <div class="tws-added-item">
+                <div class="tws-added-top">
+                  <div>
+                    <b><%= item.code %> - <%= item.title %></b>
+                    <div class="tws-added-meta">
+                      <div><strong>Schedule:</strong> <%= item.timeSlot || "—" %></div>
+                      <div><strong>Section / Room:</strong> <%= item.sectionRoom || "—" %></div>
+                      <div><strong>Units:</strong> <%= Number(item.units || 0).toFixed(2) %></div>
+                    </div>
+                  </div>
+
+                  <div class="tws-added-actions">
+                    <button
+                      type="button"
+                      class="tws-small-btn tws-small-btn-white open-edit-modal-btn"
+                      data-code="<%= item.code || '' %>"
+                      data-title="<%= item.title || '' %>"
+                      data-units="<%= Number(item.units || 0).toFixed(2) %>"
+                      data-day="<%= item.day || '' %>"
+                      data-start-time="<%= item.startTime || '' %>"
+                      data-end-time="<%= item.endTime || '' %>"
+                      data-section-room="<%= item.sectionRoom || '' %>"
+                    >
+                      Edit
+                    </button>
+
+                    <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/remove" style="display:inline;" onsubmit="return confirm('Remove this subject from the workload?');">
+                      <input type="hidden" name="code" value="<%= item.code %>" />
+                      <button class="tws-small-btn tws-small-btn-danger" type="submit">
+                        Remove
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+
+      </section>
+
+      <div class="tws-footer-actions">
+        <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Back</a>
+        <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
       </div>
 
-      <!-- optional: show list of added subjects (para sure ka na na-add) -->
-      <div style="margin-top:12px; opacity:.95; font-size:12px;">
-        <b>Added Subjects:</b>
-        <% if (!tws.createdWorkload || tws.createdWorkload.length === 0) { %>
-          <span> none</span>
-        <% } else { %>
-          <span>
-            <%= tws.createdWorkload.map(x => x.code).join(", ") %>
-          </span>
-        <% } %>
-      </div>
-
-    </section>
-
-    <!-- Footer buttons -->
-    <div class="tws-footer-actions">
-  <a class="tws-btn-white" href="/tws/faculty/<%= tws.id %>">Back</a>
-  <a class="tws-next" href="/tws/created-teaching-workload/<%= tws.id %>">Next</a>
-</div>
-
-  </div>
+    </div>
   </main>
 </div>
 
-<!-- POPUP MODAL -->
+<!-- ADD MODAL -->
 <div class="tws-modal-bg" id="addModal">
   <div class="tws-modal">
-    <div class="tws-modal-title" id="modalTitle">Add Subject</div>
+    <div class="tws-modal-title" id="addModalTitle">Add Subject</div>
 
-    <!-- REAL SUBMIT FORM -->
     <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/add">
-      <!-- hidden fields (subject info) -->
-      <input type="hidden" name="code" id="m_code" />
-      <input type="hidden" name="title" id="m_title" />
-      <input type="hidden" name="units" id="m_units" />
+      <input type="hidden" name="code" id="add_code" />
+      <input type="hidden" name="title" id="add_title" />
+      <input type="hidden" name="units" id="add_units" />
 
       <label>Choose Day</label>
       <select name="day" required>
@@ -126,51 +307,268 @@
         <option value="Sun">Sun</option>
       </select>
 
-      <label>Choose Time Slot</label>
-      <select name="timeSlot" required>
-        <option value="">-- Select --</option>
-        <option>7:00 AM - 8:15 AM</option>
-        <option>8:15 AM - 9:30 AM</option>
-        <option>9:30 AM - 10:45 AM</option>
-        <option>10:45 AM - 12:00 PM</option>
-        <option>1:15 PM - 2:30 PM</option>
-        <option>2:30 PM - 3:45 PM</option>
-        <option>3:45 PM - 5:00 PM</option>
-        <option>5:00 PM - 6:15 PM</option>
-        <option>6:15 PM - 7:30 PM</option>
-        <option>7:30 PM - 8:45 PM</option>
-      </select>
+      <div class="tws-inline-grid">
+        <div>
+          <label>Start Time</label>
+          <select name="startTime" required>
+            <option value="">-- Select Start Time --</option>
+            <option value="7:00 AM">7:00 AM</option>
+            <option value="8:15 AM">8:15 AM</option>
+            <option value="9:30 AM">9:30 AM</option>
+            <option value="10:45 AM">10:45 AM</option>
+            <option value="12:00 PM">12:00 PM</option>
+            <option value="1:15 PM">1:15 PM</option>
+            <option value="2:30 PM">2:30 PM</option>
+            <option value="3:45 PM">3:45 PM</option>
+            <option value="5:00 PM">5:00 PM</option>
+            <option value="6:15 PM">6:15 PM</option>
+            <option value="7:30 PM">7:30 PM</option>
+            <option value="8:45 PM">8:45 PM</option>
+          </select>
+        </div>
 
-      <label>Choose Section</label>
+        <div>
+          <label>End Time</label>
+          <select name="endTime" required>
+            <option value="">-- Select End Time --</option>
+            <option value="8:15 AM">8:15 AM</option>
+            <option value="9:30 AM">9:30 AM</option>
+            <option value="10:45 AM">10:45 AM</option>
+            <option value="12:00 PM">12:00 PM</option>
+            <option value="1:15 PM">1:15 PM</option>
+            <option value="2:30 PM">2:30 PM</option>
+            <option value="3:45 PM">3:45 PM</option>
+            <option value="5:00 PM">5:00 PM</option>
+            <option value="6:15 PM">6:15 PM</option>
+            <option value="7:30 PM">7:30 PM</option>
+            <option value="8:45 PM">8:45 PM</option>
+            <option value="10:00 PM">10:00 PM</option>
+          </select>
+        </div>
+      </div>
+
+      <label style="margin-top:10px;">Choose Section</label>
       <select name="sectionRoom" required>
         <option value="">-- Select --</option>
-        <option>A1531 | R611</option>
-        <option>A1532 | R612</option>
-        <option>A1533 | R613</option>
+        <option value="A1531 | R611">A1531 | R611</option>
+        <option value="A1532 | R612">A1532 | R612</option>
+        <option value="A1533 | R613">A1533 | R613</option>
       </select>
 
       <div class="tws-modal-actions">
-        <button class="tws-modal-cancel" type="button" onclick="closeModal()">Cancel</button>
-        <!-- SUBMIT => adds subject => redirects back SAME PAGE -->
+        <button class="tws-modal-cancel" type="button" onclick="closeAddModal()">Cancel</button>
         <button class="tws-modal-add" type="submit">+ Add Subject</button>
       </div>
     </form>
+  </div>
+</div>
 
+<!-- EDIT MODAL -->
+<div class="tws-modal-bg" id="editModal">
+  <div class="tws-modal">
+    <div class="tws-modal-title" id="editModalTitle">Edit Subject</div>
+
+    <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/update">
+      <input type="hidden" name="code" id="edit_code" />
+      <input type="hidden" name="title" id="edit_title" />
+      <input type="hidden" name="units" id="edit_units" />
+
+      <label>Choose Day</label>
+      <select name="day" id="edit_day" required>
+        <option value="">-- Select --</option>
+        <option value="Mon">Mon</option>
+        <option value="Tue">Tue</option>
+        <option value="Wed">Wed</option>
+        <option value="Thu">Thu</option>
+        <option value="Fri">Fri</option>
+        <option value="Sat">Sat</option>
+        <option value="Sun">Sun</option>
+      </select>
+
+      <div class="tws-inline-grid">
+        <div>
+          <label>Start Time</label>
+          <select name="startTime" id="edit_startTime" required>
+            <option value="">-- Select Start Time --</option>
+            <option value="7:00 AM">7:00 AM</option>
+            <option value="8:15 AM">8:15 AM</option>
+            <option value="9:30 AM">9:30 AM</option>
+            <option value="10:45 AM">10:45 AM</option>
+            <option value="12:00 PM">12:00 PM</option>
+            <option value="1:15 PM">1:15 PM</option>
+            <option value="2:30 PM">2:30 PM</option>
+            <option value="3:45 PM">3:45 PM</option>
+            <option value="5:00 PM">5:00 PM</option>
+            <option value="6:15 PM">6:15 PM</option>
+            <option value="7:30 PM">7:30 PM</option>
+            <option value="8:45 PM">8:45 PM</option>
+          </select>
+        </div>
+
+        <div>
+          <label>End Time</label>
+          <select name="endTime" id="edit_endTime" required>
+            <option value="">-- Select End Time --</option>
+            <option value="8:15 AM">8:15 AM</option>
+            <option value="9:30 AM">9:30 AM</option>
+            <option value="10:45 AM">10:45 AM</option>
+            <option value="12:00 PM">12:00 PM</option>
+            <option value="1:15 PM">1:15 PM</option>
+            <option value="2:30 PM">2:30 PM</option>
+            <option value="3:45 PM">3:45 PM</option>
+            <option value="5:00 PM">5:00 PM</option>
+            <option value="6:15 PM">6:15 PM</option>
+            <option value="7:30 PM">7:30 PM</option>
+            <option value="8:45 PM">8:45 PM</option>
+            <option value="10:00 PM">10:00 PM</option>
+          </select>
+        </div>
+      </div>
+
+      <label style="margin-top:10px;">Choose Section</label>
+      <select name="sectionRoom" id="edit_sectionRoom" required>
+        <option value="">-- Select --</option>
+        <option value="A1531 | R611">A1531 | R611</option>
+        <option value="A1532 | R612">A1532 | R612</option>
+        <option value="A1533 | R613">A1533 | R613</option>
+      </select>
+
+      <div class="tws-modal-actions">
+        <button class="tws-modal-cancel" type="button" onclick="closeEditModal()">Cancel</button>
+        <button class="tws-modal-add" type="submit">Save Changes</button>
+      </div>
+    </form>
   </div>
 </div>
 
 <script>
-function openModal(code, title, units){
-  document.getElementById("modalTitle").textContent = `Add Subject: ${code} - ${title}`;
-  document.getElementById("m_code").value = code;
-  document.getElementById("m_title").value = title;
-  document.getElementById("m_units").value = units;
-
+function openAddModal(code, title, units) {
+  document.getElementById("addModalTitle").textContent = `Add Subject: ${code} - ${title}`;
+  document.getElementById("add_code").value = code;
+  document.getElementById("add_title").value = title;
+  document.getElementById("add_units").value = units;
   document.getElementById("addModal").style.display = "flex";
 }
-function closeModal(){
+
+function closeAddModal() {
   document.getElementById("addModal").style.display = "none";
 }
+
+function openEditModal(code, title, units, day, startTime, endTime, sectionRoom) {
+  document.getElementById("editModalTitle").textContent = `Edit Subject: ${code} - ${title}`;
+  document.getElementById("edit_code").value = code;
+  document.getElementById("edit_title").value = title;
+  document.getElementById("edit_units").value = units;
+  document.getElementById("edit_day").value = day || "";
+  document.getElementById("edit_startTime").value = startTime || "";
+  document.getElementById("edit_endTime").value = endTime || "";
+  document.getElementById("edit_sectionRoom").value = sectionRoom || "";
+  document.getElementById("editModal").style.display = "flex";
+}
+
+function closeEditModal() {
+  document.getElementById("editModal").style.display = "none";
+}
+
+document.querySelectorAll(".open-add-modal-btn").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    openAddModal(
+      this.dataset.code || "",
+      this.dataset.title || "",
+      this.dataset.units || ""
+    );
+  });
+});
+
+document.querySelectorAll(".open-edit-modal-btn").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    openEditModal(
+      this.dataset.code || "",
+      this.dataset.title || "",
+      this.dataset.units || "",
+      this.dataset.day || "",
+      this.dataset.startTime || "",
+      this.dataset.endTime || "",
+      this.dataset.sectionRoom || ""
+    );
+  });
+});
+
+const subjectSearchInput = document.getElementById("subjectSearch");
+const subjectRows = Array.from(document.querySelectorAll(".js-subject-row"));
+const noSubjectMatchRow = document.getElementById("noSubjectMatchRow");
+const prevPageBtn = document.getElementById("prevPageBtn");
+const nextPageBtn = document.getElementById("nextPageBtn");
+const pageInfo = document.getElementById("pageInfo");
+
+const rowsPerPage = 10;
+let currentPage = 1;
+let filteredRows = [...subjectRows];
+
+function renderSubjectPage() {
+  subjectRows.forEach((row) => {
+    row.style.display = "none";
+  });
+
+  const totalRows = filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentRows = filteredRows.slice(startIndex, endIndex);
+
+  currentRows.forEach((row) => {
+    row.style.display = "";
+  });
+
+  if (pageInfo) {
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  }
+
+  if (prevPageBtn) {
+    prevPageBtn.disabled = currentPage === 1 || totalRows === 0;
+  }
+
+  if (nextPageBtn) {
+    nextPageBtn.disabled = currentPage === totalPages || totalRows === 0;
+  }
+
+  if (noSubjectMatchRow) {
+    noSubjectMatchRow.style.display = totalRows === 0 ? "" : "none";
+  }
+}
+
+function filterSubjectRows() {
+  const query = String(subjectSearchInput?.value || "").trim().toLowerCase();
+
+  filteredRows = subjectRows.filter((row) => {
+    const haystack = row.dataset.search || "";
+    return !query || haystack.includes(query);
+  });
+
+  currentPage = 1;
+  renderSubjectPage();
+}
+
+prevPageBtn?.addEventListener("click", function () {
+  if (currentPage > 1) {
+    currentPage -= 1;
+    renderSubjectPage();
+  }
+});
+
+nextPageBtn?.addEventListener("click", function () {
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+  if (currentPage < totalPages) {
+    currentPage += 1;
+    renderSubjectPage();
+  }
+});
+
+subjectSearchInput?.addEventListener("input", filterSubjectRows);
+
+renderSubjectPage();
 </script>
 
 </body>
