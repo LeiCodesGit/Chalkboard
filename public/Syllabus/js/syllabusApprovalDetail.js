@@ -151,6 +151,148 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ─── Signature Tab Switching ──────────────────────────────────────
+    const sigTabs = document.querySelectorAll('.ad-sig-tab');
+    const sigTabUpload = document.getElementById('sig-tab-upload');
+    const sigTabDraw = document.getElementById('sig-tab-draw');
+
+    sigTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            sigTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const target = tab.dataset.tab;
+            if (target === 'upload') {
+                if (sigTabUpload) sigTabUpload.style.display = 'block';
+                if (sigTabDraw) sigTabDraw.style.display = 'none';
+            } else if (target === 'draw') {
+                if (sigTabUpload) sigTabUpload.style.display = 'none';
+                if (sigTabDraw) sigTabDraw.style.display = 'block';
+                initCanvas(); // ensure canvas is sized correctly
+            }
+        });
+    });
+
+    // ─── Canvas Drawing Logic ──────────────────────────────────────
+    const sigCanvas = document.getElementById('signature-canvas');
+    const sigClearBtn = document.getElementById('sig-clear-canvas');
+    const sigUseBtn = document.getElementById('sig-use-drawn');
+    let sigCtx = null;
+    let isDrawing = false;
+    let canvasInitialized = false;
+
+    function initCanvas() {
+        if (!sigCanvas || canvasInitialized) return;
+        sigCtx = sigCanvas.getContext('2d');
+        
+        // Set canvas size to match display size
+        const rect = sigCanvas.getBoundingClientRect();
+        sigCanvas.width = rect.width;
+        sigCanvas.height = rect.height;
+
+        sigCtx.strokeStyle = '#000';
+        sigCtx.lineWidth = 2;
+        sigCtx.lineCap = 'round';
+        sigCtx.lineJoin = 'round';
+
+        // Mouse events
+        sigCanvas.addEventListener('mousedown', startDrawing);
+        sigCanvas.addEventListener('mousemove', draw);
+        sigCanvas.addEventListener('mouseup', stopDrawing);
+        sigCanvas.addEventListener('mouseleave', stopDrawing);
+
+        // Touch events
+        sigCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            startDrawing({ offsetX: touch.clientX - sigCanvas.getBoundingClientRect().left, offsetY: touch.clientY - sigCanvas.getBoundingClientRect().top });
+        });
+        sigCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            draw({ offsetX: touch.clientX - sigCanvas.getBoundingClientRect().left, offsetY: touch.clientY - sigCanvas.getBoundingClientRect().top });
+        });
+        sigCanvas.addEventListener('touchend', stopDrawing);
+
+        canvasInitialized = true;
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+        sigCtx.beginPath();
+        sigCtx.moveTo(e.offsetX, e.offsetY);
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        sigCtx.lineTo(e.offsetX, e.offsetY);
+        sigCtx.stroke();
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+    }
+
+    // Clear canvas
+    if (sigClearBtn && sigCanvas) {
+        sigClearBtn.addEventListener('click', () => {
+            if (sigCtx) {
+                sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+            }
+        });
+    }
+
+    // Use drawn signature
+    if (sigUseBtn && sigCanvas && sigBox) {
+        sigUseBtn.addEventListener('click', () => {
+            if (!sigCtx) return;
+
+            // Check if canvas is blank
+            const imageData = sigCtx.getImageData(0, 0, sigCanvas.width, sigCanvas.height).data;
+            let isBlank = true;
+            for (let i = 3; i < imageData.length; i += 4) {
+                if (imageData[i] !== 0) { isBlank = false; break; }
+            }
+
+            if (isBlank) {
+                alert('Please draw your signature before using it.');
+                return;
+            }
+
+            const dataUrl = sigCanvas.toDataURL('image/png');
+
+            // Insert drawn signature into the signature box as an image
+            sigBox.innerHTML = `<img src="${dataUrl}" alt="Signature" class="ad-signature-img">`;
+            sigBox.appendChild(sigInput); // keep hidden input in DOM
+            if (sigRemove) sigRemove.style.display = 'flex';
+
+            // Update PDF Preview
+            const previewSection = document.getElementById('document-signature-section');
+            const previewImgContainer = document.getElementById('preview-signature-img-container');
+            if (previewSection && previewImgContainer) {
+                previewImgContainer.innerHTML = `<img src="${dataUrl}" alt="Signature" style="max-height: 100%; max-width: 100%; object-fit: contain;">`;
+                previewSection.style.display = 'block';
+            }
+
+            // Enable submit button if approving
+            if ((workflowStep === 'endorsement' || workflowStep === 'approval' || workflowStep === 'archiving') && btnSubmit) {
+                const approveVal = typeof SYLLABUS_APPROVAL_DATA !== 'undefined' ? (SYLLABUS_APPROVAL_DATA.optionApproveValue || 'PC_Approved') : 'PC_Approved';
+                if (statusSelect && statusSelect.value === approveVal) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.style.opacity = '1';
+                    btnSubmit.style.cursor = 'pointer';
+                }
+            }
+
+            // Switch back to upload tab to show the result
+            sigTabs.forEach(t => t.classList.remove('active'));
+            const uploadTabBtn = document.querySelector('.ad-sig-tab[data-tab="upload"]');
+            if (uploadTabBtn) uploadTabBtn.classList.add('active');
+            if (sigTabUpload) sigTabUpload.style.display = 'block';
+            if (sigTabDraw) sigTabDraw.style.display = 'none';
+        });
+    }
+
     // ─── Signatory Name Mirroring ──────────────────────────────────
     const signatoryInput = document.getElementById('signatory-name-input');
     const signatoryPreview = document.getElementById('preview-signatory-name');

@@ -143,7 +143,7 @@
 
                 <div class="syllabus-content-section">
                     <h2 class="college-header-outside">COLLEGE OF ENGINEERING AND ARCHITECTURE</h2>
-                    <p style="text-align: center; color: #666; font-style: italic; margin-bottom: 40px;">Status: <%= locals.status || 'Archived' %></p>
+                    <p style="text-align: center; color: #666; font-style: italic; margin-bottom: 40px;">Status: <%= locals.status === 'Archived' ? 'Verified' : (locals.status || 'Not Submitted') %></p>
 
                     <!-- Vision & Mission Section -->
                     <section class="content-panel-transparent">
@@ -526,6 +526,53 @@
         document.querySelectorAll('[contenteditable]').forEach(el => {
             el.setAttribute('contenteditable', 'false');
         });
+
+        // Auto-print when opened with ?print=true (for Download PDF feature)
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('print') === 'true') {
+                // Wait for the page to fully render, then trigger print
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
+                });
+            }
+        })();
     </script>
+
+    <style>
+        @media print {
+            /* Hide non-content elements */
+            .syllabus-top-bar, .floating-close-btn, .preview-badge, .no-pdf {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .content-panel-transparent {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                page-break-inside: avoid;
+            }
+
+            .syllabus-banner {
+                page-break-after: avoid;
+            }
+
+            /* Ensure tables don't break badly across pages */
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+        }
+    </style>
 </body>
 </html>

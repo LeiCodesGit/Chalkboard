@@ -13,8 +13,10 @@ coursesOverviewFacultyRouter.get('/', async (req, res) => {
     try {
         const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
 
-        // Fetch all courses for now to populate the faculty view
-        let userCourses = await Syllabus.find({});
+        // Filter courses to only show those assigned to the logged-in faculty
+        const loggedInUserId = req.session && req.session.user ? (req.session.user.id || req.session.user._id) : null;
+        const filter = loggedInUserId ? { assignedInstructor: loggedInUserId } : {};
+        let userCourses = await Syllabus.find(filter);
 
         if (mainDB.models.User) {
             await Syllabus.populate(userCourses, { path: 'assignedInstructor' });

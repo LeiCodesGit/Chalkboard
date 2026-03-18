@@ -375,23 +375,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function getStatusInfo(status) {
+        switch(status) {
+            case 'Pending': return { cssClass: 'status-pending', label: 'Pending' };
+            case 'Endorsed': return { cssClass: 'status-endorsed', label: 'Endorsed' };
+            case 'Approved': return { cssClass: 'status-approved', label: 'Approved by Dean' };
+            case 'Archived': return { cssClass: 'status-archived', label: 'Verified by HR' };
+            case 'Rejected': case 'Returned': return { cssClass: 'status-rejected', label: status };
+            case 'Returned to PC': return { cssClass: 'status-returned', label: 'Returned to PC' };
+            default: return { cssClass: 'status-no-draft', label: status || 'No Syllabus Draft' };
+        }
+    }
+
     function renderCourseGrid(courses) {
         if (!courseGrid) return;
         const wasDeleteMode = isDeleteMode;
         const wasListView = courseGrid.classList.contains('list-view');
 
         if (courses.length > 0) {
-            courseGrid.innerHTML = courses.map(course => `
+            courseGrid.innerHTML = courses.map(course => {
+                const si = getStatusInfo(course.status);
+                return `
                 <div class="course-card" data-id="${course.id}" data-hasdraft="${course.hasDraft}" data-status="${course.status || 'No Syllabus Draft'}">
                     <div class="card-image"><img src="${course.img}" alt="Course Image"></div>
                     <div class="card-content">
                         <span class="course-code">${course.code}</span>
                         <h3 class="course-title">${course.title}</h3>
-                        <p class="course-status">${course.status || 'No Syllabus Draft'}</p>
+                        <p class="course-status ${si.cssClass}">${si.label}</p>
                     </div>
                     <div class="card-footer"><span class="instructor">${course.instructor}</span></div>
                 </div>
-            `).join('');
+            `}).join('');
         } else {
             courseGrid.innerHTML = '<p style="text-align:center;color:#777;grid-column:1/-1;padding:40px 0;">No courses found.</p>';
         }
@@ -417,12 +431,23 @@ window.openDraftModal = function (syllabusId, hasDraft, status) {
     const modal = document.getElementById('draftModal');
     const msg = document.getElementById('draftMessage');
     const btn = document.getElementById('draftActionBtn');
+    const modalTitle = document.getElementById('draftModalTitle');
 
     const RestrictedStatuses = ['Approved', 'Pending', 'Archived', 'Endorsed'];
     const isRestricted = RestrictedStatuses.includes(status);
+    const isVerified = status === 'Archived';
+
+    // Update modal title based on verification status
+    if (modalTitle) {
+        modalTitle.textContent = isVerified ? 'Syllabus' : 'Syllabus Draft';
+    }
 
     if (hasDraft) {
-        if (isRestricted) {
+        if (isVerified) {
+            msg.innerText = 'This syllabus has been verified by HR.';
+            btn.innerText = 'View Syllabus';
+            btn.onclick = () => window.location.href = `/syllabus/preview/${syllabusId}`;
+        } else if (isRestricted) {
             msg.innerText = `This syllabus is currently ${status}. Editing is disabled.`;
             btn.innerText = 'View Syllabus Draft';
             btn.onclick = () => window.location.href = `/syllabus/preview/${syllabusId}`;

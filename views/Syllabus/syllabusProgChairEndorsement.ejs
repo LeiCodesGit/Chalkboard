@@ -313,7 +313,7 @@
                 <div class="ad-sidebar-section">
                     <label class="ad-sidebar-label">Comments</label>
                     <textarea id="approval-comments" class="ad-comments-box" rows="5"
-                        placeholder="Add endorsement remarks..."><%= locals.existingComment || '' %></textarea>
+                        placeholder="Add endorsement remarks..."></textarea>
                 </div>
 
                 <!-- ── Status Dropdown ── -->
@@ -341,15 +341,34 @@
                     <input type="text" id="signatory-name-input" class="ad-comments-box" placeholder="e.g. Dr. Juan dela Cruz" style="margin-bottom: 15px; padding: 10px 12px; height: 40px; box-sizing: border-box;">
 
                     <label class="ad-sidebar-label">E-Signature</label>
-                    <div class="ad-signature-wrapper">
-                        <div class="ad-signature-box" id="signature-box">
-                            <span class="ad-signature-placeholder">Click to upload signature</span>
-                            <input type="file" id="signature-upload" accept="image/*" hidden>
+
+                    <!-- Signature Tab Switcher -->
+                    <div class="ad-sig-tabs">
+                        <button type="button" class="ad-sig-tab active" data-tab="upload">Upload</button>
+                        <button type="button" class="ad-sig-tab" data-tab="draw">Draw</button>
+                    </div>
+
+                    <!-- Upload Tab -->
+                    <div class="ad-sig-tab-content" id="sig-tab-upload">
+                        <div class="ad-signature-wrapper">
+                            <div class="ad-signature-box" id="signature-box">
+                                <span class="ad-signature-placeholder">Click to upload signature</span>
+                                <input type="file" id="signature-upload" accept="image/*" hidden>
+                            </div>
+                            <button type="button" class="ad-signature-remove-btn" id="signature-remove"
+                                title="Remove signature" style="display: none;">
+                                <span class="material-symbols-outlined">cancel</span>
+                            </button>
                         </div>
-                        <button type="button" class="ad-signature-remove-btn" id="signature-remove"
-                            title="Remove signature" style="display: none;">
-                            <span class="material-symbols-outlined">cancel</span>
-                        </button>
+                    </div>
+
+                    <!-- Draw Tab -->
+                    <div class="ad-sig-tab-content" id="sig-tab-draw" style="display: none;">
+                        <canvas id="signature-canvas" class="ad-signature-canvas" width="220" height="80"></canvas>
+                        <div class="ad-sig-draw-actions">
+                            <button type="button" class="ad-sig-draw-btn ad-sig-clear-btn" id="sig-clear-canvas">Clear</button>
+                            <button type="button" class="ad-sig-draw-btn ad-sig-use-btn" id="sig-use-drawn">Use This Signature</button>
+                        </div>
                     </div>
                 </div>
                 <% } %>

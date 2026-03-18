@@ -56,8 +56,12 @@ coursesOverviewRouter.get('/search', async (req, res) => {
 
         const filter = {};
 
-        // Only filter by userID if user is NOT a dean and userId is valid
-        if (userRole !== 'dean' && userId && mongoose.Types.ObjectId.isValid(userId)) {
+        // If the user is a Professor, restrict search to only their assigned courses
+        if (userRole === 'professor' && req.session.user) {
+            filter.assignedInstructor = req.session.user.id || req.session.user._id;
+        } 
+        // Otherwise, filter by userID if user is NOT a dean and userId is valid
+        else if (userRole !== 'dean' && userId && mongoose.Types.ObjectId.isValid(userId)) {
             filter.userID = new mongoose.Types.ObjectId(userId);
         }
 
