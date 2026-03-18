@@ -358,7 +358,7 @@ export const submitATA = async (req, res) => {
 // ==========================================
 export const approveATA = async (req, res) => {
     try {
-        const { action, remarks } = req.body;
+        const { action, remarks, justification } = req.body;
         const formId = req.params.id;
         
         let sessionUserID = "unknown";
@@ -463,6 +463,18 @@ export const approveATA = async (req, res) => {
                 default:
                     return res.status(400).json({ error: "Form cannot be moved from its current state." });
             }
+        }
+
+        // 👇 NEW: Save the explicit Justification directly to the form document!
+        if (justification !== undefined) {
+            form.justification = justification;
+            form.chairRemarks = justification; // Backwards compatibility for your submit route
+        }
+        
+        // If returning, wipe the justification so it resets for the faculty
+        if (action === 'RETURN') {
+            form.justification = "";
+            form.chairRemarks = "";
         }
 
         form.status = newStatus;
@@ -913,8 +925,11 @@ export const viewAtaPdf = async (req, res) => {
             }
         }
 
-        // Grabbing logs and printing names/dates
-        const getSignature = (role) => form.approvalHistory.find(log => log.approverRole === role);
+        // 👇 BUG FIX: Only grab actual approval signatures, ignore "RETURNED" logs!
+        const getSignature = (role) => {
+            const validLogs = form.approvalHistory.filter(log => log.approverRole === role && log.approvalStatus !== 'RETURNED');
+            return validLogs.length > 0 ? validLogs[validLogs.length - 1] : null;
+        };
         
         const chairLog = getSignature('Program-Chair');
         if (chairLog) fillText('text_83xjqp', `${chairLog.approverName} | ${new Date(chairLog.date).toLocaleDateString('en-US')}`);
@@ -1017,17 +1032,25 @@ export const viewAtaPdf = async (req, res) => {
         }
         // 👆 END OF SECTION C AUTO-STAMPER
 
-        // PERFECTED OVERLOAD JUSTIFICATION LOGIC
+       // PERFECTED OVERLOAD JUSTIFICATION LOGIC
         const regularLoad = form.totalEffectiveUnits || 0;
         const isPartTime = form.employmentType === 'Part-Time';
         const overloadLimit = isPartTime ? 11 : 15;
 
         if (regularLoad > overloadLimit) {
-            const chairRemarks = chairLog && chairLog.remarks && chairLog.remarks.trim() !== '' 
-                ? chairLog.remarks 
-                : "Justification pending Program Chair review.";
+            // 👇 Look for the dedicated justification field FIRST!
+            let finalJustification = "Justification pending Program Chair review.";
             
-            let remainingText = chairRemarks;
+            if (form.justification && form.justification.trim() !== '') {
+                finalJustification = form.justification;
+            } else if (form.chairRemarks && form.chairRemarks.trim() !== '') {
+                finalJustification = form.chairRemarks;
+            } else if (chairLog && chairLog.remarks && chairLog.remarks.trim() !== '' && chairLog.remarks !== 'Form Endorsed/Approved') {
+                finalJustification = chairLog.remarks; // Fallback for older forms
+            }
+            
+            // 👇 FIXED: We now safely pass finalJustification into the text splitter
+            let remainingText = finalJustification;
             let lines = ['', '', ''];
             const MAX_CHARS = 155; 
 
