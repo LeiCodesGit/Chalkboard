@@ -136,11 +136,13 @@
                                                                     <i class="fas fa-minus-circle"></i> Not Submitted
                                                                 </span>
                                                                 <% } %>
+                                                                <% if (d.status !== 'Approved') { %>
                                                                     <button class="review-btn"
                                                                         data-href="/syllabus/dean/approve/<%= d.syllabusId %>"
                                                                         onclick="window.location.href=this.dataset.href">
                                                                         <i class="fas fa-gavel"></i> Approve
                                                                     </button>
+                                                                <% } %>
                                                 </div>
                                             </div>
                                             <% } %>

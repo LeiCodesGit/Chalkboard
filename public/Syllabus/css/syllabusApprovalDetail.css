@@ -645,10 +645,16 @@
    PRINT / PDF EXPORT STYLES
    ═══════════════════════════════════════════════════════════ */
 @media print {
+    @page {
+        margin: 0;
+    }
+
     body, .approval-detail-main {
         background: none !important;
         background-color: white !important;
         height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     .approval-detail-header, 
@@ -685,7 +691,7 @@
         max-height: none !important;
         overflow: visible !important;
         border: none !important;
-        padding: 0 !important;
+        padding: 2cm 1.5cm !important;
     }
     
     /* Display signature block on PDF */

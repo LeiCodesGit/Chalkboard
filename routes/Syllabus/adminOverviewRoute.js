@@ -65,7 +65,7 @@ adminOverviewRouter.get('/', async (req, res) => {
 
     try {
         const approvals = await SyllabusApprovalStatus.find({
-            status: { $in: ['Approved', 'Archived'] }
+            status: { $in: ['Approved', 'Archived', 'Endorsed'] }
         });
 
         if (approvals.length > 0) {
@@ -154,7 +154,6 @@ adminOverviewRouter.get('/review/:syllabusId', async (req, res) => {
             schedules = await WeeklySchedule.find({ syllabusID: syllabusId }).sort({ week: 1 });
         }
 
-        // Pass dummy data if actual record missing
         let viewData = {
             syllabusId: syllabusId,
             courseName: course ? course.courseTitle : "Introduction to Demo Course",
@@ -171,7 +170,11 @@ adminOverviewRouter.get('/review/:syllabusId', async (req, res) => {
             existingComment: approval ? (approval.remarks || '') : '',
             hrSignature: approval ? (approval.HR_Signature || null) : null,
             hrSignatoryName: approval ? (approval.HR_SignatoryName || '') : '',
-            syl: course // Pass the syllabus object for the concept map
+            pcSignature: approval ? (approval.PC_Signature || null) : null,
+            pcSignatoryName: approval ? (approval.PC_SignatoryName || '') : '',
+            deanSignature: approval ? (approval.Dean_Signature || null) : null,
+            deanSignatoryName: approval ? (approval.Dean_SignatoryName || '') : '',
+            syl: course
         };
 
         res.render('Syllabus/syllabusApprovalHR', viewData);
@@ -247,7 +250,7 @@ adminOverviewRouter.get('/search', async (req, res) => {
         const courseIds = courses.map(c => c._id.toString());
         const approvals = await SyllabusApprovalStatus.find({
             syllabusID: { $in: courseIds },
-            status: { $in: ['Approved', 'Archived'] }
+            status: { $in: ['Approved', 'Archived', 'Endorsed'] }
         });
 
         const formatted = courses

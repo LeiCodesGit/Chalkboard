@@ -547,17 +547,11 @@ window.addEventListener('click', function (event) {
 });
 
 /* =====================================================================
-   REVIEW SYLLABUS NAVIGATION — close dropdown before leaving
+   REVIEW SYLLABUS NAVIGATION — Redirects removed
 ===================================================================== */
 window.goToReviewSyllabus = function () {
-    // Close the actions dropdown first so it isn't open when user comes back
     const wrapper = document.getElementById('actionsDropdownWrapper');
     if (wrapper) wrapper.classList.remove('open');
-
-    // Small delay so the CSS transition finishes before navigation
-    setTimeout(() => {
-        window.location.href = '/syllabus/tech-assistant/approve';
-    }, 80);
 };
 
 /* =====================================================================

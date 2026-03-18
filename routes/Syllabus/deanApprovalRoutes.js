@@ -37,14 +37,16 @@ deanApprovalRouter.get('/:syllabusId', async (req, res) => {
                 currentPageCategory: 'syllabus',
                 approvalStatus: approval ? approval.status : 'Pending',
                 existingComment: approval ? (approval.remarks || '') : '',
-                workflowStep: 'approval', // Used by JS for signature logic
+                workflowStep: 'approval',
                 optionApproveValue: 'Approved',
                 peos,
                 seos,
                 cos,
                 mappings,
                 schedules,
-                syl // Pass the full syllabus object for the concept map
+                syl,
+                pcSignature: approval ? (approval.PC_Signature || null) : null,
+                pcSignatoryName: approval ? (approval.PC_SignatoryName || '') : ''
             });
         }
     } catch (err) {

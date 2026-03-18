@@ -244,14 +244,30 @@
                     <% } %>
 
                     <!-- ── Signature Block for PDF Export ── -->
-                    <div id="document-signature-section" class="ad-signature-block">
-                        <div class="ad-signature-block-content">
-                            <p class="ad-signature-label">Approved by:</p>
-                            <div id="preview-signature-img-container" class="ad-signature-img-container">
-                                <!-- Signature image will be placed here -->
+                    <div id="document-signature-section" style="margin-top:2rem; padding-top:1.5rem; border-top:2px solid #e0e0e0; page-break-inside: avoid;">
+                        <div style="display:flex; justify-content:space-evenly; gap:2rem; flex-wrap:wrap;">
+                            <!-- Program Chair Signature -->
+                            <div style="text-align:center; flex:1; min-width:200px;">
+                                <p style="font-weight:600; font-size:0.85rem; color:#666; margin-bottom:8px;">Endorsed by:</p>
+                                <% if (locals.pcSignature) { %>
+                                    <div style="margin-bottom:6px;">
+                                        <img src="<%= locals.pcSignature %>" alt="PC Signature" style="max-height:60px; max-width:150px;">
+                                    </div>
+                                <% } else { %>
+                                    <div style="height:60px; border-bottom:1px solid #999; width:150px; margin:0 auto 6px;"></div>
+                                <% } %>
+                                <p style="font-weight:700; font-size:0.9rem; margin:4px 0 2px;"><%= locals.pcSignatoryName || 'PROGRAM CHAIR' %></p>
+                                <p style="font-size:0.8rem; color:#888;">Program Chair</p>
                             </div>
-                            <p id="preview-signatory-name" class="ad-signature-name">DEAN</p>
-                            <p class="ad-signature-title">Dean</p>
+                            <!-- Dean Signature -->
+                            <div style="text-align:center; flex:1; min-width:200px;">
+                                <p style="font-weight:600; font-size:0.85rem; color:#666; margin-bottom:8px;">Approved by:</p>
+                                <div id="preview-signature-img-container" style="margin-bottom:6px; height:60px; max-width:150px; margin:0 auto;">
+                                    <!-- Dean signature image will be placed here by JS -->
+                                </div>
+                                <p id="preview-signatory-name" style="font-weight:700; font-size:0.9rem; margin:4px 0 2px;">DEAN</p>
+                                <p style="font-size:0.8rem; color:#888;">Dean</p>
+                            </div>
                         </div>
                     </div>
 
@@ -265,8 +281,7 @@
 
                 <!-- ── Approval Progress Tracker ── -->
                 <div class="ad-tracker">
-                    <% const steps=[ { role: 'Faculty' , label: 'Submitted' , status: 'approved' }, { role: 'Technical'
-                        , label: 'Reviewed' , status: 'approved' }, { role: 'Program Chair' , label: 'Endorsed' ,
+                    <% const steps=[ { role: 'Faculty' , label: 'Submitted' , status: 'approved' }, { role: 'Program Chair' , label: 'Endorsed' ,
                         status: 'approved' }, { role: 'Dean' , label: 'On-Going' , status: 'ongoing' }, { role: 'HR' ,
                         label: 'Pending' , status: 'pending' } ]; %>
 

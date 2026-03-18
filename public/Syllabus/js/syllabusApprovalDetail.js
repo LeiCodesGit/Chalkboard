@@ -156,8 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const signatoryPreview = document.getElementById('preview-signatory-name');
     const userRole = typeof SYLLABUS_APPROVAL_DATA !== 'undefined' ? (SYLLABUS_APPROVAL_DATA.userRole || '') : '';
 
-    if (signatoryPreview) {
+    if (signatoryPreview && (signatoryPreview.textContent.trim() === 'DEAN' || signatoryPreview.textContent.trim() === 'PROGRAM CHAIR' || signatoryPreview.textContent.trim() === 'HR ADMIN' || !signatoryPreview.textContent.trim())) {
         if (userRole === 'dean') signatoryPreview.textContent = 'DEAN';
+        else if (userRole === 'hr') signatoryPreview.textContent = 'HR ADMIN';
         else signatoryPreview.textContent = 'PROGRAM CHAIR';
     }
 

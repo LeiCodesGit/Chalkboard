@@ -129,7 +129,7 @@ window.openDraftModal = function (syllabusId, hasDraft, status) {
         } else {
             msg.innerText = "A syllabus draft already exists for this course.";
             btn.innerText = "Edit Syllabus Draft";
-            btn.onclick = () => window.location.href = `/syllabus/edit/${syllabusId}`;
+            btn.onclick = () => window.location.href = `/syllabus/create/${syllabusId}`;
         }
     } else {
         msg.innerText = "There's no syllabus draft at the moment.";
