@@ -11,298 +11,252 @@
         :root {
             --accent-primary: #a01a1e;
             --accent-hover: #7d1417;
-            --accent-light: rgba(160, 26, 30, 0.08);
             --editor-border: #ddd;
             --toolbar-bg: #f7f7f7;
             --toolbar-border: #e0e0e0;
             --btn-hover: #e8e8e8;
-            --dropdown-shadow: 0 4px 16px rgba(0,0,0,0.13);
+            --btn-active-bg: #e0d0f5;
+            --btn-active-color: #7b2fa8;
+            --dropdown-shadow: 0 4px 16px rgba(0,0,0,0.14);
             --page-bg: #f4f4f4;
             --text-on-dark: #fff;
         }
-
         * { box-sizing: border-box; }
-
-        body {
-            margin: 0; padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--page-bg);
-            color: #333;
-        }
-
-        .page-layout {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            min-height: 100vh;
-        }
-
-        .side-menu-container {
-            background-color: var(--sidebar-bg);
-            height: 100vh;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            padding-bottom: 80px;
-            overflow-y: auto;
-        }
-
+        body { margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--page-bg); color:#333; }
+        .page-layout { display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+        .side-menu-container { background:var(--sidebar-bg); height:100vh; position:sticky; top:0; z-index:100; }
+        .main-content { display:flex; flex-direction:column; align-items:center; width:100%; padding-bottom:80px; overflow-y:auto; }
         .admin-hero {
-            width: 100%;
-            min-height: 300px;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
-                        url('/common/img/background.jpg') no-repeat center center/cover;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-on-dark);
-            text-align: center;
-            flex-shrink: 0;
+            width:100%; min-height:300px;
+            background:linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)),url('/common/img/background.jpg') no-repeat center center/cover;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            color:var(--text-on-dark); text-align:center; flex-shrink:0;
+        }
+        .admin-panel { background:#fff; padding:40px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1); max-width:860px; width:90%; margin:60px auto 30px; position:relative; }
+        .form-title { color:var(--accent-primary); margin-bottom:25px; font-size:1.4rem; border-bottom:2px solid #f8f8f8; padding-bottom:15px; font-weight:700; }
+        .admin-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .form-group { margin-bottom:20px; }
+        .full-width { grid-column:span 2; }
+        .admin-input-style label { display:block; font-weight:700; font-size:0.75rem; margin-bottom:10px; color:#888; text-transform:uppercase; letter-spacing:0.5px; }
+        .admin-input-style input, .admin-input-style select {
+            width:100%; padding:12px 15px; border:1px solid #e0e0e0; border-radius:8px;
+            font-family:inherit; font-size:0.9rem; color:#444; background:#fafafa; transition:all 0.2s;
+        }
+        .admin-input-style input:focus, .admin-input-style select:focus {
+            outline:none; border-color:var(--accent-primary); background:#fff;
+            box-shadow:0 0 0 4px rgba(160,26,30,0.05);
         }
 
-        .admin-panel {
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            max-width: 860px;
-            width: 90%;
-            margin: 60px auto 30px auto;
-            z-index: 10;
-            position: relative;
-        }
+        /* ===== RICH TEXT EDITOR ===== */
+        .rte-wrapper { border:1px solid var(--editor-border); border-radius:8px; background:#fff; overflow:visible; transition:border-color 0.2s,box-shadow 0.2s; }
+        .rte-wrapper:focus-within { border-color:var(--accent-primary); box-shadow:0 0 0 4px rgba(160,26,30,0.05); }
 
-        .form-title {
-            color: var(--accent-primary);
-            margin-bottom: 25px;
-            font-size: 1.4rem;
-            border-bottom: 2px solid #f8f8f8;
-            padding-bottom: 15px;
-            font-weight: 700;
-        }
-
-        .admin-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .form-group { margin-bottom: 20px; }
-        .full-width { grid-column: span 2; }
-
-        .admin-input-style label {
-            display: block;
-            font-weight: 700;
-            font-size: 0.75rem;
-            margin-bottom: 10px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .admin-input-style input,
-        .admin-input-style select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            color: #444;
-            background-color: #fafafa;
-            transition: all 0.2s ease;
-        }
-
-        .admin-input-style input:focus,
-        .admin-input-style select:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            background-color: #fff;
-            box-shadow: 0 0 0 4px rgba(160, 26, 30, 0.05);
-        }
-
-        /* ===================== RICH TEXT EDITOR ===================== */
-        .rte-wrapper {
-            border: 1px solid var(--editor-border);
-            border-radius: 8px;
-            overflow: visible;
-            background: #fff;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .rte-wrapper:focus-within {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 4px rgba(160, 26, 30, 0.05);
-        }
-
-        /* Toolbar */
         .rte-toolbar {
-            background: var(--toolbar-bg);
-            border-bottom: 1px solid var(--toolbar-border);
-            padding: 6px 8px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 2px;
-            border-radius: 8px 8px 0 0;
-            position: relative;
+            background:var(--toolbar-bg); border-bottom:1px solid var(--toolbar-border);
+            padding:5px 8px; display:flex; flex-wrap:wrap; align-items:center; gap:1px;
+            border-radius:8px 8px 0 0; position:relative; user-select:none;
         }
-
-        .toolbar-divider {
-            width: 1px;
-            height: 22px;
-            background: var(--toolbar-border);
-            margin: 0 4px;
-            flex-shrink: 0;
-        }
-
-        /* Toolbar Buttons */
-        .rte-btn {
-            background: none;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            padding: 5px 7px;
-            font-size: 0.85rem;
-            color: #444;
-            line-height: 1;
-            transition: background 0.15s, color 0.15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            white-space: nowrap;
-            position: relative;
-        }
-
-        .rte-btn:hover { background: var(--btn-hover); }
-        .rte-btn.active { background: #e0d0f5; color: #7b2fa8; }
-        .rte-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-        /* Dropdown Menus */
-        .rte-dropdown { position: relative; display: inline-block; }
-
-        .rte-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: var(--dropdown-shadow);
-            z-index: 9999;
-            min-width: 160px;
-            padding: 4px 0;
-            animation: dropIn 0.12s ease;
-        }
-
-        @keyframes dropIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .rte-dropdown-menu.open { display: block; }
-
-        .rte-dropdown-item {
-            padding: 8px 14px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            color: #333;
-            transition: background 0.12s;
-            white-space: nowrap;
-        }
-
-        .rte-dropdown-item:hover { background: #f0f0f0; }
-        .rte-dropdown-item.active { background: #e0d0f5; color: #7b2fa8; font-weight: 600; }
-
-        /* Extra Row (revealed by "...") */
         .rte-extra-row {
-            display: none;
-            background: var(--toolbar-bg);
-            border-bottom: 1px solid var(--toolbar-border);
-            padding: 4px 8px;
-            gap: 2px;
-            align-items: center;
-            flex-wrap: wrap;
+            display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--toolbar-border);
+            padding:4px 8px; gap:1px; align-items:center; flex-wrap:wrap; user-select:none;
         }
+        .rte-extra-row.visible { display:flex; }
+        .toolbar-divider { width:1px; height:22px; background:var(--toolbar-border); margin:0 3px; flex-shrink:0; }
+        .rte-btn {
+            background:none; border:none; border-radius:5px; cursor:pointer;
+            padding:5px 7px; font-size:0.85rem; color:#444; line-height:1;
+            transition:background 0.12s,color 0.12s; display:inline-flex;
+            align-items:center; gap:2px; white-space:nowrap; position:relative;
+        }
+        .rte-btn:hover { background:var(--btn-hover); }
+        .rte-btn.active { background:var(--btn-active-bg); color:var(--btn-active-color); }
+        .rte-btn svg { width:15px; height:15px; flex-shrink:0; }
 
-        .rte-extra-row.visible { display: flex; }
+        /* Dropdowns */
+        .rte-dropdown { position:relative; display:inline-block; }
+        .rte-dropdown-menu {
+            display:none; position:absolute; top:calc(100% + 4px); left:0;
+            background:#fff; border:1px solid #ddd; border-radius:8px;
+            box-shadow:var(--dropdown-shadow); z-index:9999; min-width:160px;
+            padding:4px 0; animation:dropIn 0.12s ease;
+        }
+        @keyframes dropIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+        .rte-dropdown-menu.open { display:block; }
+        .rte-dropdown-item { padding:8px 14px; cursor:pointer; font-size:0.85rem; color:#333; transition:background 0.1s; white-space:nowrap; }
+        .rte-dropdown-item:hover { background:#f0f0f0; }
+        .rte-dropdown-item.selected { background:var(--btn-active-bg); color:var(--btn-active-color); font-weight:600; }
+
+        /* Preset style classes — purely visual, not h-tags */
+        .rte-style-title  { font-size:2em;    font-weight:700; line-height:1.2; margin:0.25em 0; display:block; }
+        .rte-style-header { font-size:1.5em;  font-weight:700; line-height:1.3; margin:0.25em 0; display:block; }
+        .rte-style-subhdr { font-size:1.17em; font-weight:700; line-height:1.4; margin:0.25em 0; display:block; }
 
         /* Table Grid Picker */
-        .table-grid-picker {
-            padding: 10px;
-            min-width: 200px;
+        .table-grid-picker { padding:10px; min-width:228px; }
+        .table-grid-label { font-size:0.75rem; color:#555; margin-bottom:7px; text-align:center; font-weight:600; min-height:16px; }
+        .table-cells { display:grid; grid-template-columns:repeat(10,20px); gap:2px; }
+        .table-cell { width:20px; height:20px; border:1px solid #ccc; border-radius:2px; cursor:pointer; background:#fafafa; transition:background 0.08s,border-color 0.08s; }
+        .table-cell.highlight { background:#d4b0f0; border-color:#9b59b6; }
+        .table-cell.confirmed { background:#b39ddb; border-color:#7b2fa8; }
+        .table-insert-btn { margin-top:8px; width:100%; padding:7px; background:var(--accent-primary); color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:0.8rem; font-weight:600; }
+        .table-insert-btn:hover { background:var(--accent-hover); }
+
+        /* Table context menu */
+        .tbl-ctx-menu {
+            position:fixed; background:#fff; border:1px solid #ddd; border-radius:8px;
+            box-shadow:var(--dropdown-shadow); z-index:99999; min-width:180px; padding:4px 0; display:none;
+        }
+        .tbl-ctx-menu.open { display:block; }
+        .tbl-ctx-item { padding:8px 14px; cursor:pointer; font-size:0.83rem; color:#333; transition:background 0.1s; }
+        .tbl-ctx-item:hover { background:#f0f0f0; }
+        .tbl-ctx-item.danger { color:#c0392b; }
+        .tbl-ctx-item.danger:hover { background:#fdecea; }
+        .tbl-ctx-sep { height:1px; background:#eee; margin:3px 0; }
+
+        /* Table in editor */
+        .rte-content table { border-collapse:collapse; margin:8px 0; }
+        .rte-content table td, .rte-content table th {
+            border:1px solid #ccc; padding:6px 10px; min-width:40px;
+            position:relative; vertical-align:top;
+        }
+        .col-resize-handle {
+            position:absolute; top:0; right:-3px; width:6px; height:100%;
+            cursor:col-resize; z-index:10; background:transparent;
+        }
+        .col-resize-handle:hover, .col-resize-handle.dragging { background:rgba(155,89,182,0.35); }
+
+        /* Code span */
+        .rte-content code {
+            background:#f4f4f4; border:1px solid #e0e0e0; border-radius:4px;
+            padding:1px 6px; font-family:'Courier New',monospace; font-size:0.85em;
+            white-space:pre-wrap;
         }
 
-        .table-grid-label {
-            font-size: 0.75rem;
-            color: #666;
-            margin-bottom: 6px;
-            text-align: center;
+        /* Inline file attachments */
+        .rte-attachment {
+            display:inline-flex; align-items:center; gap:5px;
+            background:#f2f2f2; border:1px solid #ddd; border-radius:6px;
+            padding:4px 8px 4px 7px; margin:2px 2px; font-size:0.82rem; color:#333;
+            vertical-align:middle; max-width:300px; user-select:none;
+        }
+        .rte-attachment .att-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+        .rte-attachment .att-dl { color:#1a56db; cursor:pointer; font-size:0.78rem; font-weight:600; text-decoration:none; padding:1px 4px; flex-shrink:0; }
+        .rte-attachment .att-dl:hover { text-decoration:underline; }
+        .rte-attachment .att-rm { background:none; border:none; color:#aaa; cursor:pointer; font-size:0.88rem; padding:0 0 0 2px; line-height:1; flex-shrink:0; }
+        .rte-attachment .att-rm:hover { color:#c00; }
+
+        /* Inline image wrap */
+        .rte-img-wrap { display:inline-block; position:relative; margin:3px 2px; vertical-align:middle; max-width:100%; }
+        .rte-img-wrap img { display:block; max-width:100%; border-radius:6px; }
+        .rte-img-wrap .img-dl-btn {
+            position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.55); color:#fff;
+            border:none; border-radius:4px; padding:3px 8px; font-size:0.72rem; cursor:pointer;
+            opacity:0; transition:opacity 0.15s; pointer-events:none;
+        }
+        .rte-img-wrap:hover .img-dl-btn { opacity:1; pointer-events:auto; }
+
+        /* Editor area */
+        .rte-content {
+            min-height:180px; padding:14px 16px; outline:none;
+            font-size:0.9rem; line-height:1.6; color:#333; word-break:break-word;
+        }
+        .rte-content:empty::before { content:attr(data-placeholder); color:#aaa; pointer-events:none; }
+        .rte-footer { padding:4px 12px 6px; font-size:0.72rem; color:#aaa; background:var(--toolbar-bg); border-top:1px solid var(--toolbar-border); border-radius:0 0 8px 8px; }
+
+        /* Buttons */
+        .btn-submit { background:var(--accent-primary); color:#fff; padding:14px 35px; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:1rem; transition:all 0.3s; margin-top:10px; }
+        .btn-submit:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:0 5px 15px rgba(160,26,30,0.3); }
+
+        /* Announcements */
+        .announcement-box { background:#fff; padding:30px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.05); max-width:860px; width:90%; margin:20px auto; }
+        .announcement-item { padding:20px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+        .announcement-info { flex:1; }
+        .meta-tag { font-size:0.7rem; color:#888; font-weight:700; text-transform:uppercase; display:block; margin-bottom:5px; }
+        .announcement-content-preview { font-size:0.88rem; color:#444; margin:5px 0 0; line-height:1.5; }
+        .btn-delete { background:transparent; color:#dc3545; border:1px solid #dc3545; padding:6px 15px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; transition:0.2s; flex-shrink:0; }
+        .btn-delete:hover { background:#dc3545; color:#fff; }
+        .btn-proj-overview { display:inline-block; padding:15px 40px; background:var(--accent-primary); color:#fff; text-decoration:none; border-radius:50px; font-weight:600; font-size:0.95rem; border:none; cursor:pointer; transition:all 0.3s; box-shadow:0 4px 10px rgba(0,0,0,0.2); margin-top:20px; }
+        .btn-proj-overview:hover { background:var(--accent-hover); transform:translateY(-2px); }
+
+        /* Link modal */
+        .rte-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:10000; align-items:center; justify-content:center; }
+        .rte-modal-overlay.open { display:flex; }
+        .rte-modal { background:#fff; border-radius:10px; padding:24px 28px; width:380px; max-width:95vw; box-shadow:0 8px 32px rgba(0,0,0,0.18); }
+        .rte-modal h4 { margin:0 0 16px; font-size:1rem; color:#333; }
+        .rte-modal label { font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; display:block; margin-bottom:5px; }
+        .rte-modal input { width:100%; padding:9px 12px; border:1px solid #ddd; border-radius:6px; margin-bottom:12px; font-size:0.9rem; font-family:inherit; }
+        .rte-modal input:focus { outline:none; border-color:var(--accent-primary); box-shadow:0 0 0 3px rgba(160,26,30,0.08); }
+        .rte-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:4px; }
+        .rte-modal-actions button { padding:8px 20px; border-radius:6px; border:none; cursor:pointer; font-weight:600; font-size:0.85rem; }
+        .btn-cancel { background:#f0f0f0; color:#555; }
+        .btn-insert { background:var(--accent-primary); color:#fff; }
+
+        /* Toast */
+        .rte-toast { position:fixed; bottom:28px; right:28px; background:#333; color:#fff; padding:12px 22px; border-radius:8px; font-size:0.88rem; z-index:99999; opacity:0; transform:translateY(12px); transition:opacity 0.3s,transform 0.3s; pointer-events:none; }
+        .rte-toast.show { opacity:1; transform:translateY(0); }
+        .rte-toast.success { background:#27ae60; }
+        .rte-toast.error   { background:#c0392b; }
+
+        /* Add these rules inside your existing <style> block,
+   alongside the existing .rte-img-wrap rules */
+
+        .rte-img-wrap {
+            display: inline-block;
+            position: relative;
+            margin: 3px 2px;
+            vertical-align: middle;
+            max-width: 100%;
+        }
+        .rte-img-wrap img {
+            display: block;
+            max-width: 100%;
+            border-radius: 6px;
         }
 
-        .table-cells {
-            display: grid;
-            grid-template-columns: repeat(10, 18px);
-            gap: 2px;
-        }
-
-        .table-cell {
-            width: 18px;
-            height: 18px;
-            border: 1px solid #ccc;
-            border-radius: 2px;
-            cursor: pointer;
-            background: #fafafa;
-            transition: background 0.1s, border-color 0.1s;
-        }
-
-        .table-cell.highlight {
-            background: #d4b0f0;
-            border-color: #9b59b6;
-        }
-
-        .table-insert-btn {
-            margin-top: 8px;
-            width: 100%;
-            padding: 6px;
-            background: var(--accent-primary);
+        /* Download button — bottom-right, visible on hover */
+        .rte-img-wrap .img-dl-btn {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.55);
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 0.72rem;
             cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.15s;
+            pointer-events: none;
+        }
+        .rte-img-wrap:hover .img-dl-btn {
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        /* Link Modal */
-        .rte-modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 10000;
+        /* Remove button — top-right, ALWAYS visible (red ×) */
+        .rte-img-wrap .img-rm-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(180, 0, 0, 0.75);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
             align-items: center;
             justify-content: center;
+            transition: background 0.15s;
         }
-
-        .rte-modal-overlay.open { display: flex; }
-
-        .rte-modal {
-            background: #fff;
-            border-radius: 10px;
-            padding: 24px 28px;
-            width: 380px;
-            max-width: 95vw;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        .rte-img-wrap .img-rm-btn:hover {
+            background: rgba(200, 0, 0, 1);
         }
+<<<<<<< HEAD
 
         .rte-modal h4 {
             margin: 0 0 16px 0;
@@ -662,10 +616,11 @@
             border-color: rgba(160, 26, 30, 0.15);
         }
         .team-member.leadership span { color: var(--accent-primary, #a01a1e); }
+=======
+>>>>>>> 398c390 (Better Text Editor)
     </style>
 </head>
 <body>
-
 <div class="page-layout">
     <aside class="side-menu-container">
         <%- include('partials/adminSideMenuBar') %>
@@ -766,34 +721,30 @@
                         <label>Headline</label>
                         <input type="text" name="headline" placeholder="Main title of the announcement" required>
                     </div>
+
                     <div class="form-group full-width admin-input-style">
                         <label>Message Detail</label>
-
-                        <!-- ====== RICH TEXT EDITOR ====== -->
                         <div class="rte-wrapper" id="rteWrapper">
-
-                            <!-- PRIMARY TOOLBAR ROW -->
+                            <!-- PRIMARY TOOLBAR -->
                             <div class="rte-toolbar" id="rteToolbar">
-
-                                <!-- 1. Text Style (A with pencil) -->
+                                <!-- 1. Text Style (A pencil) -->
                                 <div class="rte-dropdown" id="ddStyle">
                                     <button type="button" class="rte-btn" id="btnStyle" title="Text Style">
-                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><text x="1" y="13" font-size="12" fill="currentColor" stroke="none" font-family="serif" font-weight="bold">A</text><line x1="11" y1="10" x2="15" y2="14" stroke-width="2"/><circle cx="13" cy="12" r="2.5" fill="none"/></svg>
-                                        <svg viewBox="0 0 8 8" fill="currentColor"><path d="M2 3l2 2 4-4"/></svg>
+                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><text x="1" y="13" font-size="12" fill="currentColor" stroke="none" font-family="serif" font-weight="bold">A</text><line x1="11" y1="10" x2="15" y2="14" stroke-width="2"/><circle cx="13" cy="12" r="2.5" fill="none"/></svg>
+                                        <svg viewBox="0 0 8 8" fill="currentColor" style="width:8px;height:8px"><path d="M1 2l3 4 3-4"/></svg>
                                     </button>
                                     <div class="rte-dropdown-menu" id="menuStyle">
-                                        <div class="rte-dropdown-item" data-cmd="formatBlock" data-val="h2">Title <small style="color:#aaa">(H2)</small></div>
-                                        <div class="rte-dropdown-item" data-cmd="formatBlock" data-val="h3">Header <small style="color:#aaa">(H3)</small></div>
-                                        <div class="rte-dropdown-item" data-cmd="formatBlock" data-val="h4">Subheader <small style="color:#aaa">(H4)</small></div>
-                                        <div class="rte-dropdown-item" data-cmd="formatBlock" data-val="p">Paragraph</div>
+                                        <div class="rte-dropdown-item" data-preset="title"  style="font-size:1.35em;font-weight:700;line-height:1.2">Title</div>
+                                        <div class="rte-dropdown-item" data-preset="header" style="font-size:1.15em;font-weight:700">Header</div>
+                                        <div class="rte-dropdown-item" data-preset="subhdr" style="font-size:1em;font-weight:700">Subheader</div>
+                                        <div class="rte-dropdown-item" data-preset="para">Paragraph</div>
                                     </div>
                                 </div>
-
-                                <!-- 2. Font Family (T) -->
+                                <!-- 2. Font -->
                                 <div class="rte-dropdown" id="ddFont">
                                     <button type="button" class="rte-btn" id="btnFont" title="Font">
                                         <svg viewBox="0 0 16 16" fill="currentColor"><text x="1" y="13" font-size="13" font-family="serif" font-weight="bold">T</text></svg>
-                                        <svg viewBox="0 0 8 8" fill="currentColor"><path d="M1 2l3 4 3-4"/></svg>
+                                        <svg viewBox="0 0 8 8" fill="currentColor" style="width:8px;height:8px"><path d="M1 2l3 4 3-4"/></svg>
                                     </button>
                                     <div class="rte-dropdown-menu" id="menuFont">
                                         <div class="rte-dropdown-item" data-cmd="fontName" data-val="Arial" style="font-family:Arial">Arial</div>
@@ -805,12 +756,11 @@
                                         <div class="rte-dropdown-item" data-cmd="fontName" data-val="Verdana" style="font-family:Verdana">Verdana</div>
                                     </div>
                                 </div>
-
-                                <!-- 3. Font Size (AA) -->
+                                <!-- 3. Font Size -->
                                 <div class="rte-dropdown" id="ddSize">
                                     <button type="button" class="rte-btn" id="btnSize" title="Font Size">
                                         <span style="font-size:0.95em;font-weight:700;letter-spacing:-1px">AA</span>
-                                        <svg viewBox="0 0 8 8" fill="currentColor"><path d="M1 2l3 4 3-4"/></svg>
+                                        <svg viewBox="0 0 8 8" fill="currentColor" style="width:8px;height:8px"><path d="M1 2l3 4 3-4"/></svg>
                                     </button>
                                     <div class="rte-dropdown-menu" id="menuSize">
                                         <div class="rte-dropdown-item" data-cmd="fontSize" data-val="1">10</div>
@@ -822,156 +772,114 @@
                                         <div class="rte-dropdown-item" data-cmd="fontSize" data-val="7">48</div>
                                     </div>
                                 </div>
-
-                                <!-- 4. Text Color (Paint) -->
+                                <!-- 4. Color -->
                                 <div class="rte-dropdown" id="ddColor">
                                     <button type="button" class="rte-btn" id="btnColor" title="Text Color">
-                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 13 L8 2 L13 13" stroke-linecap="round"/><line x1="5" y1="9" x2="11" y2="9"/><rect x="2" y="13.5" width="12" height="2" rx="1" fill="#333" stroke="none" id="colorBar"/></svg>
-                                        <svg viewBox="0 0 8 8" fill="currentColor"><path d="M1 2l3 4 3-4"/></svg>
+                                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 13 L8 2 L13 13" stroke-linecap="round"/><line x1="5" y1="9" x2="11" y2="9"/><rect x="2" y="13.5" width="12" height="2" rx="1" fill="#111" stroke="none" id="colorBar"/></svg>
+                                        <svg viewBox="0 0 8 8" fill="currentColor" style="width:8px;height:8px"><path d="M1 2l3 4 3-4"/></svg>
                                     </button>
                                     <div class="rte-dropdown-menu" id="menuColor">
-                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#111111" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#111;display:inline-block;border:1px solid #ccc"></span>Black</div>
-                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#666666" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#666;display:inline-block;border:1px solid #ccc"></span>Grey</div>
-                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#7b2fa8" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#7b2fa8;display:inline-block"></span>Purple</div>
-                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#1a56db" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#1a56db;display:inline-block"></span>Blue</div>
-                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#1a7a3c" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#1a7a3c;display:inline-block"></span>Green</div>
-                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#a01a1e" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#a01a1e;display:inline-block"></span>Red</div>
+                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#111111" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#111;display:inline-block;border:1px solid #ccc;flex-shrink:0"></span>Black</div>
+                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#666666" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#666;display:inline-block;border:1px solid #ccc;flex-shrink:0"></span>Grey</div>
+                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#7b2fa8" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#7b2fa8;display:inline-block;flex-shrink:0"></span>Purple</div>
+                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#1a56db" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#1a56db;display:inline-block;flex-shrink:0"></span>Blue</div>
+                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#1a7a3c" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#1a7a3c;display:inline-block;flex-shrink:0"></span>Green</div>
+                                        <div class="rte-dropdown-item" data-cmd="foreColor" data-val="#a01a1e" style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:#a01a1e;display:inline-block;flex-shrink:0"></span>Red</div>
                                     </div>
                                 </div>
-
                                 <div class="toolbar-divider"></div>
-
-                                <!-- 5. Bold -->
-                                <button type="button" class="rte-btn" id="btnBold" data-cmd="bold" title="Bold"><strong>B</strong></button>
-                                <!-- 6. Italic -->
-                                <button type="button" class="rte-btn" id="btnItalic" data-cmd="italic" title="Italic"><em>I</em></button>
-                                <!-- 7. Underline -->
-                                <button type="button" class="rte-btn" id="btnUnderline" data-cmd="underline" title="Underline"><u>U</u></button>
-
-                                <!-- 8. More (...) -->
-                                <button type="button" class="rte-btn" id="btnMore" title="More formatting">
-                                    <svg viewBox="0 0 16 6" fill="currentColor"><circle cx="2" cy="3" r="1.5"/><circle cx="8" cy="3" r="1.5"/><circle cx="14" cy="3" r="1.5"/></svg>
+                                <!-- 5-7. B I U -->
+                                <button type="button" class="rte-btn" id="btnBold"      title="Bold"><strong>B</strong></button>
+                                <button type="button" class="rte-btn" id="btnItalic"    title="Italic"><em style="font-style:italic">I</em></button>
+                                <button type="button" class="rte-btn" id="btnUnderline" title="Underline"><u>U</u></button>
+                                <!-- 8. More -->
+                                <button type="button" class="rte-btn" id="btnMore" title="More">
+                                    <svg viewBox="0 0 16 5" fill="currentColor"><circle cx="2" cy="2.5" r="1.5"/><circle cx="8" cy="2.5" r="1.5"/><circle cx="14" cy="2.5" r="1.5"/></svg>
                                 </button>
-
                                 <div class="toolbar-divider"></div>
-
                                 <!-- 9. Table -->
                                 <div class="rte-dropdown" id="ddTable">
                                     <button type="button" class="rte-btn" id="btnTable" title="Insert Table">
                                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="1" width="14" height="14" rx="1.5"/><line x1="1" y1="5" x2="15" y2="5"/><line x1="1" y1="9" x2="15" y2="9"/><line x1="1" y1="13" x2="15" y2="13"/><line x1="5" y1="1" x2="5" y2="15"/><line x1="10" y1="1" x2="10" y2="15"/></svg>
-                                        <svg viewBox="0 0 8 8" fill="currentColor"><path d="M1 2l3 4 3-4"/></svg>
+                                        <svg viewBox="0 0 8 8" fill="currentColor" style="width:8px;height:8px"><path d="M1 2l3 4 3-4"/></svg>
                                     </button>
-                                    <div class="rte-dropdown-menu" id="menuTable" style="min-width:220px">
+                                    <div class="rte-dropdown-menu" id="menuTable" style="min-width:234px">
                                         <div class="table-grid-picker">
-                                            <div class="table-grid-label" id="tableGridLabel">1 × 1 Table</div>
+                                            <div class="table-grid-label" id="tableGridLabel">Select table size</div>
                                             <div class="table-cells" id="tableGridCells"></div>
                                             <button type="button" class="table-insert-btn" id="tableInsertBtn">Insert Table</button>
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- 10. Alignment -->
                                 <div class="rte-dropdown" id="ddAlign">
                                     <button type="button" class="rte-btn" id="btnAlign" title="Alignment">
                                         <svg viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="6" x2="11" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/><line x1="1" y1="14" x2="9" y2="14"/></svg>
-                                        <svg viewBox="0 0 8 8" fill="currentColor"><path d="M1 2l3 4 3-4"/></svg>
+                                        <svg viewBox="0 0 8 8" fill="currentColor" style="width:8px;height:8px"><path d="M1 2l3 4 3-4"/></svg>
                                     </button>
                                     <div class="rte-dropdown-menu" id="menuAlign">
-                                        <div class="rte-dropdown-item" data-cmd="justifyLeft">Left</div>
-                                        <div class="rte-dropdown-item" data-cmd="justifyCenter">Center</div>
-                                        <div class="rte-dropdown-item" data-cmd="justifyRight">Right</div>
-                                        <div class="rte-dropdown-item" data-cmd="justifyFull">Justify</div>
+                                        <div class="rte-dropdown-item" data-align="left">Left</div>
+                                        <div class="rte-dropdown-item" data-align="center">Center</div>
+                                        <div class="rte-dropdown-item" data-align="right">Right</div>
+                                        <div class="rte-dropdown-item" data-align="justify">Justify</div>
                                     </div>
                                 </div>
-
-                                <!-- 11. Paragraph (flipped P) -->
+                                <!-- 11. Paragraph / List / Line Height -->
                                 <div class="rte-dropdown" id="ddPara">
-                                    <button type="button" class="rte-btn" id="btnPara" title="Paragraph options">
+                                    <button type="button" class="rte-btn" id="btnPara" title="Lists & spacing">
                                         <svg viewBox="0 0 12 16" fill="currentColor"><path d="M5 0h5v2H9v14H7V2H6v14H4V9A4 4 0 014 1z"/></svg>
-                                        <svg viewBox="0 0 8 8" fill="currentColor"><path d="M1 2l3 4 3-4"/></svg>
+                                        <svg viewBox="0 0 8 8" fill="currentColor" style="width:8px;height:8px"><path d="M1 2l3 4 3-4"/></svg>
                                     </button>
                                     <div class="rte-dropdown-menu" id="menuPara">
-                                        <div class="rte-dropdown-item" data-cmd="insertUnorderedList">
-                                            <svg viewBox="0 0 16 12" fill="currentColor" style="width:13px;height:13px;margin-right:6px;vertical-align:middle"><circle cx="2" cy="2" r="1.5"/><circle cx="2" cy="6" r="1.5"/><circle cx="2" cy="10" r="1.5"/><rect x="5" y="1" width="10" height="2" rx="1"/><rect x="5" y="5" width="10" height="2" rx="1"/><rect x="5" y="9" width="10" height="2" rx="1"/></svg>
-                                            Unordered List
-                                        </div>
-                                        <div class="rte-dropdown-item" data-cmd="insertOrderedList">
-                                            <svg viewBox="0 0 16 12" fill="currentColor" style="width:13px;height:13px;margin-right:6px;vertical-align:middle"><text x="0" y="4" font-size="4">1.</text><text x="0" y="8" font-size="4">2.</text><text x="0" y="12" font-size="4">3.</text><rect x="5" y="1" width="10" height="2" rx="1"/><rect x="5" y="5" width="10" height="2" rx="1"/><rect x="5" y="9" width="10" height="2" rx="1"/></svg>
-                                            Ordered List
-                                        </div>
-                                        <hr style="margin:4px 0;border:none;border-top:1px solid #eee">
-                                        <div style="padding:6px 14px;font-size:0.72rem;color:#aaa;font-weight:700;text-transform:uppercase">Line Height</div>
-                                        <div class="rte-dropdown-item" data-cmd="lineHeight" data-val="1">Single</div>
-                                        <div class="rte-dropdown-item" data-cmd="lineHeight" data-val="1.15">1.15</div>
-                                        <div class="rte-dropdown-item active" data-cmd="lineHeight" data-val="1.5">1.5</div>
-                                        <div class="rte-dropdown-item" data-cmd="lineHeight" data-val="2">Double</div>
+                                        <div class="rte-dropdown-item" data-cmd="insertUnorderedList">&#8226; Unordered List</div>
+                                        <div class="rte-dropdown-item" data-cmd="insertOrderedList">1. Ordered List</div>
+                                        <div class="tbl-ctx-sep"></div>
+                                        <div style="padding:5px 14px 3px;font-size:0.7rem;color:#aaa;font-weight:700;text-transform:uppercase">Line Height</div>
+                                        <div class="rte-dropdown-item lh-item" data-lh="1">Single</div>
+                                        <div class="rte-dropdown-item lh-item" data-lh="1.15">1.15</div>
+                                        <div class="rte-dropdown-item lh-item selected" data-lh="1.5">1.5</div>
+                                        <div class="rte-dropdown-item lh-item" data-lh="2">Double</div>
                                     </div>
                                 </div>
-
                                 <div class="toolbar-divider"></div>
-
                                 <!-- 12. Undo -->
-                                <button type="button" class="rte-btn" data-cmd="undo" title="Undo">
+                                <button type="button" class="rte-btn" id="btnUndo" title="Undo">
                                     <svg viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3L1 6l3 2"/><path d="M1.5 6A6.5 6.5 0 1015 8"/></svg>
                                 </button>
-
                                 <!-- 13. Clear Format -->
-                                <button type="button" class="rte-btn" data-cmd="removeFormat" title="Clear Formatting">
+                                <button type="button" class="rte-btn" id="btnClear" title="Clear Formatting">
                                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
                                 </button>
-
-                                <!-- 14. Embed Link -->
+                                <div class="toolbar-divider"></div>
+                                <!-- 14. Link -->
                                 <button type="button" class="rte-btn" id="btnLink" title="Insert Link">
                                     <svg viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 5h6"/><path d="M3 5a4 4 0 000 0 4 4 0 004 4h2"/><path d="M15 5a4 4 0 000 0 4 4 0 00-4-4H9"/></svg>
                                 </button>
-
                                 <!-- 15. Attach File -->
                                 <button type="button" class="rte-btn" id="btnAttach" title="Attach File">
                                     <svg viewBox="0 0 14 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 9v4a5 5 0 01-10 0V5a3 3 0 016 0v8a1 1 0 01-2 0V6"/></svg>
                                 </button>
                                 <input type="file" id="fileInput" style="display:none" multiple>
-
                                 <!-- 16. Insert Image -->
                                 <button type="button" class="rte-btn" id="btnImage" title="Insert Image">
                                     <svg viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="1" width="16" height="12" rx="2"/><circle cx="5.5" cy="5" r="1.5"/><path d="M1 10l4-3 3 3 3-4 5 4"/></svg>
                                 </button>
                                 <input type="file" id="imageInput" style="display:none" accept="image/*" multiple>
-
                             </div>
-                            <!-- END PRIMARY TOOLBAR -->
-
-                            <!-- EXTRA ROW (revealed by ...) -->
+                            <!-- EXTRA ROW -->
                             <div class="rte-extra-row" id="rteExtraRow">
-                                <!-- Strikethrough -->
-                                <button type="button" class="rte-btn" data-cmd="strikeThrough" title="Strikethrough">
-                                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 10c0 1.7 1.3 3 5 3s5-1.3 5-3-1.5-2.5-5-3"/><path d="M12 4c0-1.7-1.3-3-5-3S2 2.3 2 4c0 1.5 1 2.3 3 2.8"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
-                                    <span style="font-size:0.78rem">S</span>
-                                </button>
-                                <!-- Superscript -->
-                                <button type="button" class="rte-btn" data-cmd="superscript" title="Superscript">
-                                    x<sup>2</sup>
-                                </button>
-                                <!-- Subscript -->
-                                <button type="button" class="rte-btn" data-cmd="subscript" title="Subscript">
-                                    x<sub>2</sub>
-                                </button>
-                                <!-- Code snippet -->
-                                <button type="button" class="rte-btn" id="btnCode" title="Code Snippet">
+                                <button type="button" class="rte-btn" id="btnStrike"    title="Strikethrough"><s>S</s></button>
+                                <button type="button" class="rte-btn" id="btnSuper"     title="Superscript">x<sup style="font-size:0.7em">2</sup></button>
+                                <button type="button" class="rte-btn" id="btnSub"       title="Subscript">x<sub style="font-size:0.7em">2</sub></button>
+                                <button type="button" class="rte-btn" id="btnCode"      title="Code Snippet">
                                     <svg viewBox="0 0 18 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="5,1 1,6 5,11"/><polyline points="13,1 17,6 13,11"/></svg>
                                 </button>
                             </div>
-
-                            <!-- EDITOR CONTENT AREA -->
+                            <!-- CONTENT AREA -->
                             <div class="rte-content" id="rteContent" contenteditable="true"
                                  data-placeholder="Detailed information for faculty members..."></div>
-
-                            <!-- ATTACHMENT CHIPS -->
-                            <div class="attachment-preview" id="attachmentPreview" style="padding:0 12px 8px"></div>
-
-                            <!-- FOOTER: word count -->
                             <div class="rte-footer">Word count: <span id="wordCount">0</span></div>
                         </div>
-                        <!-- hidden textarea that stores base64 content -->
                         <textarea name="messageDetail" id="messageDetailField" style="display:none"></textarea>
                     </div>
                 </div>
@@ -985,33 +893,11 @@
                 <h2 style="margin:0;color:#002455;font-size:1.2rem">Live Announcements</h2>
                 <span style="font-size:0.8rem;color:#666">Showing: All Departments</span>
             </div>
-
             <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
                 <% announcements.forEach(item => { %>
                     <div class="announcement-item" data-id="<%= item._id %>">
                         <div class="announcement-info">
-                            <span class="meta-tag">
-                                <% 
-                                    const p = item.postedBy;
-                                    let posterName = 'System';
-                                    let posterRole = '';
-                                    if (p) {
-                                        posterName = ((p.firstName || '') + ' ' + (p.lastName || '')).trim().toUpperCase();
-                                        if (p.role === 'Admin' || p.role === 'Super-Admin') {
-                                            posterRole = 'Admin';
-                                        } else {
-                                            posterRole = ((p.department || '') + ' ' + (p.role || '')).trim();
-                                        }
-                                    }
-                                %>
-                                <span style="color:#002455; font-weight:800;"><%= posterName %></span>
-                                &nbsp;•&nbsp;
-                                <span style="color:#002455; font-weight:800;"><%= posterRole %></span>
-                                &nbsp;|&nbsp; <%= item.category %>
-                                <span style="float:right; font-weight:400; text-transform:none;">
-                                    <%= new Date(item.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) %>
-                                </span>
-                            </span>
+                            <span class="meta-tag"><%= item.department %> &bull; <%= item.category %></span>
                             <strong><%= item.headline %></strong>
                             <div class="announcement-content-preview">
                                 <%- item.messageDetail ? Buffer.from(item.messageDetail, 'base64').toString('utf8') : '' %>
@@ -1023,10 +909,9 @@
             <% } else { %>
                 <div class="announcement-item">
                     <div class="announcement-info">
-                        <span class="meta-tag">System • Preview Mode</span>
+                        <span class="meta-tag">System &bull; Preview Mode</span>
                         <p><strong>Notice:</strong> No announcements found in database.</p>
                     </div>
-                    <button class="btn-delete">Delete</button>
                 </div>
             <% } %>
         </div>
@@ -1048,8 +933,20 @@
     </div>
 </div>
 
-<!-- TOAST -->
+<!-- TABLE CONTEXT MENU -->
+<div class="tbl-ctx-menu" id="tblCtxMenu">
+    <div class="tbl-ctx-item" id="ctxAddRowAbove">Add Row Above</div>
+    <div class="tbl-ctx-item" id="ctxAddRowBelow">Add Row Below</div>
+    <div class="tbl-ctx-item" id="ctxAddColLeft">Add Column Left</div>
+    <div class="tbl-ctx-item" id="ctxAddColRight">Add Column Right</div>
+    <div class="tbl-ctx-sep"></div>
+    <div class="tbl-ctx-item danger" id="ctxDelRow">Delete Row</div>
+    <div class="tbl-ctx-item danger" id="ctxDelCol">Delete Column</div>
+    <div class="tbl-ctx-item danger" id="ctxDelTable">Delete Table</div>
+</div>
+
 <div class="rte-toast" id="rteToast"></div>
+
 
 </body>
 
