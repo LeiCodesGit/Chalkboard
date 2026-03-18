@@ -50,17 +50,36 @@
               <input type="text" id="deanSearch" placeholder="Search Faculty" />
             </div>
 
-            <select class="tws-board-filter" id="deanDepartmentFilter">
-              <option value="">Department</option>
-              <option value="ATYCB">ATYCB</option>
-              <option value="CAS">CAS</option>
-              <option value="CCIS">CCIS</option>
-              <option value="CEA">CEA</option>
-              <option value="CHS">CHS</option>
+            <select class="tws-board-filter" id="deanProgramFilter">
+              <option value="">Program</option>
             </select>
+
+            <select class="tws-board-filter" id="deanAcademicYearFilter">
+              <option value="">Academic Year</option>
+            </select>
+
+            <select class="tws-board-filter" id="deanTermFilter">
+              <option value="">Term</option>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+              <option value="Summer">Summer</option>
+            </select>
+
+            <a class="tws-board-create" href="/tws/create">
+              <span class="material-symbols-outlined">add</span>
+              <span>Create TWS</span>
+            </a>
+          </div>
+
+        
 
             <select class="tws-board-filter" id="deanProgramFilter">
               <option value="">Program</option>
+            </select>
+
+            <select class="tws-board-filter" id="deanAcademicYearFilter">
+              <option value="">Academic Year</option>
             </select>
 
             <select class="tws-board-filter" id="deanTermFilter">
@@ -72,7 +91,7 @@
             </select>
           </div>
 
-          <div class="tws-board-caption">A.Y. 2025 - 2026</div>
+          <div class="tws-board-caption">Dean Review Dashboard</div>
 
           <div class="tws-board-grid" id="deanActiveGrid">
             <% if (!list || !list.length) { %>
@@ -83,11 +102,12 @@
                  const currentStatus = tws.status || 'Draft';
             %>
               <article
-                class="tws-board-card dean-card"
+                class="tws-board-card dean-card <%= statusClass(currentStatus) %>"
                 data-name="<%= tws.faculty?.name || '' %>"
                 data-department="<%= tws.faculty?.dept || '' %>"
                 data-program="<%= tws.faculty?.program || tws.program || '' %>"
                 data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
               >
                 <div class="tws-board-card-hero"></div>
                 <div class="tws-board-card-body">
@@ -122,8 +142,6 @@
                           </button>
                         </form>
                       <% } %>
-
-                  
                     </div>
                   </div>
                 </div>
@@ -144,7 +162,14 @@
             <% } %>
 
             <% (archivedList || []).forEach(function(tws) { %>
-              <article class="tws-board-card dean-archived-card" data-name="<%= tws.faculty?.name || '' %>" data-department="<%= tws.faculty?.dept || '' %>" data-program="<%= tws.faculty?.program || tws.program || '' %>" data-term="<%= tws.faculty?.term || tws.term || '' %>">
+              <article
+                class="tws-board-card dean-archived-card tws-status-archived"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-department="<%= tws.faculty?.dept || '' %>"
+                data-program="<%= tws.faculty?.program || tws.program || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
                 <div class="tws-board-card-hero"></div>
                 <div class="tws-board-card-body">
                   <div class="tws-board-card-top">
@@ -174,8 +199,8 @@
 
   <script>
     const deanSearch = document.getElementById('deanSearch');
-    const deanDepartmentFilter = document.getElementById('deanDepartmentFilter');
     const deanProgramFilter = document.getElementById('deanProgramFilter');
+    const deanAcademicYearFilter = document.getElementById('deanAcademicYearFilter');
     const deanTermFilter = document.getElementById('deanTermFilter');
     const deanArchiveToggle = document.getElementById('deanArchiveToggle');
     const deanArchiveGrid = document.getElementById('deanArchiveGrid');
@@ -195,31 +220,46 @@
       });
     }
 
+    function populateDeanAcademicYears() {
+      const values = new Set();
+      document.querySelectorAll('.dean-card, .dean-archived-card').forEach((card) => {
+        const ay = (card.dataset.acadYear || '').trim();
+        if (ay) values.add(ay);
+      });
+      [...values].sort().forEach((ay) => {
+        const option = document.createElement('option');
+        option.value = ay;
+        option.textContent = ay;
+        deanAcademicYearFilter.appendChild(option);
+      });
+    }
+
     function applyDeanFilters() {
       const search = (deanSearch.value || '').toLowerCase().trim();
-      const department = (deanDepartmentFilter.value || '').toLowerCase();
       const program = (deanProgramFilter.value || '').toLowerCase();
       const term = (deanTermFilter.value || '').toLowerCase();
+      const acadYear = (deanAcademicYearFilter.value || '').toLowerCase();
 
       document.querySelectorAll('.dean-card, .dean-archived-card').forEach((card) => {
         const name = (card.dataset.name || '').toLowerCase();
-        const dept = (card.dataset.department || '').toLowerCase();
         const cardProgram = (card.dataset.program || '').toLowerCase();
         const cardTerm = (card.dataset.term || '').toLowerCase();
+        const cardAcadYear = (card.dataset.acadYear || '').toLowerCase();
 
         const matches = (!search || name.includes(search))
-          && (!department || dept === department)
           && (!program || cardProgram === program)
-          && (!term || cardTerm === term);
+          && (!term || cardTerm === term)
+          && (!acadYear || cardAcadYear === acadYear);
 
         card.style.display = matches ? '' : 'none';
       });
     }
 
     populatePrograms();
+    populateDeanAcademicYears();
     deanSearch?.addEventListener('input', applyDeanFilters);
-    deanDepartmentFilter?.addEventListener('change', applyDeanFilters);
     deanProgramFilter?.addEventListener('change', applyDeanFilters);
+    deanAcademicYearFilter?.addEventListener('change', applyDeanFilters);
     deanTermFilter?.addEventListener('change', applyDeanFilters);
 
     deanArchiveToggle?.addEventListener('click', () => {

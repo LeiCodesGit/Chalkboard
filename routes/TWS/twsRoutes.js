@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import Subject from "../../models/TWS/subject.js";
 import { calculateTwsLoadsFromCourses } from "../../utils/twsLoadCalculator.js";
 import puppeteer from "puppeteer";
+import ATACourse from "../../models/ATA/Course.js";
 import {
   getSessionUser, getSessionUserId, getSessionUserRole,
   buildFacultyName, normalizeEmail, facultyMatchesTws,
@@ -478,13 +479,30 @@ router.get(
 
     const viewerRole = getSessionUserRole(req.twsUser);
     const viewerDept = req.twsUser?.department || "";
+    const viewerProgram = req.twsUser?.program || "";
 
-    const professorFilter = { role: "Professor" };
-    if (viewerRole === "Program-Chair" && viewerDept) {
-      professorFilter.department = viewerDept;
+    let assignableRoles = ["Professor", "Program-Chair"];
+
+    if (viewerRole === "Program-Chair") {
+      // Add Dean only if you really want dean selectable for TWS
+      assignableRoles = ["Professor", "Program-Chair", "Dean"];
     }
 
-    const professorDocs = await UserModel.find(professorFilter)
+    if (viewerRole === "Dean") {
+      assignableRoles = ["Program-Chair"];
+    }
+
+    const facultyFilter = { role: { $in: assignableRoles } };
+
+    if (viewerRole === "Program-Chair" && viewerProgram) {
+      facultyFilter.program = viewerProgram;
+    }
+
+    if (viewerRole === "Dean" && viewerDept) {
+      facultyFilter.department = viewerDept;
+    }
+
+    const professorDocs = await UserModel.find(facultyFilter)
       .sort({ lastName: 1, firstName: 1, email: 1 })
       .lean();
 
@@ -530,23 +548,45 @@ router.post(
     const action = req.body.action || "next";
     const viewerRole = getSessionUserRole(req.twsUser);
     const viewerDept = req.twsUser?.department || "";
+    const viewerProgram = req.twsUser?.program || "";
 
-    const professorFilter = {
-      _id: req.body.selectedProfessorId || null,
-      role: "Professor",
-    };
+    let assignableRoles = ["Professor", "Program-Chair"];
 
-    if (viewerRole === "Program-Chair" && viewerDept) {
-      professorFilter.department = viewerDept;
+    if (viewerRole === "Program-Chair") {
+      // Add Dean only if dean should also be selectable
+      assignableRoles = ["Professor", "Program-Chair", "Dean"];
     }
 
-    const selectedProfessor = await UserModel.findOne(professorFilter).lean();
+    if (viewerRole === "Dean") {
+      assignableRoles = ["Program-Chair"];
+    }
 
-    const professorDocs = await UserModel.find(
-      viewerRole === "Program-Chair" && viewerDept
-        ? { role: "Professor", department: viewerDept }
-        : { role: "Professor" }
-    )
+    const facultyFilter = {
+      _id: req.body.selectedProfessorId || null,
+      role: { $in: assignableRoles },
+    };
+
+    if (viewerRole === "Program-Chair" && viewerProgram) {
+      facultyFilter.program = viewerProgram;
+    }
+
+    if (viewerRole === "Dean" && viewerDept) {
+      facultyFilter.department = viewerDept;
+    }
+
+    const selectedProfessor = await UserModel.findOne(facultyFilter).lean();
+
+    const listFilter = { role: { $in: assignableRoles } };
+
+    if (viewerRole === "Program-Chair" && viewerProgram) {
+      listFilter.program = viewerProgram;
+    }
+
+    if (viewerRole === "Dean" && viewerDept) {
+      listFilter.department = viewerDept;
+    }
+
+    const professorDocs = await UserModel.find(listFilter)
       .sort({ lastName: 1, firstName: 1, email: 1 })
       .lean();
 
@@ -638,10 +678,49 @@ router.get(
 
     const twsDept = tws.faculty?.dept || "";
     const twsProgram = tws.faculty?.program || "";
+    const twsTerm = tws.faculty?.term || tws.term || "";
 
-    const subjects = await Subject.find({ isActive: true })
-      .sort({ code: 1, title: 1 })
-      .lean();
+    let subjects = [];
+
+    const ataCurricula = await ATACourse.find(
+      twsProgram
+        ? { program: twsProgram }
+        : {}
+    ).lean();
+
+    if (ataCurricula && ataCurricula.length) {
+      const flattened = ataCurricula.flatMap((curriculum) =>
+        (curriculum.courses || []).map((course) => ({
+          code: String(course.courseCode || "").trim().toUpperCase(),
+          title: String(course.courseTitle || "").trim(),
+          units: Number(course.units || 0),
+          department: twsDept,
+          program: twsProgram,
+          isActive: true,
+        }))
+      );
+
+      const uniqueMap = new Map();
+      flattened.forEach((subject) => {
+        if (subject.code && !uniqueMap.has(subject.code)) {
+          uniqueMap.set(subject.code, subject);
+        }
+      });
+
+      subjects = Array.from(uniqueMap.values()).sort((a, b) => {
+        return a.code.localeCompare(b.code) || a.title.localeCompare(b.title);
+      });
+    }
+
+    if (!subjects.length) {
+      subjects = await Subject.find(
+        twsProgram
+          ? { isActive: true, $or: [{ program: twsProgram }, { program: "" }] }
+          : { isActive: true }
+      )
+        .sort({ code: 1, title: 1 })
+        .lean();
+    }
     
     res.render("TWS/twsCreateTeachingWorkloadPopup", {
       tws: normalizeTwsForView(tws, courses),
@@ -670,7 +749,27 @@ router.post(
     const endTime = String(req.body.endTime || "").trim();
     const sectionRoom = String(req.body.sectionRoom || "").trim();
 
-    const subject = await Subject.findOne({ code, isActive: true }).lean();
+    let subject = await Subject.findOne({ code, isActive: true }).lean();
+
+    if (!subject) {
+      const ataCurricula = await ATACourse.find({ "courses.courseCode": code }).lean();
+
+      for (const curriculum of ataCurricula) {
+        const matched = (curriculum.courses || []).find(
+          (c) => String(c.courseCode || "").trim().toUpperCase() === code
+        );
+
+        if (matched) {
+          subject = {
+            code: String(matched.courseCode || "").trim().toUpperCase(),
+            title: String(matched.courseTitle || "").trim(),
+            units: Number(matched.units || 0),
+          };
+          break;
+        }
+      }
+    }
+
     if (!subject) {
       return res.status(404).send("Selected subject was not found in the database.");
     }
@@ -1725,14 +1824,18 @@ router.get(
   requireProgramChair,
   asyncHandler(async (req, res) => {
     const dept = req.twsUser?.department || "";
+    const program = req.twsUser?.program || "";
     const userId = String(getSessionUserId(req.twsUser) || "");
 
-    const allDocs = await TWS.find({
-      $or: [
-        { "faculty.dept": dept },
-        { userID: userId },
-      ],
-    })
+    const scopeFilters = [{ userID: userId }];
+
+    if (program) {
+      scopeFilters.push({ "faculty.program": program });
+    } else if (dept) {
+      scopeFilters.push({ "faculty.dept": dept });
+    }
+
+    const allDocs = await TWS.find({ $or: scopeFilters })
       .sort({ updatedAt: -1, createdAt: -1 })
       .lean();
 

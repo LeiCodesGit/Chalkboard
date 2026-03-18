@@ -98,9 +98,9 @@
           <form method="POST" action="/tws/faculty/<%= tws.id %>">
             <div class="tws-form-grid">
 
-              <div class="tws-form-label">Professor Name:</div>
+              <div class="tws-form-label">Faculty Name:</div>
               <select name="selectedProfessorId" class="tws-form-control tws-field-select" required>
-                <option value="">Select Professor</option>
+                <option value="">Select Faculty</option>
                 <% (professors || []).forEach(function(prof) { %>
                   <option value="<%= prof.id %>" <%= selectedProfessorId === prof.id ? "selected" : "" %>>
                     <%= prof.name %>
@@ -171,7 +171,7 @@
             </div>
 
             <div class="tws-form-note">
-              Select a professor first. The employee ID, email, department, and program will be filled in automatically.
+              Select a faculty member first. The employee ID, email, department, and program will be filled in automatically.
             </div>
 
             <div class="tws-footer-actions" style="margin-top: 18px;">

@@ -63,6 +63,10 @@
               <option value="">Program</option>
             </select>
 
+            <select class="tws-board-filter" id="hrAcademicYearFilter">
+              <option value="">Academic Year</option>
+            </select>
+
             <select class="tws-board-filter" id="hrTermFilter">
               <option value="">Term</option>
               <option value="1st Term">1st Term</option>
@@ -72,7 +76,7 @@
             </select>
           </div>
 
-          <div class="tws-board-caption">A.Y. 2025 - 2026</div>
+          <div class="tws-board-caption">HR / Admin Archive Dashboard</div>
 
           <div class="tws-board-grid" id="hrActiveGrid">
             <% if (!list || !list.length) { %>
@@ -80,7 +84,14 @@
             <% } %>
 
             <% (list || []).forEach(function(tws) { %>
-              <article class="tws-board-card hr-card" data-name="<%= tws.faculty?.name || '' %>" data-department="<%= tws.faculty?.dept || '' %>" data-program="<%= tws.faculty?.program || tws.program || '' %>" data-term="<%= tws.faculty?.term || tws.term || '' %>">
+              <article
+                class="tws-board-card hr-card <%= statusClass(tws.status || 'Draft') %>"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-department="<%= tws.faculty?.dept || '' %>"
+                data-program="<%= tws.faculty?.program || tws.program || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
                 <div class="tws-board-card-hero"></div>
                 <div class="tws-board-card-body">
                   <div class="tws-board-card-top">
@@ -124,7 +135,14 @@
             <% } %>
 
             <% (archivedList || []).forEach(function(tws) { %>
-              <article class="tws-board-card hr-archived-card" data-name="<%= tws.faculty?.name || '' %>" data-department="<%= tws.faculty?.dept || '' %>" data-program="<%= tws.faculty?.program || tws.program || '' %>" data-term="<%= tws.faculty?.term || tws.term || '' %>">
+              <article
+                class="tws-board-card hr-archived-card tws-status-archived"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-department="<%= tws.faculty?.dept || '' %>"
+                data-program="<%= tws.faculty?.program || tws.program || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
                 <div class="tws-board-card-hero"></div>
                 <div class="tws-board-card-body">
                   <div class="tws-board-card-top">
@@ -156,6 +174,7 @@
     const hrSearch = document.getElementById('hrSearch');
     const hrDepartmentFilter = document.getElementById('hrDepartmentFilter');
     const hrProgramFilter = document.getElementById('hrProgramFilter');
+    const hrAcademicYearFilter = document.getElementById('hrAcademicYearFilter');
     const hrTermFilter = document.getElementById('hrTermFilter');
     const hrArchiveToggle = document.getElementById('hrArchiveToggle');
     const hrArchiveGrid = document.getElementById('hrArchiveGrid');
@@ -175,31 +194,50 @@
       });
     }
 
+    function populateHrAcademicYears() {
+      const values = new Set();
+      document.querySelectorAll('.hr-card, .hr-archived-card').forEach((card) => {
+        const ay = (card.dataset.acadYear || '').trim();
+        if (ay) values.add(ay);
+      });
+      [...values].sort().forEach((ay) => {
+        const option = document.createElement('option');
+        option.value = ay;
+        option.textContent = ay;
+        hrAcademicYearFilter.appendChild(option);
+      });
+    }
+
     function applyHrFilters() {
       const search = (hrSearch.value || '').toLowerCase().trim();
       const department = (hrDepartmentFilter.value || '').toLowerCase();
       const program = (hrProgramFilter.value || '').toLowerCase();
       const term = (hrTermFilter.value || '').toLowerCase();
+      const acadYear = (hrAcademicYearFilter.value || '').toLowerCase();
 
       document.querySelectorAll('.hr-card, .hr-archived-card').forEach((card) => {
         const name = (card.dataset.name || '').toLowerCase();
         const dept = (card.dataset.department || '').toLowerCase();
         const cardProgram = (card.dataset.program || '').toLowerCase();
         const cardTerm = (card.dataset.term || '').toLowerCase();
+        const cardAcadYear = (card.dataset.acadYear || '').toLowerCase();
 
         const matches = (!search || name.includes(search))
           && (!department || dept === department)
           && (!program || cardProgram === program)
-          && (!term || cardTerm === term);
+          && (!term || cardTerm === term)
+          && (!acadYear || cardAcadYear === acadYear);
 
         card.style.display = matches ? '' : 'none';
       });
     }
 
     populateHrPrograms();
+    populateHrAcademicYears();
     hrSearch?.addEventListener('input', applyHrFilters);
     hrDepartmentFilter?.addEventListener('change', applyHrFilters);
     hrProgramFilter?.addEventListener('change', applyHrFilters);
+    hrAcademicYearFilter?.addEventListener('change', applyHrFilters);
     hrTermFilter?.addEventListener('change', applyHrFilters);
 
     hrArchiveToggle?.addEventListener('click', () => {

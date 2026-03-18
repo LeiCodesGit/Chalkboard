@@ -28,6 +28,42 @@
       opacity: 1 !important;
     }
 
+    .tws-timetable .tws-block.color-1 {
+      background: #dbeafe !important;
+      border: 1px solid #93c5fd !important;
+      color: #10233d !important;
+    }
+
+    .tws-timetable .tws-block.color-2 {
+      background: #dcfce7 !important;
+      border: 1px solid #86efac !important;
+      color: #14532d !important;
+    }
+
+    .tws-timetable .tws-block.color-3 {
+      background: #fef3c7 !important;
+      border: 1px solid #fcd34d !important;
+      color: #78350f !important;
+    }
+
+    .tws-timetable .tws-block.color-4 {
+      background: #fce7f3 !important;
+      border: 1px solid #f9a8d4 !important;
+      color: #831843 !important;
+    }
+
+    .tws-timetable .tws-block.color-5 {
+      background: #ede9fe !important;
+      border: 1px solid #c4b5fd !important;
+      color: #4c1d95 !important;
+    }
+
+    .tws-timetable .tws-block.color-6 {
+      background: #ffe4e6 !important;
+      border: 1px solid #fda4af !important;
+      color: #881337 !important;
+    }
+
     .tws-block-clickable {
       cursor: pointer;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -234,13 +270,17 @@
                   }
                 }
 
-                parsedBlocks.forEach((block) => {
+                parsedBlocks.forEach((block, index) => {
                   const s = block.item;
                   const p = block.parsed;
                   if (!p) return;
                   const col = dayMap[p.day];
                   const row = p.row;
-                  const colorClass = block.isConflict ? "tws-block-conflict" : "tws-block-assigned";
+
+                  const subjectColors = ["color-1", "color-2", "color-3", "color-4", "color-5", "color-6"];
+                  const assignedColorClass = subjectColors[index % subjectColors.length];
+                  const colorClass = block.isConflict ? "tws-block-conflict" : `${assignedColorClass} tws-block-assigned`;
+
                   const compactSectionRoom = String(s.sectionRoom || "").replace(/\s*\|\s*/g, "|");
                   const compactTimeRange = `${p.startStr} - ${p.endStr}`.replace(/\s*-\s*/g, "-");
               %>

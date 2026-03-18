@@ -54,6 +54,10 @@
               <input type="text" id="pcSearch" placeholder="Search Faculty" />
             </div>
 
+            <select class="tws-board-filter" id="pcAcademicYearFilter">
+              <option value="">Academic Year</option>
+            </select>
+
             <select class="tws-board-filter" id="pcTermFilter">
               <option value="">Term</option>
               <option value="1st Term">1st Term</option>
@@ -68,7 +72,7 @@
             </a>
           </div>
 
-          <div class="tws-board-caption">A.Y. 2025 - 2026 | <%= user?.department || 'Department' %></div>
+          <div class="tws-board-caption"><%= user?.department || 'Department' %> Teaching Workload Sheets</div>
 
           <div class="tws-board-grid" id="pcActiveGrid">
             <% if (!list || !list.length) { %>
@@ -81,9 +85,10 @@
                  const canSendToDean = currentStatus === 'Sent to Faculty' && !!tws.facultySigned;
             %>
               <article
-                class="tws-board-card pc-card"
+                class="tws-board-card pc-card <%= statusClass(currentStatus) %>"
                 data-name="<%= tws.faculty?.name || '' %>"
                 data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
               >
                 <div class="tws-board-card-hero"></div>
                 <div class="tws-board-card-body">
@@ -152,7 +157,12 @@
             <% } %>
 
             <% (archivedList || []).forEach(function(tws) { %>
-              <article class="tws-board-card pc-archived-card" data-name="<%= tws.faculty?.name || '' %>" data-term="<%= tws.faculty?.term || tws.term || '' %>">
+              <article
+                class="tws-board-card pc-archived-card tws-status-archived"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
                 <div class="tws-board-card-hero"></div>
                 <div class="tws-board-card-body">
                   <div class="tws-board-card-top">
@@ -182,25 +192,48 @@
 
   <script>
     const pcSearch = document.getElementById('pcSearch');
+    const pcAcademicYearFilter = document.getElementById('pcAcademicYearFilter');
     const pcTermFilter = document.getElementById('pcTermFilter');
     const pcArchiveToggle = document.getElementById('pcArchiveToggle');
     const pcArchiveGrid = document.getElementById('pcArchiveGrid');
     const pcArchiveIcon = document.getElementById('pcArchiveIcon');
 
+    function populatePcAcademicYears() {
+      const values = new Set();
+      document.querySelectorAll('.pc-card, .pc-archived-card').forEach((card) => {
+        const ay = (card.dataset.acadYear || '').trim();
+        if (ay) values.add(ay);
+      });
+
+      [...values].sort().forEach((ay) => {
+        const option = document.createElement('option');
+        option.value = ay;
+        option.textContent = ay;
+        pcAcademicYearFilter.appendChild(option);
+      });
+    }
+
     function applyPcFilters() {
       const search = (pcSearch.value || '').toLowerCase().trim();
       const term = (pcTermFilter.value || '').toLowerCase();
+      const acadYear = (pcAcademicYearFilter.value || '').toLowerCase();
 
       document.querySelectorAll('.pc-card, .pc-archived-card').forEach((card) => {
         const name = (card.dataset.name || '').toLowerCase();
         const cardTerm = (card.dataset.term || '').toLowerCase();
+        const cardAcadYear = (card.dataset.acadYear || '').toLowerCase();
+
         const matchesSearch = !search || name.includes(search);
         const matchesTerm = !term || cardTerm === term;
-        card.style.display = matchesSearch && matchesTerm ? '' : 'none';
+        const matchesAcadYear = !acadYear || cardAcadYear === acadYear;
+
+        card.style.display = matchesSearch && matchesTerm && matchesAcadYear ? '' : 'none';
       });
     }
 
+    populatePcAcademicYears();
     pcSearch?.addEventListener('input', applyPcFilters);
+    pcAcademicYearFilter?.addEventListener('change', applyPcFilters);
     pcTermFilter?.addEventListener('change', applyPcFilters);
 
     pcArchiveToggle?.addEventListener('click', () => {

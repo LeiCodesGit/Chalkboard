@@ -217,9 +217,11 @@ select {
   width: 100%;
   background: var(--tws-board-card);
   border: 1px solid var(--tws-board-border);
+  border-left: 5px solid transparent;
   border-radius: 18px;
   box-shadow: var(--tws-board-shadow);
   overflow: hidden;
+  position: relative;
 }
 
 .tws-board-card-hero {
@@ -376,7 +378,8 @@ select {
 
 #facultyArchiveGrid,
 #deanArchiveGrid,
-#hrArchiveGrid {
+#hrArchiveGrid,
+#pcArchiveGrid {
   grid-template-columns: repeat(auto-fit, minmax(260px, max-content));
   justify-content: start;
 }
