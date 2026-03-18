@@ -8,7 +8,12 @@ import StudentEducationalObjectives from '../../models/Syllabus/studentEducation
 import CourseEvaluationPerCO from '../../models/Syllabus/courseEvaluationPerCO.js';
 import SyllabusApprovalStatus from '../../models/Syllabus/syllabusApprovalStatus.js';
 
+import { generateSyllabusPdf } from '../../controllers/Syllabus/syllabusPdfController.js';
+
 const previewRoutes = express.Router();
+
+previewRoutes.get('/generate-pdf/:syllabusId', generateSyllabusPdf);
+
 
 previewRoutes.get('/:syllabusId', async (req, res) => {
     try {

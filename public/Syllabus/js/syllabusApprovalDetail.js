@@ -318,7 +318,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPdf = document.getElementById('btn-save-pdf');
     if (btnPdf) {
         btnPdf.addEventListener('click', () => {
-            window.print();
+            const syllabusId = SYLLABUS_APPROVAL_DATA.syllabusId || SYLLABUS_APPROVAL_DATA.syllabusID;
+            if (!syllabusId) {
+                alert('Syllabus ID not found.');
+                return;
+            }
+            // Show loading state (optional but recommended)
+            const originalText = btnPdf.innerHTML;
+            btnPdf.innerHTML = '<span class="material-symbols-outlined">sync</span> Generating...';
+            btnPdf.disabled = true;
+
+            // Open PDF in a new tab for preview
+            window.open(`/syllabus/preview/generate-pdf/${syllabusId}`, '_blank');
+
+            // Reset button immediately since it's a new tab
+            btnPdf.innerHTML = originalText;
+            btnPdf.disabled = false;
         });
     }
 
