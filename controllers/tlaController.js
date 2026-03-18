@@ -89,15 +89,29 @@ async function resolveOwnedSyllabusId(userId, syllabusId, courseCode) {
     return '';
 }
 
+function hasNonEmptyText(value) {
+    return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isPostDigitalComplete(postLike) {
+    if (!postLike) return false;
+    return (
+        hasNonEmptyText(postLike.moIloCode) &&
+        hasNonEmptyText(postLike.participantTurnout) &&
+        hasNonEmptyText(postLike.assessmentResults)
+    );
+}
+
 // ===============================================================================
 //  APPROVAL CHAIN LOGIC
 //  Chain: Professor → Program-Chair → Dean → HR/HRMO → VPAA (final)
 //  Statuses: Not Submitted → Pending → Chair-Approved → Dean-Approved →
+//            Post-Pending → Post-Chair-Approved → Post-Dean-Approved →
 //            HR-Approved → Approved | Returned
 // ===============================================================================
 
 // --- Determine step status labels for the UI tracker --------------------------
-function buildApprovalSteps(tlaDoc, statusDoc) {
+function buildApprovalSteps(tlaDoc, statusDoc, hasPostDigital = true) {
     const macroStatus = statusDoc?.status || 'Not Submitted';
     const stepDocs    = statusDoc || {};
 
@@ -111,31 +125,46 @@ function buildApprovalSteps(tlaDoc, statusDoc) {
 
     // Faculty step
     const facultyDone = tlaDoc?.status && tlaDoc.status !== 'Draft';
-    const facultyStep = facultyDone
+    let facultyStep = facultyDone
         ? (macroStatus === 'Returned' ? 'rejected' : 'approved')
         : 'pending';
+
+    // After Dean approval, faculty must complete post-digital before HR can proceed.
+    if (macroStatus === 'Dean-Approved' && !hasPostDigital) {
+        facultyStep = 'ongoing';
+    }
 
     // Program Chair step
     let chairStep = 'pending';
     if (facultyDone) {
         if (macroStatus === 'Not Submitted') chairStep = 'pending';
         else if (macroStatus === 'Pending') chairStep = 'ongoing';
+        else if (macroStatus === 'Post-Pending') chairStep = 'ongoing';
         else if (macroStatus === 'Returned' && !stepDocs.programChair?.approvalDate) chairStep = 'pending';
-        else chairStep = dot(stepDocs.programChair?.status);
+        else if (macroStatus === 'Post-Chair-Approved' || macroStatus === 'Post-Dean-Approved' || macroStatus === 'HR-Approved' || macroStatus === 'Approved') {
+            chairStep = dot(stepDocs.programChairPost?.status);
+        } else {
+            chairStep = dot(stepDocs.programChair?.status);
+        }
     }
 
     // Dean step
     let deanStep = 'pending';
-    if (['Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Approved'].includes(macroStatus)) {
-        deanStep = dot(stepDocs.dean?.status);
+    if (['Chair-Approved', 'Dean-Approved', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Approved'].includes(macroStatus)) {
+        if (['Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Approved'].includes(macroStatus)) {
+            deanStep = dot(stepDocs.deanPost?.status);
+        } else {
+            deanStep = dot(stepDocs.dean?.status);
+        }
         if (macroStatus === 'Chair-Approved' && !stepDocs.dean?.status) deanStep = 'ongoing';
+        if (macroStatus === 'Post-Chair-Approved' && !stepDocs.deanPost?.status) deanStep = 'ongoing';
     }
 
     // HR/HRMO step
     let hrStep = 'pending';
-    if (['Dean-Approved', 'HR-Approved', 'Approved'].includes(macroStatus)) {
+    if (['Post-Dean-Approved', 'HR-Approved', 'Approved'].includes(macroStatus)) {
         hrStep = dot(stepDocs.hr?.status);
-        if (macroStatus === 'Dean-Approved' && !stepDocs.hr?.status) hrStep = 'ongoing';
+        if (macroStatus === 'Post-Dean-Approved' && !stepDocs.hr?.status) hrStep = 'ongoing';
     }
 
     // VPAA step (final)
@@ -155,18 +184,22 @@ function buildApprovalSteps(tlaDoc, statusDoc) {
 }
 
 // --- Determine what action the current user can take --------------------------
-function activeStep(role, macroStatus) {
+function activeStep(role, macroStatus, hasPostDigital = true) {
     if (role === 'Program-Chair' && macroStatus === 'Pending')        return 'programChair';
     if (role === 'Dean'          && macroStatus === 'Chair-Approved') return 'dean';
-    if (role === 'HR'            && macroStatus === 'Dean-Approved')  return 'hr';
-    if (role === 'HRMO'          && macroStatus === 'Dean-Approved')  return 'hr';
+    if (role === 'Program-Chair' && macroStatus === 'Post-Pending')        return 'programChairPost';
+    if (role === 'Dean'          && macroStatus === 'Post-Chair-Approved') return 'deanPost';
+    if (role === 'HR'            && macroStatus === 'Post-Dean-Approved')  return 'hr';
+    if (role === 'HRMO'          && macroStatus === 'Post-Dean-Approved')  return 'hr';
     if (role === 'VPAA'          && macroStatus === 'HR-Approved')    return 'vpaa';
 
     // Admin/Super-Admin can act at whatever the current active step is
     if (['Admin', 'Super-Admin'].includes(role)) {
         if (macroStatus === 'Pending')        return 'programChair';
         if (macroStatus === 'Chair-Approved') return 'dean';
-        if (macroStatus === 'Dean-Approved')  return 'hr';
+        if (macroStatus === 'Post-Pending')        return 'programChairPost';
+        if (macroStatus === 'Post-Chair-Approved') return 'deanPost';
+        if (macroStatus === 'Post-Dean-Approved')  return 'hr';
         if (macroStatus === 'HR-Approved')    return 'vpaa';
     }
     return null;
@@ -175,15 +208,15 @@ function activeStep(role, macroStatus) {
 // --- Shared data-fetching helpers for admin pages -----------------------------
 
 const ROLE_STATUS_FILTER = {
-    'Program-Chair':          ['Pending'],
-    'Dean':                   ['Chair-Approved'],
-    'HR':                     ['Dean-Approved'],
-    'HRMO':                   ['Dean-Approved'],
+    'Program-Chair':          ['Pending', 'Post-Pending'],
+    'Dean':                   ['Chair-Approved', 'Post-Chair-Approved'],
+    'HR':                     ['Post-Dean-Approved'],
+    'HRMO':                   ['Post-Dean-Approved'],
     'VPAA':                   ['HR-Approved'],
-    'Technical':              ['Pending', 'Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Returned'],
-    'Practicum-Coordinator':  ['Pending', 'Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Returned'],
-    'Admin':                  ['Pending', 'Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Returned'],
-    'Super-Admin':            ['Pending', 'Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Returned']
+    'Technical':              ['Pending', 'Chair-Approved', 'Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Returned'],
+    'Practicum-Coordinator':  ['Pending', 'Chair-Approved', 'Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Returned'],
+    'Admin':                  ['Pending', 'Chair-Approved', 'Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Returned'],
+    'Super-Admin':            ['Pending', 'Chair-Approved', 'Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Returned']
 };
 
 async function buildSubmissionList(role) {
@@ -192,8 +225,23 @@ async function buildSubmissionList(role) {
         status: { $in: allowedStatuses }
     }).sort({ updatedAt: -1 });
 
+    let filteredStatusDocs = statusDocs;
     const tlaIDs = statusDocs.map(s => s.tlaID);
-    const tlas   = await TLA_Main.find({ _id: { $in: tlaIDs } });
+
+    // Backward compatibility: if old records still at Dean-Approved, require completed post-digital.
+    if (['HR', 'HRMO'].includes(role) && tlaIDs.length) {
+        const postDocs = await Post_Main.find({ tlaID: { $in: tlaIDs } });
+        const postMap = {};
+        for (const pd of postDocs) postMap[pd.tlaID.toString()] = pd;
+
+        filteredStatusDocs = statusDocs.filter((sd) => {
+            if (sd.status !== 'Dean-Approved') return true;
+            return isPostDigitalComplete(postMap[sd.tlaID.toString()]);
+        });
+    }
+
+    const filteredTlaIDs = filteredStatusDocs.map(s => s.tlaID);
+    const tlas   = await TLA_Main.find({ _id: { $in: filteredTlaIDs } });
 
     const userIDs = [...new Set(tlas.map(t => t.userID?.toString()))];
     const users   = await User.find({ _id: { $in: userIDs } }, 'firstName lastName email department');
@@ -203,8 +251,8 @@ async function buildSubmissionList(role) {
     const tlaMap = {};
     for (const t of tlas) tlaMap[t._id.toString()] = t;
 
-    // Keep the same order as statusDocs (already sorted updatedAt desc)
-    return statusDocs
+    // Keep the same order as filteredStatusDocs (already sorted updatedAt desc)
+    return filteredStatusDocs
         .map((sd) => {
             const t = tlaMap[sd.tlaID.toString()];
             if (!t) return null;
@@ -473,7 +521,7 @@ export async function createTLA(req, res) {
             courseCode, section, dateofDigitalDay, facultyFacilitating,
             courseOutcomes, mediatingOutcomes, weekNumber,
             pre_moIloCode, pre_teacherLearningActivity, pre_lmsDigitalTool, pre_assessment,
-            action, syllabusId
+            action, syllabusId, professorSignature, professorPreSignature, professorPostSignature
         } = req.body;
 
         const userID    = req.session.user.id;
@@ -484,6 +532,9 @@ export async function createTLA(req, res) {
             courseCode, section, dateofDigitalDay, facultyFacilitating,
             courseOutcomes, mediatingOutcomes,
             weekNumber: weekNumber || null,
+            professorPreSignature: professorPreSignature || professorSignature || '',
+            professorPostSignature: professorPostSignature || '',
+            professorSignature: professorPreSignature || professorSignature || '',
             syllabusID: resolvedSyllabusId || undefined,
             userID, status: tlaStatus
         });
@@ -528,7 +579,7 @@ export async function updateTLA(req, res) {
             courseOutcomes, mediatingOutcomes, weekNumber,
             pre_moIloCode, pre_teacherLearningActivity, pre_lmsDigitalTool, pre_assessment,
             post_moIloCode, post_participantTurnout, post_assessmentResults, post_remarks,
-            action, syllabusId
+            action, syllabusId, professorSignature, professorPreSignature, professorPostSignature
         } = req.body;
 
         const tla = await TLA_Main.findById(id);
@@ -551,7 +602,52 @@ export async function updateTLA(req, res) {
         const isPostSubmit = action === 'submit-post';
         const isSubmit     = action === 'submit';
         const isDraft      = action === 'draft';
-        const isInChain    = ['Pending', 'Chair-Approved', 'Dean-Approved', 'HR-Approved'].includes(tla.status);
+        const isInChain    = ['Pending', 'Chair-Approved', 'Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved'].includes(tla.status);
+
+        if (isPostSubmit) {
+            const canSubmitPost = ['Dean-Approved', 'HR-Approved'].includes(tla.status);
+            if (!canSubmitPost) {
+                return res.status(403).send('Post-digital submission is only allowed after Dean approval.');
+            }
+
+            const postDraft = {
+                moIloCode: post_moIloCode,
+                participantTurnout: post_participantTurnout,
+                assessmentResults: post_assessmentResults
+            };
+            if (!isPostDigitalComplete(postDraft)) {
+                return res.status(400).send('Please complete MO/ILO Code, Participant Turnout, and Assessment Results before submitting post-digital.');
+            }
+
+            const postCycleReset = {
+                status: 'Post-Pending',
+                programChairPost: { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '', signatureImage: '' },
+                deanPost: { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '', signatureImage: '' }
+            };
+
+            await Promise.all([
+                Status_Main.findOneAndUpdate({ tlaID: id }, { $set: postCycleReset }, { upsert: true }),
+                Status_B1.findOneAndUpdate({ tlaID: id }, { $set: postCycleReset }, { upsert: true }),
+                Status_B2.findOneAndUpdate({ tlaID: id }, { $set: postCycleReset }, { upsert: true })
+            ]);
+
+            await Promise.all([
+                TLA_Main.findByIdAndUpdate(id, { status: 'Post-Pending' }),
+                TLA_B1.findByIdAndUpdate(id,   { status: 'Post-Pending' }),
+                TLA_B2.findByIdAndUpdate(id,   { status: 'Post-Pending' })
+            ]);
+
+            // Persist post professor signature from form payload as a safety net.
+            // This prevents losing the post signature in PDF after redirect/reload.
+            if (professorPostSignature && typeof professorPostSignature === 'string' && professorPostSignature.startsWith('data:image/')) {
+                const postSigUpdate = { professorPostSignature };
+                await Promise.all([
+                    TLA_Main.findByIdAndUpdate(id, postSigUpdate),
+                    TLA_B1.findByIdAndUpdate(id,   postSigUpdate),
+                    TLA_B2.findByIdAndUpdate(id,   postSigUpdate)
+                ]);
+            }
+        }
 
         let tlaStatus = tla.status;
         if (isDraft && !isInChain)  tlaStatus = 'Draft';
@@ -562,6 +658,9 @@ export async function updateTLA(req, res) {
                 courseCode, section, dateofDigitalDay, facultyFacilitating,
                 courseOutcomes, mediatingOutcomes,
                 weekNumber: weekNumber || null,
+                professorPreSignature: professorPreSignature || professorSignature || tla.professorPreSignature || tla.professorSignature || '',
+                professorPostSignature: professorPostSignature || tla.professorPostSignature || '',
+                professorSignature: professorPreSignature || professorSignature || tla.professorPreSignature || tla.professorSignature || '',
                 syllabusID: resolvedSyllabusId || tla.syllabusID || undefined,
                 status: tlaStatus
             };
@@ -607,6 +706,8 @@ export async function updateTLA(req, res) {
                 status:       'Pending',
                 programChair: { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' },
                 dean:         { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' },
+                programChairPost: { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '', signatureImage: '' },
+                deanPost:         { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '', signatureImage: '' },
                 hr:           { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' },
                 vpaa:         { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' }
             };
@@ -795,9 +896,11 @@ export async function getApprovalPage(req, res) {
             Status_Main.findOne({ tlaID: tla._id })
         ]);
 
-        const approvalSteps  = buildApprovalSteps(tla, approvalStatus);
+        const hasPostDigital = isPostDigitalComplete(postDigital);
+        const approvalSteps  = buildApprovalSteps(tla, approvalStatus, hasPostDigital);
         const macroStatus    = approvalStatus?.status || 'Not Submitted';
-        const userActiveStep = activeStep(role, macroStatus);
+        const userActiveStep = activeStep(role, macroStatus, hasPostDigital);
+        const isPostCycle = ['Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Approved'].includes(macroStatus);
 
         // Build approval history for audit trail
         const approvalHistory = [];
@@ -842,7 +945,9 @@ export async function getApprovalPage(req, res) {
             existingComment:  stepData?.remarks || '',
             signatureUrl:     stepData?.signatureImage || null,
             activeStep:       userActiveStep,
-            stepData
+            stepData,
+            chairStep:        isPostCycle ? (approvalStatus?.programChairPost || null) : (approvalStatus?.programChair || null),
+            deanStep:         isPostCycle ? (approvalStatus?.deanPost || null) : (approvalStatus?.dean || null)
         });
     } catch (error) {
         console.error('getApprovalPage error:', error);
@@ -869,11 +974,16 @@ export async function postApprovalAction(req, res) {
         const tla = await TLA_Main.findById(tlaID);
         if (!tla) return res.status(404).json({ error: 'TLA not found' });
 
-        const statusDoc = await Status_Main.findOne({ tlaID }) ||
+        const [statusDoc, postDigital] = await Promise.all([
+            Status_Main.findOne({ tlaID }),
+            Post_Main.findOne({ tlaID })
+        ]);
+        const ensuredStatusDoc = statusDoc ||
                           await Status_Main.create({ tlaID, status: 'Not Submitted' });
 
-        const macroNow  = statusDoc.status;
-        const step      = activeStep(role, macroNow);
+        const macroNow  = ensuredStatusDoc.status;
+        const hasPostDigital = isPostDigitalComplete(postDigital);
+        const step      = activeStep(role, macroNow, hasPostDigital);
 
         // -- Draft save: just store the comment without advancing the chain --
         if (action === 'draft' && step) {
@@ -916,6 +1026,8 @@ export async function postApprovalAction(req, res) {
                 const advanceMap = {
                     programChair: 'Chair-Approved',
                     dean:         'Dean-Approved',
+                    programChairPost: 'Post-Chair-Approved',
+                    deanPost:         'Post-Dean-Approved',
                     hr:           'HR-Approved',
                     vpaa:         'Approved'
                 };
@@ -925,6 +1037,10 @@ export async function postApprovalAction(req, res) {
                     nextTlaStatus = 'Approved';
                 } else if (step === 'hr') {
                     nextTlaStatus = 'HR-Approved';
+                } else if (step === 'deanPost') {
+                    nextTlaStatus = 'Post-Dean-Approved';
+                } else if (step === 'programChairPost') {
+                    nextTlaStatus = 'Post-Chair-Approved';
                 } else if (step === 'dean') {
                     nextTlaStatus = 'Dean-Approved';
                 } else if (step === 'programChair') {
@@ -1019,7 +1135,7 @@ export async function postHRArchive(req, res) {
 export async function uploadSignature(req, res) {
     try {
         const { id } = req.params;
-        const { signatureImage } = req.body;
+        const { signatureImage, signatureType } = req.body;
 
         const tla = await TLA_Main.findById(id);
         if (!tla) return res.status(404).json({ error: 'TLA not found' });
@@ -1028,9 +1144,9 @@ export async function uploadSignature(req, res) {
             return res.status(403).json({ error: 'Forbidden' });
         }
 
-        // Validate PNG data URL
-        if (!signatureImage || typeof signatureImage !== 'string' || !signatureImage.startsWith('data:image/png')) {
-            return res.status(400).json({ error: 'Only PNG images are accepted. Please upload a .png file.' });
+        // Validate image data URL
+        if (!signatureImage || typeof signatureImage !== 'string' || !signatureImage.startsWith('data:image/')) {
+            return res.status(400).json({ error: 'Only image uploads are accepted for signatures.' });
         }
 
         // Size guard: ~2 MB base64 limit
@@ -1038,10 +1154,15 @@ export async function uploadSignature(req, res) {
             return res.status(400).json({ error: 'Signature image is too large. Maximum 2 MB.' });
         }
 
+        const normalizedType = signatureType === 'post' ? 'post' : 'pre';
+        const updateFields = normalizedType === 'post'
+            ? { professorPostSignature: signatureImage }
+            : { professorPreSignature: signatureImage, professorSignature: signatureImage };
+
         await Promise.all([
-            TLA_Main.findByIdAndUpdate(id, { professorSignature: signatureImage }),
-            TLA_B1.findByIdAndUpdate(id,   { professorSignature: signatureImage }),
-            TLA_B2.findByIdAndUpdate(id,   { professorSignature: signatureImage })
+            TLA_Main.findByIdAndUpdate(id, updateFields),
+            TLA_B1.findByIdAndUpdate(id,   updateFields),
+            TLA_B2.findByIdAndUpdate(id,   updateFields)
         ]);
 
         return res.json({ success: true, message: 'Signature uploaded successfully.' });
@@ -1058,15 +1179,20 @@ export async function uploadSignature(req, res) {
 
 function buildTlaPayload(body, user) {
     const b = body || {};
+    const fallbackName =
+        b.facultyFacilitating ||
+        (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '');
     return {
         courseCode: b.courseCode || '',
         section: b.section || '',
         dateofDigitalDay: b.dateofDigitalDay || '',
-        facultyFacilitating:
-            b.facultyFacilitating ||
-            (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : ''),
+        facultyFacilitating: fallbackName,
+        preparedByNamePre: b.preparedByNamePre || fallbackName,
+        preparedByNamePost: b.preparedByNamePost || fallbackName,
         courseOutcomes: b.courseOutcomes || '',
         mediatingOutcomes: b.mediatingOutcomes || '',
+        preparedSignaturePre: b.professorPreSignature || b.professorSignature || '',
+        preparedSignaturePost: b.professorPostSignature || '',
         pre_moIloCode: b.pre_moIloCode || '',
         pre_teacherLearningActivity: b.pre_teacherLearningActivity || '',
         pre_lmsDigitalTool: b.pre_lmsDigitalTool || '',
@@ -1169,20 +1295,34 @@ async function renderTlaPdf(payload) {
     drawWrapped(payload.post_assessmentResults, 331, postY, 103, { size: 8 });
     drawWrapped(payload.post_remarks, 441, postY, 113, { size: 8 });
 
-    // Signature block: Prepared by (Faculty), Approved by (Program Chair), Endorsed by (Dean)
-    await drawSignatureImage(payload.preparedSignature, 72, 92, 140, 26);
-    await drawSignatureImage(payload.programChairSignature, 310, 92, 150, 26);
-    await drawSignatureImage(payload.deanSignature, 505, 92, 100, 26);
+    // PRE-DIGITAL signature row
+    await drawSignatureImage(payload.preparedSignaturePre, 45, 345, 160, 110);
+    await drawSignatureImage(payload.programChairSignaturePre, 215, 350, 160, 110);
+    await drawSignatureImage(payload.deanSignaturePre, 385, 350, 160, 110);
 
-    draw(payload.preparedByName, 86, 76, { size: 9, maxWidth: 120 });
-    draw(payload.programChairLine, 302, 76, { size: 8, maxWidth: 165 });
-    draw(payload.deanLine, 514, 76, { size: 9, maxWidth: 90 });
+    draw(payload.preparedByNamePre, 85, 388, { size: 9, maxWidth: 142 });
+    draw(payload.programChairLinePre, 260, 395, { size: 8, maxWidth: 160 });
+    draw(payload.deanLinePre, 435, 395, { size: 8, maxWidth: 100 });
+
+    // POST-DIGITAL signature row
+    await drawSignatureImage(payload.preparedSignaturePost, 45, 345, 160, 110);
+    await drawSignatureImage(payload.programChairSignaturePost, 215, 350, 160, 110);
+    await drawSignatureImage(payload.deanSignaturePost, 385, 350, 160, 110);
+
+    draw(payload.preparedByNamePost, 85, 388, { size: 9, maxWidth: 142 });
+    draw(payload.programChairLinePost, 260, 395, { size: 9, maxWidth: 142 });
+    draw(payload.deanLinePost, 435, 395, { size: 9, maxWidth: 142 });
 
     return pdfDoc.save();
 }
 
 async function appendTlaSignaturePayload(basePayload, tlaId, fallbackUserId) {
     const payload = { ...basePayload };
+
+    let tlaDoc = null;
+    if (tlaId) {
+        tlaDoc = await TLA_Main.findById(tlaId);
+    }
 
     let facultyUser = null;
     if (fallbackUserId) {
@@ -1194,14 +1334,25 @@ async function appendTlaSignaturePayload(basePayload, tlaId, fallbackUserId) {
         statusDoc = await Status_Main.findOne({ tlaID: tlaId });
     }
 
-    payload.preparedByName = payload.facultyFacilitating ||
+    const resolvedPreparedByName = payload.facultyFacilitating ||
         (facultyUser ? `${facultyUser.firstName || ''} ${facultyUser.lastName || ''}`.trim() : 'Faculty Member');
-    payload.programChairLine = formatApprovalLine(statusDoc?.programChair?.approvedBy, statusDoc?.programChair?.approvalDate);
-    payload.deanLine = formatApprovalLine(statusDoc?.dean?.approvedBy, statusDoc?.dean?.approvalDate);
+    payload.preparedByNamePre = payload.preparedByNamePre || resolvedPreparedByName;
+    payload.preparedByNamePost = payload.preparedByNamePost || resolvedPreparedByName;
+    payload.programChairLinePre = formatApprovalLine(statusDoc?.programChair?.approvedBy, statusDoc?.programChair?.approvalDate);
+    payload.deanLinePre = formatApprovalLine(statusDoc?.dean?.approvedBy, statusDoc?.dean?.approvalDate);
+    payload.programChairLinePost = formatApprovalLine(statusDoc?.programChairPost?.approvedBy, statusDoc?.programChairPost?.approvalDate);
+    payload.deanLinePost = formatApprovalLine(statusDoc?.deanPost?.approvedBy, statusDoc?.deanPost?.approvalDate);
 
-    payload.preparedSignature = facultyUser?.signatureImage || '';
-    payload.programChairSignature = statusDoc?.programChair?.signatureImage || '';
-    payload.deanSignature = statusDoc?.dean?.signatureImage || '';
+    // Faculty signature source: TLA form upload (per-document), not user profile.
+    payload.preparedSignaturePre = tlaDoc?.professorPreSignature || tlaDoc?.professorSignature || payload.preparedSignaturePre || '';
+    payload.preparedSignaturePost = tlaDoc?.professorPostSignature || payload.preparedSignaturePost || '';
+    if (!payload.preparedByNamePost && payload.preparedSignaturePost) {
+        payload.preparedByNamePost = resolvedPreparedByName;
+    }
+    payload.programChairSignaturePre = statusDoc?.programChair?.signatureImage || '';
+    payload.deanSignaturePre = statusDoc?.dean?.signatureImage || '';
+    payload.programChairSignaturePost = statusDoc?.programChairPost?.signatureImage || '';
+    payload.deanSignaturePost = statusDoc?.deanPost?.signatureImage || '';
 
     return payload;
 }
@@ -1294,6 +1445,126 @@ export async function viewTlaPdf(req, res) {
     } catch (err) {
         console.error('viewTlaPdf error:', err);
         res.status(500).send('Failed to view PDF');
+    }
+}
+
+// ===============================================================================
+//  VIEW TLA AS PDF FOR APPROVALS (GET /tla/form/pdf-approval/:id)
+//  Used by approval roles (Chair, Dean, HR, VPAA) to view saved TLA with signatures
+//  No faculty-only restriction; shows pre-filled faculty data + approval signatures
+// ===============================================================================
+
+export async function viewTlaPdfApproval(req, res) {
+    try {
+        const tla = await TLA_Main.findById(req.params.id);
+        if (!tla) return res.status(404).send('TLA not found');
+
+        const [preDigital, postDigital] = await Promise.all([
+            Pre_Main.findOne({ tlaID: tla._id }),
+            Post_Main.findOne({ tlaID: tla._id })
+        ]);
+
+        const basePayload = buildTlaPayload({
+            courseCode: tla.courseCode,
+            section: tla.section,
+            dateofDigitalDay: tla.dateofDigitalDay,
+            facultyFacilitating: tla.facultyFacilitating || '',
+            courseOutcomes: tla.courseOutcomes,
+            mediatingOutcomes: tla.mediatingOutcomes,
+            pre_moIloCode: preDigital?.moIloCode,
+            pre_teacherLearningActivity: preDigital?.teacherLearningActivity,
+            pre_lmsDigitalTool: preDigital?.lmsDigitalTool,
+            pre_assessment: preDigital?.assessment,
+            post_moIloCode: postDigital?.moIloCode,
+            post_participantTurnout: postDigital?.participantTurnout,
+            post_assessmentResults: postDigital?.assessmentResults,
+            post_remarks: postDigital?.remarks
+        }, req.session.user);
+
+        const payload = await appendTlaSignaturePayload(basePayload, tla._id, tla.userID);
+
+        const pdfBytes = await renderTlaPdf(payload);
+
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline; filename="TLA_Report.pdf"'
+        });
+        res.send(Buffer.from(pdfBytes));
+    } catch (err) {
+        console.error('viewTlaPdfApproval error:', err);
+        res.status(500).send('Failed to view PDF');
+    }
+}
+
+// ===============================================================================
+//  PREVIEW TLA AS PDF FOR APPROVALS (POST /tla/approval/:id/preview-pdf)
+//  Includes current in-page uploaded signature even before draft/submit.
+// ===============================================================================
+
+export async function previewApprovalTlaPdf(req, res) {
+    try {
+        const tlaID = req.params.id;
+        const { signatureImage, activeStep } = req.body || {};
+        const safeSignature = (typeof signatureImage === 'string' && signatureImage.startsWith('data:image'))
+            ? signatureImage
+            : '';
+
+        const tla = await TLA_Main.findById(tlaID);
+        if (!tla) return res.status(404).send('TLA not found');
+
+        const [preDigital, postDigital] = await Promise.all([
+            Pre_Main.findOne({ tlaID: tla._id }),
+            Post_Main.findOne({ tlaID: tla._id })
+        ]);
+
+        const basePayload = buildTlaPayload({
+            courseCode: tla.courseCode,
+            section: tla.section,
+            dateofDigitalDay: tla.dateofDigitalDay,
+            facultyFacilitating: tla.facultyFacilitating || '',
+            courseOutcomes: tla.courseOutcomes,
+            mediatingOutcomes: tla.mediatingOutcomes,
+            pre_moIloCode: preDigital?.moIloCode,
+            pre_teacherLearningActivity: preDigital?.teacherLearningActivity,
+            pre_lmsDigitalTool: preDigital?.lmsDigitalTool,
+            pre_assessment: preDigital?.assessment,
+            post_moIloCode: postDigital?.moIloCode,
+            post_participantTurnout: postDigital?.participantTurnout,
+            post_assessmentResults: postDigital?.assessmentResults,
+            post_remarks: postDigital?.remarks
+        }, req.session.user);
+
+        const payload = await appendTlaSignaturePayload(basePayload, tla._id, tla.userID);
+
+        // Overlay the currently uploaded signature in approval page preview,
+        // so approvers can verify placement before saving/submitting.
+        if (safeSignature) {
+            const actor = actorName(req.session.user);
+            if (activeStep === 'programChair') {
+                payload.programChairSignaturePre = safeSignature;
+                payload.programChairLinePre = actor;
+            } else if (activeStep === 'dean') {
+                payload.deanSignaturePre = safeSignature;
+                payload.deanLinePre = actor;
+            } else if (activeStep === 'programChairPost') {
+                payload.programChairSignaturePost = safeSignature;
+                payload.programChairLinePost = actor;
+            } else if (activeStep === 'deanPost') {
+                payload.deanSignaturePost = safeSignature;
+                payload.deanLinePost = actor;
+            }
+        }
+
+        const pdfBytes = await renderTlaPdf(payload);
+
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline; filename="TLA_Preview.pdf"'
+        });
+        res.send(Buffer.from(pdfBytes));
+    } catch (err) {
+        console.error('previewApprovalTlaPdf error:', err);
+        res.status(500).send('Failed to preview PDF');
     }
 }
 

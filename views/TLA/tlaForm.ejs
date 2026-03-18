@@ -26,14 +26,25 @@
             <h1>COLLEGE TEACHING-LEARNING ACTIVITY</h1>
 
             <!-- Status badge for non-editable records -->
-            <% if (status && ['Pending','Chair-Approved','Dean-Approved','HR-Approved','Approved','Archived'].includes(status.status)) { %>
+            <% if (status && ['Pending','Chair-Approved','Dean-Approved','Post-Pending','Post-Chair-Approved','Post-Dean-Approved','HR-Approved','Approved','Archived'].includes(status.status)) { %>
                 <div class="status-badge status-badge--locked">
                     <% if (status.status === 'Pending') { %>
                         &#9203; This TLA is <strong>Pending</strong> Program Chair review. Pre-digital section is locked.
                     <% } else if (status.status === 'Chair-Approved') { %>
                         &#9203; This TLA is <strong>Chair-Approved</strong>, awaiting Dean review.
                     <% } else if (status.status === 'Dean-Approved') { %>
-                        &#9203; This TLA is <strong>Dean-Approved</strong>, awaiting HR/HRMO review.
+                        <% const postIsCompleteAtDean = postDigital && postDigital.moIloCode && postDigital.participantTurnout && postDigital.assessmentResults; %>
+                        <% if (postIsCompleteAtDean) { %>
+                            &#9203; This TLA is <strong>Dean-Approved</strong>, awaiting HR/HRMO review.
+                        <% } else { %>
+                            &#9203; This TLA is <strong>Dean-Approved</strong>. Please complete and submit the Post-Digital section to continue to HR/HRMO review.
+                        <% } %>
+                    <% } else if (status.status === 'Post-Pending') { %>
+                        &#9203; Post-Digital is submitted and awaiting Program Chair post review.
+                    <% } else if (status.status === 'Post-Chair-Approved') { %>
+                        &#9203; Post-Digital is <strong>Post-Chair-Approved</strong>, awaiting Dean post review.
+                    <% } else if (status.status === 'Post-Dean-Approved') { %>
+                        &#9203; Post-Digital is <strong>Post-Dean-Approved</strong>, awaiting HR/HRMO review.
                     <% } else if (status.status === 'HR-Approved') { %>
                         &#9203; This TLA is <strong>HR-Approved</strong>, awaiting VPAA final approval.
                     <% } else if (status.status === 'Approved') { %>
@@ -47,7 +58,7 @@
             <%
                 const formAction = tla ? '/tla/form/' + tla._id : '/tla/form';
                 // Pre-digital locked when in approval chain or fully approved
-                const isLocked   = status && ['Pending','Chair-Approved','Dean-Approved','HR-Approved','Approved','Archived'].includes(status.status);
+                const isLocked   = status && ['Pending','Chair-Approved','Dean-Approved','Post-Pending','Post-Chair-Approved','Post-Dean-Approved','HR-Approved','Approved','Archived'].includes(status.status);
                 const backToOverviewLink = (locals.syllabusId && String(locals.syllabusId).trim())
                     ? ('/tla/overview/' + locals.syllabusId)
                     : '/tla/overview';
@@ -57,6 +68,9 @@
                 <% if (tla) { %>
                 <input type="hidden" name="_tlaId" value="<%= tla._id %>">
                 <% } %>
+                <input type="hidden" name="professorPreSignature" id="professorPreSignature" value="<%= tla && (tla.professorPreSignature || tla.professorSignature) ? (tla.professorPreSignature || tla.professorSignature) : '' %>">
+                <input type="hidden" name="professorPostSignature" id="professorPostSignature" value="<%= tla && tla.professorPostSignature ? tla.professorPostSignature : '' %>">
+                <input type="hidden" name="professorSignature" id="professorSignature" value="<%= tla && (tla.professorPreSignature || tla.professorSignature) ? (tla.professorPreSignature || tla.professorSignature) : '' %>">
                 <div class="form-section top-section">
                     <div class="form-row two-col">
                         <div class="form-group">
@@ -117,9 +131,8 @@
                 </div>
                 
                 <%
-                    // Post-digital unlocks ONLY after Program-Chair approves
-                    // (status reaches Chair-Approved or beyond in the chain)
-                    const postApprovedStatuses = ['Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Approved'];
+                    // Post-digital unlocks only after Dean approval.
+                    const postApprovedStatuses = ['Dean-Approved', 'Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved', 'Approved'];
                     const postUnlocked = status && postApprovedStatuses.includes(status.status);
                     const postDisabled = !postUnlocked;
                 %>
@@ -152,22 +165,22 @@
                                    <%= isLocked ? 'disabled' : '' %>>
                         </div>
                         <div class="signature-block" id="pre-signature-block">
-                            <label>SIGNATURE <span class="sig-format-hint">(PNG only)</span></label>
+                            <label>SIGNATURE <span class="sig-format-hint">(Image file)</span></label>
                             <div class="signature-upload-area" id="pre-sig-area">
-                                <% const existingSig = (tla && tla.professorSignature) ? tla.professorSignature : (user && user.signatureImage ? user.signatureImage : ''); %>
+                                <% const existingSig = (tla && tla.professorSignature) ? tla.professorSignature : ''; %>
                                 <% if (existingSig) { %>
                                     <img src="<%= existingSig %>" alt="Signature" class="sig-preview-img" id="pre-sig-preview">
                                 <% } else { %>
-                                    <span class="sig-placeholder" id="pre-sig-placeholder">Click to upload PNG signature</span>
+                                    <span class="sig-placeholder" id="pre-sig-placeholder">Click to upload signature image</span>
                                 <% } %>
-                                <input type="file" accept="image/png" class="sig-file-input" id="pre-sig-input" <%= isLocked ? 'disabled' : '' %>>
+                                <input type="file" accept="image/*" class="sig-file-input" id="pre-sig-input" <%= isLocked ? 'disabled' : '' %>>
                             </div>
                             <% if (!isLocked) { %>
                             <div class="sig-actions">
                                 <button type="button" class="sig-upload-btn" id="pre-sig-btn" onclick="document.getElementById('pre-sig-input').click()">
-                                    <span class="material-symbols-outlined">upload</span> Upload PNG
+                                    <span class="material-symbols-outlined">upload</span> Upload Image
                                 </button>
-                                <button type="button" class="sig-remove-btn" id="pre-sig-remove" style="display: <%= existingSig ? 'inline-flex' : 'none' %>">
+                                <button type="button" class="sig-remove-btn" id="pre-sig-remove" <%= existingSig ? '' : 'style="display:none"' %>>
                                     <span class="material-symbols-outlined">delete</span> Remove
                                 </button>
                             </div>
@@ -181,10 +194,10 @@
 
                         <% if (postDisabled) { %>
                         <div class="post-lock-notice">
-                            <% if (status && status.status === 'Pending') { %>
-                                &#9203; Waiting for Program-Chair approval before Post-Digital Session can be filled.
+                            <% if (status && (status.status === 'Pending' || status.status === 'Chair-Approved')) { %>
+                                &#9203; Waiting for Dean approval before Post-Digital Session can be filled.
                             <% } else { %>
-                                &#128274; Post-Digital Session becomes available after Program-Chair approves the Pre-Digital Session.
+                                &#128274; Post-Digital Session becomes available after Dean approval.
                             <% } %>
                         </div>
                         <% } %>
@@ -214,17 +227,22 @@
                                    <%= postDisabled ? 'disabled' : '' %>>
                         </div>
                         <div class="signature-block" id="post-signature-block">
-                            <label>SIGNATURE <span class="sig-format-hint">(PNG only)</span></label>
+                            <label>SIGNATURE <span class="sig-format-hint">(Image file)</span></label>
                             <div class="signature-upload-area" id="post-sig-area">
-                                <span class="sig-placeholder" id="post-sig-placeholder">Click to upload PNG signature</span>
-                                <input type="file" accept="image/png" class="sig-file-input" id="post-sig-input" <%= postDisabled ? 'disabled' : '' %>>
+                                <% const existingPostSig = (tla && tla.professorPostSignature) ? tla.professorPostSignature : ''; %>
+                                <% if (existingPostSig) { %>
+                                    <img src="<%= existingPostSig %>" alt="Signature" class="sig-preview-img" id="post-sig-preview">
+                                <% } else { %>
+                                    <span class="sig-placeholder" id="post-sig-placeholder">Click to upload signature image</span>
+                                <% } %>
+                                <input type="file" accept="image/*" class="sig-file-input" id="post-sig-input" <%= postDisabled ? 'disabled' : '' %>>
                             </div>
                             <% if (!postDisabled) { %>
                             <div class="sig-actions">
                                 <button type="button" class="sig-upload-btn" id="post-sig-btn" onclick="document.getElementById('post-sig-input').click()">
-                                    <span class="material-symbols-outlined">upload</span> Upload PNG
+                                    <span class="material-symbols-outlined">upload</span> Upload Image
                                 </button>
-                                <button type="button" class="sig-remove-btn" id="post-sig-remove" style="display:none">
+                                <button type="button" class="sig-remove-btn" id="post-sig-remove" <%= existingPostSig ? '' : 'style="display:none"' %>>
                                     <span class="material-symbols-outlined">delete</span> Remove
                                 </button>
                             </div>
@@ -246,12 +264,14 @@
                     <% } else if (postUnlocked && tla && tla.userID && tla.userID.toString() === user.id) { %>
                         <!-- Post-digital unlocked (Chair-Approved+): professor can fill post-digital -->
                         <button type="button" class="btn-save" onclick="window.location.href='<%= backToOverviewLink %>'">BACK TO DASHBOARD</button>
+                        <button type="button" class="btn-pdf" onclick="viewTLAForm()">VIEW PDF</button>
                         <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
                         <button type="submit" name="action" value="submit-post" class="btn-submit">SUBMIT POST-DIGITAL</button>
 
-                    <% } else if (['Pending','Chair-Approved','Dean-Approved','HR-Approved'].includes(currentStatus)) { %>
+                    <% } else if (['Pending','Chair-Approved','Dean-Approved','Post-Pending','Post-Chair-Approved','Post-Dean-Approved','HR-Approved'].includes(currentStatus)) { %>
                         <!-- In approval chain: waiting for review, no edits -->
                         <button type="button" class="btn-save" onclick="window.location.href='<%= backToOverviewLink %>'">BACK TO DASHBOARD</button>
+                        <button type="button" class="btn-pdf" onclick="viewTLAForm()">VIEW PDF</button>
                         <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
 
                     <% } else { %>

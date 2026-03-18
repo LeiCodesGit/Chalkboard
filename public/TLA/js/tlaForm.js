@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const area    = document.getElementById(prefix + '-sig-area');
         const errEl   = document.getElementById(prefix + '-sig-error');
         const removeBtn = document.getElementById(prefix + '-sig-remove');
+        const sigFieldId = prefix === 'post' ? 'professorPostSignature' : 'professorPreSignature';
 
         if (!input || !area) return;
 
@@ -36,10 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const file = input.files[0];
             if (!file) return;
 
-            // Validate PNG only
-            if (file.type !== 'image/png') {
+            // Validate image only
+            if (!file.type || !file.type.startsWith('image/')) {
                 if (errEl) {
-                    errEl.textContent = 'Only PNG files are accepted. Please select a .png image.';
+                    errEl.textContent = 'Only image files are accepted for signatures.';
                     errEl.style.display = 'block';
                 }
                 input.value = '';
@@ -74,13 +75,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (removeBtn) removeBtn.style.display = 'inline-flex';
 
+                const sigField = document.getElementById(sigFieldId);
+                if (sigField) sigField.value = dataUrl;
+                // Backward compatibility hidden field mirrors pre-signature
+                const legacyField = document.getElementById('professorSignature');
+                if (legacyField && prefix !== 'post') legacyField.value = dataUrl;
+
                 // Upload to server
                 const tlaId = document.querySelector('[name="_tlaId"]');
                 if (tlaId && tlaId.value) {
                     fetch('/tla/form/' + tlaId.value + '/signature', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ signatureImage: dataUrl })
+                        body: JSON.stringify({ signatureImage: dataUrl, signatureType: prefix })
                     })
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
@@ -93,13 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         console.error('Signature upload error:', err);
                     });
                 }
-
-                // Also save to user profile
-                fetch('/user/update-signature', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ signatureImage: dataUrl })
-                }).catch(function () {});
             };
             reader.readAsDataURL(file);
         });
@@ -107,9 +107,13 @@ document.addEventListener('DOMContentLoaded', function () {
         // Remove button
         if (removeBtn) {
             removeBtn.addEventListener('click', function () {
-                area.innerHTML = '<span class="sig-placeholder" id="' + prefix + '-sig-placeholder">Click to upload PNG signature</span>';
+            area.innerHTML = '<span class="sig-placeholder" id="' + prefix + '-sig-placeholder">Click to upload signature image</span>';
                 area.appendChild(input);
                 input.value = '';
+                const sigField = document.getElementById(sigFieldId);
+                if (sigField) sigField.value = '';
+                const legacyField = document.getElementById('professorSignature');
+                if (legacyField && prefix !== 'post') legacyField.value = '';
                 removeBtn.style.display = 'none';
             });
         }
@@ -133,12 +137,19 @@ function printTLAForm() {
         return el ? (el.value || '').trim() : '';
     };
 
+    const signaturePayload = {
+        professorPreSignature: v('professorPreSignature'),
+        professorPostSignature: v('professorPostSignature'),
+        professorSignature: v('professorSignature')
+    };
+
     const data = new URLSearchParams({
         _tlaId:                      v('_tlaId'),
         courseCode:                  v('courseCode'),
         section:                     v('section'),
         dateofDigitalDay:            v('dateofDigitalDay'),
         facultyFacilitating:         v('facultyFacilitating') || v('_name'),
+        ...signaturePayload,
         courseOutcomes:              v('courseOutcomes'),
         mediatingOutcomes:           v('mediatingOutcomes'),
         pre_moIloCode:               v('pre_moIloCode'),
@@ -176,12 +187,19 @@ function buildPdfPayload() {
         return el ? (el.value || '').trim() : '';
     };
 
+    const signaturePayload = {
+        professorPreSignature: v('professorPreSignature'),
+        professorPostSignature: v('professorPostSignature'),
+        professorSignature: v('professorSignature')
+    };
+
     return new URLSearchParams({
         _tlaId:                      v('_tlaId'),
         courseCode:                  v('courseCode'),
         section:                     v('section'),
         dateofDigitalDay:            v('dateofDigitalDay'),
         facultyFacilitating:         v('facultyFacilitating') || v('_name'),
+        ...signaturePayload,
         courseOutcomes:              v('courseOutcomes'),
         mediatingOutcomes:           v('mediatingOutcomes'),
         pre_moIloCode:               v('pre_moIloCode'),

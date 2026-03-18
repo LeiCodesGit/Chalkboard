@@ -9,6 +9,7 @@ import {
     discoverTlaPdfFields,
     previewTlaPdf,
     viewTlaPdf,
+    viewTlaPdfApproval,
     uploadSignature
 } from "../../controllers/tlaController.js";
 
@@ -31,6 +32,9 @@ formRoutes.post('/preview-pdf', requireLogin, previewTlaPdf);
 
 // GET /tla/form/pdf/:id – view saved TLA record as inline PDF
 formRoutes.get('/pdf/:id', requireLogin, viewTlaPdf);
+
+// GET /tla/form/pdf-approval/:id – view saved TLA record as inline PDF for approval roles
+formRoutes.get('/pdf-approval/:id', requireLogin, viewTlaPdfApproval);
 
 // GET /tla/form/pdf-xray – visualize all form field names in the TLA PDF template
 formRoutes.get('/pdf-xray', requireLogin, discoverTlaPdfFields);

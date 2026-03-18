@@ -172,6 +172,9 @@
                             locals.macroStatus === 'Pending' ? 'chip-pending' :
                             locals.macroStatus === 'Chair-Approved' ? 'chip-chair-approved' :
                             locals.macroStatus === 'Dean-Approved' ? 'chip-dean-approved' :
+                            locals.macroStatus === 'Post-Pending' ? 'chip-chair-approved' :
+                            locals.macroStatus === 'Post-Chair-Approved' ? 'chip-chair-approved' :
+                            locals.macroStatus === 'Post-Dean-Approved' ? 'chip-dean-approved' :
                             locals.macroStatus === 'HR-Approved' ? 'chip-hr-approved' :
                             locals.macroStatus === 'Approved' ? 'chip-approved' :
                             locals.macroStatus === 'Returned' ? 'chip-returned' : ''
@@ -244,6 +247,45 @@
                     </div>
                 </div>
 
+                <!-- ── Professor Signature (from TLA form) ── -->
+                <% if (locals.tla && locals.tla.professorSignature) { %>
+                    <div class="sidebar-section">
+                        <label class="sidebar-label">Professor - Prepared By</label>
+                        <div class="signature-info">
+                            <p class="approval-name"><strong><%= locals.facultyName || locals.tla.facultyFacilitating || '—' %></strong></p>
+                            <div class="signature-display">
+                                <img src="<%= locals.tla.professorSignature %>" alt="Professor Signature" class="signature-img-display">
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- ── Program Chair Signature (if approved) ── -->
+                <% if (locals.chairStep && locals.chairStep.status === 'Approved' && locals.chairStep.signatureImage) { %>
+                    <div class="sidebar-section">
+                        <label class="sidebar-label">Program Chair - Approved By</label>
+                        <div class="signature-info">
+                            <p class="approval-name"><strong><%= locals.chairStep.approvedBy || '—' %></strong></p>
+                            <div class="signature-display">
+                                <img src="<%= locals.chairStep.signatureImage %>" alt="Program Chair Signature" class="signature-img-display">
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- ── Dean Signature (if approved) ── -->
+                <% if (locals.deanStep && locals.deanStep.status === 'Approved' && locals.deanStep.signatureImage) { %>
+                    <div class="sidebar-section">
+                        <label class="sidebar-label">Dean - Endorsed By</label>
+                        <div class="signature-info">
+                            <p class="approval-name"><strong><%= locals.deanStep.approvedBy || '—' %></strong></p>
+                            <div class="signature-display">
+                                <img src="<%= locals.deanStep.signatureImage %>" alt="Dean Signature" class="signature-img-display">
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
                 <!-- ── Comments ── -->
                 <div class="sidebar-section">
                     <label class="sidebar-label">
@@ -264,6 +306,8 @@
                         const stepLabels = {
                             programChair:         'Program Chair Endorsement',
                             dean:                 "Dean's Approval",
+                            programChairPost:     'Program Chair Endorsement (Post-Digital)',
+                            deanPost:             "Dean's Approval (Post-Digital)",
                             hr:                   'HR/HRMO Workload Review',
                             vpaa:                 'VPAA Final Approval'
                         };
@@ -311,6 +355,10 @@
 
                         <!-- Action Buttons -->
                         <div class="sidebar-actions">
+                            <button type="button" class="btn-action btn-pdf" id="btn-view-pdf" onclick="viewTLAApproval()">
+                                <span class="material-symbols-outlined">preview</span>
+                                View PDF
+                            </button>
                             <button type="button" class="btn-action btn-pdf" id="btn-save-pdf">
                                 <span class="material-symbols-outlined">picture_as_pdf</span>
                                 Save as PDF
@@ -344,6 +392,10 @@
                             <% } %>
                         </p>
                         <div class="sidebar-actions">
+                            <button type="button" class="btn-action btn-pdf" id="btn-view-pdf" onclick="viewTLAApproval()">
+                                <span class="material-symbols-outlined">preview</span>
+                                View PDF
+                            </button>
                             <button type="button" class="btn-action btn-pdf" id="btn-save-pdf">
                                 <span class="material-symbols-outlined">picture_as_pdf</span>
                                 Save as PDF

@@ -25,6 +25,9 @@ const tlaApprovalStatusSchema = new Schema({
             "Pending",              // Submitted by faculty, awaiting Program-Chair
             "Chair-Approved",       // Program Chair endorsed, awaiting Dean
             "Dean-Approved",        // Dean approved, awaiting HR/HRMO
+            "Post-Pending",         // Post-digital submitted by faculty, awaiting Program-Chair (post)
+            "Post-Chair-Approved",  // Post Program-Chair endorsed, awaiting Dean (post)
+            "Post-Dean-Approved",   // Post Dean approved, awaiting HR/HRMO
             "HR-Approved",          // HR/HRMO approved, awaiting VPAA
             "Approved",             // VPAA final approval — fully complete
             "Returned"              // Returned to faculty at any step
@@ -35,6 +38,8 @@ const tlaApprovalStatusSchema = new Schema({
     // ── Per-step tracking ─────────────────────────────────────────────────────
     programChair:         { type: stepSchema, default: () => ({}) },
     dean:                 { type: stepSchema, default: () => ({}) },
+    programChairPost:     { type: stepSchema, default: () => ({}) },
+    deanPost:             { type: stepSchema, default: () => ({}) },
     hr:                   { type: stepSchema, default: () => ({}) },
     vpaa:                 { type: stepSchema, default: () => ({}) },
 

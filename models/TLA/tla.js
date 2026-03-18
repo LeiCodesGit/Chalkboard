@@ -16,6 +16,9 @@ const tlaSchema = new Schema({
       "Pending",            // Submitted, awaiting Program-Chair
       "Chair-Approved",     // Program Chair endorsed, awaiting Dean
       "Dean-Approved",      // Dean approved, awaiting HR/HRMO
+      "Post-Pending",       // Post-digital submitted, awaiting Program-Chair (post)
+      "Post-Chair-Approved",// Post Program Chair endorsed, awaiting Dean (post)
+      "Post-Dean-Approved", // Post Dean approved, awaiting HR/HRMO
       "HR-Approved",        // HR/HRMO approved, awaiting VPAA
       "Approved",           // VPAA final approval — fully complete
       "Returned",           // Rejected at any stage, back to Professor
@@ -24,6 +27,8 @@ const tlaSchema = new Schema({
     default: "Draft"
   },
   weekNumber: Number,
+  professorPreSignature: { type: String, default: "" },
+  professorPostSignature: { type: String, default: "" },
   professorSignature: { type: String, default: "" },
   pdf: Buffer
 },{ timestamps:true });

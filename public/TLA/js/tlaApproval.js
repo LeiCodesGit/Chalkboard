@@ -10,6 +10,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return img ? (img.getAttribute('src') || '') : '';
     }
 
+    async function fetchCurrentApprovalPdfBlob() {
+        const tlaID = APPROVAL_DATA.tlaID;
+        if (!tlaID) throw new Error('No TLA loaded.');
+
+        const data = new URLSearchParams({
+            signatureImage: getCurrentSignatureDataUrl(),
+            activeStep: APPROVAL_DATA.activeStep || ''
+        });
+
+        const res = await fetch(`/tla/approval/${tlaID}/preview-pdf`, { method: 'POST', body: data });
+        if (!res.ok) throw new Error('Server returned ' + res.status);
+        return res.blob();
+    }
+
     // ─── Status / verdict indicator color sync ─────────────
     const statusSelect = document.getElementById('approval-status');
     const statusDot    = document.getElementById('status-indicator');
@@ -60,10 +74,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ─── Save as PDF (browser print) ───────────────────────
+    // ─── Save as PDF (download generated PDF) ───────────────
     const btnPdf = document.getElementById('btn-save-pdf');
     if (btnPdf) {
-        btnPdf.addEventListener('click', () => window.print());
+        btnPdf.addEventListener('click', async () => {
+            try {
+                const blob = await fetchCurrentApprovalPdfBlob();
+                const url = URL.createObjectURL(blob);
+                const tlaID = APPROVAL_DATA.tlaID || 'TLA';
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `TLA_Approval_${tlaID}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                showToast('PDF downloaded successfully.', 'success');
+            } catch (err) {
+                console.error('Save PDF failed:', err);
+                showToast('Could not save PDF: ' + err.message, 'error');
+            }
+        });
     }
 
     // ─── Save as Draft ─────────────────────────────────────
@@ -110,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const stepLabel = {
                 programChair: 'Program Chair Endorsement',
                 dean:         "Dean's Approval",
+                programChairPost: 'Program Chair Endorsement (Post-Digital)',
+                deanPost:         "Dean's Approval (Post-Digital)",
                 hr:           'HR/HRMO Review',
                 vpaa:         'VPAA Final Approval'
             }[APPROVAL_DATA.activeStep] || 'Verdict';
@@ -172,3 +205,50 @@ document.addEventListener('DOMContentLoaded', () => {
         toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
     }
 });
+
+/**
+ * buildApprovalPdfPayload()
+ * Not needed - we use GET endpoint with tlaID in URL
+ */
+
+/**
+ * viewTLAApproval()
+ * Opens the saved TLA PDF in a new browser tab
+ * Uses the GET /tla/form/pdf-approval/:id endpoint which:
+ * - Fetches complete faculty-filled TLA data
+ * - Fetches all approval signatures (Chair, Dean)
+ * - Renders full PDF with all data
+ */
+function viewTLAApproval() {
+    const tlaID = APPROVAL_DATA.tlaID;
+    if (!tlaID) {
+        alert('No TLA loaded.');
+        return;
+    }
+
+    const img = document.querySelector('#signature-box .signature-img');
+    const signatureImage = img ? (img.getAttribute('src') || '') : '';
+
+    const data = new URLSearchParams({
+        signatureImage,
+        activeStep: APPROVAL_DATA.activeStep || ''
+    });
+
+    fetch(`/tla/approval/${tlaID}/preview-pdf`, { method: 'POST', body: data })
+        .then(res => {
+            if (!res.ok) throw new Error('Server returned ' + res.status);
+            return res.blob();
+        })
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const win = window.open(url, '_blank');
+            if (!win) {
+                alert('Popup blocked. Please allow popups for this site to view the PDF.');
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        })
+        .catch(err => {
+            console.error('Approval preview failed:', err);
+            alert('Could not preview document: ' + err.message);
+        });
+}
