@@ -49,6 +49,60 @@ if (backButton) {
 }
 
 // ==========================================
+// 1.2 DYNAMIC ACADEMIC YEAR GENERATOR
+// ==========================================
+// ==========================================
+// 1.5 SMART ACADEMIC YEAR INPUT
+// ==========================================
+document.addEventListener("DOMContentLoaded", function() {
+    const ayInput = document.getElementById("academicYear");
+    
+    if (ayInput) {
+        // Real-time formatting while typing
+        ayInput.addEventListener("input", function(e) {
+            // Strip out any letters (only allow numbers and hyphens)
+            this.value = this.value.replace(/[^\d-]/g, '');
+            
+            // If they type exactly 4 numbers (and aren't pressing backspace), magically add the rest!
+            if (this.value.length === 4 && !this.value.includes('-') && e.inputType !== 'deleteContentBackward') {
+                const startYear = parseInt(this.value);
+                this.value = `${startYear}-${startYear + 1}`;
+            }
+        });
+
+        // Backup formatting (if they copy-paste or click away)
+        ayInput.addEventListener("blur", function() {
+            const val = this.value.trim();
+            if (/^\d{4}$/.test(val)) {
+                const startYear = parseInt(val);
+                this.value = `${startYear}-${startYear + 1}`;
+            }
+        });
+    }
+});
+
+// ==========================================
+// 1.6 DYNAMIC ACCEPTANCE TEXT
+// ==========================================
+window.updateAcceptanceText = function() {
+    const termDropdown = document.getElementById('term');
+    const yearDropdown = document.getElementById('academicYear');
+    const acceptLabel = document.getElementById('dynamicAcceptLabel');
+
+    if (acceptLabel && termDropdown && yearDropdown) {
+        const termVal = termDropdown.value ? termDropdown.value.replace(" Term", "").toUpperCase() : "___";
+        const yearVal = yearDropdown.value;
+
+        if (yearVal && yearVal.includes('-')) {
+            const years = yearVal.split('-'); // Splits "2026-2027" into ["2026", "2027"]
+            acceptLabel.innerHTML = `I hereby accept the above teaching assignment/s for the <strong>${termVal}</strong> term for Academic Year <strong>${years[0]}</strong> to <strong>${years[1]}</strong>.`;
+        } else {
+            // Default fallback if they haven't typed a year yet
+            acceptLabel.innerHTML = "I hereby accept the above teaching assignment/s.";
+        }
+    }
+};
+// ==========================================
 // 2. USER STATE (Strict Validation & Security)
 // ==========================================
 const rawRole = document.body.getAttribute('data-role');
@@ -178,23 +232,16 @@ window.handleInnerSectionVisibility = function() {
     const adminMode = window.isAdminUser(); 
 
     const sectionA = document.getElementById('sectionA_Container'); 
-    if (sectionA) sectionA.style.display = adminMode ? 'block' : 'none';
+    if (sectionA) sectionA.style.display = adminMode ? 'flex' : 'none';
 
     const sectionD = document.getElementById('sectionD_Container');
-    if (sectionD) sectionD.style.display = adminMode ? 'block' : 'none';
+    if (sectionD) sectionD.style.display = adminMode ? 'flex' : 'none';
 
     const dashboardBtn = document.getElementById('adminCourseBtn');
     if (dashboardBtn) dashboardBtn.style.display = adminMode ? 'block' : 'none';
 
     const adminApprovalCard = document.getElementById('adminApprovalCard');
     if (adminApprovalCard) adminApprovalCard.style.display = adminMode ? 'block' : 'none';
-
-    const isHighAdmin = (window.currentUser.role === 'Program-Chair' || window.currentUser.role === 'Dean');
-    const form6SignatureRows = document.querySelectorAll('#form6 .signature-row');
-    
-    form6SignatureRows.forEach(row => {
-        row.style.display = isHighAdmin ? 'none' : ''; 
-    });
 };
 
 // ==========================================
@@ -211,22 +258,38 @@ window.calculateSummary = function() {
         return el ? (Number(el.value) || 0) : 0;
     };
 
+    // 👇 1. Add this helper so the live calculator can read text!
+    const getVal = (row, colIndex) => {
+        const cell = row.children[colIndex];
+        if(!cell) return "";
+        const el = cell.querySelector('input, select');
+        return el ? el.value.trim() : "";
+    };
+
     totals.A = Number(document.getElementById('teachingUnits1')?.value) || 0;
 
-    let isSectionC = false;
-    const form2Inner = document.querySelector('#form2 .ata-form');
-    if (form2Inner) {
-        Array.from(form2Inner.children).forEach(child => {
-            if (child.classList.contains('form-divider')) isSectionC = true;
-            if (child.classList.contains('course-row')) {
-                if (isSectionC) totals.C += getUnit(child, 2);
-                else totals.B += getUnit(child, 2);
-            }
-        });
-    }
-
-    document.querySelectorAll('#form3 .admin-row').forEach(row => totals.D += getUnit(row, 1));
+    // 👇 2. STRICT CHECK: Section B
+    document.querySelectorAll('#form2 .form-row:nth-child(1) .course-row').forEach(row => {
+        if (getVal(row, 0) && getVal(row, 1) && getUnit(row, 2) > 0 && getVal(row, 3)) {
+            totals.B += getUnit(row, 2);
+        }
+    });
     
+    // 👇 3. STRICT CHECK: Section C
+    document.querySelectorAll('#form2 .form-row:nth-child(2) .course-row').forEach(row => {
+        if (getVal(row, 0) && getVal(row, 1) && getUnit(row, 2) > 0 && getVal(row, 3)) {
+            totals.C += getUnit(row, 2);
+        }
+    });
+
+    // 👇 4. STRICT CHECK: Section D
+    document.querySelectorAll('#form3 .admin-row').forEach(row => {
+        if (getVal(row, 0) && getUnit(row, 1) > 0 && getVal(row, 2)) {
+            totals.D += getUnit(row, 1);
+        }
+    });
+    
+    // 👇 5. STRICT CHECK: Section G
     document.querySelectorAll('#form5 .remedial-row').forEach(row => {
         const units = getUnit(row, 3);
         const students = getUnit(row, 4);
@@ -234,11 +297,13 @@ window.calculateSummary = function() {
         const typeSelect = typeCell ? typeCell.querySelector('select') : null;
         const type = typeSelect ? typeSelect.value : "lecture";
 
-        totals.G_raw += units; // Tracks the raw input units perfectly!
-
-        let effective = units * (students / 40);
-        if (type === 'lab') effective *= 2;
-        totals.G_eff += effective;
+        // Only calculate if EVERY box in the remedial row is filled
+        if (getVal(row, 0) && getVal(row, 1) && getVal(row, 2) && units > 0 && students > 0) {
+            totals.G_raw += units;
+            let effective = units * (students / 40);
+            if (type === 'lab') effective *= 2;
+            totals.G_eff += effective;
+        }
     });
 
     // 1. Push LIVE totals to active form pages
@@ -276,6 +341,10 @@ window.calculateSummary = function() {
     if (elUnitsG) elUnitsG.textContent = totals.G_raw;
     const elEffG = document.getElementById('sumEffG');
     if (elEffG) elEffG.textContent = totals.G_eff.toFixed(2);
+
+    // Update the local Section G display
+    if (document.getElementById('localUnitsG')) document.getElementById('localUnitsG').textContent = totals.G_raw;
+    if (document.getElementById('localEffG')) document.getElementById('localEffG').textContent = totals.G_eff.toFixed(2);
     
     // 👇 NEW: Save this globally so the Next button can check it!
     window.remedialEffTotal = totals.G_eff; 
@@ -326,20 +395,6 @@ window.calculateSummary = function() {
     const empType = document.querySelector('input[name="employment"]:checked')?.value || "Full-Time";
     const OVERLOAD_LIMIT = empType === 'Part-Time' ? 11 : 15; 
     
-    const justificationRow = document.querySelector('.justification-row');
-    
-    // Only show the justification text box if they exceed the limit!
-    if (justificationRow) {
-        if (grandTotal > OVERLOAD_LIMIT) {
-            justificationRow.style.display = 'flex'; 
-        } else {
-            justificationRow.style.display = 'none'; 
-        }
-    }
-
-
-
-    
 };
 
 // ==========================================
@@ -380,10 +435,16 @@ window.getSectionWarning = function(step) {
     if (step === 1 && !needsYellow) {
         const step1Inputs = [
             document.getElementById('facultyName'), document.getElementById('position'),
-            document.getElementById('college'), document.getElementById('address')
+            document.getElementById('college'), document.getElementById('address'),
+            document.getElementById('term'), document.getElementById('academicYear')
         ];
         const filledCount = step1Inputs.filter(i => i && i.value.trim() !== '').length;
         if (filledCount < step1Inputs.length) needsYellow = true; 
+        
+        // 👇 NEW: Check if the employment radio button is empty!
+        if (!document.querySelector('input[name="employment"]:checked')) {
+            needsYellow = true;
+        }
     }
 
     if (step === 4 && isSectionEmpty) {
@@ -409,19 +470,19 @@ window.updateDotsOnly = function() {
     stepDots.forEach((dot, index) => {
         const stepNumber = index + 1;
         
+        // 1. Reset all states cleanly
         dot.classList.remove('filled', 'active');
-        dot.style.display = "inline-block"; 
-        dot.style.color = ""; 
+        dot.style.display = "flex"; 
+        dot.style.borderColor = ""; // Resets the yellow border if it was applied
 
+        // 2. Handle Hidden/Disabled Steps (like Part-Time Outside Employment)
         if (window.isStepVisible && !window.isStepVisible(stepNumber)) {
             dot.style.opacity = "0.3"; 
             dot.style.cursor = "not-allowed";
             if (stepNumber === 4) dot.setAttribute("title", "This section is for Part-Time employment only.");
             if (stepNumber === 7) {
                 dot.style.display = "none";
-                return;
             }
-            dot.textContent = '○';
             return;
         } else {
             dot.style.opacity = "1"; 
@@ -429,34 +490,31 @@ window.updateDotsOnly = function() {
             dot.removeAttribute("title");
         }
 
+        // 3. Handle Active Step
         if (stepNumber === window.currentStep) {
-            dot.textContent = '●'; 
             dot.classList.add('active'); 
             return;
         }
 
+        // 4. Handle Warnings & Finished States (NO textContent overwrites!)
         const warning = window.getSectionWarning(stepNumber);
 
         if (warning === 'green') {
-            dot.textContent = '●'; 
             dot.classList.add('filled');
+            
         } else if (warning === 'yellow') {
-            dot.textContent = '●'; 
-            dot.style.color = '#ffc107'; 
+            // Beautiful yellow warning applied to the border to match new CSS
+            dot.style.borderColor = '#ffc107'; 
             dot.setAttribute("title", "Notice: Missing mandatory fields detected.");
-        }
-        else if (warning === 'red-limit') {
-            // 👇 NEW: The specific dot warning for the 6.00 limit!
-            dot.textContent = '●'; 
-            dot.style.color = '#dc3545'; 
-            dot.setAttribute("title", "Error: Remedial Effective Units exceed the maximum limit of 6.00.");
-        }
-         else if (warning.startsWith('red')) {
-            dot.textContent = '●'; 
-            dot.style.color = '#dc3545'; 
-            dot.setAttribute("title", "Action Required: Missing mandatory section or acceptance.");
-        } else {
-            dot.textContent = '○'; 
+            
+        } else if (warning === 'red-limit') {
+            // Converts the aggressive red error into a calm yellow border warning
+            dot.style.borderColor = '#ffc107'; 
+            dot.setAttribute("title", "Notice: Remedial Effective Units exceed the maximum limit of 6.00.");
+            
+        } else if (warning && warning.startsWith('red')) {
+            // Neutralizes the red-scroll warning completely. Just marks it as filled.
+            dot.classList.add('filled'); 
         }
     });
 };
@@ -465,6 +523,7 @@ const triggerUpdates = (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
         if (window.calculateSummary) window.calculateSummary();
         if (window.updateDotsOnly) window.updateDotsOnly();
+        if (window.updateAcceptanceText) window.updateAcceptanceText();
     }
 };
 document.addEventListener('input', triggerUpdates);
@@ -493,6 +552,17 @@ if (nextBtn) {
         }
         // 🚀 THE SUBMIT TRIGGER
         if (this.textContent.includes('Submit') || this.textContent === 'Finish') {
+            const acceptBox = document.getElementById('acceptCheckbox');
+            if (acceptBox && !acceptBox.checked) {
+                    alert("⚠️ Action Required: You must check the box to accept your teaching assignments before submitting.");
+                    return; 
+            }
+
+                // ALWAYS require a drawn signature
+            if (!signaturePad || signaturePad.isEmpty()) {
+                    alert("⚠️ Action Required: Please provide your e-signature in the box provided before submitting.");
+                    return; // 🛑 STOPS THE SUBMISSION
+            }
             this.textContent = 'Submitting...'; 
             this.disabled = true;
 
@@ -514,8 +584,8 @@ if (nextBtn) {
                 employmentStatus: document.getElementById('employmentStatus')?.value || "",
                 employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
                 facultySignature: signaturePad && !signaturePad.isEmpty() ? signaturePad.toDataURL("image/png") : "",
-                term: "2nd Term 2025-2026", 
-                academicYear: "2025-2026", 
+                term: document.getElementById('term')?.value || "", 
+                academicYear: document.getElementById('academicYear')?.value || "", 
                 action: "SUBMIT",
                 justification: document.getElementById('justificationText')?.value || "", // 👈 GRABS THE ADMIN REMARKS!
                 sectionA_AdminUnits: Number(document.getElementById('teachingUnits1')?.value) || 0,
@@ -527,61 +597,48 @@ if (nextBtn) {
                 sectionG_Remedial: []
             };
 
-            let isSectionCSubmit = false;
-            const form2InnerSubmit = document.querySelector('#form2 .ata-form');
-            if (form2InnerSubmit) {
-                Array.from(form2InnerSubmit.children).forEach(child => {
-                    if (child.classList.contains('form-divider')) isSectionCSubmit = true;
-                    if (child.classList.contains('course-row')) {
-                        const courseCode = getVal(child, 0);
-                        if (courseCode) {
-                            const courseObj = {
-                                courseCode: courseCode,
-                                section: getVal(child, 1),
-                                units: getNum(child, 2),
-                                effectiveDate: getVal(child, 3)
-                            };
-                            if (isSectionCSubmit) payload.sectionC_OtherCollege.push(courseObj);
-                            else payload.sectionB_WithinCollege.push(courseObj);
-                        }
+            // Section B: Requires Course, Section, Units, and Date
+            document.querySelectorAll('#form2 .form-row:nth-child(1) .course-row').forEach(row => {
+                if (getVal(row, 0) && getVal(row, 1) && getNum(row, 2) > 0 && getVal(row, 3)) {
+                    payload.sectionB_WithinCollege.push({ courseCode: getVal(row, 0), section: getVal(row, 1), units: getNum(row, 2), effectiveDate: getVal(row, 3) });
+                }
+            });
+
+            // Section C: Requires Course, Section, Units, and Date
+            document.querySelectorAll('#form2 .form-row:nth-child(2) .course-row').forEach(row => {
+                if (getVal(row, 0) && getVal(row, 1) && getNum(row, 2) > 0 && getVal(row, 3)) {
+                    payload.sectionC_OtherCollege.push({ courseCode: getVal(row, 0), section: getVal(row, 1), units: getNum(row, 2), effectiveDate: getVal(row, 3) });
+                }
+            });
+
+            // Section D: Requires Description, Units, and Date
+            document.querySelectorAll('#form3 .admin-row').forEach(row => {
+                if (getVal(row, 0) && getNum(row, 1) > 0 && getVal(row, 2)) {
+                    payload.sectionD_AdminWork.push({ workDescription: getVal(row, 0), units: getNum(row, 1), effectiveDate: getVal(row, 2) });
+                }
+            });
+
+            // Section E: Requires Course Code, Students, and Coordinator
+            document.querySelectorAll('#form3 .practicum-row').forEach(row => {
+                if (getVal(row, 0) && getVal(row, 1) && getVal(row, 2)) {
+                    payload.sectionE_Practicum.push({ courseCode: getVal(row, 0), numberOfStudents: getNum(row, 1), coordinator: getVal(row, 2) });
+                }
+            });
+            
+            // Section F: Requires Employer, Position, Course, and Hours
+            if (payload.employmentType === 'Part-Time') {
+                document.querySelectorAll('#form4 .employment-row').forEach(row => {
+                    if (getVal(row, 0) && getVal(row, 1) && getVal(row, 2) && getVal(row, 3)) {
+                        payload.sectionF_OutsideEmployment.push({ employer: getVal(row, 0), position: getVal(row, 1), courseOrUnits: getVal(row, 2), hoursPerWeek: getNum(row, 3) });
                     }
                 });
             }
 
-            document.querySelectorAll('#form3 .admin-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionD_AdminWork.push({
-                    workDescription: getVal(row, 0),
-                    units: getNum(row, 1),
-                    effectiveDate: getVal(row, 2)
-                });
-            });
-
-            document.querySelectorAll('#form3 .practicum-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionE_Practicum.push({
-                    courseCode: getVal(row, 0),
-                    numberOfStudents: getNum(row, 1),
-                    coordinator: getVal(row, 2)
-                });
-            });
-            if (payload.employmentType === 'Part-Time') {
-                document.querySelectorAll('#form4 .employment-row').forEach(row => {
-                    if (getVal(row, 0)) payload.sectionF_OutsideEmployment.push({
-                        employer: getVal(row, 0),
-                        position: getVal(row, 1),
-                        courseOrUnits: getVal(row, 2),
-                        hoursPerWeek: getNum(row, 3)
-                    });
-                });
-            }
+            // Section G: Requires Course ID, Module Code, Section, Units, and Students
             document.querySelectorAll('#form5 .remedial-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionG_Remedial.push({
-                    courseId: getVal(row, 0),
-                    moduleCode: getVal(row, 1),
-                    section: getVal(row, 2),
-                    units: getNum(row, 3),
-                    numberOfStudents: getNum(row, 4),
-                    type: getVal(row, 5) || "lecture"
-                });
+                if (getVal(row, 0) && getVal(row, 1) && getVal(row, 2) && getNum(row, 3) > 0 && getVal(row, 4)) {
+                    payload.sectionG_Remedial.push({ courseId: getVal(row, 0), moduleCode: getVal(row, 1), section: getVal(row, 2), units: getNum(row, 3), numberOfStudents: getNum(row, 4), type: getVal(row, 5) || "lecture" });
+                }
             });
 
             try {
@@ -755,90 +812,20 @@ document.addEventListener('DOMContentLoaded', () => {
             container.addEventListener('scroll', checkScrollBottom);
         }
 
-        window.scrollToMissedContent = function(step, wasVisited) {
-            const currentForm = document.getElementById('form' + step);
-            if (!currentForm) return;
-
-            if (!wasVisited) return; 
-
-            const warning = window.getSectionWarning(step);
-
-            if (warning === 'red-checkbox') {
-                const cbRow = currentForm.querySelector('.acceptance-row');
-                if (cbRow) {
-                    cbRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    cbRow.style.transition = "background-color 0.3s, box-shadow 0.3s";
-                    const orig = cbRow.style.backgroundColor;
-                    
-                    cbRow.style.backgroundColor = "rgba(220, 53, 69, 0.2)";
-                    cbRow.style.boxShadow = "0 0 15px 5px rgba(220, 53, 69, 0.4)";
-                    
-                    setTimeout(() => {
-                        cbRow.style.backgroundColor = orig;
-                        cbRow.style.boxShadow = "none";
-                    }, 2000);
-                }
-            } 
-            else if (warning === 'yellow') {
-                let targetInput = null;
-                const rows = currentForm.querySelectorAll('.course-row, .admin-row, .practicum-row, .employment-row, .remedial-row');
-                for (let row of rows) {
-                    const inputs = Array.from(row.querySelectorAll('input[type="text"], select'));
-                    if(inputs.length > 1) { 
-                        const filledCount = inputs.filter(i => i.value.trim() !== '').length;
-                        if (filledCount > 0 && filledCount < inputs.length) {
-                            targetInput = inputs.find(i => i.value.trim() === '');
-                            break;
-                        }
-                    }
-                }
-                if (step === 1 && !targetInput) {
-                    const step1Inputs = [
-                        document.getElementById('facultyName'), document.getElementById('position'),
-                        document.getElementById('college'), document.getElementById('address')
-                    ];
-                    targetInput = step1Inputs.find(i => i && i.value.trim() === '');
-                }
-                
-                if (step === 4 && !targetInput) {
-                    targetInput = currentForm.querySelector('.employment-row input[type="text"]');
-                }
-
-                if (targetInput) {
-                    targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetInput.style.transition = "box-shadow 0.3s";
-                    targetInput.style.boxShadow = "0 0 15px 5px #ffc107"; 
-                    setTimeout(() => targetInput.style.boxShadow = "none", 2000);
-                }
+        window.scrollToMissedContent = function(step) {
+    // 👇 AUTO-SCROLL AND RED HIGHLIGHT COMPLETELY DISABLED
+    // We just silently update the system's memory so the dots update, 
+    // but the screen will NEVER auto-scroll or flash red again.
+    
+            if (window.scrolledSteps) {
+                window.scrolledSteps.add(step);
             }
-            else if (warning === 'red-scroll') {
-                let redTarget = null;
-                if (step === 1) {
-                    redTarget = currentForm.querySelector('.form-section-divider'); 
-                } else if (step === 2) {
-                    redTarget = Array.from(currentForm.querySelectorAll('.form-section-header')).find(el => el.textContent.includes('(C)')); 
-                } else if (step === 3) {
-                    redTarget = Array.from(currentForm.querySelectorAll('.form-section-header')).find(el => el.textContent.includes('(E)')); 
-                }
-
-                if (redTarget) {
-                    redTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    redTarget.style.transition = "background-color 0.3s, color 0.3s, box-shadow 0.3s, border-radius 0.3s";
-                    const originalBg = redTarget.style.backgroundColor;
-                    
-                    redTarget.style.backgroundColor = "rgba(220, 53, 69, 0.2)";
-                    redTarget.style.boxShadow = "0 0 15px 5px rgba(220, 53, 69, 0.4)";
-                    redTarget.style.borderRadius = "5px";
-                    
-                    setTimeout(() => {
-                        redTarget.style.backgroundColor = originalBg;
-                        redTarget.style.boxShadow = "none";
-                    }, 2000);
-
-                    window.scrolledSteps.add(step);
-                    if (window.updateDotsOnly) window.updateDotsOnly();
-                }
+            
+            if (window.updateDotsOnly) {
+                window.updateDotsOnly();
             }
+            
+            return; // Stops the function right here!
         };
 
         window.updateFormDisplay = function(preventScroll = false) {
@@ -888,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.currentStep === lastVisibleStep) {
                     let target = "Program Chair"; 
                     if (window.currentUser.role === 'Dean') {
-                        target = "VPAA";
+                        target = "Program Chair"; 
                     } else if (window.currentUser.role === 'Program-Chair') {
                         let hasPracticum = false;
                         document.querySelectorAll('#form3 .practicum-row select, #form3 .practicum-row input').forEach(input => {
@@ -1040,8 +1027,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 facultySignature: signaturePad && !signaturePad.isEmpty() ? signaturePad.toDataURL("image/png") : "",
                 employmentStatus: document.getElementById('employmentStatus')?.value || "",
                 employmentType: document.querySelector('input[name="employment"]:checked')?.value || "",
-                term: "2nd Term", 
-                academicYear: "2025-2026", 
+                term: document.getElementById('term')?.value || "", 
+                academicYear: document.getElementById('academicYear')?.value || "", 
                 sectionA_AdminUnits: Number(document.getElementById('teachingUnits1')?.value) || 0,
                 sectionB_WithinCollege: [],
                 sectionC_OtherCollege: [],
@@ -1052,35 +1039,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 justification: document.getElementById('justificationText')?.value || ""
             };
 
-            let isSectionC = false;
-            const form2Inner = document.querySelector('#form2 .ata-form');
-            if (form2Inner) {
-                Array.from(form2Inner.children).forEach(child => {
-                    if (child.classList.contains('form-divider')) isSectionC = true;
-                    if (child.classList.contains('course-row')) {
-                        if (getVal(child, 0)) {
-                            const obj = { courseCode: getVal(child, 0), section: getVal(child, 1), units: getNum(child, 2), effectiveDate: getVal(child, 3) };
-                            isSectionC ? payload.sectionC_OtherCollege.push(obj) : payload.sectionB_WithinCollege.push(obj);
-                        }
+            // Section B: Requires Course, Section, Units, and Date
+            document.querySelectorAll('#form2 .form-row:nth-child(1) .course-row').forEach(row => {
+                if (getVal(row, 0) && getVal(row, 1) && getNum(row, 2) > 0 && getVal(row, 3)) {
+                    payload.sectionB_WithinCollege.push({ courseCode: getVal(row, 0), section: getVal(row, 1), units: getNum(row, 2), effectiveDate: getVal(row, 3) });
+                }
+            });
+
+            // Section C: Requires Course, Section, Units, and Date
+            document.querySelectorAll('#form2 .form-row:nth-child(2) .course-row').forEach(row => {
+                if (getVal(row, 0) && getVal(row, 1) && getNum(row, 2) > 0 && getVal(row, 3)) {
+                    payload.sectionC_OtherCollege.push({ courseCode: getVal(row, 0), section: getVal(row, 1), units: getNum(row, 2), effectiveDate: getVal(row, 3) });
+                }
+            });
+
+            // Section D: Requires Description, Units, and Date
+            document.querySelectorAll('#form3 .admin-row').forEach(row => {
+                if (getVal(row, 0) && getNum(row, 1) > 0 && getVal(row, 2)) {
+                    payload.sectionD_AdminWork.push({ workDescription: getVal(row, 0), units: getNum(row, 1), effectiveDate: getVal(row, 2) });
+                }
+            });
+
+            // Section E: Requires Course Code, Students, and Coordinator
+            document.querySelectorAll('#form3 .practicum-row').forEach(row => {
+                if (getVal(row, 0) && getVal(row, 1) && getVal(row, 2)) {
+                    payload.sectionE_Practicum.push({ courseCode: getVal(row, 0), numberOfStudents: getNum(row, 1), coordinator: getVal(row, 2) });
+                }
+            });
+            
+            // Section F: Requires Employer, Position, Course, and Hours
+            if (payload.employmentType === 'Part-Time') {
+                document.querySelectorAll('#form4 .employment-row').forEach(row => {
+                    if (getVal(row, 0) && getVal(row, 1) && getVal(row, 2) && getVal(row, 3)) {
+                        payload.sectionF_OutsideEmployment.push({ employer: getVal(row, 0), position: getVal(row, 1), courseOrUnits: getVal(row, 2), hoursPerWeek: getNum(row, 3) });
                     }
                 });
             }
 
-            document.querySelectorAll('#form3 .admin-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionD_AdminWork.push({ workDescription: getVal(row, 0), units: getNum(row, 1), effectiveDate: getVal(row, 2) });
-            });
-
-            document.querySelectorAll('#form3 .practicum-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionE_Practicum.push({ courseCode: getVal(row, 0), numberOfStudents: getNum(row, 1), coordinator: getVal(row, 2) });
-            });
-
-            if (payload.employmentType === 'Part-Time') {
-                document.querySelectorAll('#form4 .employment-row').forEach(row => {
-                    if (getVal(row, 0)) payload.sectionF_OutsideEmployment.push({ employer: getVal(row, 0), position: getVal(row, 1), courseOrUnits: getVal(row, 2), hoursPerWeek: getNum(row, 3) });
-                });
-            }
+            // Section G: Requires Course ID, Module Code, Section, Units, and Students
             document.querySelectorAll('#form5 .remedial-row').forEach(row => {
-                if (getVal(row, 0)) payload.sectionG_Remedial.push({ courseId: getVal(row, 0), moduleCode: getVal(row, 1), section: getVal(row, 2), units: getNum(row, 3), numberOfStudents: getNum(row, 4), type: getVal(row, 5) || "lecture" });
+                if (getVal(row, 0) && getVal(row, 1) && getVal(row, 2) && getNum(row, 3) > 0 && getVal(row, 4)) {
+                    payload.sectionG_Remedial.push({ courseId: getVal(row, 0), moduleCode: getVal(row, 1), section: getVal(row, 2), units: getNum(row, 3), numberOfStudents: getNum(row, 4), type: getVal(row, 5) || "lecture" });
+                }
             });
 
             // 2. Send to Server to build PDF in memory
@@ -1131,6 +1131,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fillInput('college', data.college);
         fillInput('address', data.address);
         fillInput('employmentStatus', data.employmentStatus);
+        fillInput('term', data.term);
+        fillInput('academicYear', data.academicYear);
         
         if (data.employmentType === 'Part-Time') {
             const ptRadio = document.getElementById('radioPartTime');

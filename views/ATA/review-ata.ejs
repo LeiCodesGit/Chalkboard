@@ -42,7 +42,21 @@
       data-fac-employment="<%= typeof employmentType !== 'undefined' ? employmentType : 'Full-Time' %>"
       data-has-signature="<%= (typeof user !== 'undefined' && user.signatureImage) ? 'true' : 'false' %>">
 
-    <%- include('../partials/sideMenuBar') %> 
+    <% 
+        if (typeof role !== 'undefined') {
+            if (['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) { %>
+                <%- include('../MainPages/admin/partials/adminSideMenuBar') %>
+            <% } else if (role === 'Dean') { %>
+                <%- include('../MainPages/dean/partials/deanMenuBar') %>
+            <% } else if (role === 'Program-Chair') { %>
+                <%- include('../MainPages/progChair/partials/progChairMenuBar') %>
+            <% } else { %>
+                <%- include('../partials/sideMenuBar') %>
+            <% } 
+        } else { %>
+            <%- include('../partials/sideMenuBar') %>
+        <% }
+    %>
 
     <main style="margin-left: 260px; width: calc(100vw - 260px); display: flex; flex-direction: column;">
         
@@ -91,6 +105,10 @@
                            style="padding: 10px 15px; border-radius: 5px; border: none; width: 300px; background: #333; color: white;">
                 </div>
                 
+                <button type="button" onclick="window.history.back()" class="form-btn" style="background: #6c757d; color: white; border: none; padding: 10px 20px; white-space: nowrap; cursor: pointer;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+
                 <button class="form-btn" id="btnReturn" style="background: #dc3545; color: white; border: none; padding: 10px 20px; white-space: nowrap;">
                     <i class="fas fa-undo"></i> Return
                 </button>
