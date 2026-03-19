@@ -7,7 +7,7 @@ const syllabusApprovalStatusSchema = new Schema({
   syllabusID: { type: Schema.Types.ObjectId, ref: "Syllabus", required: true },
   status: { 
     type: String, 
-    enum: ["Approved", "Pending", "Not Submitted", "Archived", "Endorsed", "Returned to PC", "Rejected"], 
+    enum: ["Approved", "Pending", "Not Submitted", "Archived", "Endorsed", "Returned to PC", "Rejected", "Returned to Dean"], 
     default: "Not Submitted" 
   },
   approvalDate: Date,

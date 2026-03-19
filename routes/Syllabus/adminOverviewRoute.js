@@ -204,12 +204,19 @@ adminOverviewRouter.get('/review/:syllabusId', async (req, res) => {
    ----------------------------------------------------------------------- */
 adminOverviewRouter.post('/archive/:syllabusId', async (req, res) => {
     const { syllabusId } = req.params;
-    const { archivedBy, remarks, signature, signatoryName } = req.body;
+    const { archivedBy, remarks, signature, signatoryName, status } = req.body;
 
     try {
         const record = await SyllabusApprovalStatus.findOne({ syllabusID: syllabusId });
         if (!record) return res.status(404).json({ success: false, message: 'Record not found.' });
-        if (record.status !== 'Approved') return res.status(400).json({ success: false, message: 'Only approved syllabuses can be archived.' });
+        if (record.status !== 'Approved') return res.status(400).json({ success: false, message: 'Only approved syllabuses can be processed.' });
+
+        if (status === 'Returned') {
+            record.status = 'Returned to Dean';
+            record.HR_Remarks = remarks || '';
+            await record.save();
+            return res.json({ success: true, message: 'Syllabus returned to Dean successfully.' });
+        }
 
         record.status = 'Archived';
         record.HR_Remarks = remarks || '';

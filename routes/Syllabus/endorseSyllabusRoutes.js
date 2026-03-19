@@ -422,8 +422,8 @@ endorseSyllabusRouter.post('/approve/:syllabusId', async (req, res) => {
             approval.status = 'Rejected';
             approval.approvedBy = 'Rejected';
         } else if (status === 'PC_Approved' || status === 'Approve Syllabus') {
-            approval.status = 'Approved'; 
-            approval.approvedBy = 'PC_Approved';
+            approval.status = 'Endorsed'; 
+            approval.approvedBy = 'Program Chair';
             approval.approvalDate = new Date();
             
             // Save signature if provided
@@ -691,7 +691,10 @@ endorseSyllabusRouter.get('/search', async (req, res) => {
                     : `https://picsum.photos/seed/${c._id}/400/200`,
                 hasDraft: !!draftRecord,
                 status: draftRecord ? draftRecord.status : 'No Syllabus Draft',
-                remarks: draftRecord ? draftRecord.remarks : ""
+                remarks: draftRecord ? draftRecord.remarks : "",
+                pcRemarks: draftRecord ? (draftRecord.PC_Remarks || "") : "",
+                deanRemarks: draftRecord ? (draftRecord.Dean_Remarks || "") : "",
+                hrRemarks: draftRecord ? (draftRecord.HR_Remarks || "") : ""
             };
         });
 

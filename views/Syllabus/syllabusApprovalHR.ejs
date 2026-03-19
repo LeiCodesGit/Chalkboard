@@ -443,17 +443,13 @@
                 const signatureImg = document.querySelector('.ad-signature-img');
                 const signatureBase64 = signatureImg ? signatureImg.src : null;
 
-                if (statusVal !== 'Archived') {
-                    alert('Please set Status to "Archived" to proceed.');
-                    return;
-                }
-
-                if (!signatureBase64) {
+                if (statusVal === 'Archived' && !signatureBase64) {
                     alert('Please upload your E-Signature to archive this document.');
                     return;
                 }
 
-                if (!confirm('Archive this syllabus? It will be moved to the archived list.')) return;
+                const actionText = statusVal === 'Returned' ? 'return this syllabus to the Dean' : 'archive this syllabus';
+                if (!confirm(`Are you sure you want to ${actionText}?`)) return;
 
                 try {
                     const res = await fetch(`/syllabus/hr/archive/${syllabusId}`, {
@@ -463,20 +459,21 @@
                             archivedBy: signatoryName, 
                             remarks: remarks,
                             signatoryName: signatoryName,
-                            signature: signatureBase64
+                            signature: signatureBase64,
+                            status: statusVal
                         })
                     });
 
                     if (res.ok) {
-                        alert('Syllabus archived successfully.');
+                        alert(statusVal === 'Returned' ? 'Returned to Dean successfully.' : 'Syllabus archived successfully.');
                         window.location.href = '/syllabus/hr';
                     } else {
                         const data = await res.json();
-                        alert('Failed to archive: ' + (data.message || 'Unknown error'));
+                        alert('Failed to process: ' + (data.message || 'Unknown error'));
                     }
                 } catch (err) {
-                    console.error('Archive error:', err);
-                    alert('An error occurred while archiving.');
+                    console.error('Process error:', err);
+                    alert('An error occurred while processing.');
                 }
             });
         }

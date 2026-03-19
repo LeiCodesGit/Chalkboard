@@ -64,7 +64,10 @@
                                     <div class="course-card" data-id="<%= course.id %>"
                                         data-hasdraft="<%= course.hasDraft %>"
                                         data-status="<%= course.status || 'No Syllabus Draft' %>"
-                                        data-title="<%= course.title %>">
+                                        data-title="<%= course.title %>"
+                                        data-pcremarks="<%= course.pcRemarks || '' %>"
+                                        data-deanremarks="<%= course.deanRemarks || '' %>"
+                                        data-hrremarks="<%= course.hrRemarks || '' %>">
                                         <div class="card-image">
                                             <img src="<%= course.img || 'https://picsum.photos/400/200?random=' + course.id %>"
                                                 alt="Course Image">
@@ -88,6 +91,36 @@
                                                     <%= statusLabel %>
                                                 </p>
                                             </div>
+                                            <% 
+                                                const isEndorsedOrHigher = ['Endorsed', 'Approved', 'Archived', 'Rejected'].includes(rawStatus);
+                                                const isApprovedOrHigher = ['Approved', 'Archived', 'Returned to PC', 'Returned to Dean'].includes(rawStatus);
+                                                const isArchived = rawStatus === 'Archived';
+                                            %>
+                                            <% if (isEndorsedOrHigher || isApprovedOrHigher || isArchived) { %>
+                                            <div style="margin-top: 6px; font-size: 11px; color: #555; border-top: 1px dashed #e0e0e0; padding-top: 6px;">
+                                                <% if (isEndorsedOrHigher) { %>
+                                                    <div style="margin-bottom: 3px;">
+                                                        <i class="fas fa-comment-dots" style="color: #1565c0; margin-right: 3px;"></i>
+                                                        <strong style="color: #1565c0;">Endorsed:</strong>
+                                                        <span style="font-style: italic;"><%= course.pcRemarks || 'No comments.' %></span>
+                                                    </div>
+                                                <% } %>
+                                                <% if (isApprovedOrHigher) { %>
+                                                    <div style="margin-bottom: 3px;">
+                                                        <i class="fas fa-comment-dots" style="color: #2e7d32; margin-right: 3px;"></i>
+                                                        <strong style="color: #2e7d32;">Approved:</strong>
+                                                        <span style="font-style: italic;"><%= course.deanRemarks || 'No comments.' %></span>
+                                                    </div>
+                                                <% } %>
+                                                <% if (isArchived) { %>
+                                                    <div style="margin-bottom: 3px;">
+                                                        <i class="fas fa-comment-dots" style="color: #6a1b9a; margin-right: 3px;"></i>
+                                                        <strong style="color: #6a1b9a;">Verified:</strong>
+                                                        <span style="font-style: italic;"><%= course.hrRemarks || 'No comments.' %></span>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                            <% } %>
                                         </div>
                                         <div class="card-footer">
                                             <span class="instructor">

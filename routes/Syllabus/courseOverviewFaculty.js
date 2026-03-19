@@ -54,7 +54,10 @@ coursesOverviewFacultyRouter.get('/', async (req, res) => {
                     : `https://picsum.photos/seed/${c._id}/400/200`,
                 hasDraft: !!draftRecord,
                 status: draftRecord ? draftRecord.status : "No Syllabus Draft",
-                remarks: draftRecord ? getLatestRemark(draftRecord) : ""
+                remarks: draftRecord ? getLatestRemark(draftRecord) : "",
+                pcRemarks: draftRecord ? (draftRecord.PC_Remarks || "") : "",
+                deanRemarks: draftRecord ? (draftRecord.Dean_Remarks || "") : "",
+                hrRemarks: draftRecord ? (draftRecord.HR_Remarks || "") : ""
             };
         });
 

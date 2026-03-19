@@ -91,6 +91,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function buildRemarksHtml(status, pcRemarks, deanRemarks, hrRemarks) {
+        const strStatus = status || 'No Syllabus Draft';
+        const isEndorsedOrHigher = ['Endorsed', 'Approved', 'Archived', 'Rejected'].includes(strStatus);
+        const isApprovedOrHigher = ['Approved', 'Archived', 'Returned to PC', 'Returned to Dean'].includes(strStatus);
+        const isArchived = strStatus === 'Archived';
+
+        if (!isEndorsedOrHigher && !isApprovedOrHigher && !isArchived) return '';
+
+        let html = '<div style="margin-top: 6px; font-size: 11px; color: #555; border-top: 1px dashed #e0e0e0; padding-top: 6px;">';
+        if (isEndorsedOrHigher) {
+            html += `<div style="margin-bottom: 3px;">
+                <i class="fas fa-comment-dots" style="color: #1565c0; margin-right: 3px;"></i>
+                <strong style="color: #1565c0;">Endorsed:</strong>
+                <span style="font-style: italic;">${pcRemarks ? escapeHtml(pcRemarks) : 'No comments.'}</span>
+            </div>`;
+        }
+        if (isApprovedOrHigher) {
+            html += `<div style="margin-bottom: 3px;">
+                <i class="fas fa-comment-dots" style="color: #2e7d32; margin-right: 3px;"></i>
+                <strong style="color: #2e7d32;">Approved:</strong>
+                <span style="font-style: italic;">${deanRemarks ? escapeHtml(deanRemarks) : 'No comments.'}</span>
+            </div>`;
+        }
+        if (isArchived) {
+            html += `<div style="margin-bottom: 3px;">
+                <i class="fas fa-comment-dots" style="color: #6a1b9a; margin-right: 3px;"></i>
+                <strong style="color: #6a1b9a;">Verified:</strong>
+                <span style="font-style: italic;">${hrRemarks ? escapeHtml(hrRemarks) : 'No comments.'}</span>
+            </div>`;
+        }
+        html += '</div>';
+        return html;
+    }
+
     function renderCourseGrid(courses) {
         if (!courseGrid) return;
 
@@ -99,8 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (courses.length > 0) {
             courseGrid.innerHTML = courses.map(course => {
                 const si = getStatusInfo(course.status);
+                const remarksHtml = buildRemarksHtml(course.status, course.pcRemarks || '', course.deanRemarks || '', course.hrRemarks || '');
                 return `
-                <div class="course-card" data-id="${course.id}" data-hasdraft="${course.hasDraft}" data-status="${course.status || 'No Syllabus Draft'}" data-title="${course.title}">
+                <div class="course-card" data-id="${course.id}" data-hasdraft="${course.hasDraft}" data-status="${course.status || 'No Syllabus Draft'}" data-title="${escapeHtml(course.title)}" data-pcremarks="${escapeHtml(course.pcRemarks || '')}" data-deanremarks="${escapeHtml(course.deanRemarks || '')}" data-hrremarks="${escapeHtml(course.hrRemarks || '')}">
                     <div class="card-image">
                         <img src="${course.img}" alt="Course Image">
                     </div>
@@ -108,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="course-code">${course.code}</span>
                         <h3 class="course-title">${course.title}</h3>
                         <p class="course-status ${si.cssClass}">${si.label}</p>
+                        ${remarksHtml}
                     </div>
                     <div class="card-footer">
                         <span class="instructor">${course.instructor}</span>
@@ -154,11 +195,11 @@ window.openDraftModal = function (syllabusId, hasDraft, status, courseTitle) {
             btn.innerText = 'View Syllabus';
             btn.onclick = () => window.location.href = `/syllabus/preview/${syllabusId}`;
 
-            // Show Download PDF button
+            // Show Download PDF button — uses the proper PDF template via Puppeteer
             if (downloadBtn) {
                 downloadBtn.style.display = 'flex';
                 downloadBtn.onclick = () => {
-                    window.open(`/syllabus/preview/${syllabusId}?print=true`, '_blank');
+                    window.open(`/syllabus/preview/generate-pdf/${syllabusId}`, '_blank');
                 };
             }
         } else if (isRestricted) {

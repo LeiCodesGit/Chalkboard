@@ -85,13 +85,13 @@ deanApprovalRouter.post('/:syllabusId', async (req, res) => {
             if (signatoryName) approval.Dean_SignatoryName = signatoryName;
 
         } else if (status === 'Returned' || status === 'Returned to PC') {
-            approval.status = 'Returned to PC';
-            approval.approvedBy = 'Dean (Returned)';
+            approval.status = 'Rejected';
+            approval.approvedBy = 'Dean';
             approval.approvalDate = new Date();
         }
 
         await approval.save();
-        res.json({ success: true, message: status === 'Returned to PC' ? 'Returned to Program Chair.' : 'Approval submitted.' });
+        res.json({ success: true, message: status === 'Returned' || status === 'Returned to PC' ? 'Returned to Faculty.' : 'Approval submitted.' });
     } catch (err) {
         console.error('Dean approval action error:', err);
         res.status(500).json({ success: false, message: 'Internal server error.' });
