@@ -11,6 +11,17 @@ import WeeklySchedule from '../../models/Syllabus/weeklySchedule.js';
 
 const adminOverviewRouter = express.Router();
 
+function getLatestRemark(a) {
+    if (!a) return "";
+    if (a.status === 'Archived') return a.HR_Remarks || a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Approved' || a.status === 'Returned to PC') return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Endorsed' || a.status === 'PC_Approved') return a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Rejected') {
+        if (a.approvedBy && a.approvedBy.includes('Dean')) return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+        return a.PC_Remarks || a.remarks || "";
+    }
+    return a.PC_Remarks || a.remarks || "";
+}
 /* -----------------------------------------------------------------------
    Dummy data for development / empty-DB fallback
    ----------------------------------------------------------------------- */
@@ -99,6 +110,7 @@ adminOverviewRouter.get('/', async (req, res) => {
                     archivedDate: approval.archivedDate
                         ? new Date(approval.archivedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : null,
+                    remarks: getLatestRemark(approval),
                     submittedDate: approval.updatedAt
                         ? new Date(approval.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : 'N/A'
@@ -167,7 +179,10 @@ adminOverviewRouter.get('/review/:syllabusId', async (req, res) => {
             mappings,
             schedules,
             currentStatus: approval ? approval.status : 'Pending',
-            existingComment: approval ? (approval.remarks || '') : '',
+            currentStatus: approval ? approval.status : 'Pending',
+            existingComment: approval ? (approval.HR_Remarks || '') : '',
+            deanRemarks: approval ? (approval.Dean_Remarks || '') : '',
+            pcRemarks: approval ? (approval.PC_Remarks || approval.remarks || '') : '',
             hrSignature: approval ? (approval.HR_Signature || null) : null,
             hrSignatoryName: approval ? (approval.HR_SignatoryName || '') : '',
             pcSignature: approval ? (approval.PC_Signature || null) : null,
@@ -197,7 +212,7 @@ adminOverviewRouter.post('/archive/:syllabusId', async (req, res) => {
         if (record.status !== 'Approved') return res.status(400).json({ success: false, message: 'Only approved syllabuses can be archived.' });
 
         record.status = 'Archived';
-        record.remarks = remarks || record.remarks;
+        record.HR_Remarks = remarks || '';
         record.archivedBy = archivedBy || 'HR Admin';
         record.archivedDate = new Date();
         record.HR_Signature = signature || record.HR_Signature;
@@ -268,7 +283,8 @@ adminOverviewRouter.get('/search', async (req, res) => {
                     img: (c.courseImage && c.courseImage.startsWith('data:'))
                         ? c.courseImage
                         : `https://picsum.photos/seed/${c._id}/400/200`,
-                    status: record.status
+                    status: record.status,
+                    remarks: getLatestRemark(record)
                 };
             });
 

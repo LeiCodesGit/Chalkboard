@@ -1,0 +1,12 @@
+[dotenv@17.3.1] injecting env (8) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+file:///D:/SOFTWARE%20DESIGN%20LAB/CPE107L-1-Final-Project-Foxtrot-Batch/routes/Syllabus/courseOverview.js:49
+syllabusCourseOverviewRouter.get('/users', async (req, res) => {
+^
+
+ReferenceError: syllabusCourseOverviewRouter is not defined
+    at file:///D:/SOFTWARE%20DESIGN%20LAB/CPE107L-1-Final-Project-Foxtrot-Batch/routes/Syllabus/courseOverview.js:49:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:671:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.11.1

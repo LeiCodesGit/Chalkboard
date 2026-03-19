@@ -36,7 +36,8 @@ deanApprovalRouter.get('/:syllabusId', async (req, res) => {
                 syllabusId,
                 currentPageCategory: 'syllabus',
                 approvalStatus: approval ? approval.status : 'Pending',
-                existingComment: approval ? (approval.remarks || '') : '',
+                existingComment: approval ? (approval.Dean_Remarks || '') : '',
+                pcRemarks: approval ? (approval.PC_Remarks || approval.remarks || '') : '',
                 workflowStep: 'approval',
                 optionApproveValue: 'Approved',
                 peos,
@@ -68,7 +69,7 @@ deanApprovalRouter.post('/:syllabusId', async (req, res) => {
             approval = new SyllabusApprovalStatus({ syllabusID: syllabusId });
         }
 
-        approval.remarks = comment || '';
+        approval.Dean_Remarks = comment || '';
 
         if (action === 'draft') {
             await approval.save();

@@ -6,6 +6,19 @@ import SyllabusApprovalStatus from '../../models/Syllabus/syllabusApprovalStatus
 
 const coursesOverviewFacultyRouter = express.Router();
 
+function getLatestRemark(a) {
+    if (!a) return "";
+    if (a.status === 'Archived') return a.HR_Remarks || a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Approved' || a.status === 'Returned to PC') return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Endorsed' || a.status === 'PC_Approved') return a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Rejected') {
+        if (a.approvedBy && a.approvedBy.includes('Dean')) return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+        return a.PC_Remarks || a.remarks || "";
+    }
+    // Fallback
+    return a.remarks || "";
+}
+
 /**
  * READ logic for the main dashboard load
  */
@@ -40,7 +53,8 @@ coursesOverviewFacultyRouter.get('/', async (req, res) => {
                     ? c.courseImage
                     : `https://picsum.photos/seed/${c._id}/400/200`,
                 hasDraft: !!draftRecord,
-                status: draftRecord ? draftRecord.status : "No Syllabus Draft"
+                status: draftRecord ? draftRecord.status : "No Syllabus Draft",
+                remarks: draftRecord ? getLatestRemark(draftRecord) : ""
             };
         });
 

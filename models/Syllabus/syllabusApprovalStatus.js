@@ -11,7 +11,10 @@ const syllabusApprovalStatusSchema = new Schema({
     default: "Not Submitted" 
   },
   approvalDate: Date,
-  remarks: String,
+  remarks: String,        // legacy – kept for backwards compatibility
+  PC_Remarks: String,     // comment left by Program Chair on endorsement
+  Dean_Remarks: String,   // comment left by Dean on approval
+  HR_Remarks: String,     // comment left by HR on verification
   approvedBy: String,
   
   // Signature Fields

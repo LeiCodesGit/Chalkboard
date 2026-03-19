@@ -129,7 +129,7 @@ syllabusApprovalRouter.get('/', async (req, res) => {
                         ? new Date(approval.approvalDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : null,
                     approvedBy: approvedBy,
-                    remarks: approval.remarks || '',
+                    remarks: approval.PC_Remarks || approval.remarks || '',
                     submittedDate: approval.updatedAt
                         ? new Date(approval.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : 'N/A'

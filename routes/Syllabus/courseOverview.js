@@ -30,6 +30,19 @@ const upload = multer({
 
 const coursesOverviewRouter = express.Router();
 
+function getLatestRemark(a) {
+    if (!a) return "";
+    if (a.status === 'Archived') return a.HR_Remarks || a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Approved' || a.status === 'Returned to PC') return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Endorsed' || a.status === 'PC_Approved') return a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Rejected') {
+        if (a.approvedBy && a.approvedBy.includes('Dean')) return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+        return a.PC_Remarks || a.remarks || "";
+    }
+    // Fallback
+    return a.remarks || "";
+}
+
 /**
  * API: Fetch Users for Instructor Dropdown
  */
@@ -98,7 +111,7 @@ coursesOverviewRouter.get('/search', async (req, res) => {
                     : `https://picsum.photos/seed/${c._id}/400/200`,
                 hasDraft: !!draftRecord,
                 status: draftRecord ? draftRecord.status : "No Syllabus Draft",
-                remarks: draftRecord ? draftRecord.remarks : ""
+                remarks: draftRecord ? getLatestRemark(draftRecord) : ""
             };
         });
 
@@ -155,7 +168,7 @@ coursesOverviewRouter.get('/:userId', async (req, res) => {
                     : `https://picsum.photos/seed/${c._id}/400/200`,
                 hasDraft: !!draftRecord,
                 status: draftRecord ? draftRecord.status : "No Syllabus Draft",
-                remarks: draftRecord ? draftRecord.remarks : ""
+                remarks: draftRecord ? getLatestRemark(draftRecord) : ""
             };
         });
 
@@ -177,8 +190,17 @@ coursesOverviewRouter.get('/:userId', async (req, res) => {
  */
 coursesOverviewRouter.post('/:userId/add', upload.single('courseImage'), async (req, res) => {
     try {
-        const userId = req.params.userId;
+        let userId = req.params.userId;
         const { courseCode, courseTitle, assignedInstructor } = req.body;
+
+        // Use session user ID as fallback when URL param is not a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(userId) && req.session.user) {
+            userId = req.session.user.id || req.session.user._id;
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: 'server', message: 'Invalid user ID. Please log in again.' });
+        }
 
         const existingCode = await Syllabus.findOne({ userID: userId, courseCode: { $regex: new RegExp(`^${courseCode}$`, 'i') } });
         if (existingCode) return res.status(409).json({ error: 'duplicate', field: 'courseCode', message: `Code "${courseCode}" already exists.` });

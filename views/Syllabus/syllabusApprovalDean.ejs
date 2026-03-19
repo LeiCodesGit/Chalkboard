@@ -36,14 +36,6 @@
                     <span class="meta-item">
                         <%= locals.courseCode || '[COURSE CODE]' %>
                     </span>
-                    <span class="ad-meta-divider">|</span>
-                    <span class="meta-item">
-                        <%= locals.courseSection || '[COURSE SECTION]' %>
-                    </span>
-                    <span class="ad-meta-divider">|</span>
-                    <span class="meta-item">
-                        <%= locals.academicYear || '[ACADEMIC YEAR]' %>
-                    </span>
                 </p>
             </div>
         </header>
@@ -62,10 +54,10 @@
                 </a>
 
                 <div class="ad-file-type-badge">
-                    <%= locals.fileType || '[FILE TYPE]' %>
+                    <%= locals.courseName || '[COURSE NAME]' %>
                 </div>
 
-                <h2 class="ad-section-title">Basic Information</h2>
+                <h2 class="ad-section-title"><%= locals.courseName || '[COURSE NAME]' %></h2>
 
                 <!-- ── Document Read-Only Preview ── -->
                 <div class="ad-document-preview ad-doc-content">
@@ -74,8 +66,7 @@
                     <table class="ad-data-table ad-data-table-wide">
                         <tr><td style="font-weight:bold; width: 30%; background:#f9f9f9;">Course Code</td><td><%= locals.courseCode %></td></tr>
                         <tr><td style="font-weight:bold; background:#f9f9f9;">Course Title</td><td><%= locals.courseName %></td></tr>
-                        <tr><td style="font-weight:bold; background:#f9f9f9;">Section</td><td><%= locals.courseSection %></td></tr>
-                        <tr><td style="font-weight:bold; background:#f9f9f9;">Academic Year</td><td><%= locals.academicYear %></td></tr>
+
                     </table>
 
                     <h3 class="ad-section-heading">Program Educational Objectives (PEO)</h3>
@@ -369,10 +360,6 @@
                     <button type="button" class="ad-btn-action ad-btn-pdf" id="btn-save-pdf">
                         <span class="material-symbols-outlined">picture_as_pdf</span>
                         Save as PDF
-                    </button>
-                    <button type="button" class="ad-btn-action ad-btn-draft" id="btn-save-draft">
-                        <span class="material-symbols-outlined">save</span>
-                        Save as Draft
                     </button>
                     <button type="button" class="ad-btn-action ad-btn-submit" id="btn-submit">
                         Submit Endorsement

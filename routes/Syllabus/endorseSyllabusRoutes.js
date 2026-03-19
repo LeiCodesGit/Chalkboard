@@ -159,8 +159,17 @@ endorseSyllabusRouter.get('/', async (req, res) => {
    ----------------------------------------------------------------------- */
 endorseSyllabusRouter.post('/:userId/add', upload.single('courseImage'), async (req, res) => {
     try {
-        const userId = req.params.userId;
+        let userId = req.params.userId;
         const { courseCode, courseTitle, assignedInstructor } = req.body;
+
+        // Use session user ID as fallback when URL param is not a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(userId) && req.session.user) {
+            userId = req.session.user.id || req.session.user._id;
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: 'server', message: 'Invalid user ID. Please log in again.' });
+        }
 
         // Duplicate Check (Case-insensitive)
         const existing = await Syllabus.findOne({ 
@@ -209,6 +218,7 @@ endorseSyllabusRouter.get('/approve', async (req, res) => {
                 { status: 'Pending' },
                 { status: 'Approved', approvedBy: 'PC_Approved' },
                 { status: 'Approved', approvedBy: 'Program Chair' },
+                { status: 'Endorsed' },
                 { status: 'Returned to PC' },
                 { approvedBy: 'Rejected' }
             ]
@@ -234,6 +244,9 @@ endorseSyllabusRouter.get('/approve', async (req, res) => {
                 if (approval.approvedBy === 'Rejected') {
                     displayStatus = 'Rejected';
                     statusDateLabel = 'Rejected';
+                } else if (approval.status === 'Endorsed') {
+                    displayStatus = 'PC_Approved';
+                    statusDateLabel = 'Endorsed';
                 } else if (approval.approvedBy === 'PC_Approved' || approval.approvedBy === 'Program Chair') {
                     displayStatus = 'PC_Approved';
                     statusDateLabel = 'Endorsed';
@@ -352,7 +365,7 @@ endorseSyllabusRouter.get('/approve/:syllabusId', async (req, res) => {
                 syllabusId: syllabusId, // Consistent naming
                 currentStatus: approval ? approval.status : 'Pending',
                 approvalState: approval ? approval.approvedBy : null,
-                existingComment: approval ? (approval.remarks || '') : '',
+                existingComment: approval ? (approval.PC_Remarks || approval.remarks || '') : '',
                 currentPageCategory: 'syllabus',
                 actionUrlPrefix: '/syllabus/prog-chair/approve',
                 optionApproveValue: 'PC_Approved', // Value submitted when approved
@@ -398,7 +411,7 @@ endorseSyllabusRouter.post('/approve/:syllabusId', async (req, res) => {
         let approval = await SyllabusApprovalStatus.findOne({ syllabusID: syllabusId });
         if (!approval) return res.status(404).json({ success: false, message: 'Approval record not found.' });
 
-        approval.remarks = comment || '';
+        approval.PC_Remarks = comment || '';
 
         if (action === 'draft') {
             await approval.save();
@@ -479,7 +492,7 @@ endorseSyllabusRouter.get('/endorse', async (req, res) => {
                         ? new Date(approval.approvalDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : null,
                     endorsedBy: approval.approvedBy || null,
-                    remarks: approval.remarks || '',
+                    remarks: approval.PC_Remarks || approval.remarks || '',
                     submittedDate: approval.updatedAt
                         ? new Date(approval.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : 'N/A'
@@ -574,7 +587,7 @@ endorseSyllabusRouter.get('/endorse/:syllabusId', async (req, res) => {
                 syllabusId: syllabusId, // Consistent naming
                 currentStatus: approval ? approval.status : 'Pending',
                 approvalState: approval ? approval.approvedBy : null,
-                existingComment: approval ? (approval.remarks || '') : '',
+                existingComment: approval ? (approval.PC_Remarks || approval.remarks || '') : '',
                 currentPageCategory: 'syllabus',
                 actionUrlPrefix: '/syllabus/prog-chair/endorse',
                 optionApproveValue: 'Approved', // Value submitted when endorsed
@@ -617,7 +630,7 @@ endorseSyllabusRouter.post('/endorse/:syllabusId', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Syllabus must be Approved in the Approval Queue first.' });
         }
 
-        approval.remarks = comment || '';
+        approval.PC_Remarks = comment || '';
 
         if (action === 'draft') {
             await approval.save();

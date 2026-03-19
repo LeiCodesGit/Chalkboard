@@ -24,8 +24,8 @@
                             <div class="hr-header-left">
 
                                 <div>
-                                    <h1>HR Syllabus Archive</h1>
-                                    <p class="hr-subtitle">View approved syllabuses and manage archives</p>
+                                    <h1>HR Syllabus</h1>
+                                    <p class="hr-subtitle">View approved syllabuses and manage Verified Syllabuses</p>
                                 </div>
                             </div>
                             <div class="hr-header-right">
@@ -103,7 +103,8 @@
                                                                         <% if (d.status==='Archived' && d.archivedDate)
                                                                             { %>
                                                                             <span><i class="fas fa-archive"></i>
-                                                                                Verified by HR: <%= d.archivedDate %></span>
+                                                                                Verified by HR: <%= d.archivedDate %>
+                                                                                    </span>
                                                                             <% } %>
                                                                                 <% if (d.status==='Archived' &&
                                                                                     d.archivedBy) { %>
@@ -111,6 +112,11 @@
                                                                                             class="fas fa-user-cog"></i>
                                                                                         By: <%= d.archivedBy %></span>
                                                                                     <% } %>
+                                                                                <% if (d.remarks) { %>
+                                                                                    <span style="display: block; width: 100%; margin-top: 6px; font-size: 0.85rem; color: #666; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                                                        <i class="fas fa-comment-alt" style="opacity: 0.7;"></i> <%= d.remarks %>
+                                                                                    </span>
+                                                                                <% } %>
                                                     </div>
                                                 </div>
 
