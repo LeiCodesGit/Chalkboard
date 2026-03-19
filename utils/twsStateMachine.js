@@ -5,10 +5,11 @@
 
 const VALID_TRANSITIONS = {
   "Draft":                      ["Sent to Faculty", "Sent to Dean"],
-  "Sent to Faculty":            ["Sent to Dean", "Returned to Program Chair"],
+  "Sent to Faculty":            ["Faculty Approved", "Sent to Dean", "Returned to Program Chair"],
+  "Faculty Approved":           ["Sent to Dean", "Returned to Program Chair"],
   "Sent to Dean":               ["Approved", "Rejected", "Returned to Program Chair"],
   "Approved":                   ["Archived"],
-  "Rejected":                   ["Draft"],
+  "Rejected":                   ["Draft", "Sent to Faculty"],
   "Returned to Program Chair":  ["Draft", "Sent to Faculty", "Sent to Dean"],
   "Archived":                   [],
 };
@@ -47,14 +48,16 @@ export function getStepperState(status) {
       return { step: 0, label: "Draft", isRejected: false, isReturned: false };
     case "Sent to Faculty":
       return { step: 1, label: "Sent to Faculty", isRejected: false, isReturned: false };
+    case "Faculty Approved":
+      return { step: 2, label: "Approved by Faculty", isRejected: false, isReturned: false };
     case "Sent to Dean":
-      return { step: 2, label: "Pending Dean Approval", isRejected: false, isReturned: false };
+      return { step: 3, label: "Pending Dean Approval", isRejected: false, isReturned: false };
     case "Approved":
-      return { step: 3, label: "Approved by Dean", isRejected: false, isReturned: false };
+      return { step: 4, label: "Approved by Dean", isRejected: false, isReturned: false };
     case "Archived":
-      return { step: 4, label: "Archived", isRejected: false, isReturned: false };
+      return { step: 5, label: "Archived", isRejected: false, isReturned: false };
     case "Rejected":
-      return { step: 2, label: "Rejected by Dean", isRejected: true, isReturned: false };
+      return { step: 3, label: "Rejected by Dean", isRejected: true, isReturned: false };
     case "Returned to Program Chair":
       return { step: 2, label: "Returned for Revision", isRejected: false, isReturned: true };
     default:

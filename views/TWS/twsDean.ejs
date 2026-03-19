@@ -14,6 +14,7 @@
       if (st === 'approved') return 'tws-status-approved';
       if (st === 'archived') return 'tws-status-archived';
       if (st === 'rejected') return 'tws-status-rejected';
+      if (st === 'faculty approved') return 'tws-status-sent';
       if (st.includes('returned')) return 'tws-status-returned';
       if (st.includes('sent')) return 'tws-status-sent';
       return 'tws-status-draft';
@@ -123,6 +124,12 @@
                     <strong>Status:</strong>
                     <span class="<%= statusClass(currentStatus) %>"><%= currentStatus %></span>
                   </div>
+
+                  <% if (tws.facultyNotes) { %>
+                    <div class="tws-board-note" style="margin-top:8px;">
+                      <b>Faculty Note:</b> <%= String(tws.facultyNotes).slice(0, 160) %><%= String(tws.facultyNotes).length > 160 ? '...' : '' %>
+                    </div>
+                  <% } %>
 
                   <div class="tws-board-card-footer">
                     <div class="tws-board-card-date">Updated: <%= formatDate(tws.updatedAt || tws.createdAt) %></div>
@@ -267,5 +274,7 @@
       deanArchiveIcon.textContent = deanArchiveGrid.classList.contains('tws-board-hidden') ? 'chevron_right' : 'expand_more';
     });
   </script>
+
+  <%- include("./partials/twsNotifications") %>
 </body>
 </html>

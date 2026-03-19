@@ -34,15 +34,24 @@
           <% const isProfessor = !!(user && user.role === "Professor"); %>
           <% const isProgramChair = !!(user && user.role === "Program-Chair"); %>
           <% const isDean = !!(user && user.role === "Dean"); %>
-          <% const canFacultyAct = isProfessor && currentStatus === "Sent to Faculty" && !tws.facultySigned; %>
-          <% const canSendToFaculty = isChair && ["Draft", "Returned to Program Chair"].includes(currentStatus); %>
-          <% const canSendToDean = isChair && isProgramChair && currentStatus === "Sent to Faculty" && !!tws.facultySigned; %>
+          <% const canFacultyReview = isProfessor && ["Sent to Faculty", "Faculty Approved"].includes(currentStatus); %>
+          <% const canFacultySign = isProfessor && currentStatus === "Sent to Faculty" && !tws.facultySigned; %>
+          <% const canFacultyReturn = canFacultyReview; %>
+          <% const canFacultySaveNotes = canFacultyReview; %>
+          <% const canSendToFaculty = isChair && ["Draft", "Returned to Program Chair", "Rejected"].includes(currentStatus); %>
+          <% const canSendToDean = isChair && isProgramChair && ["Sent to Faculty", "Faculty Approved"].includes(currentStatus) && !!tws.facultySigned; %>
           <% const canEdit = isChair && ["Draft", "Returned to Program Chair", "Rejected"].includes(currentStatus); %>
           <% const canDownloadPdf = currentStatus === "Approved" || currentStatus === "Archived"; %>
 
           <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
             <div style="margin-bottom:12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
               <b>Action blocked:</b> <%= errorMessage %>
+            </div>
+          <% } %>
+
+          <% if (typeof noteSaved !== "undefined" && noteSaved) { %>
+            <div style="margin-bottom:12px; background: rgba(22,163,74,0.2); border:1px solid rgba(22,163,74,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+              <b>Saved:</b> Faculty notes were updated successfully.
             </div>
           <% } %>
 
@@ -89,6 +98,19 @@
                       Signed
                       <% if (tws.deanSignedAt) { %>
                         - <%= new Date(tws.deanSignedAt).toLocaleString("en-US", { timeZone: "Asia/Manila" }) %> (PHT)
+                      <% } %>
+                    </div>
+                  <% } %>
+
+                  <% if (tws.facultyNotes) { %>
+                    <div style="font-weight:800;">Faculty Notes:</div>
+                    <div style="white-space:pre-wrap;"><%= tws.facultyNotes %></div>
+
+                    <div style="font-weight:800;">Notes Updated:</div>
+                    <div>
+                      <%= tws.facultyNotesUpdatedAt ? new Date(tws.facultyNotesUpdatedAt).toLocaleString("en-US", { timeZone: "Asia/Manila" }) + " (PHT)" : "—" %>
+                      <% if (tws.facultyNotesUpdatedBy) { %>
+                        by <%= tws.facultyNotesUpdatedBy %>
                       <% } %>
                     </div>
                   <% } %>
@@ -185,7 +207,7 @@
                   Back
                 </a>
 
-                <% if (canFacultyAct) { %>
+                <% if (canFacultySign) { %>
                   <button
                     type="submit"
                     formaction="/tws/signature"
@@ -196,7 +218,9 @@
                   >
                     Sign TWS
                   </button>
+                <% } %>
 
+                <% if (canFacultyReturn) { %>
                   <button
                     type="submit"
                     formaction="/tws/faculty-return/<%= tws.id %>"
@@ -211,9 +235,11 @@
               </div>
             </div>
 
-            <% if (canFacultyAct) { %>
+            <% if (canFacultySign) { %>
               <input type="hidden" name="id" value="<%= tws.id %>" />
+            <% } %>
 
+            <% if (canFacultySaveNotes) { %>
               <div style="margin-top:14px; display:grid; gap:8px; max-width:640px;">
                 <label for="facultyReturnRemarks" style="font-size:12px; font-weight:800;">Revision Notes (optional)</label>
                 <textarea
@@ -222,7 +248,19 @@
                   rows="3"
                   placeholder="State what needs to be revised before approval."
                   style="width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.35); background:rgba(255,255,255,0.08); color:#fff; padding:10px 12px; resize:vertical; font-size:12px;"
-                ></textarea>
+                ><%= tws.facultyNotes || "" %></textarea>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button
+                    type="submit"
+                    formaction="/tws/faculty-note/<%= tws.id %>"
+                    formmethod="POST"
+                    class="tws-btn-white"
+                    style="cursor:pointer;"
+                  >
+                    Save Notes
+                  </button>
+                </div>
               </div>
             <% } %>
 
@@ -443,5 +481,7 @@
       </div>
     </main>
   </div>
+
+  <%- include("./partials/twsNotifications") %>
 </body>
 </html>

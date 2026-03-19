@@ -8,7 +8,7 @@ const twsApprovalStatusSchema = new Schema(
     approvedBy: { type: String, default: "" },
     status: {
       type: String,
-      enum: ["Approved", "Pending", "Rejected", "Returned", "Not Submitted"],
+      enum: ["Approved", "Pending", "Rejected", "Returned", "Not Submitted", "Archived"],
       default: "Not Submitted",
     },
   },

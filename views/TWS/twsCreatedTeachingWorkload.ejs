@@ -162,6 +162,12 @@
         <section class="tws-card tws-card-wide tws-created-sheet">
           <div class="tws-card-title">Created Teaching Workload Sheet</div>
 
+          <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+            <div style="margin: 0 0 12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+              <b>Scheduling conflict:</b> <%= errorMessage %>
+            </div>
+          <% } %>
+
           <div class="tws-schedule-layout">
 
             <div class="tws-timetable">

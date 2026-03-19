@@ -110,7 +110,7 @@ export function validateLoadRows(loads) {
   return { valid: errors.length === 0, errors };
 }
 
-function parseTime12Hour(value) {
+export function parseTime12HourToMinutes(value) {
   const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (!match) return null;
 
@@ -125,6 +125,20 @@ function parseTime12Hour(value) {
   if (meridiem === "AM" && hour === 12) hour = 0;
 
   return hour * 60 + minute;
+}
+
+export function hasOverlappingSchedule(a, b) {
+  const aDay = String(a?.day || "").trim().toLowerCase();
+  const bDay = String(b?.day || "").trim().toLowerCase();
+  if (!aDay || !bDay || aDay !== bDay) return false;
+
+  const aStart = parseTime12HourToMinutes(a?.startTime);
+  const aEnd = parseTime12HourToMinutes(a?.endTime);
+  const bStart = parseTime12HourToMinutes(b?.startTime);
+  const bEnd = parseTime12HourToMinutes(b?.endTime);
+
+  if ([aStart, aEnd, bStart, bEnd].includes(null)) return false;
+  return aStart < bEnd && bStart < aEnd;
 }
 
 /**
@@ -149,8 +163,8 @@ export function validateCourseAdd(body) {
   if (!sectionRoom) errors.push("Section and room are required.");
   if (isNaN(units) || units <= 0) errors.push("Units must be greater than 0.");
 
-  const startMinutes = parseTime12Hour(startTime);
-  const endMinutes = parseTime12Hour(endTime);
+  const startMinutes = parseTime12HourToMinutes(startTime);
+  const endMinutes = parseTime12HourToMinutes(endTime);
 
   if (startTime && startMinutes === null) {
     errors.push("Start time must be in this format: 7:00 AM");
@@ -197,4 +211,19 @@ export function validateChairAction(body) {
   if (!validActions.includes(action)) errors.push(`Invalid action. Must be one of: ${validActions.join(", ")}.`);
 
   return { valid: errors.length === 0, errors };
+}
+
+export function validateFacultyNote(value) {
+  const errors = [];
+  const note = String(value || "").trim();
+
+  if (note.length > 1500) {
+    errors.push("Faculty notes must be under 1500 characters.");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    note,
+  };
 }
