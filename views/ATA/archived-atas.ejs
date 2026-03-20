@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chalkboard | Archived ATAs</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="/ATA/css/archived.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+<body data-role="<%= typeof role !== 'undefined' ? role : 'Admin' %>"
+      data-employment="<%= (typeof user !== 'undefined' && user.employmentType) ? user.employmentType : 'Full-Time' %>"
+      data-practicum="<%= (typeof user !== 'undefined' && user.isPracticumCoordinator) ? 'true' : 'false' %>">
+
+    <% 
+        if (typeof role !== 'undefined') {
+            if (['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) { %>
+                <%- include('../MainPages/admin/partials/adminSideMenuBar') %>
+            <% } else if (role === 'Dean') { %>
+                <%- include('../MainPages/dean/partials/deanMenuBar') %>
+            <% } else if (role === 'Program-Chair') { %>
+                <%- include('../MainPages/progChair/partials/progChairMenuBar') %>
+            <% } else { %>
+                <%- include('../partials/sideMenuBar') %>
+            <% } 
+        } else { %>
+            <%- include('../partials/sideMenuBar') %>
+        <% }
+    %>
+
+    <main class="main-content">
+
+        <div class="bb-header">
+            <h1 class="bb-title">Archived ATA Forms</h1>
+            
+            <div class="header-actions">
+                <div class="bb-total-btn">
+                    <i class="fas fa-book-open"></i> Total Records: <span id="totalCountBadge" style="margin-left: 5px; font-weight: bold; color: #222;"><%= totalCount %></span>
+                </div>
+                <a href="<%= (typeof role !== 'undefined' && ['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) ? '/admin/ata' : '/ata/dashboard/window' %>" class="btn-top-back">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="bb-toolbar-wrapper">
+            <div class="bb-toolbar">
+                <div class="bb-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search Faculty Name" oninput="applyFilters()">
+                </div>
+
+                <div class="bb-filter-group">
+                    <label>Terms</label>
+                    <select id="yearFilter" class="bb-filter-select" onchange="applyFilters()">
+                        <option value="">All Academic Years</option>
+                    </select>
+                </div>
+
+                <div class="bb-filter-group">
+                    <label>Filters</label>
+                    <select id="programFilter" class="bb-filter-select" onchange="applyFilters()">
+                        <option value="">All Programs</option>
+                        <optgroup label="College of Engineering & Architecture (CEA)">
+                            <option value="CpE">Computer Engineering (CpE)</option>
+                            <option value="CE">Civil Engineering (CE)</option>
+                            <option value="EE">Electrical Engineering (EE)</option>
+                            <option value="ECE">Electronics Engineering (ECE)</option>
+                            <option value="IE">Industrial Engineering (IE)</option> 
+                            <option value="ME">Mechanical Engineering (ME)</option>
+                            <option value="AR">Architecture (AR)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="bb-filter-group" style="max-width: 200px;">
+                    <select id="termFilter" class="bb-filter-select" onchange="applyFilters()">
+                        <option value="">All Terms</option>
+                        <option value="1ST">1st Term</option>
+                        <option value="2ND">2nd Term</option>
+                        <option value="3RD">3rd Term</option>
+                        <option value="MIDYEAR">Midyear</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="bb-results-text">
+                <span id="resultsCountText"><%= totalCount %></span> results
+            </div>
+        </div>
+
+        <div class="bb-scroll-area" id="accordionContainer">
+            </div>
+
+    </main>
+        
+    <script>
+        window.__FORMS__ = <%- JSON.stringify(forms) %>;
+    </script>
+
+    <script src="/ATA/js/ata_client.js"></script>
+    <script src="/ATA/js/archived.js"></script>
+</body>
+</html>

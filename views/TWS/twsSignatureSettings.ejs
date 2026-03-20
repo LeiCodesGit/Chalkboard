@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS - E-Signature Settings</title>
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyles.css" />
+  <style>
+  body {
+    background: #f4f6f9;
+    color: #333;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .sig-page-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  /* TITLE (matches screenshot) */
+  .page-title {
+    background: #e9ecef;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+
+  /* MAIN PANEL */
+  .panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px 22px;
+  }
+
+  .panel-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  /* GRID */
+  .sig-panel-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 20px;
+  }
+
+  /* DRAW AREA */
+  .sig-canvas-wrap {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .sig-canvas {
+    width: 100%;
+    height: 220px;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: crosshair;
+  }
+
+  /* BUTTONS */
+  .sig-tools {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    background: #e5e7eb;
+    color: #333;
+  }
+
+  .btn:hover {
+    opacity: 0.85;
+  }
+
+  /* RED PRIMARY BUTTON */
+  .btn-red {
+    background: #b30000;
+    color: #fff;
+  }
+
+  .btn-red:hover {
+    background: #8f0000;
+  }
+
+  /* GREEN BUTTON */
+  .btn-green {
+    background: #22c55e;
+    color: #fff;
+  }
+
+  /* DISABLED */
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* PREVIEW BOX */
+  .sig-preview-box {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 18px;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+  }
+
+  .sig-preview-box img {
+    max-width: 100%;
+    max-height: 160px;
+    object-fit: contain;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  /* TEXT */
+  .sig-note {
+    font-size: 12px;
+    color: #555;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .sig-msg {
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 860px) {
+    .sig-panel-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+  <aside class="tws-sidebar">
+    <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+  </aside>
+
+  <div class="main">
+    <div class="shell sig-page-wrap">
+
+      <div class="page-title">TWS - E-Signature Settings</div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Setup Your E-Signature</div>
+          <div class="panel-actions">
+            <a class="btn" href="/tws/dashboard">Back to Dashboard</a>
+          </div>
+        </div>
+
+        <div class="sig-panel-grid">
+          <div>
+            <div class="sig-canvas-wrap">
+              <div style="font-weight:700; margin-bottom:10px;">Draw your signature below</div>
+              <canvas id="signatureCanvas" class="sig-canvas"></canvas>
+
+              <div class="sig-tools">
+                <button type="button" class="btn" id="clearCanvasBtn">Clear</button>
+                <button type="button" class="btn btn-red" id="saveSignatureBtn">Save Signature</button>
+                <button
+                  type="button"
+                  class="btn"
+                  id="removeSignatureBtn"
+                  <%= user?.signatureImage ? "" : "disabled style='opacity:.55; cursor:not-allowed;'" %>
+                >
+                  Remove Saved Signature
+                </button>
+              </div>
+
+              <div class="sig-note">
+                This saved signature will be used when you click <b>Sign</b> on your assigned TWS.
+                It will also appear on the final approved PDF later.
+              </div>
+
+              <div id="sigMessage" class="sig-msg"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel-title" style="margin-bottom:12px;">Current Saved Signature</div>
+            <div class="sig-preview-box" id="previewBox">
+              <% if (user?.signatureImage) { %>
+                <img id="savedSignaturePreview" src="<%= user.signatureImage %>" alt="Saved signature" />
+              <% } else { %>
+                <div id="savedSignatureEmpty" style="opacity:.72; text-align:center;">
+                  No saved signature yet.
+                </div>
+              <% } %>
+            </div>
+
+            <div class="sig-note">
+              Signed in as:
+              <b><%= [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "User" %></b>
+              <% if (user?.employeeId) { %>
+                <br />
+                Employee ID: <b><%= user.employeeId %></b>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById("signatureCanvas");
+      const ctx = canvas.getContext("2d");
+      const saveBtn = document.getElementById("saveSignatureBtn");
+      const clearBtn = document.getElementById("clearCanvasBtn");
+      const removeBtn = document.getElementById("removeSignatureBtn");
+      const msg = document.getElementById("sigMessage");
+      const previewBox = document.getElementById("previewBox");
+
+      let drawing = false;
+      let hasStroke = false;
+
+      function setMessage(text, isError) {
+        msg.textContent = text || "";
+        msg.style.color = isError ? "#ffb3b3" : "#d7ffd7";
+      }
+
+      function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * ratio;
+        canvas.height = rect.height * ratio;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#111";
+        repaintGuide();
+      }
+
+      function repaintGuide() {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.setLineDash([6, 5]);
+        ctx.strokeStyle = "#cfcfcf";
+        ctx.beginPath();
+        ctx.moveTo(20, canvas.height / (window.devicePixelRatio || 1) - 35);
+        ctx.lineTo(canvas.width / (window.devicePixelRatio || 1) - 20, canvas.height / (window.devicePixelRatio || 1) - 35);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = "#111";
+      }
+
+      function getPos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const point = evt.touches ? evt.touches[0] : evt;
+        return {
+          x: point.clientX - rect.left,
+          y: point.clientY - rect.top
+        };
+      }
+
+      function startDraw(evt) {
+        evt.preventDefault();
+        drawing = true;
+        const pos = getPos(evt);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
+
+      function draw(evt) {
+        if (!drawing) return;
+        evt.preventDefault();
+        const pos = getPos(evt);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        hasStroke = true;
+      }
+
+      function endDraw(evt) {
+        if (evt) evt.preventDefault();
+        drawing = false;
+      }
+
+      clearBtn.addEventListener("click", function () {
+        hasStroke = false;
+        repaintGuide();
+        setMessage("Canvas cleared.", false);
+      });
+
+      saveBtn.addEventListener("click", async function () {
+        if (!hasStroke) {
+          setMessage("Please draw your signature first.", true);
+          return;
+        }
+
+        const signatureImage = canvas.toDataURL("image/png");
+
+        try {
+          const res = await fetch("/tws/signature-settings", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ signatureImage })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            setMessage(data.message || "Failed to save signature.", true);
+            return;
+          }
+
+          previewBox.innerHTML = '<img id="savedSignaturePreview" src="' + signatureImage + '" alt="Saved signature" />';
+          if (removeBtn) {
+            removeBtn.disabled = false;
+            removeBtn.style.opacity = "1";
+            removeBtn.style.cursor = "pointer";
+          }
+
+          setMessage("E-signature saved successfully.", false);
+        } catch (err) {
+          setMessage("Something went wrong while saving the signature.", true);
+        }
+      });
+
+      if (removeBtn) {
+        removeBtn.addEventListener("click", async function () {
+          try {
+            const res = await fetch("/tws/signature-settings/clear", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              }
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+              setMessage(data.message || "Failed to remove signature.", true);
+              return;
+            }
+
+            previewBox.innerHTML = '<div id="savedSignatureEmpty" style="opacity:.72; text-align:center;">No saved signature yet.</div>';
+            removeBtn.disabled = true;
+            removeBtn.style.opacity = ".55";
+            removeBtn.style.cursor = "not-allowed";
+            setMessage("Saved signature removed.", false);
+          } catch (err) {
+            setMessage("Something went wrong while removing the signature.", true);
+          }
+        });
+      }
+
+      canvas.addEventListener("mousedown", startDraw);
+      canvas.addEventListener("mousemove", draw);
+      window.addEventListener("mouseup", endDraw);
+
+      canvas.addEventListener("touchstart", startDraw, { passive: false });
+      canvas.addEventListener("touchmove", draw, { passive: false });
+      canvas.addEventListener("touchend", endDraw, { passive: false });
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+    })();
+  </script>
+</body>
+</html>

@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMCM Chalkboard | TLA</title>
 
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
     <!--inside the public file, for colors-->
     <link rel="stylesheet" href="/common/css/variables.css">
-    
-    <link rel="stylesheet" href="/TLA/css/tlaDashboard.css"> 
+
+    <link rel="stylesheet" href="/TLA/css/tlaDashboard.css">
 </head>
 <body>
 
@@ -22,7 +25,12 @@
             <button class="create-btn" onclick="window.location.href='/tla/form'">+ CREATE TLA FORM</button>
         </div>
 
-
+        <div class="status-legend">
+            <span class="legend-item"><span class="legend-dot draft"></span> Draft</span>
+            <span class="legend-item"><span class="legend-dot pending"></span> Pending</span>
+            <span class="legend-item"><span class="legend-dot returned"></span> Returned</span>
+            <span class="legend-item"><span class="legend-dot archived"></span> Approved / Archived</span>
+        </div>
 
         <div class="weekly-rpt-wrapper">
 
@@ -39,7 +47,7 @@
                         const canDelete = week.status !== 'Approved' && week.status !== 'Archived';
                         const weekLabel = 'Week ' + (week.weekNumber || '?');
                     %>
-                    <div class="week-buttons" data-tla-id="<%= week._id %>">
+                    <div class="week-buttons card card-status-<%= circleClass %>" data-tla-id="<%= week._id %>">
                         <!-- Main clickable card -->
                         <button class="week-btn" onclick="openTLA('<%= week._id %>')">
                             <p class="week-label"><%= weekLabel %></p>
@@ -71,8 +79,9 @@
                     </div>
                 <% }); %>
             <% } else { %>
-                <div class="no-tla-msg">
-                    <p>No TLA forms yet. <a href="/tla/form">Create your first one</a>.</p>
+                <div class="empty-state">
+                    <span class="material-symbols-outlined">assignment</span>
+                    <p>No TLA forms yet. Click the button above to create your first one.</p>
                 </div>
             <% } %>
 

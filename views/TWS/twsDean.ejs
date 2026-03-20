@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS - Dean</title>
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsDashboard.css" />
+</head>
+<body class="tws-board-page">
+  <%
+    function statusClass(status) {
+      const st = String(status || 'Draft').toLowerCase();
+      if (st === 'approved') return 'tws-status-approved';
+      if (st === 'archived') return 'tws-status-archived';
+      if (st === 'rejected') return 'tws-status-rejected';
+      if (st === 'faculty approved') return 'tws-status-sent';
+      if (st.includes('returned')) return 'tws-status-returned';
+      if (st.includes('sent')) return 'tws-status-sent';
+      return 'tws-status-draft';
+    }
+
+    function formatDate(value) {
+      if (!value) return '—';
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'Asia/Manila',
+      });
+    }
+  %>
+
+  <div class="tws-board-layout">
+    <aside class="tws-board-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws", user }) %>
+    </aside>
+
+    <main class="tws-board-main">
+      <div class="tws-board-shell">
+        <div class="tws-board-header">
+          <h1 class="tws-board-title">Teaching Workload Sheet</h1>
+        </div>
+
+        <div class="tws-board-content">
+          <div class="tws-board-toolbar">
+            <div class="tws-board-search">
+              <span class="material-symbols-outlined">search</span>
+              <input type="text" id="deanSearch" placeholder="Search Faculty" />
+            </div>
+
+            <select class="tws-board-filter" id="deanProgramFilter">
+              <option value="">Program</option>
+            </select>
+
+            <select class="tws-board-filter" id="deanAcademicYearFilter">
+              <option value="">Academic Year</option>
+            </select>
+
+            <select class="tws-board-filter" id="deanTermFilter">
+              <option value="">Term</option>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+              <option value="Summer">Summer</option>
+            </select>
+
+            <a class="tws-board-create" href="/tws/create">
+              <span class="material-symbols-outlined">add</span>
+              <span>Create TWS</span>
+            </a>
+          </div>
+
+        
+
+            <select class="tws-board-filter" id="deanProgramFilter">
+              <option value="">Program</option>
+            </select>
+
+            <select class="tws-board-filter" id="deanAcademicYearFilter">
+              <option value="">Academic Year</option>
+            </select>
+
+            <select class="tws-board-filter" id="deanTermFilter">
+              <option value="">Term</option>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+              <option value="Summer">Summer</option>
+            </select>
+          </div>
+
+          <div class="tws-board-caption">Dean Review Dashboard</div>
+
+          <div class="tws-board-grid" id="deanActiveGrid">
+            <% if (!list || !list.length) { %>
+              <div class="tws-board-empty">No teaching workload sheets found.</div>
+            <% } %>
+
+            <% (list || []).forEach(function(tws) {
+                 const currentStatus = tws.status || 'Draft';
+            %>
+              <article
+                class="tws-board-card dean-card <%= statusClass(currentStatus) %>"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-department="<%= tws.faculty?.dept || '' %>"
+                data-program="<%= tws.faculty?.program || tws.program || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || '—' %> | <%= tws.faculty?.program || tws.program || '—' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
+
+                  <div class="tws-board-card-status">
+                    <strong>Status:</strong>
+                    <span class="<%= statusClass(currentStatus) %>"><%= currentStatus %></span>
+                  </div>
+
+                  <% if (tws.facultyNotes) { %>
+                    <div class="tws-board-note" style="margin-top:8px;">
+                      <b>Faculty Note:</b> <%= String(tws.facultyNotes).slice(0, 160) %><%= String(tws.facultyNotes).length > 160 ? '...' : '' %>
+                    </div>
+                  <% } %>
+
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-card-date">Updated: <%= formatDate(tws.updatedAt || tws.createdAt) %></div>
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/summary/<%= tws.id %>?from=dean" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+
+                      <% if (currentStatus === 'Sent to Dean') { %>
+                        <a class="tws-board-icon-btn -approve" href="/tws/approval/<%= tws.id %>" title="Review / Approve">
+                          <span class="material-symbols-outlined">fact_check</span>
+                        </a>
+                        <form method="POST" action="/tws/approval/<%= tws.id %>" style="display:inline;">
+                          <input type="hidden" name="action" value="return" />
+                          <button class="tws-board-icon-btn -danger" type="submit" title="Return to Program Chair">
+                            <span class="material-symbols-outlined">reply</span>
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+
+          <div class="tws-board-section-title">
+            <button type="button" id="deanArchiveToggle">
+              <span>Archive</span>
+              <span class="material-symbols-outlined" id="deanArchiveIcon">chevron_right</span>
+            </button>
+          </div>
+
+          <div class="tws-board-grid tws-board-hidden" id="deanArchiveGrid">
+            <% if (!archivedList || !archivedList.length) { %>
+              <div class="tws-board-empty">No archived teaching workload sheets yet.</div>
+            <% } %>
+
+            <% (archivedList || []).forEach(function(tws) { %>
+              <article
+                class="tws-board-card dean-archived-card tws-status-archived"
+                data-name="<%= tws.faculty?.name || '' %>"
+                data-department="<%= tws.faculty?.dept || '' %>"
+                data-program="<%= tws.faculty?.program || tws.program || '' %>"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+                data-acad-year="<%= tws.faculty?.acadYear || tws.schoolYear || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || '—' %> | <%= tws.faculty?.program || tws.program || '—' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
+                  <div class="tws-board-card-status"><strong>Status:</strong> <span class="tws-status-archived">Archived</span></div>
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-card-date">Archived: <%= formatDate(tws.archivedAt || tws.updatedAt) %></div>
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/summary/<%= tws.id %>?from=dean" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const deanSearch = document.getElementById('deanSearch');
+    const deanProgramFilter = document.getElementById('deanProgramFilter');
+    const deanAcademicYearFilter = document.getElementById('deanAcademicYearFilter');
+    const deanTermFilter = document.getElementById('deanTermFilter');
+    const deanArchiveToggle = document.getElementById('deanArchiveToggle');
+    const deanArchiveGrid = document.getElementById('deanArchiveGrid');
+    const deanArchiveIcon = document.getElementById('deanArchiveIcon');
+
+    function populatePrograms() {
+      const values = new Set();
+      document.querySelectorAll('.dean-card, .dean-archived-card').forEach((card) => {
+        const program = (card.dataset.program || '').trim();
+        if (program) values.add(program);
+      });
+      [...values].sort().forEach((program) => {
+        const option = document.createElement('option');
+        option.value = program;
+        option.textContent = program;
+        deanProgramFilter.appendChild(option);
+      });
+    }
+
+    function populateDeanAcademicYears() {
+      const values = new Set();
+      document.querySelectorAll('.dean-card, .dean-archived-card').forEach((card) => {
+        const ay = (card.dataset.acadYear || '').trim();
+        if (ay) values.add(ay);
+      });
+      [...values].sort().forEach((ay) => {
+        const option = document.createElement('option');
+        option.value = ay;
+        option.textContent = ay;
+        deanAcademicYearFilter.appendChild(option);
+      });
+    }
+
+    function applyDeanFilters() {
+      const search = (deanSearch.value || '').toLowerCase().trim();
+      const program = (deanProgramFilter.value || '').toLowerCase();
+      const term = (deanTermFilter.value || '').toLowerCase();
+      const acadYear = (deanAcademicYearFilter.value || '').toLowerCase();
+
+      document.querySelectorAll('.dean-card, .dean-archived-card').forEach((card) => {
+        const name = (card.dataset.name || '').toLowerCase();
+        const cardProgram = (card.dataset.program || '').toLowerCase();
+        const cardTerm = (card.dataset.term || '').toLowerCase();
+        const cardAcadYear = (card.dataset.acadYear || '').toLowerCase();
+
+        const matches = (!search || name.includes(search))
+          && (!program || cardProgram === program)
+          && (!term || cardTerm === term)
+          && (!acadYear || cardAcadYear === acadYear);
+
+        card.style.display = matches ? '' : 'none';
+      });
+    }
+
+    populatePrograms();
+    populateDeanAcademicYears();
+    deanSearch?.addEventListener('input', applyDeanFilters);
+    deanProgramFilter?.addEventListener('change', applyDeanFilters);
+    deanAcademicYearFilter?.addEventListener('change', applyDeanFilters);
+    deanTermFilter?.addEventListener('change', applyDeanFilters);
+
+    deanArchiveToggle?.addEventListener('click', () => {
+      deanArchiveGrid.classList.toggle('tws-board-hidden');
+      deanArchiveIcon.textContent = deanArchiveGrid.classList.contains('tws-board-hidden') ? 'chevron_right' : 'expand_more';
+    });
+  </script>
+
+  <%- include("./partials/twsNotifications") %>
+</body>
+</html>

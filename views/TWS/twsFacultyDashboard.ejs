@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWS - Faculty</title>
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsDashboard.css" />
+</head>
+<body class="tws-board-page">
+  <%
+    function statusClass(status) {
+      const st = String(status || 'Draft').toLowerCase();
+      if (st === 'approved') return 'tws-status-approved';
+      if (st === 'archived') return 'tws-status-archived';
+      if (st === 'rejected') return 'tws-status-rejected';
+      if (st === 'faculty approved') return 'tws-status-sent';
+      if (st.includes('returned')) return 'tws-status-returned';
+      if (st.includes('sent')) return 'tws-status-sent';
+      return 'tws-status-draft';
+    }
+
+    function formatDate(value) {
+      if (!value) return '—';
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'Asia/Manila',
+      });
+    }
+
+    const signatureReady = !!(user && user.signatureImage);
+    const departmentLabel = (user && user.department) ? user.department : ((list && list[0] && list[0].faculty && list[0].faculty.dept) ? list[0].faculty.dept : 'Department');
+  %>
+
+  <div class="tws-board-layout">
+    <aside class="tws-board-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws", user }) %>
+    </aside>
+
+    <main class="tws-board-main">
+      <div class="tws-board-shell">
+        <div class="tws-board-header">
+          <h1 class="tws-board-title">Teaching Workload Sheet</h1>
+        </div>
+
+        <div class="tws-board-content">
+          <% if (!signatureReady) { %>
+            <div class="tws-board-note">
+              Your e-signature is not set yet. Please set it up first before signing a TWS.
+            </div>
+          <% } %>
+
+          <div class="tws-board-toolbar">
+            <select class="tws-board-filter" id="facultyTermFilter">
+              <option value="">Term</option>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+              <option value="Summer">Summer</option>
+            </select>
+
+            <a class="tws-board-action" href="/tws/signature-settings">
+              <span class="material-symbols-outlined">draw</span>
+              <span><%= signatureReady ? 'Manage E-Signature' : 'Set Up E-Signature' %></span>
+            </a>
+          </div>
+
+          <div class="tws-board-caption">A.Y. 2025 - 2026 | <%= departmentLabel %></div>
+
+          <div class="tws-board-grid" id="facultyActiveGrid">
+            <% if (!list || !list.length) { %>
+              <div class="tws-board-empty">No active teaching workload sheets assigned to you yet.</div>
+            <% } %>
+
+            <% (list || []).forEach(function(tws) {
+                 const currentStatus = tws.status || 'Draft';
+                 const canSignNow = currentStatus === 'Sent to Faculty' && !tws.facultySigned;
+                const canReturnNow = currentStatus === 'Sent to Faculty' || currentStatus === 'Faculty Approved';
+            %>
+              <article
+                class="tws-board-card faculty-card"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || departmentLabel %> | <%= tws.faculty?.email || user?.email || '—' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
+
+                  <div class="tws-board-card-status">
+                    <strong>Status:</strong>
+                    <span class="<%= statusClass(currentStatus) %>"><%= currentStatus %></span>
+                  </div>
+
+                  <% if (tws.facultyNotes) { %>
+                    <div class="tws-board-note" style="margin-top:8px;">
+                      <b>Your note:</b> <%= String(tws.facultyNotes).slice(0, 140) %><%= String(tws.facultyNotes).length > 140 ? '...' : '' %>
+                    </div>
+                  <% } %>
+
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-card-date">Created: <%= formatDate(tws.createdAt) %></div>
+
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/summary/<%= tws.id %>?from=faculty" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+
+                      <% if (canSignNow || canReturnNow) { %>
+                        <% if (canSignNow && signatureReady) { %>
+                          <form method="POST" action="/tws/signature" style="display:inline;">
+                            <input type="hidden" name="id" value="<%= tws.id %>" />
+                            <button class="tws-board-icon-btn -approve" type="submit" title="Sign" onclick="return confirm('Use your saved e-signature for this TWS?')">
+                              <span class="material-symbols-outlined">draw</span>
+                            </button>
+                          </form>
+                        <% } %>
+
+                        <% if (canSignNow && !signatureReady) { %>
+                          <a class="tws-board-icon-btn" href="/tws/signature-settings" title="Set signature first">
+                            <span class="material-symbols-outlined">edit</span>
+                          </a>
+                        <% } %>
+
+                        <% if (canReturnNow) { %>
+                          <form method="POST" action="/tws/faculty-return/<%= tws.id %>" style="display:inline;">
+                            <button class="tws-board-icon-btn -danger" type="submit" title="Return" onclick="return confirm('Return this TWS to the Program Chair?')">
+                              <span class="material-symbols-outlined">reply</span>
+                            </button>
+                          </form>
+                        <% } %>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+
+          <div class="tws-board-section-title">
+            <button type="button" id="facultyArchiveToggle">
+              <span>Archive</span>
+              <span class="material-symbols-outlined" id="facultyArchiveIcon">expand_more</span>
+            </button>
+          </div>
+
+          <div class="tws-board-grid" id="facultyArchiveGrid">
+            <% if (!archivedList || !archivedList.length) { %>
+              <div class="tws-board-empty">No archived teaching workload sheets yet.</div>
+            <% } %>
+
+            <% (archivedList || []).forEach(function(tws) { %>
+              <article
+                class="tws-board-card faculty-archived-card"
+                data-term="<%= tws.faculty?.term || tws.term || '' %>"
+              >
+                <div class="tws-board-card-hero"></div>
+                <div class="tws-board-card-body">
+                  <div class="tws-board-card-top">
+                    <div>
+                      <div class="tws-board-card-name"><%= tws.faculty?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Faculty' %></div>
+                      <div class="tws-board-card-meta"><%= tws.faculty?.dept || departmentLabel %> | <%= tws.faculty?.email || user?.email || '—' %></div>
+                    </div>
+                    <div class="tws-board-card-term"><%= tws.faculty?.term || tws.term || '—' %></div>
+                  </div>
+
+                  <div class="tws-board-card-status">
+                    <strong>Status:</strong>
+                    <span class="tws-status-archived">Archived</span>
+                  </div>
+
+                  <div class="tws-board-card-footer">
+                    <div class="tws-board-card-date">Archived: <%= formatDate(tws.archivedAt || tws.updatedAt) %></div>
+                    <div class="tws-board-actions">
+                      <a class="tws-board-icon-btn" href="/tws/summary/<%= tws.id %>?from=faculty" title="View">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const facultyTermFilter = document.getElementById('facultyTermFilter');
+    const archiveToggle = document.getElementById('facultyArchiveToggle');
+    const archiveGrid = document.getElementById('facultyArchiveGrid');
+    const archiveIcon = document.getElementById('facultyArchiveIcon');
+
+    function applyFacultyFilter() {
+      const term = (facultyTermFilter.value || '').toLowerCase();
+      document.querySelectorAll('.faculty-card, .faculty-archived-card').forEach((card) => {
+        const cardTerm = (card.dataset.term || '').toLowerCase();
+        const show = !term || cardTerm === term;
+        card.style.display = show ? '' : 'none';
+      });
+    }
+
+    facultyTermFilter?.addEventListener('change', applyFacultyFilter);
+
+    archiveToggle?.addEventListener('click', () => {
+      archiveGrid.classList.toggle('tws-board-hidden');
+      archiveIcon.textContent = archiveGrid.classList.contains('tws-board-hidden') ? 'chevron_right' : 'expand_more';
+    });
+  </script>
+
+  <%- include("./partials/twsNotifications") %>
+</body>
+</html>

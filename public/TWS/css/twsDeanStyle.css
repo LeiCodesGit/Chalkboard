@@ -1,0 +1,351 @@
+/* =========================================
+   TWS DEAN THEME ALIGNMENT
+   Uses the same palette as twsStyle.css
+========================================= */
+
+:root {
+  --tws-bg: #e9ecef;
+
+  --tws-surface: #f1f3f6;
+  --tws-surface-soft: #e3e7ec;
+
+  --tws-border: #cfd4da;
+  --tws-border-strong: #b7bcc3;
+
+  --tws-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+
+  --tws-primary: var(--accent-primary);
+  --tws-primary-hover: var(--accent-primary-hover);
+  --tws-secondary: var(--accent-secondary);
+
+  --tws-text: #1e293b;
+  --tws-muted: #64748b;
+
+  --tws-success: var(--status-approved);
+  --tws-warning: #b98a1d;
+  --tws-danger: #b45309;
+  --tws-danger-dark: #b42318;
+
+  --tws-white-btn: #ffffff;
+  --tws-white-btn-text: #1f2937;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif);
+  color: var(--tws-text);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+    var(--tws-bg);
+}
+
+.twsd-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.twsd-sidebar {
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.twsd-sidebar > * {
+  position: relative !important;
+  left: 0 !important;
+  width: 100% !important;
+}
+
+.twsd-main {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.twsd-center {
+  width: min(1040px, 92%);
+  margin-top: 60px;
+}
+
+.twsd-title-pill {
+  background: linear-gradient(135deg, #ece7e7, #f7f7f8);
+  border: 1px solid var(--tws-border);
+  border-radius: 20px;
+  padding: 16px 20px;
+  width: min(760px, 100%);
+  margin: 0 auto 18px auto;
+  box-shadow: var(--tws-shadow);
+  text-align: center;
+}
+
+.twsd-title-pill h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--tws-text);
+}
+
+.twsd-glass {
+  background: transparent;
+  border-radius: 20px;
+  padding: 0;
+  box-shadow: none;
+}
+
+.twsd-panel,
+.twsd-card {
+  background: var(--tws-surface);
+  border: 1px solid var(--tws-border);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: var(--tws-shadow);
+}
+
+.twsd-card-wide {
+  max-width: 980px;
+}
+
+.twsd-card-mid {
+  max-width: 860px;
+}
+
+.twsd-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.twsd-card-title {
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--tws-text);
+}
+
+.twsd-chips {
+  display: flex;
+  gap: 10px;
+}
+
+.twsd-chip {
+  background: var(--tws-white-btn);
+  border: 1px solid var(--tws-border);
+  color: var(--tws-text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.twsd-table {
+  display: grid;
+  gap: 10px;
+}
+
+.twsd-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 1fr 0.55fr 1.2fr 1.25fr;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--tws-text);
+}
+
+.twsd-row-4 {
+  grid-template-columns: 1.4fr 1.1fr 0.55fr 1.25fr;
+}
+
+.twsd-head {
+  opacity: 0.95;
+  font-weight: 900;
+}
+
+.twsd-empty {
+  color: var(--tws-muted);
+  padding: 10px 0;
+}
+
+.twsd-status {
+  font-weight: 900;
+}
+
+.twsd-yellow {
+  color: var(--tws-warning);
+}
+
+.twsd-red {
+  color: var(--tws-danger-dark);
+}
+
+.twsd-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.twsd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  min-width: 110px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--tws-border);
+  background: var(--tws-white-btn);
+  color: var(--tws-text);
+  cursor: pointer;
+}
+
+.twsd-white {
+  background: var(--tws-white-btn);
+  color: var(--tws-white-btn-text);
+}
+
+.twsd-green {
+  background: var(--tws-success);
+  color: #fff;
+  border-color: transparent;
+}
+
+.twsd-blue {
+  background: var(--tws-secondary);
+  color: #fff;
+  border-color: transparent;
+}
+
+.twsd-guidelines {
+  margin: 10px 0 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--tws-muted);
+}
+
+.twsd-next-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.twsd-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  min-width: 110px;
+  padding: 0 16px;
+  background: var(--tws-primary);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.twsd-approval-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.twsd-approval-top {
+  background: var(--tws-surface);
+  border: 1px solid var(--tws-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--tws-shadow);
+}
+
+.twsd-approval-top h2 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--tws-text);
+}
+
+.twsd-approval-top .small {
+  font-size: 12px;
+  color: var(--tws-muted);
+  margin-top: 4px;
+}
+
+.twsd-approval-bottom {
+  background: var(--tws-surface);
+  border: 1px solid var(--tws-border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--tws-shadow);
+}
+
+.twsd-approve-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  margin-bottom: 12px;
+  color: var(--tws-text);
+}
+
+.twsd-arrow {
+  color: var(--tws-success);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.twsd-line {
+  height: 2px;
+  flex: 1;
+  background: var(--tws-border);
+  border-radius: 99px;
+}
+
+.twsd-approval-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+@media (max-width: 980px) {
+  .twsd-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .twsd-sidebar {
+    display: none;
+  }
+
+  .twsd-center {
+    width: min(96%, 96%);
+    margin-top: 30px;
+  }
+}

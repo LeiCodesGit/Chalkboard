@@ -1,0 +1,311 @@
+/* ====================================================================
+    NUKE PREVIOUS STYLE.CSS INTERFERENCE
+    ==================================================================== */
+body, html {
+    background-color: #f4f5f7 !important;
+    background-image: none !important; 
+    color: #333333;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden !important; 
+    display: block !important;
+}
+
+.main-content {
+    position: absolute !important;
+    top: 0 !important;
+    left: 260px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: calc(100vw - 260px) !important;
+    height: 100vh !important;
+    max-width: none !important;
+    background-color: #f4f5f7 !important;
+    background-image: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important; 
+    justify-content: flex-start !important; 
+    z-index: 10;
+}
+
+/* ====================================================================
+    BLACKBOARD LEARN "COURSES" THEME (LIGHT, CARD-BASED)
+    ==================================================================== */
+*, *::before, *::after { box-sizing: border-box !important; }
+
+/* --- 1. Top Header --- */
+.bb-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 20px 30px !important; /* Reduced padding for wider stretch */
+    background: #ffffff !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+}
+
+.bb-title {
+    font-size: 28px;
+    font-weight: 400; 
+    color: #222;
+    margin: 0;
+    letter-spacing: -0.5px;
+    text-align: left;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.bb-total-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #444;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 12px;
+    cursor: default;
+}
+.bb-total-btn i { font-size: 20px; color: #666; }
+
+/* Professional Back Button */
+.btn-top-back {
+    background-color: #ffffff;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.btn-top-back:hover { 
+    background-color: #f8f9fa; 
+    border-color: #aaa; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* --- 2. Toolbar & Filters --- */
+.bb-toolbar-wrapper {
+    background: #ffffff !important;
+    padding: 20px 30px 15px 30px !important; /* Reduced padding for wider stretch */
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.bb-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+/* Search Box */
+.bb-search-box {
+    display: flex;
+    align-items: center;
+    border: 1px solid #777;
+    border-radius: 3px;
+    padding: 0 15px;
+    flex: 1;
+    max-width: 500px; /* Widened search box */
+    background: #fff;
+    height: 40px;
+    transition: border-color 0.2s;
+}
+.bb-search-box:focus-within { border-color: #222; box-shadow: 0 0 0 1px #222; }
+.bb-search-box i { color: #666; margin-right: 10px; font-size: 16px; }
+.bb-search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 15px;
+    color: #222;
+}
+
+/* Floating Label Dropdowns */
+.bb-filter-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1; /* Allows dropdowns to stretch */
+    max-width: 300px;
+}
+.bb-filter-group label {
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: #fff;
+    padding: 0 4px;
+    font-size: 11px;
+    color: #666;
+    z-index: 1;
+}
+.bb-filter-select {
+    border: 1px solid #777;
+    border-radius: 3px;
+    padding: 0 35px 0 15px;
+    font-size: 15px;
+    color: #333;
+    background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="5" viewBox="0 0 10 5"><path fill="%23333" d="M0 0l5 5 5-5z"/></svg>') no-repeat right 15px center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+    width: 100%;
+    height: 40px;
+    cursor: pointer;
+}
+.bb-filter-select:focus { border-color: #222; box-shadow: 0 0 0 1px #222; }
+
+.bb-results-text {
+    font-size: 14px;
+    color: #444;
+    margin-top: 15px;
+    text-align: left;
+    width: 100%;
+}
+
+/* --- 3. Scrollable Cards Area --- */
+.bb-scroll-area {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 20px 30px 40px 30px !important; /* Reduced side padding */
+    background: #f4f5f7 !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+.bb-course-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-left-width: 6px; 
+    border-radius: 4px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s, transform 0.2s;
+    width: 100%;
+    display: block;
+}
+.bb-course-card:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+.bb-card-header {
+    padding: 20px 25px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.bb-card-title {
+    font-size: 18px; /* Slightly larger for the stretched layout */
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 6px;
+    text-align: left;
+}
+
+.bb-card-subtitle {
+    font-size: 13px;
+    color: #555;
+    display: flex;
+    align-items: center;
+}
+.bb-card-subtitle span.divider {
+    margin: 0 10px;
+    color: #ccc;
+}
+
+.bb-card-icon {
+    color: #777;
+    font-size: 20px;
+    transition: transform 0.3s;
+}
+
+/* --- 4. The Folded Table --- */
+.folder-body {
+    display: none; 
+    border-top: 1px solid #eee;
+    background: #fafafa;
+    width: 100%;
+}
+.folder-body.open {
+    display: block; 
+}
+
+.bb-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.bb-table th {
+    text-align: left;
+    padding: 12px 25px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    border-bottom: 1px solid #ddd;
+    background: #f4f5f7;
+    text-transform: uppercase;
+}
+.bb-table td {
+    padding: 15px 25px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    color: #333;
+}
+.bb-table tr:hover td { background: #ffffff; }
+
+/* --- Buttons inside the table --- */
+.btn-view {
+    background-color: #333;
+    color: #fff !important;
+    padding: 6px 16px;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    transition: background 0.2s;
+}
+.btn-view:hover { background-color: #000; }
+
+.btn-outline {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 5px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+.btn-outline:hover { background-color: #f4f5f7; border-color: #aaa; }

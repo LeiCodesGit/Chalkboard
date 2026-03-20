@@ -4,64 +4,211 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TWS - Faculty Information</title>
-  <link rel="stylesheet" href="/twa/public/twsStyle.css" />
+
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+
+  <style>
+    .tws-form-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 14px 16px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .tws-form-label {
+      font-weight: 800;
+      color: var(--tws-text);
+    }
+
+    .tws-form-control {
+      width: 100%;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid var(--tws-input-border);
+      background: var(--tws-input-bg);
+      color: var(--tws-input-text);
+      padding: 0 14px;
+      outline: none;
+      font-size: 13px;
+    }
+
+    .tws-form-control:focus {
+      border-color: var(--tws-secondary);
+      box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.08);
+    }
+
+    .tws-form-note {
+      font-size: 12px;
+      color: var(--tws-muted);
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    .tws-validation-box {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(180, 35, 24, 0.08);
+      border: 1px solid rgba(180, 35, 24, 0.2);
+      color: var(--tws-text);
+    }
+
+    .tws-validation-box ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+
+    @media (max-width: 760px) {
+      .tws-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
-<body>
-  <%- include("partials/twsNavBar") %>
+<body class="tws-app-body">
+  <div class="tws-app-layout">
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
 
-  <main class="main-content">
-    <div class="page-container">
+    <main class="tws-app-main">
+      <div class="tws-app-center">
 
-      <div class="header-pill">
-        <h1>TWS - Faculty Information</h1>
-      </div>
-
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Faculty Information</h2>
+        <div class="tws-app-title-pill">
+          <h1>Teaching Workload Sheet - Faculty Information</h1>
         </div>
 
-        <div class="form-box">
-          <div class="form-row">
-            <div class="form-label">Faculty Name:</div>
-            <div class="form-input"></div>
-          </div>
+        <section class="tws-card">
+          <div class="tws-card-title" style="margin-bottom: 14px;">Faculty Information</div>
 
-          <div class="form-row">
-            <div class="form-label">Employee ID:</div>
-            <div class="form-input"></div>
-          </div>
+          <% if (typeof validationErrors !== "undefined" && validationErrors && validationErrors.length) { %>
+            <div class="tws-validation-box">
+              <div style="font-weight:800; margin-bottom:6px;">Please fix these first:</div>
+              <ul>
+                <% validationErrors.forEach(function(err) { %>
+                  <li><%= err %></li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
 
-          <div class="form-row">
-            <div class="form-label">Department:</div>
-            <div class="form-input"></div>
-          </div>
+          <form method="POST" action="/tws/faculty/<%= tws.id %>">
+            <div class="tws-form-grid">
 
-          <div class="form-row">
-            <div class="form-label">Academic Year:</div>
-            <div class="form-input"></div>
-          </div>
+              <div class="tws-form-label">Faculty Name:</div>
+              <select name="selectedProfessorId" class="tws-form-control tws-field-select" required>
+                <option value="">Select Faculty</option>
+                <% (professors || []).forEach(function(prof) { %>
+                  <option value="<%= prof.id %>" <%= selectedProfessorId === prof.id ? "selected" : "" %>>
+                    <%= prof.name %>
+                  </option>
+                <% }) %>
+              </select>
 
-          <div class="form-row">
-            <div class="form-label">Term:</div>
-            <div class="form-input"></div>
-          </div>
+              <div class="tws-form-label">Employee ID:</div>
+              <input
+                type="text"
+                name="empId"
+                value="<%= tws.faculty?.empId || '' %>"
+                class="tws-form-control"
+                readonly
+              />
 
-          <div class="form-row">
-            <div class="form-label">Employee Status:</div>
-            <div class="form-input"></div>
-          </div>
-        </div>
-      </section>
+              <div class="tws-form-label">Faculty Email:</div>
+              <input
+                type="email"
+                name="email"
+                value="<%= tws.faculty?.email || '' %>"
+                class="tws-form-control"
+                readonly
+              />
 
-      <div class="triple-actions">
-        <a href="/twa/dashboard" class="pill-btn">Back</a>
-        <a href="#" class="pill-btn">Save Draft</a>
-        <a href="/twa/teaching-load" class="pill-btn">Next</a>
+              <div class="tws-form-label">Department:</div>
+              <input
+                type="text"
+                name="dept"
+                value="<%= tws.faculty?.dept || '' %>"
+                class="tws-form-control"
+                readonly
+              />
+
+              <div class="tws-form-label">Program:</div>
+              <input
+                type="text"
+                name="program"
+                value="<%= tws.faculty?.program || '' %>"
+                class="tws-form-control"
+                readonly
+              />
+
+              <div class="tws-form-label">Academic Year:</div>
+              <input
+                type="text"
+                name="acadYear"
+                placeholder="2025 - 2026"
+                value="<%= tws.faculty?.acadYear || '' %>"
+                class="tws-form-control"
+              />
+
+              <div class="tws-form-label">Term:</div>
+              <select name="term" class="tws-form-control tws-field-select" required>
+                <option value="">Select Term</option>
+                <option value="1st Term" <%= tws.faculty?.term === "1st Term" ? "selected" : "" %>>1st Term</option>
+                <option value="2nd Term" <%= tws.faculty?.term === "2nd Term" ? "selected" : "" %>>2nd Term</option>
+                <option value="3rd Term" <%= tws.faculty?.term === "3rd Term" ? "selected" : "" %>>3rd Term</option>
+                <option value="Summer" <%= tws.faculty?.term === "Summer" ? "selected" : "" %>>Summer</option>
+              </select>
+
+              <div class="tws-form-label">Employee Status:</div>
+              <select name="empStatus" class="tws-form-control tws-field-select" required>
+                <option value="">Select Status</option>
+                <option value="Full-Time" <%= tws.faculty?.empStatus === "Full-Time" ? "selected" : "" %>>Full-Time</option>
+                <option value="Part-Time" <%= tws.faculty?.empStatus === "Part-Time" ? "selected" : "" %>>Part-Time</option>
+              </select>
+            </div>
+
+            <div class="tws-form-note">
+              Select a faculty member first. The employee ID, email, department, and program will be filled in automatically.
+            </div>
+
+            <div class="tws-footer-actions" style="margin-top: 18px;">
+              <a class="tws-btn-white" href="/tws/dashboard">Back</a>
+
+              <button class="tws-btn-white" type="submit" name="action" value="save">
+                Save Draft
+              </button>
+
+              <button class="tws-next" type="submit" name="action" value="next">
+                Next
+              </button>
+            </div>
+          </form>
+        </section>
+
       </div>
+    </main>
+  </div>
 
-    </div>
-  </main>
+  <script>
+    const professorSelect = document.querySelector('select[name="selectedProfessorId"]');
+    const empIdInput = document.querySelector('input[name="empId"]');
+    const emailInput = document.querySelector('input[name="email"]');
+    const deptInput = document.querySelector('input[name="dept"]');
+    const programInput = document.querySelector('input[name="program"]');
+
+    const professors = JSON.parse(`<%- JSON.stringify(professors || []) %>`);
+    
+    professorSelect?.addEventListener("change", function () {
+      const selected = professors.find((p) => p.id === this.value);
+
+      empIdInput.value = selected ? selected.empId || "" : "";
+      emailInput.value = selected ? selected.email || "" : "";
+      deptInput.value = selected ? selected.dept || "" : "";
+      programInput.value = selected ? selected.program || "" : "";
+    });
+  </script>
 </body>
 </html>

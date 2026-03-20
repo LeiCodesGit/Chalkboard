@@ -4,433 +4,548 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMCM Chalkboard | User Configuration</title>
-
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
     <link rel="stylesheet" href="/common/css/variables.css">
     <style>
         body {
-            background-color: var(--page-bg, #f4f4f4); 
-            color: #333; 
+            background-color: var(--page-bg, #f4f4f4);
+            color: #333;
         }
-
-        .page-layout { 
-            display: grid; 
-            grid-template-columns: 250px 1fr; 
-            min-height: 100vh; 
+        .page-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
         }
-
-        .side-menu-container { 
-            background-color: var(--sidebar-bg, #2c3e50); 
-            height: 100vh; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
+        .side-menu-container {
+            background-color: var(--sidebar-bg, #2c3e50);
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-
-        .main-content { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            width: 100%; 
-            padding-bottom: 80px; 
-            overflow-y: auto; 
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding-bottom: 80px;
+            overflow-y: auto;
         }
-
-        .admin-hero { 
-            width: 100%; 
-            min-height: 250px; 
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
-                        url('/common/img/background.jpg') no-repeat center center/cover; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            color: var(--text-on-dark, #fff); 
-            text-align: center; 
-            flex-shrink: 0; 
+        .admin-hero {
+            width: 100%;
+            min-height: 250px;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                        url('/common/img/background.jpg') no-repeat center center/cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-on-dark, #fff);
+            text-align: center;
+            flex-shrink: 0;
         }
-
-        .admin-panel { 
-            background-color: #fff; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            max-width: 950px; 
-            width: 90%; 
-            margin: -50px auto 30px auto; 
-            z-index: 10; 
-            position: relative; 
+        .admin-panel {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 950px;
+            width: 90%;
+            margin: -50px auto 30px auto;
+            z-index: 10;
+            position: relative;
         }
-
-        .form-title { 
-            color: var(--accent-primary, #a01a1e); 
-            margin-bottom: 25px; 
-            font-size: 1.4rem; 
-            border-bottom: 2px solid #f8f8f8; 
-            padding-bottom: 15px; 
-            font-weight: 700; 
+        .form-title {
+            color: var(--accent-primary, #a01a1e);
+            margin-bottom: 25px;
+            font-size: 1.4rem;
+            border-bottom: 2px solid #f8f8f8;
+            padding-bottom: 15px;
+            font-weight: 700;
         }
-
-        .admin-form-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px; 
+        .admin-form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
         }
-
         .form-group { margin-bottom: 20px; }
         .full-width { grid-column: span 3; }
-
-        .admin-input-style label { 
-            display: block; 
-            font-weight: 700; 
-            font-size: 0.75rem; 
-            margin-bottom: 10px; 
-            color: #888; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
+        .admin-input-style label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-
-        .admin-input-style input, 
-        .admin-input-style select { 
-            width: 100%; 
-            padding: 12px 15px; 
-            border: 1px solid #e0e0e0; 
-            border-radius: 8px; 
-            font-family: inherit; 
-            font-size: 0.9rem; 
-            color: #444; 
-            background-color: #fafafa; 
-            box-sizing: border-box; 
-            transition: all 0.2s ease; 
+        .admin-input-style input,
+        .admin-input-style select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: #444;
+            background-color: #fafafa;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
         }
-
-        .admin-input-style input:focus { 
-            outline: none; 
-            border-color: var(--accent-primary, #a01a1e); 
-            background-color: #fff; 
-            box-shadow: 0 0 0 4px rgba(160, 26, 30, 0.05); 
+        .admin-input-style input:focus {
+            outline: none;
+            border-color: var(--accent-primary, #a01a1e);
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(160, 26, 30, 0.05);
         }
-
-        .btn-submit { 
-            background-color: var(--accent-primary, #a01a1e); 
-            color: white; 
-            padding: 14px 35px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 700; 
-            font-size: 1rem; 
-            transition: all 0.3s ease; 
+        .btn-submit {
+            background-color: var(--accent-primary, #a01a1e);
+            color: white;
+            padding: 14px 35px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
         }
-
-        .user-list-box { 
-            background-color: #fff; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
-            max-width: 950px; 
-            width: 90%; 
-            margin: 20px auto; 
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+            padding: 14px 35px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: none;
+            margin-left: 10px;
         }
-
+        .user-list-box {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            max-width: 950px;
+            width: 90%;
+            margin: 20px auto;
+        }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #888; padding: 15px; border-bottom: 2px solid #eee; }
         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-        
-        .role-badge { 
-            padding: 4px 10px; 
-            border-radius: 20px; 
-            font-size: 0.7rem; 
-            font-weight: 700; 
-            background: #eee; 
-            text-transform: uppercase; 
+        .role-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #eee;
+            text-transform: uppercase;
         }
-
         .action-btns { display: flex; gap: 8px; }
-        .btn-edit, .btn-delete { 
-            padding: 5px 10px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            transition: 0.2s; 
-            background: none; 
+        .btn-edit, .btn-delete {
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: 0.2s;
+            background: none;
+            border: 1px solid;
         }
-        .btn-edit { 
-            border: 1px solid #002455; 
-            color: #002455; 
-        }
-
-        .btn-edit:hover { 
-            background: #002455; 
-            color: white; 
-        }
-
-        .btn-delete { 
-            border: 1px solid #dc3545; 
-            color: #dc3545; 
-        }
-
-        .btn-delete:hover { 
-            background: #dc3545; 
-            color: white; 
-        }
-
-        .btn-cancel {
-            background-color: var(--accent-primary, #a01a1e); 
-            color: white; 
-            padding: 14px 35px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 700; 
-            font-size: 1rem; 
-            transition: all 0.3s ease;
-            display: none; 
-        }
+        .btn-edit  { border-color: #002455; color: #002455; }
+        .btn-edit:hover  { background: #002455; color: white; }
+        .btn-delete { border-color: #dc3545; color: #dc3545; }
+        .btn-delete:hover { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
 
-    <div class="page-layout">
-        <aside class="side-menu-container">
-            <%- include('partials/adminSideMenuBar') %>
-        </aside>
+<div class="page-layout">
+    <aside class="side-menu-container">
+        <%- include('partials/adminSideMenuBar') %>
+    </aside>
 
-        <main class="main-content">
-            <div class="admin-hero">
-                <h1>User Configuration</h1>
-                <p>Enterprise Resource Planning • Faculty & Staff Management</p>
-            </div>
+    <main class="main-content">
+        <div class="admin-hero">
+            <h1>User Configuration</h1>
+            <p>Enterprise Resource Planning • Faculty & Staff Management</p>
+        </div>
 
-            <div class="admin-panel">
-                <h3 class="form-title">Register New Faculty/Staff</h3>
-                <form id="userConfigForm" action="/admin/users/add" method="POST">
-                    <div class="admin-form-grid">
-                        <div class="form-group admin-input-style">
-                            <label>First Name</label>
-                            <input type="text" name="firstName" id="firstName" required>
-                        </div>
-                        <div class="form-group admin-input-style">
-                            <label>Middle Name</label>
-                            <input type="text" name="middleName" id="middleName">
-                        </div>
-                        <div class="form-group admin-input-style">
-                            <label>Last Name</label>
-                            <input type="text" name="lastName" id="lastName" required>
-                        </div>
-
-                        <div class="form-group admin-input-style">
-                            <label>Email Address</label>
-                            <input type="email" name="email" id="email" required>
-                        </div>
-                        <div class="form-group admin-input-style">
-                            <label>Employee ID</label>
-                            <input type="text" name="employeeId" id="employeeId" required>
-                        </div>
-                        <div class="form-group admin-input-style">
-                            <label>Password</label>
-                            <input type="password" id="password" autocomplete="off" required>
-                        </div>
-
-                        <div class="form-group admin-input-style">
-                            <label>Role</label>
-                            <select name="role" id="role" required>
-                                <option value="" disabled selected hidden>Select Role</option>
-
-                                <option value="Professor">Professor</option>
-                                <option value="Program-Chair">Program Chair</option>
-                                <option value="Dean">Dean</option>
-                                <option value="HR">HR</option>
-                                <option value="Admin">Admin</option>
-                            </select>
-                        </div>
-                        <div class="form-group admin-input-style">
-                            <label>Employment Type</label>
-                            <select name="employmentType" id="employmentType" required>
-                                <option value="" disabled selected hidden>Select Employment Type</option>
-
-                                <option value="Full-Time">Full-Time</option>
-                                <option value="Part-Time">Part-Time</option>
-                            </select>
-                        </div>
-                        <div class="form-group admin-input-style">
-                            <label>Department</label>
-                            <select name="department" id="department-select" required>
-                                <option value="" disabled selected hidden>Select Department</option>
-                                
-                                <option value="ATYCB">ATYCB</option>
-                                <option value="CAS">CAS</option>
-                                <option value="CCIS">CCIS</option>
-                                <option value="CEA">CEA</option>
-                                <option value="CHS">CHS</option>
-                            </select>
-                        </div>
-                        <div class="form-group admin-input-style">
-                            <label>Program</label>
-                            <select name="program" id="program-select" required>
-                                <option value="" disabled selected>Select a department first</option>
-                            </select>
-                        </div>
+        <div class="admin-panel">
+            <h3 class="form-title" id="form-title-label">Register New Faculty/Staff</h3>
+            <form id="userConfigForm">
+                <div class="admin-form-grid">
+                    <div class="form-group admin-input-style">
+                        <label>First Name</label>
+                        <input type="text" name="firstName" id="firstName" required>
                     </div>
-                    <button type="submit" class="btn-submit">Create Account</button>
-                    <button type="button" id="btn-cancel" class="btn-cancel" onclick="resetForm()">Cancel Edit</button>
-                </form>
+                    <div class="form-group admin-input-style">
+                        <label>Middle Name</label>
+                        <input type="text" name="middleName" id="middleName">
+                    </div>
+                    <div class="form-group admin-input-style">
+                        <label>Last Name</label>
+                        <input type="text" name="lastName" id="lastName" required>
+                    </div>
+
+                    <div class="form-group admin-input-style">
+                        <label>Email Address</label>
+                        <input type="email" name="email" id="email" required>
+                    </div>
+                    <div class="form-group admin-input-style">
+                        <label>Employee ID</label>
+                        <input type="text" name="employeeId" id="employeeId" required>
+                    </div>
+                    <div class="form-group admin-input-style">
+                        <label>
+                            Password
+                            <span id="password-hint" style="font-weight:400; text-transform:none; color:#aaa; font-size:0.7rem;"></span>
+                        </label>
+                        <input type="password" name="password" id="password" autocomplete="off">
+                    </div>
+
+                    <div class="form-group admin-input-style">
+                        <label>Role</label>
+                        <select name="role" id="role" required>
+                            <option value="" disabled selected hidden>Select Role</option>
+                            <option value="Professor">Professor</option>
+                            <option value="Program-Chair">Program Chair</option>
+                            <option value="Dean">Dean</option>
+                            <option value="HR">HR</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group admin-input-style">
+                        <label>Employment Type</label>
+                        <select name="employmentType" id="employmentType" required>
+                            <option value="" disabled selected hidden>Select Employment Type</option>
+                            <option value="Full-Time">Full-Time</option>
+                            <option value="Part-Time">Part-Time</option>
+                        </select>
+                    </div>
+                    <div class="form-group admin-input-style">
+                        <label>Department</label>
+                        <select name="department" id="department-select" required>
+                            <option value="" disabled selected hidden>Select Department</option>
+                            <option value="ATYCB">ATYCB</option>
+                            <option value="CAS">CAS</option>
+                            <option value="CCIS">CCIS</option>
+                            <option value="CEA">CEA</option>
+                            <option value="CHS">CHS</option>
+                        </select>
+                    </div>
+                    <div class="form-group admin-input-style">
+                        <label>Program</label>
+                        <select name="program" id="program-select" required>
+                            <option value="" disabled selected>Select a department first</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btn-submit">Create Account</button>
+                <button type="button" id="btn-cancel" class="btn-cancel" onclick="resetForm()">Cancel Edit</button>
+            </form>
+        </div>
+
+        <div class="user-list-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #002455; font-size: 1.2rem;">Active Accounts</h2>
+                <input type="text" id="userSearchInput" placeholder="Filter by Name or ID..."
+                       style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
             </div>
 
-            <div class="user-list-box">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #002455; font-size: 1.2rem;">Active Accounts</h2>
-                    <input type="text" id="userSearchInput" placeholder="Filter by Name or ID..." style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Full Name</th>
-                            <th>Role/Dept</th>
-                            <th>Employee ID</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (users && users.length > 0) { %>
-                            <% users.forEach(user => { %>
-                                <tr data-middle="<%= user.middleName || '' %>" 
-                                    data-employment="<%= user.employmentType || '' %>"
-                                    data-role="<%= user.role %>">
-                                    <td>
-                                        <strong>
-                                            <%= user.lastName %>, <%= user.firstName %> 
-                                            <% if (user.middleName && user.middleName.trim() !== "") { %>
-                                                <%= user.middleName %>
-                                            <% } %>
-                                        </strong><br>
-                                        <small><%= user.email %></small>
-                                    </td>
-                                    <td>
-                                        <span class="role-badge"><%= user.role %></span><br>
-                                        <small><%= user.program %> | <%= user.department %></small>
-                                    </td>
-                                    <td><%= user.employeeId %></td>
-                                    <td class="action-btns">
-                                        <button class="btn-edit" onclick="editUser('<%= user._id %>')">Edit</button>
-                                        <form action="/admin/users/delete/<%= user._id %>" method="POST" style="margin:0;">
-                                            <button type="submit" class="btn-delete">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Role/Dept</th>
+                        <th>Employee ID</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (users && users.length > 0) { %>
+                        <% users.forEach(user => { %>
                             <tr>
-                                <td colspan="4" style="text-align: center; color: #888;">No users found.</td>
+                                <td>
+                                    <strong>
+                                        <%= user.lastName %>, <%= user.firstName %>
+                                        <% if (user.middleName && user.middleName.trim() !== "") { %>
+                                            <%= user.middleName %>
+                                        <% } %>
+                                    </strong><br>
+                                    <small><%= user.email %></small>
+                                </td>
+                                <td>
+                                    <span class="role-badge"><%= user.role %></span><br>
+                                    <small><%= user.program %> | <%= user.department %></small>
+                                </td>
+                                <td><%= user.employeeId %></td>
+                                <td class="action-btns">
+                                    <button class="btn-edit" onclick="editUser('<%= user._id %>')">Edit</button>
+                                    <button class="btn-delete" onclick="deleteUser('<%= user._id %>')">Delete</button>
+                                </td>
                             </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </main>
-    </div>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #888;">No users found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/MainPages/js/adminConfigUsers.js"></script>
+<script>
+    const programData = {
+        "ATYCB": [
+            { value: "ENTREP", text: "BS Entrepreneurship" },
+            { value: "MA",     text: "BS Management Accounting" },
+            { value: "REM",    text: "BS Real Estate Management" },
+            { value: "TM",     text: "BS Tourism Management" },
+            { value: "BSA",    text: "BS Accountancy" },
+            { value: "AIS",    text: "BS Accounting Information System" }
+        ],
+        "CAS": [
+            { value: "COMM", text: "Bachelor of Arts in Communication" },
+            { value: "MMA",  text: "Bachelor of Multimedia Arts" }
+        ],
+        "CCIS": [
+            { value: "CS",  text: "BS Computer Science" },
+            { value: "EMC", text: "BS Entertainment and Multimedia Computing" },
+            { value: "IS",  text: "BS Information Systems" }
+        ],
+        "CEA": [
+            { value: "AR",  text: "Architecture" },
+            { value: "ChE", text: "Chemical Engineering" },
+            { value: "CE",  text: "Civil Engineering" },
+            { value: "CpE", text: "Computer Engineering" },
+            { value: "EE",  text: "Electrical Engineering" },
+            { value: "ECE", text: "Electronics Engineering" },
+            { value: "IE",  text: "Industrial Engineering" },
+            { value: "ME",  text: "Mechanical Engineering" }
+        ],
+        "CHS": [
+            { value: "BIO",     text: "BS Biology, Major in Medical Biology" },
+            { value: "PHARM",   text: "BS in Pharmacy" },
+            { value: "PSYCH",   text: "BS in Psychology" },
+            { value: "PT",      text: "BS in Physical Therapy" },
+            { value: "MEDTECH", text: "BS in Medical Technology/Laboratory Science" }
+        ]
+    };
+
+    const roleSelect     = document.getElementById('role');
+    const deptSelect     = document.getElementById('department-select');
+    const progSelect     = document.getElementById('program-select');
+    const passwordInput  = document.getElementById('password');
+    const passwordHint   = document.getElementById('password-hint');
+    const btnSubmit      = document.getElementById('btn-submit');
+    const btnCancel      = document.getElementById('btn-cancel');
+    const formTitleLabel = document.getElementById('form-title-label');
+    const form           = document.getElementById('userConfigForm');
+
+    let editingUserId = null;
     
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="/MainPages/js/adminConfigUsers.js"></script>
-    <script>
-        const programData = {
-            "ATYCB": [
-                { value: "ENTREP", text: "BS Entrepreneurship" },
-                { value: "MA", text: "BS Management Accounting" },
-                { value: "REM", text: "BS Real Estate Management" },
-                { value: "TM", text: "BS Tourism Management" },
-                { value: "BSA", text: "BS Accountancy" },
-                { value: "AIS", text: "BS Accounting Information System" }
-            ],
-            "CAS": [
-                { value: "COMM", text: "Bachelor of Arts in Communication" },
-                { value: "MMA", text: "Bachelor of Multimedia Arts" }
-            ],
-            "CCIS": [
-                { value: "CS", text: "BS Computer Science" },
-                { value: "EMC", text: "BS Entertainment and Multimedia Computing" },
-                { value: "IS", text: "BS Information Systems" }
-            ],
-            "CEA": [
-                { value: "AR", text: "Architecture" },
-                { value: "ChE", text: "Chemical Engineering" },
-                { value: "CE", text: "Civil Engineering" },
-                { value: "CpE", text: "Computer Engineering" },
-                { value: "EE", text: "Electrical Engineering" },
-                { value: "ECE", text: "Electronics Engineering" },
-                { value: "IE", text: "Industrial Engineering" },
-                { value: "ME", text: "Mechanical Engineering" }
-            ],
-            "CHS": [
-                { value: "BIO", text: "BS Biology, Major in Medical Biology" },
-                { value: "PHARM", text: "BS in Pharmacy" },
-                { value: "PSYCH", text: "BS in Psychology" },
-                { value: "PT", text: "BS in Physical Therapy" },
-                { value: "MEDTECH", text: "BS in Medical Technology/Laboratory Science" }
-            ]
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const firstNameVal      = document.getElementById('firstName').value.trim();
+        const middleNameVal     = document.getElementById('middleName').value.trim();
+        const lastNameVal       = document.getElementById('lastName').value.trim();
+        const emailVal          = document.getElementById('email').value.trim().toLowerCase();
+        const employeeIdVal     = document.getElementById('employeeId').value.trim();
+        const employmentTypeVal = document.getElementById('employmentType').value;
+        const roleVal           = document.getElementById('role').value;
+        const departmentVal     = document.getElementById('department-select').value;
+        const programVal        = document.getElementById('program-select').value;
+        const passwordValue     = document.getElementById('password').value;
+
+        if (!firstNameVal || !lastNameVal || !emailVal || !roleVal || !departmentVal || !programVal) {
+            alert("VALIDATION ERROR: Please fill in all required fields.");
+            return;
+        }
+
+        const mcmRegex = /^[a-zA-Z0-9._%+-]+@mcm\.edu\.ph$/;
+        if (!mcmRegex.test(emailVal)) {
+            alert("ACCESS DENIED: You must use an official @mcm.edu.ph email address.");
+            document.getElementById('email').focus();
+            return;
+        }
+
+        if (!editingUserId && passwordValue.length < 6) {
+            alert("SECURITY ERROR: Passwords must be at least 6 characters long.");
+            document.getElementById('password').focus();
+            return;
+        }
+
+        if (editingUserId && passwordValue.trim() !== '' && passwordValue.length < 6) {
+            alert("SECURITY ERROR: Passwords must be at least 6 characters long.");
+            document.getElementById('password').focus();
+            return;
+        }
+
+        const formData = {
+            firstName:      firstNameVal,
+            middleName:     middleNameVal,
+            lastName:       lastNameVal,
+            email:          emailVal,
+            employeeId:     employeeIdVal,
+            employmentType: employmentTypeVal,
+            role:           roleVal,
+            department:     departmentVal,
+            program:        programVal,
         };
 
-        const roleSelect = document.getElementById('role');
-        const deptSelect = document.getElementById('department-select');
-        const progSelect = document.getElementById('program-select');
-
-        roleSelect.addEventListener('change', function() {
-            const role = this.value;
-
-            // Reset defaults
-            deptSelect.disabled = false;
-            progSelect.disabled = false;
-            deptSelect.required = true;
-            progSelect.required = true;
-
-            if (role === "Admin" || role === "HR") {
-                deptSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
-                progSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
-                deptSelect.required = false;
-                progSelect.required = false;
-            } 
-            else if (role === "Dean") {
-                resetDepartmentOptions();
-                progSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
-                progSelect.required = false;
-            } 
-            else {
-                resetDepartmentOptions();
-                updatePrograms(); 
-            }
-        });
-
-        function resetDepartmentOptions() {
-            if (deptSelect.value === "N/A" || deptSelect.options.length <= 1) {
-                deptSelect.innerHTML = `
-                    <option value="" disabled selected hidden>Select Department</option>
-                    <option value="ATYCB">ATYCB</option>
-                    <option value="CAS">CAS</option>
-                    <option value="CCIS">CCIS</option>
-                    <option value="CEA">CEA</option>
-                    <option value="CHS">CHS</option>
-                `;
-            }
+        // Only attach password if filled in
+        if (passwordValue.trim() !== '') {
+            formData.password = passwordValue;
         }
 
-        function updatePrograms() {
-            const selectedDept = deptSelect.value;
-            if (roleSelect.value === "Dean" || roleSelect.value === "Admin" || roleSelect.value === "HR") return;
-
-            progSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
-            const programs = programData[selectedDept];
-            if (programs) {
-                programs.forEach(prog => {
-                    const option = document.createElement('option');
-                    option.value = prog.value;
-                    option.textContent = prog.text;
-                    progSelect.appendChild(option);
-                });
+        try {
+            if (editingUserId) {
+                await axios.put(`/admin/users/${editingUserId}`, formData);
+                alert('User updated successfully!');
+            } else {
+                if (!formData.password) {
+                    alert('Password is required when creating a new account.');
+                    return;
+                }
+                await axios.post('/admin/users/add', formData);
+                alert('User created successfully!');
             }
-        }
+            window.location.reload();
 
-        deptSelect.addEventListener('change', updatePrograms);
-    </script>
+        } catch (err) {
+            const message = err.response?.data?.message || 'Something went wrong.';
+            alert('Error: ' + message);
+        }
+    });
+    
+    roleSelect.addEventListener('change', function () {
+        const role = this.value;
+
+        deptSelect.disabled = false;
+        progSelect.disabled = false;
+        deptSelect.required = true;
+        progSelect.required = true;
+
+        if (role === "Admin" || role === "HR") {
+            deptSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
+            progSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
+            deptSelect.required = false;
+            progSelect.required = false;
+        } else if (role === "Dean") {
+            resetDepartmentOptions();
+            progSelect.innerHTML = '<option value="N/A" selected>Not Required</option>';
+            progSelect.required = false;
+        } else {
+            resetDepartmentOptions();
+            updatePrograms();
+        }
+    });
+
+    function resetDepartmentOptions() {
+        if (deptSelect.value === "N/A" || deptSelect.options.length <= 1) {
+            deptSelect.innerHTML = `
+                <option value="" disabled selected hidden>Select Department</option>
+                <option value="ATYCB">ATYCB</option>
+                <option value="CAS">CAS</option>
+                <option value="CCIS">CCIS</option>
+                <option value="CEA">CEA</option>
+                <option value="CHS">CHS</option>
+            `;
+        }
+    }
+
+    function updatePrograms() {
+        const selectedDept = deptSelect.value;
+        if (["Dean", "Admin", "HR"].includes(roleSelect.value)) return;
+
+        progSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
+        const programs = programData[selectedDept];
+        if (programs) {
+            programs.forEach(prog => {
+                const option = document.createElement('option');
+                option.value = prog.value;
+                option.textContent = prog.text;
+                progSelect.appendChild(option);
+            });
+        }
+    }
+
+    deptSelect.addEventListener('change', updatePrograms);
+
+    async function editUser(userId) {
+        try {
+            const res = await axios.get(`/admin/users/${userId}`);
+            const u = res.data;
+
+            document.getElementById('firstName').value      = u.firstName      || '';
+            document.getElementById('middleName').value     = u.middleName     || '';
+            document.getElementById('lastName').value       = u.lastName       || '';
+            document.getElementById('email').value          = u.email          || '';
+            document.getElementById('employeeId').value     = u.employeeId     || '';
+            document.getElementById('employmentType').value = u.employmentType || '';
+
+            // Clear password field and show hint
+            passwordInput.value      = '';
+            passwordInput.required   = false;
+            passwordHint.textContent = '(leave blank to keep current)';
+
+            // Set role first — drives dept/prog dropdowns
+            roleSelect.value = u.role || '';
+            roleSelect.dispatchEvent(new Event('change'));
+
+            // Set dept then prog after dropdowns rebuild
+            setTimeout(() => {
+                deptSelect.value = u.department || '';
+                deptSelect.dispatchEvent(new Event('change'));
+                setTimeout(() => {
+                    progSelect.value = u.program || '';
+                }, 50);
+            }, 50);
+
+            editingUserId              = userId;
+            btnSubmit.textContent      = 'Save Changes';
+            btnCancel.style.display    = 'inline-block';
+            formTitleLabel.textContent = 'Edit Faculty/Staff';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (err) {
+            console.error('Failed to load user for editing:', err);
+            alert('Could not load user data. Please try again.');
+        }
+    }
+
+    async function deleteUser(userId) {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+
+        try {
+            await axios.delete(`/admin/users/${userId}`);
+            window.location.reload();
+        } catch (err) {
+            const message = err.response?.data?.message || 'Something went wrong.';
+            alert('Error: ' + message);
+        }
+    }
+
+    function resetForm() {
+        form.reset();
+        editingUserId              = null;
+        btnSubmit.textContent      = 'Create Account';
+        btnCancel.style.display    = 'none';
+        formTitleLabel.textContent = 'Register New Faculty/Staff';
+        passwordInput.required     = true;
+        passwordHint.textContent   = '';
+        resetDepartmentOptions();
+        progSelect.innerHTML = '<option value="" disabled selected>Select a department first</option>';
+    }
+</script>
 </body>
 </html>

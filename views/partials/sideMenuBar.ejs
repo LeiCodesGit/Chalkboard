@@ -122,6 +122,18 @@
         </span>
     </div>
 
+    <%
+        const userRole = (locals.user && user.role) ? user.role : '';
+        const isProf = userRole === 'Professor';
+        const isChair = userRole === 'Program-Chair';
+        const isDean = userRole === 'Dean';
+        const isHR = userRole === 'HR';
+        const isHRMO = userRole === 'HRMO';
+        const isAdmin = userRole === 'Admin' || userRole === 'Super-Admin';
+        const isVPAA = userRole === 'VPAA';
+        const isPracticum = userRole === 'Practicum-Coordinator';
+        const isTech = userRole === 'Technical';
+    %>
     <ul class="sidebar-menu">
         <li>
             <a href="<%= (locals.user && (user.role === 'Admin' || user.role === 'admin')) ? '/admin/institution' : (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? '/dean/institution' : '/institution' %>"
@@ -136,12 +148,15 @@
                 <span class="menu-text">TWS</span>
             </a>
         </li>
+        <% if (isProf || isChair || isDean || isAdmin) { %>
         <li>
             <a href="/ata" class="<%= (locals.currentPageCategory === 'ata') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">fact_check</span>
                 <span class="menu-text">ATA</span>
             </a>
         </li>
+        <% } %>
+        <% if (isProf || isChair || isDean || isAdmin) { %>
         <li>
             <a href="<%= (locals.user && (user.role === 'Admin' || user.role === 'HR')) ? '/syllabus/hr' : (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? '/dean/syllabus' : (locals.user && (user.role === 'Program-Chair' || user.role === 'program-chair')) ? '/syllabus/prog-chair' : (locals.user && (user.role === 'Professor' || user.role === 'professor')) ? '/faculty' : '/syllabus' %>"
                 class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
@@ -149,12 +164,15 @@
                 <span class="menu-text">Syllabus</span>
             </a>
         </li>
+        <% } %>
+        <% if (isProf || isChair || isAdmin || isDean || isHR || isHRMO || isTech || isVPAA || isPracticum) { %>
         <li>
             <a href="/tla" class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">assignment</span>
                 <span class="menu-text">TLA</span>
             </a>
         </li>
+        <% } %>
     </ul>
 
     <div class="sidebar-footer">

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMCM Chalkboard | ERP Portal</title>
-
+    <title>MMCM Chalkboard | Professor Portal</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    
     <!--inside the public file, for colors-->
     <link rel="stylesheet" href="/common/css/variables.css"> 
-    
     <style>
         body {
             margin: 0;
@@ -114,14 +114,49 @@
             margin-bottom: 5px;
         }
 
+        .announcement-headline {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #222;
+            margin: 0 0 8px 0;
+        }
+
+        .announcement-body {
+            font-size: 0.9rem;
+            color: #444;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* rich text content styling */
+        .announcement-body h2 { font-size: 1.2rem; margin: 8px 0; }
+        .announcement-body h3 { font-size: 1.05rem; margin: 6px 0; }
+        .announcement-body h4 { font-size: 0.95rem; margin: 4px 0; }
+        .announcement-body table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+        .announcement-body table td, 
+        .announcement-body table th { border: 1px solid #ccc; padding: 6px 10px; }
+        .announcement-body code { 
+            background: #f4f4f4; border: 1px solid #e0e0e0; 
+            border-radius: 4px; padding: 1px 6px; 
+            font-family: 'Courier New', monospace; font-size: 0.85em; 
+        }
+        .announcement-body img { max-width: 100%; border-radius: 6px; }
+        .announcement-body a { color: var(--accent-primary, #a01a1e); }
+
+        .no-announcements {
+            text-align: center;
+            color: #aaa;
+            padding: 30px 0;
+            font-size: 0.9rem;
+        }
+
+        /* Modal */
         .modal-overlay {
             display: none; 
             position: fixed;
             z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px); 
         }
@@ -137,7 +172,6 @@
             position: relative;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             animation: slideDown 0.3s ease-out;
-            
             overflow-y: auto;
             overflow-x: hidden;
             scrollbar-width: thin;
@@ -146,16 +180,10 @@
 
         .modal-content::-webkit-scrollbar { width: 6px; }
         .modal-content::-webkit-scrollbar-track { background: transparent; margin: 15px; }
-        .modal-content::-webkit-scrollbar-thumb { 
-            background: #ccc; 
-            border-radius: 10px; 
-        }
+        .modal-content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
         .modal-content::-webkit-scrollbar-thumb:hover { background: var(--accent-primary, #a01a1e); }
 
-        .team-section {
-            margin-top: 25px;
-            text-align: left;
-        }
+        .team-section { margin-top: 25px; text-align: left; }
 
         .team-section h3 {
             color: var(--color-mapua-blue, #002455);
@@ -175,12 +203,7 @@
             opacity: 0.7;
         }
 
-        .team-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 15px;
-        }
+        .team-list { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
 
         .team-member {
             display: flex;
@@ -195,18 +218,11 @@
         }
 
         .team-member:hover { transform: translateX(5px); background: #f0f0f0; }
-
-        .team-member small {
-            color: #666;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-        }
+        .team-member small { color: #666; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
 
         .close-btn {
             position: absolute;
-            right: 20px;
-            top: 15px;
+            right: 20px; top: 15px;
             font-size: 28px;
             font-weight: bold;
             color: #aaa;
@@ -219,7 +235,11 @@
 
         @keyframes slideDown {
             from { transform: translateY(-30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-overlay.open {
+            display: block;
         }
     </style>
 </head>
@@ -239,22 +259,48 @@
 
             <div class="announcement-box">
                 <h2>System Announcements</h2>
-                
-                <div class="announcement-item">
-                    <span class="meta-tag">Dean's Office • Academic Requirement</span>
-                    <p><strong>Workflow Sync:</strong> All faculty members are requested to upload their standardized 
-                    Teaching-Learning Activities (TLAs) for the current quarter through the automation module by Friday.</p>
-                </div>
 
-                <div class="announcement-item">
-                    <span class="meta-tag">HR Department • Administrative Update</span>
-                    <p><strong>TWS Verification:</strong> Please verify your Teaching-Work Schedules (TWS) to ensure 
-                    proper load balancing and automated payroll synchronization for this period.</p>
-                </div>
+                <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
+                    <% announcements.forEach(item => { %>
+                        <div class="announcement-item">
+                            <span class="meta-tag">
+                                <% 
+                                    const p = item.postedBy;
+                                    let posterName = 'System';
+                                    let posterRole = '';
+                                    if (p) {
+                                        posterName = ((p.firstName || '') + ' ' + (p.lastName || '')).trim().toUpperCase();
+                                        if (p.role === 'Admin' || p.role === 'Super-Admin') {
+                                            posterRole = 'Admin';
+                                        } else {
+                                            posterRole = ((p.department || '') + ' ' + (p.role || '')).trim();
+                                        }
+                                    }
+                                %>
+                                <span style="color:#002455; font-weight:800;"><%= posterName %></span>
+                                &nbsp;•&nbsp;
+                                <span style="color:#002455; font-weight:800;"><%= posterRole %></span>
+                                &nbsp;|&nbsp; <%= item.category %>
+                                <span style="float:right; font-weight:400; text-transform:none;">
+                                    <%= new Date(item.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) %>
+                                </span>
+                            </span>
+                            <p class="announcement-headline"><%= item.headline %></p>
+                            <div class="announcement-body">
+                                <%- item.messageDetail ? Buffer.from(item.messageDetail, 'base64').toString('utf8') : '' %>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="no-announcements">
+                        <p>No announcements at this time. Check back later.</p>
+                    </div>
+                <% } %>
             </div>
         </main>
     </div>
 
+    <!-- Project Overview Modal -->
     <div id="projectModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
@@ -318,7 +364,6 @@
                     <div class="team-member"><span>Zoey Liana Gonzales</span> <small>Developer</small></div>
                 </div>
             </div>
-        </div>
         </div>
     </div>
 

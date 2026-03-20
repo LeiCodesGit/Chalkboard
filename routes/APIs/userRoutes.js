@@ -1,5 +1,6 @@
 import express from 'express';
-import { mainDB, backup1, backup2 } from "../../database/mongo-dbconnect.js"; 
+import bcrypt from 'bcrypt';
+import { mainDB, backup1, backup2 } from "../../database/mongo-dbconnect.js";
 import userSchema from "../../models/user.js";
 
 const MainUser = mainDB.model("User", userSchema);
@@ -7,34 +8,39 @@ const Backup1User = backup1.model("User", userSchema);
 const Backup2User = backup2.model("User", userSchema);
 const router = express.Router();
 
+const SALT_ROUNDS = 12;
+
 // ==========================================
-// CREATE - POST /api/users
+// CREATE - POST /api/users/add
 // ==========================================
 
 router.post('/add', async (req, res) => {
     try {
-        const userData = req.body;
+        const userData = { ...req.body };
 
-        // Create the save promises for all three databases
+        if (!userData.password) {
+            return res.status(400).json({ message: "Password is required." });
+        }
+        userData.password = await bcrypt.hash(userData.password, SALT_ROUNDS);
+
         const savePromises = [
             new MainUser(userData).save(),
             new Backup1User(userData).save(),
             new Backup2User(userData).save()
         ];
 
-        // Execute all saves in parallel
         await Promise.all(savePromises);
 
-        res.status(201).json({ 
-            message: "Success: User created in MainDB, Backup1, and Backup2!" 
+        res.status(201).json({
+            message: "Success: User created in MainDB, Backup1, and Backup2!"
         });
 
     } catch (error) {
         console.error("Triple Save Error:", error);
-        
+
         if (error.code === 11000) {
-            return res.status(400).json({ 
-                message: "Error: Email or Employee ID already exists in the system." 
+            return res.status(400).json({
+                message: "Error: Email or Employee ID already exists in the system."
             });
         }
 
@@ -62,7 +68,8 @@ router.put('/:id', async (req, res) => {
         employmentStatus,
         employmentFromOutside,
         program,
-        department
+        department,
+        password
     } = req.body;
 
     try {
@@ -85,49 +92,56 @@ router.put('/:id', async (req, res) => {
         };
 
         // Remove undefined fields
-        Object.keys(updateData).forEach(key => 
+        Object.keys(updateData).forEach(key =>
             updateData[key] === undefined && delete updateData[key]
         );
 
-        const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true, runValidators: true }
-        ).select('-password');
+        // If a new password was provided, hash it before saving
+        if (password && password.trim() !== "") {
+            updateData.password = await bcrypt.hash(password, SALT_ROUNDS);
+        }
+
+        // Update all three databases in parallel
+        const [updatedUser] = await Promise.all([
+            MainUser.findByIdAndUpdate(
+                req.params.id,
+                updateData,
+                { new: true, runValidators: false }
+            ).select('-password'),
+            Backup1User.findByIdAndUpdate(
+                req.params.id,
+                updateData,
+                { new: true, runValidators: false }
+            ),
+            Backup2User.findByIdAndUpdate(
+                req.params.id,
+                updateData,
+                { new: true, runValidators: false }
+            )
+        ]);
 
         if (!updatedUser) {
-            return res.status(404).json({ 
-                message: "User not found" 
-            });
+            return res.status(404).json({ message: "User not found" });
         }
 
         res.status(200).json(updatedUser);
+
     } catch (error) {
-        // Handle duplicate key error
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
-            return res.status(409).json({ 
-                message: `${field} already exists` 
-            });
+            return res.status(409).json({ message: `${field} already exists` });
         }
 
-        // Handle validation errors
         if (error.name === "ValidationError") {
             const errors = Object.values(error.errors).map(err => ({
                 field: err.path,
                 message: err.message
             }));
-            return res.status(400).json({ 
-                message: "Validation error", 
-                errors 
-            });
+            return res.status(400).json({ message: "Validation error", errors });
         }
 
-        // Handle invalid ObjectId
         if (error.kind === "ObjectId") {
-            return res.status(400).json({ 
-                message: "Invalid user ID format" 
-            });
+            return res.status(400).json({ message: "Invalid user ID format" });
         }
 
         res.status(500).json({ message: error.message });
@@ -135,7 +149,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // ==========================================
-// READ ALL - POST /api/users (with filters)
+// READ ALL - POST /api/users/search (with filters)
 // ==========================================
 
 router.post('/search', async (req, res) => {
@@ -154,10 +168,8 @@ router.post('/search', async (req, res) => {
     } = req.body;
 
     try {
-        // Build query object
         const query = {};
 
-        // Search functionality
         if (search) {
             query.$or = [
                 { firstName: { $regex: search, $options: "i" } },
@@ -167,7 +179,6 @@ router.post('/search', async (req, res) => {
             ];
         }
 
-        // Filter by specific fields
         if (role) query.role = role;
         if (program) query.program = program;
         if (department) query.department = department;
@@ -175,19 +186,17 @@ router.post('/search', async (req, res) => {
         if (employmentType) query.employmentType = employmentType;
         if (gender) query.gender = gender;
 
-        // Calculate pagination
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const sortOptions = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 
-        // Execute query
         const [users, total] = await Promise.all([
-            User.find(query)
+            MainUser.find(query)
                 .select("-password")
                 .sort(sortOptions)
                 .skip(skip)
                 .limit(parseInt(limit))
                 .lean(),
-            User.countDocuments(query)
+            MainUser.countDocuments(query)
         ]);
 
         res.status(200).json({
@@ -199,32 +208,29 @@ router.post('/search', async (req, res) => {
                 usersPerPage: parseInt(limit)
             }
         });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
 // ==========================================
-// READ BY ID - POST /api/users/:id
+// READ BY ID - GET /api/users/:id
 // ==========================================
 
-router.post('/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select("-password").lean();
+        const user = await MainUser.findById(req.params.id).select("-password").lean();
 
         if (!user) {
-            return res.status(404).json({ 
-                message: "User not found" 
-            });
+            return res.status(404).json({ message: "User not found" });
         }
 
         res.status(200).json(user);
+
     } catch (error) {
-        // Handle invalid ObjectId
         if (error.kind === "ObjectId") {
-            return res.status(400).json({ 
-                message: "Invalid user ID format" 
-            });
+            return res.status(400).json({ message: "Invalid user ID format" });
         }
 
         res.status(500).json({ message: error.message });
@@ -237,26 +243,55 @@ router.post('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     try {
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
-        
+        const [deletedUser] = await Promise.all([
+            MainUser.findByIdAndDelete(req.params.id),
+            Backup1User.findByIdAndDelete(req.params.id),
+            Backup2User.findByIdAndDelete(req.params.id)
+        ]);
+
         if (!deletedUser) {
-            return res.status(404).json({ 
-                message: "User not found" 
-            });
+            return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json({ 
-            message: "User deleted successfully" 
-        });
+        res.status(200).json({ message: "User deleted successfully" });
+
     } catch (error) {
-        // Handle invalid ObjectId
         if (error.kind === "ObjectId") {
-            return res.status(400).json({ 
-                message: "Invalid user ID format" 
-            });
+            return res.status(400).json({ message: "Invalid user ID format" });
         }
 
         res.status(500).json({ message: error.message });
+    }
+});
+
+// ==========================================
+// UPDATE SIGNATURE - POST /api/users/update-signature
+// ==========================================
+router.post('/update-signature', async (req, res) => {
+    try {
+        const { signatureImage } = req.body;
+        const userId = req.session?.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Not authenticated' });
+        }
+
+        if (!signatureImage || typeof signatureImage !== 'string') {
+            return res.status(400).json({ success: false, message: 'Invalid signature image' });
+        }
+
+        // Update user signature in all databases
+        const updateOp = { signatureImage };
+        await Promise.all([
+            MainUser.findByIdAndUpdate(userId, updateOp),
+            Backup1User.findByIdAndUpdate(userId, updateOp),
+            Backup2User.findByIdAndUpdate(userId, updateOp)
+        ]);
+
+        res.status(200).json({ success: true, message: 'Signature updated successfully' });
+    } catch (error) {
+        console.error('Error updating signature:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

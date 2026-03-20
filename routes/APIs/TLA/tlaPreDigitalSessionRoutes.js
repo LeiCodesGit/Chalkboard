@@ -1,7 +1,9 @@
 import express from 'express';
 import { Pre_Main, Pre_B1, Pre_B2 } from '../../../models/TLA/tlaModels.js';
+import { requireLogin } from '../../../controllers/tlaController.js';
 
 const router = express.Router();
+router.use(requireLogin);
 
 // CREATE Pre-Digital Session
 router.post('/', async (req, res) => {

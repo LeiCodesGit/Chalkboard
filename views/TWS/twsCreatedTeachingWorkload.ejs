@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TWS - Created Teaching Workload Sheet</title>
+  <link rel="stylesheet" href="/common/css/variables.css" />
+  <link rel="stylesheet" href="/TWS/css/twsStyle.css" />
+  <style>
+    .tws-block {
+      grid-column: var(--col, auto);
+      grid-row: var(--row, auto) / span var(--span, 1);
+    }
+
+    .tws-timetable .tws-block.tws-block-assigned {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      opacity: 1 !important;
+    }
+
+    .tws-timetable .tws-block.tws-block-conflict {
+      background: #efc0c0 !important;
+      border: 1px solid #d89c9c !important;
+      color: #5d1d1d !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      opacity: 1 !important;
+    }
+
+    .tws-block-clickable {
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .tws-block-clickable:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .tws-detail-item {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--tws-border);
+    }
+
+    .tws-detail-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .tws-detail-info {
+      max-width: 210px;
+    }
+
+    .tws-detail-meta {
+      opacity: .9;
+      font-size: 11px;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .tws-detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tws-mini-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 58px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--tws-border);
+      background: #fff;
+      color: var(--tws-text);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .tws-mini-btn-danger {
+      background: #fff;
+      color: #b42318;
+    }
+
+    .tws-inline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 700px) {
+      .tws-inline-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body class="tws-app-body" data-view-only="<%= isViewOnly ? 'true' : 'false' %>">
+  <div class="tws-app-layout">
+
+    <aside class="tws-app-sidebar">
+      <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
+    </aside>
+
+    <main class="tws-app-main">
+      <div class="tws-app-center">
+
+        <div class="tws-app-title-pill">
+          <h1>TWS: Teaching Workload Sheet</h1>
+          <div style="opacity:.9; font-size:12px; margin-top:4px;">
+            Faculty: <b><%= (tws?.faculty?.name || "—") %></b>
+            <% if (tws?.faculty?.dept) { %> • Dept: <b><%= tws.faculty.dept %></b><% } %>
+          </div>
+        </div>
+
+        <section class="tws-card tws-card-wide tws-created-sheet">
+          <div class="tws-card-title">Created Teaching Workload Sheet</div>
+
+          <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+            <div style="margin: 0 0 12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#1f2937; border-radius:12px; padding:10px 12px; font-size:12px;">
+              <b>Scheduling conflict:</b> <%= errorMessage %>
+            </div>
+          <% } %>
+
+          <div class="tws-schedule-layout">
+
+            <div class="tws-timetable">
+              <%
+                const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+                const times = [
+                  "7:00 AM","8:15 AM","9:30 AM","10:45 AM","12:00 PM",
+                  "1:15 PM","2:30 PM","3:45 PM","5:00 PM","6:15 PM","7:30 PM","8:45 PM"
+                ];
+                const SLOT_MINUTES = 75;
+              %>
+
+              <div class="tws-cell tws-head tws-corner"></div>
+              <% days.forEach(d => { %>
+                <div class="tws-cell tws-head"><%= d %></div>
+              <% }) %>
+
+              <% times.forEach((t, rowIndex) => {
+                   const row = rowIndex + 2;
+              %>
+                <div class="tws-cell tws-time" style="--row: <%= row %>;"><%= t %></div>
+                <% for (let c = 0; c < 7; c++) { %>
+                  <div class="tws-cell tws-slot" style="--row: <%= row %>; --col: <%= c + 2 %>;"></div>
+                <% } %>
+              <% }) %>
+
+              <%
+                const dayMap = { "Mon": 2, "Tue": 3, "Wed": 4, "Thu": 5, "Fri": 6, "Sat": 7, "Sun": 8 };
+                const dayAlias = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+                const GRID_START_MINUTES = 7 * 60;
+                const GRID_MIN_ROW = 2;
+                const GRID_MAX_SLOT = times.length - 1;
+
+                function toMinutes(timeStr) {
+                  if (!timeStr) return null;
+                  const m = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+                  if (!m) return null;
+                  let hour = Number(m[1]);
+                  const minute = Number(m[2]);
+                  const ampm = m[3].toUpperCase();
+                  if (ampm === "PM" && hour !== 12) hour += 12;
+                  if (ampm === "AM" && hour === 12) hour = 0;
+                  return hour * 60 + minute;
+                }
+
+                function parseSchedule(workloadItem) {
+                  const rawDay = String(workloadItem.day || "").trim();
+                  const rawStart = String(workloadItem.startTime || "").trim();
+                  const rawEnd = String(workloadItem.endTime || "").trim();
+                  const rawSlot = String(workloadItem.timeSlot || "").trim();
+
+                  let day = rawDay;
+                  let startStr = rawStart;
+                  let endStr = rawEnd;
+
+                  if ((!startStr || !endStr) && rawSlot) {
+                    const slotMatch = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+                    if (slotMatch) {
+                      day = day || slotMatch[1] || "";
+                      startStr = startStr || (slotMatch[2] || "").trim();
+                      endStr = endStr || (slotMatch[3] || "").trim();
+                    }
+                  }
+
+                  const startMin = toMinutes(startStr);
+                  const endMin = toMinutes(endStr);
+                  const normalizedDay = dayAlias[String(day).slice(0, 3).toLowerCase()] || day;
+
+                  if (!dayMap[normalizedDay] || startMin === null || endMin === null || endMin <= startMin) {
+                    return null;
+                  }
+
+                  const startSlot = Math.round((startMin - GRID_START_MINUTES) / SLOT_MINUTES);
+                  const endSlot = Math.round((endMin - GRID_START_MINUTES) / SLOT_MINUTES);
+                  const clampedStartSlot = Math.max(0, Math.min(GRID_MAX_SLOT, startSlot));
+                  const clampedEndSlot = Math.max(
+                    clampedStartSlot + 1,
+                    Math.min(times.length, endSlot)
+                  );
+                  const row = clampedStartSlot + GRID_MIN_ROW;
+                  const span = Math.max(1, clampedEndSlot - clampedStartSlot);
+
+                  return { day: normalizedDay, startStr, endStr, startMin, endMin, row, span };
+                }
+
+                function getSubjectKey(item) {
+  return `${String(item.code || "").trim()}|${String(item.sectionRoom || "").trim()}`;
+}
+
+                function buildColorMap(workload) {
+                  const subjectColors = ["color-1", "color-2", "color-3", "color-4", "color-5", "color-6"];
+                  const uniqueKeys = [];
+
+                  (workload || []).forEach((item) => {
+                    const key = getSubjectKey(item);
+                    if (key && !uniqueKeys.includes(key)) {
+                      uniqueKeys.push(key);
+                    }
+                  });
+
+                  uniqueKeys.sort();
+
+                  const colorMap = {};
+                  uniqueKeys.forEach((key, index) => {
+                    colorMap[key] = subjectColors[index % subjectColors.length];
+                  });
+
+                  return colorMap;
+                }
+
+                const parsedBlocks = (tws?.createdWorkload || []).map((item) => {
+                  const parsed = parseSchedule(item);
+                  return {
+                    item,
+                    parsed,
+                    isConflict: false,
+                  };
+                });
+
+                const subjectColorMap = buildColorMap(tws?.createdWorkload || []);
+
+                for (let i = 0; i < parsedBlocks.length; i++) {
+                  for (let j = i + 1; j < parsedBlocks.length; j++) {
+                    const a = parsedBlocks[i].parsed;
+                    const b = parsedBlocks[j].parsed;
+                    if (!a || !b) continue;
+                    if (a.day !== b.day) continue;
+                    const overlaps = a.startMin < b.endMin && b.startMin < a.endMin;
+                    if (overlaps) {
+                      parsedBlocks[i].isConflict = true;
+                      parsedBlocks[j].isConflict = true;
+                    }
+                  }
+                }
+
+                parsedBlocks.forEach((block) => {
+                  const s = block.item;
+                  const p = block.parsed;
+                  if (!p) return;
+                  const col = dayMap[p.day];
+                  const row = p.row;
+
+                  const assignedColorClass = subjectColorMap[getSubjectKey(s)] || "color-1";
+                  const colorClass = block.isConflict ? "tws-block-conflict" : `${assignedColorClass} tws-block-assigned`;
+
+                  const compactSectionRoom = String(s.sectionRoom || "").replace(/\s*\|\s*/g, "|");
+                  const compactTimeRange = `${p.startStr} - ${p.endStr}`.replace(/\s*-\s*/g, "-");
+              %>
+              <div
+                class="tws-block <%= isViewOnly ? '' : 'tws-block-clickable js-edit-subject' %> <%= colorClass %>"
+                style="--col: <%= col %>; --row: <%= row %>; --span: <%= p.span %>;"
+                data-code="<%= s.code || '' %>"
+                data-title="<%= s.title || '' %>"
+                data-units="<%= Number(s.units || 0).toFixed(2) %>"
+                data-day="<%= s.day || p.day || '' %>"
+                data-start="<%= s.startTime || p.startStr || '' %>"
+                data-end="<%= s.endTime || p.endStr || '' %>"
+                data-section-room="<%= s.sectionRoom || '' %>"
+                title="<%= isViewOnly ? 'View only' : 'Click to edit subject' %>"
+              >
+                <div class="tws-block-code"><%= s.code %></div>
+                <div class="tws-block-sub"><%= compactSectionRoom %></div>
+                <div class="tws-block-sub"><%= compactTimeRange %></div>
+              </div>
+              <%
+                });
+              %>
+            </div>
+
+            <div class="tws-load-details">
+              <div class="ld-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Load Details</span>
+                <% if (!isViewOnly) { %>
+                <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>" style="text-decoration:none;">
+                  + Add Subject
+                </a>
+                <% } %>
+              </div>
+
+              <div class="ld-row">
+                Teaching Hours
+                <span><%= Number(tws?.teachingHours || 0).toFixed(2) %></span>
+              </div>
+
+              <div class="ld-row">
+                Academic Units
+                <span><%= Number(tws?.academicUnits || 0).toFixed(2) %></span>
+              </div>
+
+              <div class="ld-row">
+                Equivalent Load
+                <span><%= Number(tws?.totals?.equivLoad || 0).toFixed(2) %></span>
+              </div>
+
+              <div class="ld-divider"></div>
+
+              <% if (!tws?.createdWorkload || tws.createdWorkload.length === 0) { %>
+                <div style="opacity:.9; font-size:12px; padding: 10px 0;">
+                  No subjects yet.
+                </div>
+              <% } %>
+
+              <% (tws?.createdWorkload || []).forEach(s => { %>
+                <div class="tws-detail-item">
+                  <div class="tws-detail-top">
+                    <div class="tws-detail-info">
+                      <b><%= s.code %></b> - <%= s.title %>
+                      <div class="tws-detail-meta">
+                        <%= (String(s.timeSlot || "").trim() ? String(s.timeSlot || "").trim() + " (PHT)" : "No schedule (PHT)") %> • <%= s.sectionRoom || "— room" %>
+                      </div>
+                    </div>
+
+                    <div class="tws-detail-actions">
+                      <span><%= Number(s.units || 0).toFixed(2) %></span>
+
+                      <% if (!isViewOnly) { %>
+                        <button
+                          type="button"
+                          class="tws-mini-btn js-edit-subject"
+                          data-code="<%= s.code || '' %>"
+                          data-title="<%= s.title || '' %>"
+                          data-units="<%= Number(s.units || 0).toFixed(2) %>"
+                          data-day="<%= s.day || '' %>"
+                          data-start="<%= s.startTime || '' %>"
+                          data-end="<%= s.endTime || '' %>"
+                          data-section-room="<%= s.sectionRoom || '' %>"
+                        >
+                          Edit
+                        </button>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+
+              <div class="ld-divider"></div>
+
+              <div class="ld-row">
+                <b>Total Units</b>
+                <span><b><%= Number(tws?.totalUnits || 0).toFixed(2) %></b></span>
+              </div>
+
+              <div class="ld-row" style="border-bottom:none; padding-bottom:0;">
+                <b>Total Hours</b>
+                <span><b><%= Number(tws?.totalHours || 0).toFixed(2) %></b></span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <div class="tws-footer-actions">
+          <% if (isViewOnly) { %>
+            <a class="tws-btn-white" href="<%= viewBackUrl || '/tws/dashboard' %>">Back</a>
+          <% } else { %>
+            <a class="tws-btn-white" href="/tws/create-teaching-workload/<%= tws.id %>">Back</a>
+            <a class="tws-next" href="/tws/summary/<%= tws.id %>">Next</a>
+          <% } %>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <% if (!isViewOnly) { %>
+  <div class="tws-modal-bg" id="editModal">
+    <div class="tws-modal">
+      <div class="tws-modal-title" id="editModalTitle">Edit Subject</div>
+
+      <form method="POST" action="/tws/create-teaching-workload/<%= tws.id %>/update?from=created">
+        <input type="hidden" name="code" id="edit_code" />
+        <input type="hidden" name="title" id="edit_title" />
+        <input type="hidden" name="units" id="edit_units" />
+
+        <label>Choose Day</label>
+        <select name="day" id="edit_day" required>
+          <option value="">-- Select --</option>
+          <option value="Mon">Mon</option>
+          <option value="Tue">Tue</option>
+          <option value="Wed">Wed</option>
+          <option value="Thu">Thu</option>
+          <option value="Fri">Fri</option>
+          <option value="Sat">Sat</option>
+          <option value="Sun">Sun</option>
+        </select>
+
+        <div class="tws-inline-grid">
+          <div>
+            <label>Start Time</label>
+            <select name="startTime" id="edit_startTime" required>
+              <option value="">-- Select Start Time --</option>
+              <option value="7:00 AM">7:00 AM</option>
+              <option value="8:15 AM">8:15 AM</option>
+              <option value="9:30 AM">9:30 AM</option>
+              <option value="10:45 AM">10:45 AM</option>
+              <option value="12:00 PM">12:00 PM</option>
+              <option value="1:15 PM">1:15 PM</option>
+              <option value="2:30 PM">2:30 PM</option>
+              <option value="3:45 PM">3:45 PM</option>
+              <option value="5:00 PM">5:00 PM</option>
+              <option value="6:15 PM">6:15 PM</option>
+              <option value="7:30 PM">7:30 PM</option>
+              <option value="8:45 PM">8:45 PM</option>
+            </select>
+          </div>
+
+          <div>
+            <label>End Time</label>
+            <select name="endTime" id="edit_endTime" required>
+              <option value="">-- Select End Time --</option>
+              <option value="8:15 AM">8:15 AM</option>
+              <option value="9:30 AM">9:30 AM</option>
+              <option value="10:45 AM">10:45 AM</option>
+              <option value="12:00 PM">12:00 PM</option>
+              <option value="1:15 PM">1:15 PM</option>
+              <option value="2:30 PM">2:30 PM</option>
+              <option value="3:45 PM">3:45 PM</option>
+              <option value="5:00 PM">5:00 PM</option>
+              <option value="6:15 PM">6:15 PM</option>
+              <option value="7:30 PM">7:30 PM</option>
+              <option value="8:45 PM">8:45 PM</option>
+              <option value="10:00 PM">10:00 PM</option>
+            </select>
+          </div>
+        </div>
+
+        <label style="margin-top:10px;">Choose Section</label>
+        <select name="sectionRoom" id="edit_sectionRoom" required>
+          <option value="">-- Select --</option>
+          <option value="A1531 | R611">A1531 | R611</option>
+          <option value="A1532 | R612">A1532 | R612</option>
+          <option value="A1533 | R613">A1533 | R613</option>
+        </select>
+
+        <div class="tws-modal-actions">
+          <button class="tws-modal-cancel" type="button" onclick="closeEditModal()">Cancel</button>
+          <button class="tws-modal-add" type="submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <script>
+  function openEditModal(code, title, units, day, startTime, endTime, sectionRoom) {
+    const titleEl = document.getElementById("editModalTitle");
+    const codeEl = document.getElementById("edit_code");
+    const subjectTitleEl = document.getElementById("edit_title");
+    const unitsEl = document.getElementById("edit_units");
+    const dayEl = document.getElementById("edit_day");
+    const startEl = document.getElementById("edit_startTime");
+    const endEl = document.getElementById("edit_endTime");
+    const sectionEl = document.getElementById("edit_sectionRoom");
+    const modalEl = document.getElementById("editModal");
+
+    if (!titleEl || !codeEl || !subjectTitleEl || !unitsEl || !dayEl || !startEl || !endEl || !sectionEl || !modalEl) return;
+
+    titleEl.textContent = `Edit Subject: ${code} - ${title}`;
+    codeEl.value = code || "";
+    subjectTitleEl.value = title || "";
+    unitsEl.value = units || "";
+    dayEl.value = day || "";
+    startEl.value = startTime || "";
+    endEl.value = endTime || "";
+    sectionEl.value = sectionRoom || "";
+    modalEl.style.display = "flex";
+  }
+
+  function closeEditModal() {
+    const modalEl = document.getElementById("editModal");
+    if (modalEl) modalEl.style.display = "none";
+  }
+
+  const pageIsViewOnly = document.body.dataset.viewOnly === "true";
+
+  document.querySelectorAll(".js-edit-subject").forEach((el) => {
+    el.addEventListener("click", function () {
+      if (pageIsViewOnly) return;
+
+      openEditModal(
+        this.dataset.code || "",
+        this.dataset.title || "",
+        this.dataset.units || "",
+        this.dataset.day || "",
+        this.dataset.start || "",
+        this.dataset.end || "",
+        this.dataset.sectionRoom || ""
+      );
+    });
+  });
+  </script>
+</body>
+</html>

@@ -3,63 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapúa MCM - New ATA Form</title>
-    <link rel="stylesheet" href="/ATA/css/style.css">
+    <title>Chalkboard | New ATA Form</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/ATA/css/new-ata.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
 </head>
 <body data-role="<%= typeof role !== 'undefined' ? role : '' %>" 
       data-employment="<%= typeof employmentType !== 'undefined' ? employmentType : '' %>"
       data-practicum="<%= typeof isPracticumCoordinator !== 'undefined' ? isPracticumCoordinator : 'false' %>">
 
-    <div class="hamburger-menu" id="hamburgerMenu">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
+    <% 
+        if (typeof role !== 'undefined') {
+            if (['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) { %>
+                <%- include('../MainPages/admin/partials/adminSideMenuBar') %>
+            <% } else if (role === 'Dean') { %>
+                <%- include('../MainPages/dean/partials/deanMenuBar') %>
+            <% } else if (role === 'Program-Chair') { %>
+                <%- include('../MainPages/progChair/partials/progChairMenuBar') %>
+            <% } else { %>
+                <%- include('../partials/sideMenuBar') %>
+            <% } 
+        } else { %>
+            <%- include('../partials/sideMenuBar') %>
+        <% }
+    %>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <main id="multiStepSection">
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="/ATA/images/mapua_logo.png" alt="Mapúa Logo" class="logo-image">
-            <div class="logo-placeholder">MAPÚA</div>
+        <div class="bb-top-bar">
+            <h1>ATA Form</h1>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item"><a href="/syllabus" class="nav-link"><i class="fas fa-book"></i>Syllabus</a></li>
-            <li class="nav-item"><a href="/ata" class="nav-link active"><i class="fas fa-file-alt"></i>ATA</a></li>
-            <li class="nav-item"><a href="/tla" class="nav-link"><i class="fas fa-tasks"></i>TLA</a></li>
-            <li class="nav-item"><a href="/tws" class="nav-link"><i class="fas fa-calendar-week"></i>TWS</a></li>
-        </ul>
+        <div class="bb-nav-container">
+            <div id="formTitle">
+                <h1>Personal Details</h1>
+            </div>
 
-        <div class="mode-toggle">
-            <i class="fas fa-moon"></i>
-            <span>Dark/Light Mode</span>
-            <i class="fas fa-toggle-off"></i>
-        </div>
+            <div class="bb-nav-row">
+                <button id="backBtn" type="button">Back</button>
 
-        <div class="sign-out">
-            <a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt"></i>Sign out</a>
-        </div>
+                <div class="progress-steps">
+                    <span class="progress-dot active" id="step1Dot" data-label="Personal Details">1</span>
+                    <span class="progress-dot" id="step2Dot" data-label="Teaching Load">2</span>
+                    <span class="progress-dot" id="step3Dot" data-label="Admin & Practicum">3</span>
+                    <span class="progress-dot" id="step4Dot" data-label="Outside Employment">4</span>
+                    <span class="progress-dot" id="step5Dot" data-label="Remedial Modules">5</span>
+                    <span class="progress-dot" id="step6Dot" data-label="Review">6</span>
+                    
+                    <% 
+                        let adminRoleForDot = (typeof role !== 'undefined' && role) ? role : ((typeof user !== 'undefined' && user && user.role) ? user.role : '');
+                        if (['Program-Chair', 'Dean', 'Admin', 'VPAA', 'HR', 'HRMO'].includes(adminRoleForDot)) { 
+                    %>
+                        <span class="progress-dot" id="step7Dot" data-label="Approval">7</span>
+                    <% } %>
+                </div>
 
-        <div class="sidebar-year">2015</div>
-    </div>
-
-    <main class="form-bg-fixed" id="multiStepSection">
-
-        <div class="form-title-box" id="formTitle">
-            <h1>ATA form: Personal Details</h1>
-        </div>
-
-        <div class="progress-container">
-            <div class="progress-steps">
-              <span class="progress-dot filled" id="step1Dot" data-label="Personal Details">●</span>
-                <span class="progress-dot" id="step2Dot" data-label="Teaching Load">○</span>
-                <span class="progress-dot" id="step3Dot" data-label="Admin & Practicum">○</span>
-                <span class="progress-dot" id="step4Dot" data-label="Outside Employment">○</span>
-                <span class="progress-dot" id="step5Dot" data-label="Remedial Modules">○</span>
-                <span class="progress-dot" id="step6Dot" data-label="Review">○</span>
-                <span class="progress-dot" id="step7Dot" data-label="Approval">○</span>
+                <button id="nextBtn" type="button">Next</button>
             </div>
         </div>
 
@@ -67,82 +69,111 @@
             
             <div class="form-card-scrollable" id="form1">
                 <div class="ata-form">
+                    <% if (typeof form !== 'undefined' && form._id) { %>
+                        <input type="hidden" id="existingDraftId" value="<%= form._id %>">
+                    <% } %>
                     
                     <div class="form-row">
-                        <div class="form-label">NAME OF FACULTY MEMBER:</div>
+                        <div class="form-label">NAME</div>
                         <div class="form-field">
-                            <input type="text" class="form-input" placeholder="" id="facultyName">
+                            <input type="text" class="form-input" id="facultyName" value="<%= user.name %>" readonly style="background-color: #e9ecef !important; color: #666 !important; cursor: not-allowed; border-color: #ccc !important;">
                         </div>
                     </div>
 
                     <div class="form-row">
-                        <div class="form-label">POSITION:</div>
+                        <div class="form-label">POSITION</div>
                         <div class="form-field">
-                            <select class="form-input" id="position" style="background-color: rgba(255,255,255,0.1); color: white;">
-                                <option value="" disabled selected>Select your position</option>
-                                <option value="Professor">Professor</option>
-                                <option value="Assistant Professor">Assistant Professor</option>
-                                <option value="Associate Professor">Associate Professor</option>
-                                <option value="Program-Chair">Program Chair</option>
-                                <option value="Dean">Dean</option>
+                            <select class="form-input" id="position">
+                                <option value="" disabled <%= !role ? 'selected' : '' %>>Select your position</option>
+                                <option value="Professor" <%= role === 'Professor' ? 'selected' : '' %>>Professor</option>
+                                <option value="Assistant Professor" <%= role === 'Assistant Professor' ? 'selected' : '' %>>Assistant Professor</option>
+                                <option value="Associate Professor" <%= role === 'Associate Professor' ? 'selected' : '' %>>Associate Professor</option>
+                                <option value="Program-Chair" <%= role === 'Program-Chair' ? 'selected' : '' %>>Program Chair</option>
+                                <option value="Dean" <%= role === 'Dean' ? 'selected' : '' %>>Dean</option>
+                                <option value="Practicum-Coordinator" <%= role === 'Practicum-Coordinator' ? 'selected' : '' %>>Practicum Coordinator</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-row">
-                        <div class="form-label">COLLEGE/PROGRAM:</div>
+                        <div class="form-label">COLLEGE / PROGRAM</div>
                         <div class="form-field">
-                            <select class="form-input" id="college" style="background-color: rgba(255,255,255,0.1); color: white;">
-                                <option value="" disabled selected>Select your College or Program</option>
+                            <select class="form-input" id="college">
+                                <option value="" disabled <%= !user.program && role !== 'Dean' ? 'selected' : '' %>>Select your College or Program</option>
+                                <option value="CEA" <%= role === 'Dean' || user.program === 'CEA' ? 'selected' : '' %>>College of Engineering & Architecture (CEA)</option>
                                 <optgroup label="College of Engineering & Architecture (CEA)">
-                                    <option value="CpE">Computer Engineering (CpE)</option>
-                                    <option value="CE">Civil Engineering (CE)</option>
-                                    <option value="EE">Electrical Engineering (EE)</option>
-                                    <option value="ECE">Electronics Engineering (ECE)</option>
-                                    <option value="IE">Industrial Engineering (IE)</option> 
-                                    <option value="ME">Mechanical Engineering (ME)</option>
-                                    <option value="AR">Architecture (AR)</option>
+                                    <option value="CpE" <%= user.program === 'CpE' ? 'selected' : '' %>>Computer Engineering (CpE)</option>
+                                    <option value="CE" <%= user.program === 'CE' ? 'selected' : '' %>>Civil Engineering (CE)</option>
+                                    <option value="EE" <%= user.program === 'EE' ? 'selected' : '' %>>Electrical Engineering (EE)</option>
+                                    <option value="ECE" <%= user.program === 'ECE' ? 'selected' : '' %>>Electronics Engineering (ECE)</option>
+                                    <option value="IE" <%= user.program === 'IE' ? 'selected' : '' %>>Industrial Engineering (IE)</option> 
+                                    <option value="ME" <%= user.program === 'ME' ? 'selected' : '' %>>Mechanical Engineering (ME)</option>
+                                    <option value="AR" <%= user.program === 'AR' ? 'selected' : '' %>>Architecture (AR)</option>
                                 </optgroup>
                                 <optgroup label="Other Colleges">
-                                    <option value="CCIS">College of Computing and Information Sciences (CCIS)</option>
-                                    <option value="CAS">College of Arts and Sciences (CAS)</option>
-                                    <option value="ETYCB">E.T. Yuchengco College of Business (ETYCB)</option>
-                                    <option value="CHS">College of Health Sciences (CHS)</option>
+                                    <option value="CCIS" disabled>College of Computing and Information Sciences (CCIS)</option>
+                                    <option value="CAS" disabled>College of Arts and Sciences (CAS)</option>
+                                    <option value="ETYCB" disabled>E.T. Yuchengco College of Business (ETYCB)</option>
+                                    <option value="CHS" disabled>College of Health Sciences (CHS)</option>
                                 </optgroup>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-row">
-                        <div class="form-label">EMPLOYMENT STATUS:</div>
-                        <div class="form-field radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="employment" value="Full-Time" id="radioFullTime"> FULL TIME
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="employment" value="Part-Time" id="radioPartTime"> PART TIME
-                            </label>
+                        <div class="form-label">EMPLOYMENT STATUS</div>
+                        <div class="form-field">
+                            <select class="form-input" id="employmentStatus">
+                                <option value="" disabled selected>Select Status...</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Probationary">Probationary</option>
+                                <option value="Fixed-Term">Fixed-Term</option>
+                                <option value="Contractual">Contractual</option>
+                                <option value="Guest Lecturer">Guest Lecturer</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-row">
-                        <div class="form-label">ADDRESS:</div>
+                        <div class="form-label">EMPLOYMENT TYPE</div>
+                        <div class="form-field radio-group">
+                            <label class="radio-label"><input type="radio" name="employment" value="Full-Time" id="radioFullTime"> FULL TIME</label>
+                            <label class="radio-label"><input type="radio" name="employment" value="Part-Time" id="radioPartTime"> PART TIME</label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">ADDRESS</div>
                         <div class="form-field">
-                            <input type="text" class="form-input" placeholder="" id="address">
+                            <input type="text" class="form-input" placeholder="Your current address" id="address">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">ACADEMIC TERM</div>
+                        <div class="form-field">
+                            <select class="form-input" id="term" required>
+                                <option value="" disabled selected>Select Term...</option>
+                                <option value="1ST">1st Term</option>
+                                <option value="2ND">2nd Term</option>
+                                <option value="3RD">3rd Term</option>
+                                <option value="MIDYEAR">Midyear</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">ACADEMIC YEAR</div>
+                        <div class="form-field">
+                            <input type="text" class="form-input" id="academicYear" placeholder="e.g. 2025" required maxlength="9">
                         </div>
                     </div>
 
                     <div id="sectionA_Container">
-                        <div class="form-section-divider">
-                            (A) TOTAL TEACHING UNITS SERVED FOR A.Y.<br>
-                            <span class="sub-text">(For Admin and Faculty with Admin Only)</span>
-                        </div>
-
-                        <div class="form-row units-row">
-                            <div class="form-label"></div>
-                            <div class="form-field units-field">
-                                <input type="text" class="form-input units-input" placeholder="" id="teachingUnits1">
-                                <input type="text" class="form-input units-input" placeholder="" id="teachingUnits2">
+                        <div class="form-row">
+                            <div class="form-label">ADMIN UNITS<br><span style="font-size:9px; font-weight:normal; color:#aaa;">(IF APPLICABLE)</span></div>
+                            <div class="form-field">
+                                <input type="number" class="form-input units-input" placeholder="0" id="teachingUnits1" min="0" oninput="this.value = Math.abs(this.value)" style="max-width: 150px !important;">
                             </div>
                         </div>
                     </div>
@@ -153,90 +184,92 @@
             <div class="form-card-scrollable" id="form2" style="display: none;">
                 <div class="ata-form">
                     
-                    <div class="form-section-header">
-                        (B) COURSES WITHIN ASSIGNED COLLEGE
-                    </div>
-
-                    <div class="table-header">
-                        <div class="table-col">Course</div>
-                        <div class="table-col">Section</div>
-                        <div class="table-col">Units</div>
-                        <div class="table-col">Effective Date</div>
-                        <div class="table-col">Actions</div>
-                    </div>
-
-                    <div class="course-row">
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Course code"></div>
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Section"></div>
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Units"></div>
-                        <div class="table-col">
-                            <div class="date-input-group">
-                                <input type="text" class="table-input date-input" placeholder="DD/MM/YYYY">
+                    <div class="form-row">
+                        <div class="form-label">ASSIGNED COLLEGE</div>
+                        <div class="form-field" style="align-items: stretch; padding-top: 0;">
+                            
+                            <div class="table-header">
+                                <div class="table-col">Course Code</div>
+                                <div class="table-col">Section</div>
+                                <div class="table-col" style="flex:0.5;">Units</div>
+                                <div class="table-col">Effective Date</div>
+                                <div class="table-col" style="flex:0.5;">Actions</div>
                             </div>
-                        </div>
-                        <div class="table-col action-col">
-                            <button class="action-btn remove-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
 
-                    <div class="course-row">
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Course code"></div>
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Section"></div>
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Units"></div>
-                        <div class="table-col">
-                            <div class="date-input-group">
-                                <input type="text" class="table-input date-input" placeholder="DD/MM/YYYY">
+                            <div class="course-row">
+                                <div class="table-col"><input type="text" class="table-input" placeholder="Code"></div>
+                                <div class="table-col"><input type="text" class="table-input" placeholder="Sec"></div>
+                                <div class="table-col" style="flex:0.5;">
+                                    <select class="table-input" required>
+                                        <option value="" disabled selected>0</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                                    </select>
+                                </div>
+                                <div class="table-col"><input type="text" class="table-input date-input" placeholder="DD/MM/YYYY"></div>
+                                <div class="table-col action-col" style="flex:0.5;"><button type="button" class="action-btn remove-btn"><i class="fas fa-trash"></i></button></div>
                             </div>
-                        </div>
-                        <div class="table-col action-col">
-                            <button class="action-btn remove-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="add-course-btn">
-                        <button class="secondary-btn small-btn">+ Add Course</button>
-                    </div>
-
-                    <div class="total-units-row">
-                        <span class="total-label">Total Units (B):</span>
-                        <span class="total-value">0</span>
-                    </div>
-
-                    <div class="form-divider"></div>
-
-                    <div class="form-section-header">
-                        (C) COURSES FROM OTHER COLLEGE
-                    </div>
-
-                    <div class="table-header">
-                        <div class="table-col">Course</div>
-                        <div class="table-col">Section</div>
-                        <div class="table-col">Units</div>
-                        <div class="table-col">Effective Date</div>
-                        <div class="table-col">Dean Sig.</div>
-                    </div>
-
-                    <div class="course-row">
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Course code"></div>
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Section"></div>
-                        <div class="table-col"><input type="text" class="table-input" placeholder="Units"></div>
-                        <div class="table-col">
-                            <div class="date-input-group">
-                                <input type="text" class="table-input date-input" placeholder="DD/MM/YYYY">
+                            
+                            <div class="course-row">
+                                <div class="table-col"><input type="text" class="table-input" placeholder="Code"></div>
+                                <div class="table-col"><input type="text" class="table-input" placeholder="Sec"></div>
+                                <div class="table-col" style="flex:0.5;">
+                                    <select class="table-input" required>
+                                        <option value="" disabled selected>0</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                                    </select>
+                                </div>
+                                <div class="table-col"><input type="text" class="table-input date-input" placeholder="DD/MM/YYYY"></div>
+                                <div class="table-col action-col" style="flex:0.5;"><button type="button" class="action-btn remove-btn"><i class="fas fa-trash"></i></button></div>
                             </div>
-                        </div>
-                        <div class="table-col">
-                            <span class="pending-badge">Pending</span>
+
+                            <div class="add-course-btn" style="padding: 15px 0;">
+                                <button type="button" class="secondary-btn">+ Add Course</button>
+                            </div>
+
+                            <div class="total-units-row">
+                                <span>Total Units (B):</span><span class="total-value">0</span>
+                            </div>
+
                         </div>
                     </div>
 
-                    <div class="add-course-btn">
-                        <button class="secondary-btn small-btn">+ Add Course</button>
-                    </div>
+                    <div class="form-row">
+                        <div class="form-label">OTHER COLLEGES</div>
+                        <div class="form-field" style="align-items: stretch; padding-top: 0;">
+                            
+                            <div class="table-header">
+                                <div class="table-col">Course Code</div>
+                                <div class="table-col">Section</div>
+                                <div class="table-col" style="flex:0.5;">Units</div>
+                                <div class="table-col">Effective Date</div>
+                                <div class="table-col" style="flex:0.5;">Status</div>
+                            </div>
 
-                    <div class="total-units-row">
-                        <span class="total-label">Total Units (C):</span>
-                        <span class="total-value">0</span>
+                            <div class="course-row">
+                                <div class="table-col"><input type="text" class="table-input" placeholder="Code"></div>
+                                <div class="table-col"><input type="text" class="table-input" placeholder="Sec"></div>
+                                <div class="table-col" style="flex:0.5;">
+                                    <select class="table-input" required>
+                                        <option value="" disabled selected>0</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                                    </select>
+                                </div>
+                                <div class="table-col"><input type="text" class="table-input date-input" placeholder="DD/MM/YYYY"></div>
+                                <div class="table-col" style="flex:0.5;"><span style="color: #d39e00; font-size: 11px;"><i class="fas fa-clock"></i> Pending</span></div>
+                            </div>
+
+                            <div class="add-course-btn" style="padding: 15px 0;">
+                                <button type="button" class="secondary-btn">+ Add Course</button>
+                            </div>
+
+                            <div class="total-units-row">
+                                <span>Total Units (C):</span><span class="total-value">0</span>
+                            </div>
+
+                        </div>
                     </div>
 
                 </div>
@@ -245,78 +278,70 @@
             <div class="form-card-scrollable" id="form3" style="display: none;">
                 <div class="ata-form">
                     
-                    <div id="sectionD_Container">
-                        <div class="form-section-header">
-                            (D) ADMINISTRATIVE/ RESEARCH WORK
-                        </div>
-
-                        <div class="admin-header">
-                            <div class="admin-col work-desc">Work Description</div>
-                            <div class="admin-col units">Units</div>
-                            <div class="admin-col date">Effective Date</div>
-                            <div class="admin-col actions">Actions</div>
-                        </div>
-
-                        <div class="admin-row">
-                            <div class="admin-col work-desc">
-                                <input type="text" class="table-input" placeholder="Work description">
+                    <div id="sectionD_Container" class="form-row">
+                    <div class="form-label">ADMIN WORK</div>
+                    <div class="form-field" style="align-items: stretch; padding-top: 0;">
+                            
+                            <div class="admin-header">
+                                <div class="admin-col" style="flex:2;">Work Description</div>
+                                <div class="admin-col" style="flex:0.5;">Units</div>
+                                <div class="admin-col">Effective Date</div>
+                                <div class="admin-col" style="flex:0.5;">Actions</div>
                             </div>
-                            <div class="admin-col units">
-                                <input type="text" class="table-input" placeholder="Units">
-                            </div>
-                            <div class="admin-col date">
-                                <div class="date-input-group">
-                                    <input type="text" class="table-input date-input" placeholder="DD/MM/YYYY">
-                                    <button class="dropdown-btn">▼</button>
+
+                            <div class="admin-row">
+                                <div class="admin-col" style="flex:2;"><input type="text" class="table-input" placeholder="Description"></div>
+                                <div class="admin-col" style="flex:0.5;">
+                                    <select class="table-input" required>
+                                        <option value="" disabled selected>0</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                    </select>
                                 </div>
+                                <div class="admin-col"><input type="text" class="table-input date-input" placeholder="DD/MM/YYYY"></div>
+                                <div class="admin-col" style="flex:0.5;"><button type="button" class="action-btn remove-btn"><i class="fas fa-trash"></i></button></div>
                             </div>
-                            <div class="admin-col actions">
-                                <button class="action-btn remove-btn"><i class="fas fa-trash"></i></button>
+
+                            <div class="add-course-btn" style="padding: 15px 0;">
+                                <button type="button" class="secondary-btn">+ Add Work</button>
                             </div>
-                        </div>
 
-                        <div class="add-course-btn">
-                            <button class="secondary-btn small-btn">+ Add Work</button>
-                        </div>
-
-                        <div class="total-units-row">
-                            <span class="total-label">Total Units (D):</span>
-                            <span class="total-value">0</span>
-                        </div>
-
-                        <div class="form-divider"></div>
-                    </div>
-                    <div class="form-section-header">
-                        (E) PRACTICUM ADVISING
-                    </div>
-
-                    <div class="practicum-header">
-                        <div class="practicum-col">Course Code</div>
-                        <div class="practicum-col">No. of Students</div>
-                        <div class="practicum-col">Coordinator</div>
-                        <div class="practicum-col">Actions</div>
-                    </div>
-
-                    <div class="practicum-row">
-                        <div class="practicum-col">
-                            <input type="text" class="table-input" placeholder="Course code">
-                        </div>
-                        <div class="practicum-col">
-                            <input type="text" class="table-input" placeholder="#">
-                        </div>
-                        <div class="practicum-col">
-                            <input type="text" class="table-input" placeholder="Coordinator">
-                        </div>
-                        <div class="practicum-col">
-                            <div class="action-group">
-                                <button class="dropdown-btn">▼</button>
-                                <button class="action-btn remove-btn"><i class="fas fa-trash"></i></button>
+                            <div class="total-units-row">
+                                <span>Total Units (D):</span><span class="total-value">0</span>
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-label">PRACTICUM</div>
+                        <div class="form-field" style="align-items: stretch; padding-top: 0;">
 
-                    <div class="add-course-btn">
-                        <button class="secondary-btn small-btn">+ Add Practicum</button>
+                            <div class="practicum-header">
+                                <div class="practicum-col">Course Code</div>
+                                <div class="practicum-col" style="flex:0.5;">Students</div>
+                                <div class="practicum-col" style="flex:1.5;">Coordinator</div>
+                                <div class="practicum-col" style="flex:0.5;">Actions</div>
+                            </div>
+
+                            <div class="practicum-row">
+                                <div class="practicum-col"><input type="text" class="table-input" placeholder="Code"></div>
+                                <div class="practicum-col" style="flex:0.5;"><input type="text" class="table-input" placeholder="#"></div>
+                                <div class="practicum-col" style="flex:1.5;">
+                                    <select class="table-input" required>
+                                        <option value="" disabled selected>Select Coordinator</option>
+                                        <% if (typeof coordinators !== 'undefined' && coordinators.length > 0) { %>
+                                            <% coordinators.forEach(function(name) { %>
+                                                <option value="<%= name %>"><%= name %></option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="practicum-col" style="flex:0.5;"><button type="button" class="action-btn remove-btn"><i class="fas fa-trash"></i></button></div>
+                            </div>
+
+                            <div class="add-course-btn" style="padding: 15px 0;">
+                                <button type="button" class="secondary-btn">+ Add Practicum</button>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -325,42 +350,30 @@
             <div class="form-card-scrollable" id="form4" style="display: none;">
                 <div class="ata-form">
                     
-                    <div class="form-section-header">
-                        (F) EMPLOYMENT OUTSIDE MAPUA MCM
-                    </div>
+                    <div class="form-row">
+                        <div class="form-label">OUTSIDE EMPLOYMENT</div>
+                        <div class="form-field" style="align-items: stretch; padding-top: 0;">
 
-                    <div class="form-subtitle">
-                        (Part-Time Only)
-                    </div>
+                            <div class="employment-header">
+                                <div class="employment-col" style="flex:1.5;">University</div>
+                                <div class="employment-col">Position</div>
+                                <div class="employment-col">Course</div>
+                                <div class="employment-col" style="flex:0.5;">Hrs/Wk</div>
+                                <div class="employment-col" style="flex:0.5;">Actions</div>
+                            </div>
 
-                    <div class="employment-header">
-                        <div class="employment-col employer">Employer University</div>
-                        <div class="employment-col position">Position/Status</div>
-                        <div class="employment-col course">Course/Units</div>
-                        <div class="employment-col hours">Hrs/Wk</div>
-                        <div class="employment-col actions">Actions</div>
-                    </div>
+                            <div class="employment-row">
+                                <div class="employment-col" style="flex:1.5;"><input type="text" class="table-input" placeholder="Institution Name"></div>
+                                <div class="employment-col"><input type="text" class="table-input" placeholder="Role"></div>
+                                <div class="employment-col"><input type="text" class="table-input" placeholder="Subject"></div>
+                                <div class="employment-col" style="flex:0.5;"><input type="text" class="table-input" placeholder="Hours"></div>
+                                <div class="employment-col" style="flex:0.5;"><button type="button" class="action-btn remove-btn"><i class="fas fa-trash"></i></button></div>
+                            </div>
 
-                    <div class="employment-row">
-                        <div class="employment-col employer">
-                            <input type="text" class="table-input" placeholder="University name">
+                            <div class="add-course-btn" style="padding: 15px 0;">
+                                <button type="button" class="secondary-btn">+ Add Employment</button>
+                            </div>
                         </div>
-                        <div class="employment-col position">
-                            <input type="text" class="table-input" placeholder="Position">
-                        </div>
-                        <div class="employment-col course">
-                            <input type="text" class="table-input" placeholder="Course/Units">
-                        </div>
-                        <div class="employment-col hours">
-                            <input type="text" class="table-input" placeholder="Hours">
-                        </div>
-                        <div class="employment-col actions">
-                            <button class="action-btn remove-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="add-course-btn">
-                        <button class="secondary-btn small-btn">+ Add Employment</button>
                     </div>
 
                 </div>
@@ -369,53 +382,65 @@
             <div class="form-card-scrollable" id="form5" style="display: none;">
                 <div class="ata-form">
                     
-                    <div class="form-section-header">
-                        (G) REMEDIAL MODULE TEACHING ASSIGNMENT
-                    </div>
+                    <div class="form-row">
+                        <div class="form-label">REMEDIAL MODULES</div>
+                        <div class="form-field" style="align-items: stretch; padding-top: 0;">
 
-                    <div class="remedial-header">
-                        <div class="remedial-col">Course ID</div>
-                        <div class="remedial-col">Module Code</div>
-                        <div class="remedial-col">Section</div>
-                        <div class="remedial-col">Units</div>
-                        <div class="remedial-col">Students</div>
-                        <div class="remedial-col">Actions</div>
-                    </div>
+                            <div class="remedial-header">
+                                <div class="remedial-col">Course ID</div>
+                                <div class="remedial-col">Module</div>
+                                <div class="remedial-col" style="flex:0.5;">Sec</div>
+                                <div class="remedial-col" style="flex:0.5;">Units</div>
+                                <div class="remedial-col" style="flex:0.5;">Students</div>
+                                
+                                <div class="remedial-col">Type</div>
+                                
+                                <div class="remedial-col" style="flex:0.5;">Actions</div>
+                            </div>
 
-                    <div class="remedial-row">
-                        <div class="remedial-col">
-                            <input type="text" class="table-input" placeholder="Course ID">
-                        </div>
-                        <div class="remedial-col">
-                            <input type="text" class="table-input" placeholder="Module Code">
-                        </div>
-                        <div class="remedial-col">
-                            <input type="text" class="table-input" placeholder="Section">
-                        </div>
-                        <div class="remedial-col">
-                            <input type="text" class="table-input" placeholder="Units">
-                        </div>
-                        <div class="remedial-col">
-                            <input type="text" class="table-input" placeholder="#">
-                        </div>
-                        <div class="remedial-col">
-                            <select class="table-input type-select" required style="cursor: pointer; background: transparent; border: 1px solid #ccc; padding: 5px; border-radius: 4px; width: 100%;">
-                                <option value="" disabled selected>Type...</option>
-                                <option value="lecture">Lecture</option>
-                                <option value="lab">Lab</option>
-                            </select>
-                        </div>
-                        <div class="remedial-col action-col">
-                            <button class="action-btn remove-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
+                            <div class="remedial-row">
+                                <div class="remedial-col"><input type="text" class="table-input" placeholder="ID"></div>
+                                <div class="remedial-col">
+                                    <select class="table-input" required>
+                                        <option value="" disabled selected>Select Module</option>
+                                        <option value="M1">M1</option>
+                                        <option value="M2">M2</option>
+                                        <option value="M3">M3</option>
+                                    </select>
+                                </div>
+                                <div class="remedial-col" style="flex:0.5;"><input type="text" class="table-input" placeholder="#"></div>
+                                <div class="remedial-col" style="flex:0.5;">
+                                    <select class="table-input" required>
+                                        <option value="" disabled selected>0</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                                    </select>
+                                </div>
+                                <div class="remedial-col" style="flex:0.5;"><input type="text" class="table-input" placeholder="#"></div>
+                                
+                                <div class="remedial-col">
+                                    <select class="table-input type-select" required>
+                                        <option value="lecture" selected>Lecture</option>
+                                        <option value="lab">Lab</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="remedial-col" style="flex:0.5;"><button type="button" class="action-btn remove-btn"><i class="fas fa-trash"></i></button></div>
+                            </div>
 
-                    <div class="add-course-btn">
-                        <button class="secondary-btn small-btn">+ Add Module</button>
-                    </div>
+                            <div class="add-course-btn" style="padding: 15px 0;">
+                                <button type="button" class="secondary-btn">+ Add Module</button>
+                            </div>
+                            <div class="total-units-row" style="margin-top: 20px;">
+                                <span>Total Units (G):</span>
+                                <span class="total-value">Raw: <span id="localUnitsG">0</span> | Eff: <span id="localEffG">0.00</span></span>
+                            </div>
 
-                    <div class="remedial-note">
-                        Note: Remedial units are not included in bonus/summer pay
+                            <div id="remedialErrorDiv" style="color: #a00100; font-weight: bold; margin-top: 15px; display: none;">
+                                <i class="fas fa-exclamation-triangle"></i> ERROR: Maximum limit of 6 effective units exceeded.
+                            </div>
+
+                        </div>
                     </div>
 
                 </div>
@@ -424,73 +449,82 @@
             <div class="form-card-scrollable" id="form6" style="display: none;">
                 <div class="ata-form review-form">
                     
-                    <div class="review-title">REVIEW & SUBMIT</div>
+                    <div class="form-row">
+                        <div class="form-label">SUMMARY</div>
+                        <div class="form-field" style="align-items: stretch; padding-top: 0;">
 
-                    <div class="summary-table">
-                        <div class="summary-header">
-                            <div class="summary-col section">SECTION</div>
-                            <div class="summary-col units">UNITS</div>
-                            <div class="summary-col effective">EFFECTIVE UNITS</div>
-                        </div>
-
-                        <div class="summary-row">
-                            <div class="summary-col section">(B) Courses Within College</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-
-                        <div class="summary-row">
-                            <div class="summary-col section">(C) Courses Other Colleges</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-
-                        <div class="summary-row">
-                            <div class="summary-col section">(D) Administrative Work</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-
-                        <div class="summary-row">
-                            <div class="summary-col section">(E) Practicum Advising</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-
-                        <div class="summary-row">
-                            <div class="summary-col section">(G) Remedial Modules</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-
-                        <div class="summary-total">
-                            <div class="summary-col section">TOTAL</div>
-                            <div class="summary-col units">0</div>
-                            <div class="summary-col effective">0</div>
-                        </div>
-                    </div>
-
-                    <div class="acceptance-row">
-                        <input type="checkbox" id="acceptCheckbox" class="acceptance-checkbox">
-                        <label for="acceptCheckbox" class="acceptance-label">
-                            I hereby accept the above teaching assignment/s.
-                        </label>
-                    </div>
-
-                    <div class="signature-row">
-                        <div class="signature-label">SIGNATURE OF FACULTY:</div>
-                        <div class="signature-field">
-                            <button class="upload-btn">Upload File</button>
-                        </div>
-                    </div>
-
-                    <div class="signature-row">
-                        <div class="signature-label">DATE:</div>
-                        <div class="signature-field">
-                            <div class="date-input-group">
-                                <input type="text" class="table-input date-input" placeholder="DD/MM/YYYY">
-                                <button class="dropdown-btn">▼</button>
+                            <div class="summary-table">
+                                <div class="summary-header">
+                                    <div class="summary-col section" style="flex:2;">SECTION</div>
+                                    <div class="summary-col units">UNITS</div>
+                                    <div class="summary-col effective">EFFECTIVE UNITS</div>
+                                </div>
+                                <div class="summary-row" id="sumRowA" style="display: none;">
+                                    <div class="summary-col section" style="flex:2;">(A) Admin Served Units</div><div class="summary-col units">0</div><div class="summary-col effective">N/A</div>
+                                </div>
+                                <div class="summary-row">
+                                    <div class="summary-col section" style="flex:2;">(B) Courses Within College</div><div class="summary-col units" id="sumUnitsB">0</div><div class="summary-col effective" id="sumEffB">0</div>
+                                </div>
+                                <div class="summary-row">
+                                    <div class="summary-col section" style="flex:2;">(C) Courses Other Colleges</div><div class="summary-col units" id="sumUnitsC">0</div><div class="summary-col effective" id="sumEffC">0</div>
+                                </div>
+                                <div class="summary-row" id="sumRowD" style="display: none;">
+                                    <div class="summary-col section" style="flex:2;">(D) Administrative Work</div><div class="summary-col units" id="sumUnitsD">0</div><div class="summary-col effective" id="sumEffD">0</div>
+                                </div>
+                                <div class="summary-total">
+                                    <div class="summary-col section" style="flex:2;">TOTAL REGULAR LOAD</div><div class="summary-col units" id="grandTotalUnits">0</div><div class="summary-col effective" id="grandTotalEff">0</div>
+                                </div>
+                                <div class="summary-row" style="border-top: 1px solid #eee; margin-top: 10px;">
+                                    <div class="summary-col section" style="flex:2;">(G) Remedial Modules</div><div class="summary-col units" id="sumUnitsG">0</div><div class="summary-col effective" id="sumEffG">0</div>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-label">AGREEMENT</div>
+                        <div class="form-field" style="flex-direction: row; gap: 15px; align-items: center;">
+                            <input type="checkbox" id="acceptCheckbox" style="width: 18px; height: 18px;">
+                            <label for="acceptCheckbox" class="acceptance-label" id="dynamicAcceptLabel">I hereby accept the above teaching assignment/s.</label>
+                        </div>
+                    </div>
+
+                    <% 
+                        // 1. Identify the user's role safely
+                        let adminUserRole = (typeof role !== 'undefined' && role) ? role : ((typeof user !== 'undefined' && user && user.role) ? user.role : '');
+                        
+                        // 2. The Ultimate Signature Hunter (Robust Null Checks)
+                        let hasSavedSig = false;
+                        let savedSigData = '';
+                        
+                        if (typeof user !== 'undefined' && user) {
+                            if (user.signatureImage && user.signatureImage.length > 20) {
+                                hasSavedSig = true;
+                                savedSigData = user.signatureImage;
+                            } else if (user.signature && user.signature.length > 20) {
+                                hasSavedSig = true;
+                                savedSigData = user.signature;
+                            } else if (user.facultySignature && user.facultySignature.length > 20) {
+                                hasSavedSig = true;
+                                savedSigData = user.facultySignature;
+                            }
+                        }
+                    %>
+
+                    <div class="form-row e-signature-box" style="border-bottom: none;">
+                        <div class="form-label">E-SIGNATURE</div>
+                        <div class="form-field" style="align-items: flex-start; flex-direction: column; gap: 10px;">
+                            <canvas id="signatureCanvas" width="400" height="150" style="background: #ffffff; border: 1px solid #ccc; border-radius: 4px; cursor: crosshair;"></canvas>
+                            <button type="button" id="clearSignatureBtn" class="secondary-btn"><i class="fas fa-eraser"></i> Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row" style="border-bottom: none;">
+                        <div class="form-label"></div>
+                        <div class="form-field">
+                            <button type="button" id="previewPdfBtn" style="background: #ffffff; color: #444; border: 1px solid #ccc; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                <i class="fas fa-file-pdf" style="color: #dc3545; margin-right: 8px;"></i> Preview PDF Form
+                            </button>
                         </div>
                     </div>
 
@@ -499,234 +533,42 @@
 
             <div class="form-card-scrollable" id="form7" style="display: none;">
                 <div class="ata-form admin-form">
-                    
-                    <div class="form-section-header">
-                        (H) RECOMMENDING APPROVAL
-                    </div>
 
-                    <div class="justification-row">
-                        <div class="justification-label">Justification for overload (if applicable):</div>
-                        <div class="justification-field">
-                            <textarea class="form-input justification-input" rows="3" placeholder="Enter justification..."></textarea>
+                    <div class="form-section-header" style="margin-top: 0;">RECOMMENDING APPROVAL</div>
+
+                    <% if (typeof role !== 'undefined' && role === 'Dean') { %>
+                        <div style="padding: 30px; text-align: center; color: #555; background: #f8f9fa; border-radius: 8px; margin-top: 20px; border: 1px solid #e0e0e0;">
+                            <i class="fas fa-route" style="font-size: 28px; color: var(--color-mapua-blue, #002455); margin-bottom: 15px;"></i>
+                            <h3 style="margin: 0 0 10px 0; color: #333;">Hello, Dean.</h3>
+                            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                                Your teaching assignment will be routed to the <strong>Program Chair</strong> for initial review.<br><br>
+                                If an overload is detected on your load, the Program Chair will provide the official justification during their endorsement. You may bypass this section and submit your form.
+                            </p>
                         </div>
-                    </div>
-
-                    <div class="admin-signature-row">
-                        <div class="admin-signature-label">SIGNATURE OF PROGRAM CHAIR:</div>
-                        <div class="admin-signature-field">
-                            <button class="upload-btn">Upload File</button>
-                        </div>
-                    </div>
-
-                    <div class="admin-signature-row">
-                        <div class="admin-signature-label">DATE:</div>
-                        <div class="admin-signature-field">
-                            <div class="date-input-group">
-                                <input type="text" class="table-input date-input" placeholder="DD/MM/YYYY">
-                                <button class="dropdown-btn">▼</button>
+                        <textarea id="justificationText" name="justification" style="display:none;"></textarea>
+                    <% } else { %>
+                        <div class="form-row justification-row" style="border: none;">
+                            <div class="form-label" style="line-height: 1.4;">OVERLOAD JUSTIFICATION<br><span style="font-size: 9px; font-weight: normal;">(IF APPLICABLE)</span></div>
+                            <div class="form-field">
+                                <textarea class="form-input" id="justificationText" name="justification" rows="4" style="max-width: 100% !important; color: #333333 !important; background-color: #ffffff !important; font-size: 14px !important;"></textarea>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="form-divider-light"></div>
-
-                    <div class="admin-signature-row">
-                        <div class="admin-signature-label">RECEIVED BY HR</div>
-                        <div class="admin-signature-field"></div>
-                    </div>
-
-                    <div class="admin-signature-row">
-                        <div class="admin-signature-label">NOTED BY VPAA</div>
-                        <div class="admin-signature-field"></div>
-                    </div>
-
-                    <div class="admin-signature-row">
-                        <div class="admin-signature-label">APPROVED BY DEAN</div>
-                        <div class="admin-signature-field"></div>
-                    </div>
+                    <% } %>
 
                 </div>
             </div>
 
-        </div> <div class="step7-buttons-container" id="step7Buttons" style="display: none;">
-            <div class="step7-buttons-wrapper">
-                <button class="form-btn approval-routing-btn" id="goToApprovalBtn">Go to Approval Routing</button>
-                <button class="form-btn primary-btn" id="viewApprovedBtn">View Approved Form (Read-Only)</button>
-            </div>
-        </div>
-
-        <div class="form-navigation-outside">
-            <button class="form-btn secondary-btn" id="backBtn">Return to Dashboard</button>
-            <button class="form-btn primary-btn" id="nextBtn">Next</button>
         </div>
 
     </main>
 
-    <main class="form-bg-fixed" id="approvalSection" style="display: none;">
-        <div class="form-title-box">
-            <h1>APPROVAL ROUTING</h1>
-        </div>
-        <div class="form-cards-container">
-            <div class="form-card-scrollable">
-                <div class="approval-item-simple">
-                    <div class="approval-role-simple">APPROVED BY:</div>
-                    <div class="approval-name-simple">DEAN</div>
-                    <div class="form-row"><div class="form-label">Signature:</div><div class="form-field"><button class="upload-btn">Upload File</button></div></div>
-                </div>
-                <div class="form-action-buttons-simple">
-                    <button class="form-btn secondary-btn" id="printPdfBtn">Print PDF</button>
-                    <button class="form-btn secondary-btn" id="exportCsvBtn">Export CSV</button>
-                    <button class="form-btn primary-btn" id="closeApprovalBtn">Close Form</button>
-                </div>
-                <div class="back-to-forms-container">
-                    <button class="form-btn secondary-btn" id="backToFormsBtn">Back to Forms</button>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <main class="form-bg-fixed" id="approvedViewSection" style="display: none;">
-        <div class="form-title-box"><h1>ATA FORM: APPROVED VIEW</h1></div>
-        <div class="form-cards-container">
-            <div class="form-card-scrollable">
-                <div class="approved-header"><div class="approved-header-item"><span class="approved-header-label">Form:</span><span>ATA-2025-001</span></div></div>
-                <div class="back-to-forms-container" style="margin-top: 30px;">
-                    <button class="form-btn primary-btn" id="closeApprovedViewBtn">Close</button>
-                </div>
-            </div>
-        </div>
-    </main>
+    <div class="form-navigation-outside"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Global Step Tracker
-            window.currentStep = 1;
-            
-            const totalSteps = 7;
-            const formTitle = document.getElementById('formTitle').querySelector('h1');
-            const backBtn = document.getElementById('backBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const step7Buttons = document.getElementById('step7Buttons');
-            const stepDots = Array.from(document.querySelectorAll('.progress-dot'));
-
-            const formTitles = [
-                'ATA form: Personal Details',
-                'ATA form: Teaching Assignments',
-                'ATA form: Administrative & Practicum Work',
-                'ATA form: External Employment (Part-Time Only)',
-                'ATA form: Remedial Module Assignments',
-                'ATA form: Review & Submit',
-                'ATA form: Admin Approval Section'
-            ];
-
-            // --- DISPLAY FUNCTION ---
-            window.updateFormDisplay = function() {
-                // 1. Hide all forms
-                for(let i=1; i<=7; i++) {
-                    const f = document.getElementById('form'+i);
-                    if(f) f.style.display = 'none';
-                }
-
-                // 2. Show current form
-                const currentForm = document.getElementById('form' + window.currentStep);
-                if (currentForm) currentForm.style.display = 'block';
-
-                // 3. Update Title
-                if (formTitle) formTitle.textContent = formTitles[window.currentStep - 1];
-
-                // 4. Update Dots (Visuals Only)
-                stepDots.forEach((dot, index) => {
-                    const stepNumber = index + 1;
-                    dot.classList.remove('filled', 'active');
-                    
-                    if (window.isStepVisible && !window.isStepVisible(stepNumber)) {
-                        dot.style.opacity = "0.3"; 
-                        dot.style.cursor = "not-allowed";
-                    } else {
-                        dot.style.opacity = "1"; 
-                        dot.style.cursor = "pointer";
-                    }
-
-                    if (stepNumber < window.currentStep) {
-                        dot.textContent = '●'; dot.classList.add('filled');
-                    } else if (stepNumber === window.currentStep) {
-                        dot.textContent = '●'; dot.classList.add('active');
-                    } else {
-                        dot.textContent = '○';
-                    }
-                });
-
-                // 5. Update Buttons dynamically based on roles
-                if (backBtn) backBtn.textContent = (window.currentStep === 1) ? 'Return to Dashboard' : 'Back';
-
-                let lastVisibleStep = 7;
-                while(lastVisibleStep > 0 && window.isStepVisible && !window.isStepVisible(lastVisibleStep)) {
-                    lastVisibleStep--;
-                }
-
-                if (nextBtn) {
-                    nextBtn.textContent = (window.currentStep === lastVisibleStep) ? 'Submit' : 'Next';
-                }
-
-                if (step7Buttons) step7Buttons.style.display = (window.currentStep === 7) ? 'block' : 'none';
-
-                // 6. Force Section Visibility Check
-                if (window.handleInnerSectionVisibility) window.handleInnerSectionVisibility();
-
-                // 7. Scroll top
-                const container = document.querySelector('.form-cards-container');
-                if (container) container.scrollTop = 0;
-            };
-
-            // --- DOT CLICK LISTENER ---
-            stepDots.forEach((dot, index) => {
-                dot.addEventListener('click', () => {
-                    const targetStep = index + 1;
-                    if (window.isStepVisible && !window.isStepVisible(targetStep)) {
-                        alert("⚠️ This section is not applicable to your current role.");
-                        return; 
-                    }
-                    window.currentStep = targetStep;
-                    updateFormDisplay();
-                    
-                    // Trigger math calculation if jumping directly to Review Page
-                    if (window.currentStep === 6 && window.calculateSummary) {
-                        window.calculateSummary();
-                    }
-                });
-            });
-
-            // Back button logic
-            if (backBtn) {
-                backBtn.addEventListener('click', function() {
-                    if (window.currentStep === 1) {
-                        window.location.href = '/dashboard/window';
-                    } else {
-                        let prevStep = window.currentStep - 1;
-                        while (prevStep > 0 && window.isStepVisible && !window.isStepVisible(prevStep)) {
-                            prevStep--; 
-                        }
-                        if (prevStep > 0) {
-                            window.currentStep = prevStep;
-                            updateFormDisplay();
-                        }
-                    }
-                });
-            }
-
-            // Initial Run
-            updateFormDisplay();
-        });
+        window.DRAFT_FORM_DATA = <%- typeof form !== 'undefined' && form ? JSON.stringify(form) : 'null' %>;
     </script>
-
-<<<<<<< HEAD:views/ATA/new-ata.ejs
-   <script src="/ATA/js/ata_client.js"></script>
-<script src="/ATA/js/ata_autocomplete.js"></script>
-    <%- include('partials/dev_toolbar') %>
-=======
-    <script src="/js/ata_client.js"></script>
-
->>>>>>> ATA:ATA/views/new-ata.ejs
-
+    <script src="/ATA/js/ata_client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+    <script src="/ATA/js/new-ata.js"></script>
 </body>
 </html>

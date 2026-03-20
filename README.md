@@ -102,3 +102,23 @@ node syllabus/syllabusServer.js  # Runs the ATA module
 node TLA/tlaServer.js  # Runs the ATA module
 node tws/twsServer.js  # Runs the ATA module
 
+## Import TWS Subjects From PDF
+
+If you have a PDF list of courses and you only want to import course code + title to the TWS Subject database, run:
+
+```bash
+npm run import:tws:pdf -- --file "path/to/your-courses.pdf" --department CEA --program CpE
+```
+
+Notes:
+- The script parses course code/title pairs from PDF text.
+- Existing course codes are updated with the latest title.
+- New records are inserted with defaults for fields not in the PDF (`units`, `department`, `program`).
+- To preview without writing to DB, add `--dry-run`.
+
+Example dry run:
+
+```bash
+npm run import:tws:pdf -- --file "path/to/your-courses.pdf" --dry-run
+```
+

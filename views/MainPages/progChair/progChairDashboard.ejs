@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMCM Chalkboard | ERP Portal</title>
+    <title>MMCM Chalkboard | Program Chair Portal</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
 
     <!--inside the public file, for colors-->
     <link rel="stylesheet" href="/common/css/variables.css"> 
@@ -239,18 +240,43 @@
 
             <div class="announcement-box">
                 <h2>System Announcements</h2>
-                
-                <div class="announcement-item">
-                    <span class="meta-tag">Dean's Office • Academic Requirement</span>
-                    <p><strong>Workflow Sync:</strong> All faculty members are requested to upload their standardized 
-                    Teaching-Learning Activities (TLAs) for the current quarter through the automation module by Friday.</p>
-                </div>
 
-                <div class="announcement-item">
-                    <span class="meta-tag">HR Department • Administrative Update</span>
-                    <p><strong>TWS Verification:</strong> Please verify your Teaching-Work Schedules (TWS) to ensure 
-                    proper load balancing and automated payroll synchronization for this period.</p>
-                </div>
+                <% if (typeof announcements !== 'undefined' && announcements.length > 0) { %>
+                    <% announcements.forEach(item => { %>
+                        <div class="announcement-item">
+                            <span class="meta-tag">
+                                <% 
+                                    const p = item.postedBy;
+                                    let posterName = 'System';
+                                    let posterRole = '';
+                                    if (p) {
+                                        posterName = ((p.firstName || '') + ' ' + (p.lastName || '')).trim().toUpperCase();
+                                        if (p.role === 'Admin' || p.role === 'Super-Admin') {
+                                            posterRole = 'Admin';
+                                        } else {
+                                            posterRole = ((p.department || '') + ' ' + (p.role || '')).trim();
+                                        }
+                                    }
+                                %>
+                                <span style="color:#002455; font-weight:800;"><%= posterName %></span>
+                                &nbsp;•&nbsp;
+                                <span style="color:#002455; font-weight:800;"><%= posterRole %></span>
+                                &nbsp;|&nbsp; <%= item.category %>
+                                <span style="float:right; font-weight:400; text-transform:none;">
+                                    <%= new Date(item.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) %>
+                                </span>
+                            </span>
+                            <p class="announcement-headline"><%= item.headline %></p>
+                            <div class="announcement-body">
+                                <%- item.messageDetail ? Buffer.from(item.messageDetail, 'base64').toString('utf8') : '' %>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="no-announcements">
+                        <p>No announcements at this time. Check back later.</p>
+                    </div>
+                <% } %>
             </div>
         </main>
     </div>
@@ -319,8 +345,8 @@
                 </div>
             </div>
         </div>
-        </div>
     </div>
+</div>
 
     <script src="/MainPages/js/projectDetailsScript.js"></script>
 </body>

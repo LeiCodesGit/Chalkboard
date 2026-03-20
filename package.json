@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon TLA/tlaServer.js",
-    "twa": "nodemon TWA/twaServer.js"
+    "start": "nodemon index.js",
+    "dev": "nodemon index.js",
+    "import:tws:pdf": "node scripts/importTwsSubjectsFromPdf.js"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
   "author": "A361 - Foxtrot Batch - Computer Engineering",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "docx-preview": "^0.3.7",
     "docxtemplater": "^3.68.3",
@@ -33,11 +35,12 @@
     "express-session": "^1.19.0",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.0",
-    "mongoose": "^9.3.1",
+    "mongoose": "^9.2.1",
     "multer": "^2.0.2",
     "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
     "pizzip": "^3.2.0",
-    "puppeteer": "^24.37.5"
+    "puppeteer": "^24.39.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

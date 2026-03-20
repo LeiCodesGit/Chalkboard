@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./database/mongo-dbconnect.js";
 import session from 'express-session';
+import { isAuthenticated } from "./middleware/authMiddleware.js";
 
 
 // ========================
@@ -27,9 +28,9 @@ app.get('/ping', (req, res) => {
 });
 const PORT = process.env.PORT || 3000;
 
-// JSON & URL Encoding (Increased limit for Base64 Images)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// JSON
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session
 app.use(session({
@@ -42,11 +43,9 @@ app.use(session({
     }
 }));
 
-// ADDED: Make session user available to all templates via res.locals.user
-app.use((req, res, next) => {
-    res.locals.user = req.session.user || null;
-    next();
-});
+// ========================
+// Middleware
+// ========================
 
 // ========================
 // View Engine Setup
@@ -69,6 +68,7 @@ import adminRoutes from "./routes/MainPages/adminRoutes.js";
 import progChairRoutes from "./routes/MainPages/progChairRoutes.js";
 import deanRoutes from "./routes/MainPages/deanRoutes.js";
 import userRoutes from './routes/APIs/userRoutes.js';
+import announcementRoutes from "./routes/APIs/MainPages/adminAnnouncementsApi.js"
 
 // TLA
 import dashBoardRoutes from "./routes/TLA/tlaDashboardRoutes.js";
@@ -99,17 +99,41 @@ import previewRoutes from "./routes/Syllabus/previewRoutes.js";
 
 // ATA
 import ataPages from "./routes/ATA/ataPages.js";
+import ataApiRoutes from "./routes/ATA/ataRoutes.js";
+import ataAuthRoutes from "./routes/ATA/authRoutes.js";
+
+//TWS
+import twsRoutes from "./routes/TWS/twsRoutes.js";
+
 
 // ========================
 // Routes
 // ========================
 // Main Pages
-app.use("/login", loginRoutes);
-app.use("/institution", professorRoutes);
+app.use("/login",loginRoutes);
+
+// Shared Institution entry point used by sidebar links.
+// Redirect users to their role-specific dashboard route.
+app.get("/institution", isAuthenticated, (req, res, next) => {
+    const role = req.session?.user?.role;
+ 
+    if (role === "Program-Chair") return res.redirect("/progChair/institution");
+    if (role === "Dean")          return res.redirect("/dean/institution");
+    if (role === "VPAA")          return res.redirect("/vpaa/institution");
+    if (role === "Admin" || role === "HR" || role === "Super-Admin") {
+        return res.redirect("/admin/institution");
+    }
+ 
+    // Professors and anyone else fall through to the professor route
+    return next();
+});
+
+app.use("/institution",professorRoutes);
 app.use("/admin/users", userRoutes); //admin user API
 app.use("/admin", adminRoutes);
 app.use("/progChair", progChairRoutes);
 app.use("/dean", deanRoutes);
+app.use("/api", announcementRoutes)
 
 //TLA Pages
 app.use("/tla/dashboard", dashBoardRoutes);
@@ -117,7 +141,16 @@ app.use("/tla/courses", coursesRoutes);
 app.use("/tla/overview", overviewRoutes);
 app.use("/tla/form", formRoutes);
 app.use("/tla/approval", approvalRoutes);
-app.get("/tla", (req, res) => res.redirect("/tla/courses"));
+app.get("/tla", (req, res) => {
+    const role = req.session?.user?.role;
+    const approvalRoles = ['Program-Chair', 'Dean', 'HR', 'HRMO', 'VPAA', 'Technical', 'Practicum-Coordinator', 'Admin', 'Super-Admin'];
+    if (role && approvalRoles.includes(role)) return res.redirect("/admin/tla");
+    return res.redirect("/tla/courses");
+});
+
+// Redirects for removed TLA routes
+app.get("/tla/admin-overview", (req, res) => res.redirect("/admin/tla"));
+app.get("/tla/hr", (req, res) => res.redirect("/admin/tla"));
 
 // TLA APIs
 app.use("/api/tla/approval", tlaApprovalApiRoutes);
@@ -160,6 +193,10 @@ app.use("/faculty", courseOverviewFacultyRoutes);
 
 // ATA Pages
 app.use("/ata", ataPages);
+app.use("/ata", ataApiRoutes); 
+app.use("/ata/auth", ataAuthRoutes);
+// TWS
+app.use("/tws", twsRoutes);
 
 
 

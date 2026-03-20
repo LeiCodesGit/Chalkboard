@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Teaching Workload Sheet PDF</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 8mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111;
+      margin: 0;
+      padding: 0;
+      font-size: 10px;
+      line-height: 1.25;
+      background: #fff;
+    }
+
+    .page {
+      width: 100%;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 6px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+    }
+
+    .school-name {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .school-line {
+      font-size: 9px;
+      color: #333;
+      margin-bottom: 1px;
+    }
+
+    .doc-meta {
+      text-align: right;
+    }
+
+    .doc-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .doc-sub {
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .faculty-name {
+      text-align: center;
+      margin: 3px 0 8px;
+      font-size: 12px;
+      font-style: italic;
+      font-weight: 700;
+      color: #b22828;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .schedule-wrap {
+      border: 1px solid #111;
+      overflow: hidden;
+    }
+
+    .schedule-grid {
+      --pdf-row-h: 31px;
+      display: grid;
+      grid-template-columns: 68px repeat(7, minmax(0, 1fr));
+      grid-template-rows: repeat(13, var(--pdf-row-h));
+      grid-auto-rows: 0;
+      position: relative;
+      isolation: isolate;
+      width: 100%;
+      background: #fff;
+      align-content: start;
+    }
+
+    .cell {
+      border-right: 1px solid #111;
+      border-bottom: 1px solid #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2px 4px;
+      font-size: 9px;
+      background: #fff;
+    }
+
+    .head {
+      font-weight: 700;
+      font-size: 10px;
+    }
+
+    .corner,
+    .time {
+      font-weight: 700;
+      background: #fff;
+    }
+
+    .time {
+      grid-column: 1 !important;
+      grid-row: var(--row, auto);
+      font-size: 9px;
+    }
+
+    .slot {
+      grid-column: var(--col, auto);
+      grid-row: var(--row, auto);
+    }
+
+    .block {
+      border: 1px solid #111;
+      margin: 0;
+      padding: 1px 2px;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
+      min-width: 0;
+      color: #111;
+      font-size: 7px;
+      line-height: 1.0;
+      font-weight: 700;
+    }
+
+    .block .code {
+      font-size: 7px;
+      font-weight: 700;
+    }
+
+    .block .sub {
+      font-size: 6px;
+      font-weight: 600;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.0;
+    }
+
+    .details {
+      border-left: 1px solid #111;
+      padding-left: 10px;
+      min-height: 434px;
+    }
+
+    .details-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .line {
+      height: 1px;
+      background: #111;
+      margin: 5px 0;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10px;
+      padding: 2px 0;
+    }
+
+    .stat-row b {
+      font-size: 10px;
+    }
+
+    .course-row {
+      margin: 5px 0;
+      padding-bottom: 5px;
+      border-bottom: 1px dashed #777;
+    }
+
+    .course-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .course-sub {
+      margin-top: 2px;
+      font-size: 8px;
+      color: #333;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .signatures {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+      align-items: end;
+    }
+
+    .sig-box {
+      text-align: center;
+      min-height: 56px;
+    }
+
+    .sig-image-wrap {
+      height: 26px;
+      display: flex;
+      justify-content: center;
+      align-items: end;
+    }
+
+    .sig-image {
+      max-width: 140px;
+      max-height: 24px;
+      object-fit: contain;
+    }
+
+    .sig-line {
+      border-top: 1px solid #111;
+      margin-top: 2px;
+      padding-top: 2px;
+      font-size: 9px;
+      font-weight: 700;
+      min-height: 13px;
+    }
+
+    .sig-role {
+      font-size: 9px;
+      color: #333;
+      margin-top: 1px;
+    }
+
+    .generated {
+      margin-top: 4px;
+      text-align: right;
+      font-size: 8px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <%
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const times = [
+      "7:00", "8:15", "9:30", "10:45", "12:00", "1:15 PM", "2:30", "3:45", "5:00", "6:15", "7:30", "8:45"
+    ];
+
+    const SLOT_MINUTES = 75;
+    const BASE_MINUTES = 7 * 60;
+    const MAX_SLOT_INDEX = times.length - 1;
+    const dayMap = { Mon: 2, Tue: 3, Wed: 4, Thu: 5, Fri: 6, Sat: 7, Sun: 8 };
+    const createdWorkload = Array.isArray(tws?.createdWorkload) ? tws.createdWorkload : [];
+
+    function toMinutes(timeStr) {
+      if (!timeStr) return null;
+      const raw = String(timeStr).trim();
+      const hasAmPm = /\b(AM|PM)\b/i.test(raw);
+      const normalized = hasAmPm ? raw : `${raw} AM`;
+      const match = normalized.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+      if (!match) return null;
+      let hour = Number(match[1]);
+      const minute = Number(match[2]);
+      const ampm = String(match[3]).toUpperCase();
+      if (ampm === "PM" && hour !== 12) hour += 12;
+      if (ampm === "AM" && hour === 12) hour = 0;
+      return hour * 60 + minute;
+    }
+
+    function parseSchedule(item) {
+      const rawDay = String(item?.day || "").trim();
+      const rawStart = String(item?.startTime || "").trim();
+      const rawEnd = String(item?.endTime || "").trim();
+      const rawSlot = String(item?.timeSlot || "").trim();
+
+      let day = rawDay;
+      let start = rawStart;
+      let end = rawEnd;
+
+      if ((!start || !end) && rawSlot) {
+        const match = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+        if (match) {
+          day = day || String(match[1] || "").trim();
+          start = start || String(match[2] || "").trim();
+          end = end || String(match[3] || "").trim();
+        }
+      }
+
+      const startMin = toMinutes(start);
+      const endMin = toMinutes(end);
+      if (!dayMap[day] || startMin === null || endMin === null || endMin <= startMin) {
+        return null;
+      }
+
+      const startSlot = Math.round((startMin - BASE_MINUTES) / SLOT_MINUTES);
+      const endSlot = Math.round((endMin - BASE_MINUTES) / SLOT_MINUTES);
+      const clampedStartSlot = Math.max(0, Math.min(MAX_SLOT_INDEX, startSlot));
+      const clampedEndSlot = Math.max(
+        clampedStartSlot + 1,
+        Math.min(times.length, endSlot)
+      );
+      const row = clampedStartSlot + 2;
+      const span = Math.max(1, clampedEndSlot - clampedStartSlot);
+
+      return { day, row, span, start, end, startMin, endMin };
+    }
+
+    function getSubjectKey(item) {
+      return `${String(item?.code || "").trim()}|${String(item?.sectionRoom || "").trim()}`;
+    }
+
+    function buildColorMap(workload) {
+      const subjectColors = {
+        "color-1": "#dbeafe",
+        "color-2": "#dcfce7",
+        "color-3": "#fef3c7",
+        "color-4": "#fce7f3",
+        "color-5": "#ede9fe",
+        "color-6": "#ffe4e6"
+      };
+
+      const orderedKeys = [];
+      (workload || []).forEach((item) => {
+        const key = getSubjectKey(item);
+        if (key && !orderedKeys.includes(key)) {
+          orderedKeys.push(key);
+        }
+      });
+
+      orderedKeys.sort();
+
+      const classes = Object.keys(subjectColors);
+      const colorMap = {};
+
+      orderedKeys.forEach((key, index) => {
+        const className = classes[index % classes.length];
+        colorMap[key] = subjectColors[className];
+      });
+
+      return colorMap;
+    }
+
+    const subjectColorMap = buildColorMap(createdWorkload);
+
+    const blocks = createdWorkload.map((item) => ({
+      item,
+      parsed: parseSchedule(item),
+      color: subjectColorMap[getSubjectKey(item)] || "#dbeafe",
+      isConflict: false,
+    }));
+
+    for (let i = 0; i < blocks.length; i += 1) {
+      for (let j = i + 1; j < blocks.length; j += 1) {
+        const a = blocks[i].parsed;
+        const b = blocks[j].parsed;
+        if (!a || !b) continue;
+        if (a.day !== b.day) continue;
+        const overlaps = a.startMin < b.endMin && b.startMin < a.endMin;
+        if (overlaps) {
+          blocks[i].isConflict = true;
+          blocks[j].isConflict = true;
+        }
+      }
+    }
+
+    blocks.forEach((block) => {
+      if (block.isConflict) {
+        block.color = "#efc0c0";
+      }
+    });
+
+    const facultyName = String(tws?.faculty?.name || tws?.facultySignerName || "").trim();
+    const termLabel = String(tws?.term || tws?.faculty?.term || "N/A").trim();
+    const ayLabel = String(tws?.schoolYear || tws?.faculty?.acadYear || "N/A").trim();
+
+    const teachingHours = Number(tws?.teachingHours || 0);
+    const advisingHours = Number(tws?.advisingHours || 0);
+    const consultationHours = Number(tws?.consultationHours || 0);
+    const committeeWorks = Number(tws?.committeeWorks || 0);
+    const computedHours = teachingHours + advisingHours + consultationHours + committeeWorks;
+    const rawTotalHours = tws?.totalHours;
+    const totalHours = Number(rawTotalHours != null ? rawTotalHours : (tws?.totals?.totalHours ?? computedHours));
+
+    const academicUnits = Number(tws?.academicUnits || 0);
+    const peUnits = Number(tws?.peUnits || 0);
+    const nstpUnits = Number(tws?.nstpUnits || 0);
+    const valuesUnits = Number(tws?.valuesUnits || 0);
+    const deloadingUnits = Number(tws?.deloadingUnits || 0);
+    const computedUnits = createdWorkload.reduce((acc, item) => acc + Number(item?.units || 0), 0);
+    const rawTotalUnits = tws?.totalUnits;
+    const totalUnits = Number(rawTotalUnits != null ? rawTotalUnits : (tws?.totals?.totalUnits ?? computedUnits));
+  %>
+
+  <div class="page">
+    <div class="top">
+      <div class="brand">
+        <img class="logo" src="<%= assetBaseUrl %>/TWS/img/logo.png" alt="MMCM Logo" />
+        <div>
+          <div class="school-name">Mapua Malayan Colleges Mindanao</div>
+          <div class="school-line">General Douglas MacArthur Highway, Matina, Davao City</div>
+          <div class="school-line">www.mmcm.edu.ph</div>
+        </div>
+      </div>
+
+      <div class="doc-meta">
+        <div class="doc-title">Instructor Schedule</div>
+        <div class="doc-sub"><%= termLabel %> | AY <%= ayLabel %></div>
+      </div>
+    </div>
+
+    <div class="faculty-name"><%= facultyName || "INSTRUCTOR" %></div>
+
+    <div class="layout">
+      <div class="schedule-wrap">
+        <div class="schedule-grid">
+          <div class="cell head corner"></div>
+          <% days.forEach((day) => { %>
+            <div class="cell head"><%= day %></div>
+          <% }) %>
+
+          <% times.forEach((time, rowIndex) => {
+               const row = rowIndex + 2;
+          %>
+            <div class="cell time" style="--row: <%= row %>;"><%= time %></div>
+            <% for (let col = 0; col < 7; col += 1) { %>
+              <div class="cell slot" style="--row: <%= row %>; --col: <%= col + 2 %>;"></div>
+            <% } %>
+          <% }) %>
+
+          <% blocks.forEach((block) => {
+               if (!block.parsed) return;
+               const schedule = block.parsed;
+               const sectionRoom = String(block.item?.sectionRoom || "").trim().replace(/\s*\|\s*/g, "|");
+               const timeLabel = `${schedule.start} - ${schedule.end}`.replace(/\s*-\s*/g, "-");
+          %>
+            <div
+              class="block"
+              data-col="<%= dayMap[schedule.day] %>"
+              data-row="<%= schedule.row %>"
+              data-span="<%= schedule.span %>"
+              data-color="<%= block.color %>"
+            >
+              <div class="code"><%= block.item?.code || "-" %></div>
+              <div class="sub"><%= sectionRoom || "-" %></div>
+              <div class="sub"><%= timeLabel %></div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <aside class="details">
+        <div class="details-title">Load Details</div>
+
+        <div class="stat-row"><span>Teaching Hours</span><b><%= teachingHours.toFixed(2) %></b></div>
+        <div class="stat-row"><span>Advising Hours</span><b><%= advisingHours.toFixed(2) %></b></div>
+        <div class="stat-row"><span>Consultation Hours</span><b><%= consultationHours.toFixed(2) %></b></div>
+        <div class="stat-row"><span>Committee Works</span><b><%= committeeWorks.toFixed(2) %></b></div>
+        <div class="line"></div>
+        <div class="stat-row"><span><b>Total Hours</b></span><b><%= totalHours.toFixed(2) %></b></div>
+
+        <div class="line"></div>
+        <% if (!createdWorkload.length) { %>
+          <div class="course-row">
+            <div class="course-sub">No schedule assigned.</div>
+          </div>
+        <% } %>
+
+        <% createdWorkload.forEach((item) => { %>
+          <div class="course-row">
+            <div class="course-top">
+              <span><%= item?.code || "-" %></span>
+              <span><%= Number(item?.units || 0).toFixed(2) %></span>
+            </div>
+            <div class="course-sub"><%= item?.timeSlot || "No schedule" %> | <%= item?.sectionRoom || "-" %></div>
+          </div>
+        <% }) %>
+
+        <div class="line"></div>
+        <div class="details-title" style="font-size: 11px; margin-bottom: 4px;">Unit Distribution</div>
+        <div class="stat-row"><span>Academic</span><b><%= academicUnits.toFixed(2) %></b></div>
+        <div class="stat-row"><span>PE</span><b><%= peUnits.toFixed(2) %></b></div>
+        <div class="stat-row"><span>Values</span><b><%= valuesUnits.toFixed(2) %></b></div>
+        <div class="stat-row"><span>NSTP</span><b><%= nstpUnits.toFixed(2) %></b></div>
+        <div class="stat-row"><span>Deloading</span><b><%= deloadingUnits.toFixed(2) %></b></div>
+        <div class="line"></div>
+        <div class="stat-row"><span><b>Total Units</b></span><b><%= totalUnits.toFixed(2) %></b></div>
+      </aside>
+    </div>
+
+    <div class="signatures">
+      <div class="sig-box">
+        <div class="sig-image-wrap">
+          <% if (tws?.deanSignatureImage) { %>
+            <img class="sig-image" src="<%= tws.deanSignatureImage %>" alt="Dean Signature" />
+          <% } %>
+        </div>
+        <div class="sig-line"><%= tws?.deanSignerName || tws?.deanName || "" %></div>
+        <div class="sig-role">Dean</div>
+      </div>
+
+      <div class="sig-box">
+        <div class="sig-image-wrap">
+          <% if (tws?.programChairSignatureImage) { %>
+            <img class="sig-image" src="<%= tws.programChairSignatureImage %>" alt="Program Chair Signature" />
+          <% } %>
+        </div>
+        <div class="sig-line"><%= tws?.programChairSignerName || tws?.programChairName || "" %></div>
+        <div class="sig-role">Program Chair</div>
+      </div>
+
+      <div class="sig-box">
+        <div class="sig-image-wrap">
+          <% if (tws?.facultySignatureImage) { %>
+            <img class="sig-image" src="<%= tws.facultySignatureImage %>" alt="Instructor Signature" />
+          <% } %>
+        </div>
+        <div class="sig-line"><%= tws?.facultySignerName || tws?.faculty?.name || "Instructor" %></div>
+        <div class="sig-role">Instructor</div>
+      </div>
+    </div>
+
+    <div class="generated">
+      Generated on <%= new Date(generatedAt).toLocaleString("en-US", { timeZone: "Asia/Manila" }) %> (PHT)
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var blocks = document.querySelectorAll(".block[data-col]");
+      blocks.forEach(function (el) {
+        var col = el.getAttribute("data-col");
+        var row = el.getAttribute("data-row");
+        var span = el.getAttribute("data-span");
+        var color = el.getAttribute("data-color");
+
+        if (col) el.style.gridColumn = col;
+        if (row) el.style.gridRowStart = row;
+        if (span) el.style.gridRowEnd = "span " + span;
+        if (color) el.style.background = color;
+      });
+    })();
+  </script>
+</body>
+</html>

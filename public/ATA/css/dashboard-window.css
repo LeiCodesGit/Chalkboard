@@ -1,0 +1,123 @@
+/* --- MAPUA / BLACKBOARD LIGHT THEME OVERRIDES --- */
+body {
+    background-color: var(--color-white) !important;
+    color: var(--color-charcoal) !important;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.bb-main {
+    padding: 40px 50px;
+    background-color: var(--color-white);
+    box-sizing: border-box;
+}
+
+.bb-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.bb-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--color-charcoal);
+    margin: 0 0 5px 0;
+    letter-spacing: -0.5px;
+}
+
+.bb-subtitle {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.bb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+/* --- CARD STYLING (Blackboard Layout) --- */
+.bb-card {
+    background: var(--color-white);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.bb-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+    border-color: var(--color-mapua-red);
+}
+
+.bb-card-top {
+    height: 120px;
+    background-color: #f4f5f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 45px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: color 0.3s ease;
+}
+
+.bb-card-body {
+    padding: 20px;
+}
+
+.bb-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-charcoal);
+    margin: 0 0 5px 0;
+}
+
+.bb-card-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Card Specific Icon Colors */
+.card-new .bb-card-top { color: var(--color-mapua-red); }
+.card-pending .bb-card-top { color: var(--color-mapua-blue); }
+.card-approved .bb-card-top { color: #28a745; }
+.card-manage .bb-card-top { color: #721c24; }
+.card-inbox .bb-card-top { color: #d39e00; }
+.card-history .bb-card-top { color: #17a2b8; }
+.card-archive .bb-card-top { color: #6c757d; }
+
+/* --- INFO BANNER --- */
+.bb-info-banner {
+    margin-top: 50px;
+    background: #f8f9fa;
+    border-left: 4px solid var(--color-mapua-blue);
+    padding: 20px 25px;
+    border-radius: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.bb-info-item span {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.bb-info-item strong {
+    font-size: 16px;
+    color: var(--color-charcoal);
+}

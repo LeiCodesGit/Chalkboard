@@ -1,11 +1,13 @@
 import express from 'express';
 import { TLA_Main, TLA_B1, TLA_B2, Status_Main, Status_B1, Status_B2 } from '../../../models/TLA/tlaModels.js';
+import { requireLogin } from '../../../controllers/tlaController.js';
 
 const Approval_Main = Status_Main;
 const Approval_B1   = Status_B1;
 const Approval_B2   = Status_B2;
 
 const router = express.Router();
+router.use(requireLogin);
 
 // CREATE Approval Status
 router.post('/', async (req, res) => {
@@ -56,10 +58,8 @@ router.put('/:id', async (req, res) => {
 
         // Mirror status onto TLA document
         if (req.body.status) {
-            const tlaStatus = req.body.status === 'Approved' ? 'Approved'
-                            : req.body.status === 'Returned' ? 'Returned'
-                            : req.body.status === 'Pending'  ? 'Pending'
-                            : 'Draft';
+            const VALID_STATUSES = ['Draft', 'Pending', 'Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Approved', 'Returned', 'Archived'];
+            const tlaStatus = VALID_STATUSES.includes(req.body.status) ? req.body.status : 'Draft';
             await Promise.all([
                 TLA_Main.findByIdAndUpdate(updated.tlaID, { status: tlaStatus }),
                 TLA_B1.findByIdAndUpdate(updated.tlaID, { status: tlaStatus }),

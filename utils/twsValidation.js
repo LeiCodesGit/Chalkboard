@@ -1,0 +1,229 @@
+/**
+ * TWS Input Validation
+ * Server-side validators for all TWS form inputs.
+ */
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function isValidAcademicYear(value) {
+  const text = String(value || "").trim();
+  if (!/^\d{4}\s*-\s*\d{4}$/.test(text)) return false;
+
+  const parts = text.split("-").map((x) => Number(String(x).trim()));
+  if (parts.length !== 2) return false;
+
+  const [startYear, endYear] = parts;
+  return endYear === startYear + 1;
+}
+
+/**
+ * Validate faculty info fields.
+ * Returns { valid: boolean, errors: string[] }
+ */
+export function validateFacultyInfo(body) {
+  const errors = [];
+  const selectedProfessorId = (body.selectedProfessorId || "").trim();
+  const name = (body.name || "").trim();
+  const empId = (body.empId || "").trim();
+  const email = (body.email || "").trim();
+  const dept = (body.dept || "").trim();
+  const acadYear = (body.acadYear || "").trim();
+  const term = (body.term || "").trim();
+  const empStatus = (body.empStatus || "").trim();
+
+  const validTerms = ["1st Term", "2nd Term", "3rd Term", "Summer"];
+  const validStatuses = ["Full-Time", "Part-Time", "Contractual"];
+
+  if (!selectedProfessorId) {
+    errors.push("Please select a professor.");
+  }
+
+  if (!name || name.length < 2) {
+    errors.push("Faculty name is required.");
+  }
+
+  if (name.length > 200) {
+    errors.push("Faculty name must be under 200 characters.");
+  }
+
+  if (!empId) {
+    errors.push("Employee ID is required.");
+  }
+
+  if (empId.length > 50) {
+    errors.push("Employee ID must be under 50 characters.");
+  }
+
+  if (!email) {
+    errors.push("Faculty email is required.");
+  } else if (!isValidEmail(email)) {
+    errors.push("Faculty email is invalid.");
+  }
+
+  if (!dept) {
+    errors.push("Department is required.");
+  }
+
+  if (!acadYear) {
+    errors.push("Academic year is required.");
+  } else if (!isValidAcademicYear(acadYear)) {
+    errors.push("Academic year must follow this format: 2025 - 2026");
+  }
+
+  if (!term) {
+    errors.push("Term is required.");
+  } else if (!validTerms.includes(term)) {
+    errors.push(`Term must be one of: ${validTerms.join(", ")}`);
+  }
+
+  if (!empStatus) {
+    errors.push("Employee status is required.");
+  } else if (!validStatuses.includes(empStatus)) {
+    errors.push(`Employee status must be one of: ${validStatuses.join(", ")}`);
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Validate an array of load rows.
+ * Returns { valid: boolean, errors: string[] }
+ */
+export function validateLoadRows(loads) {
+  const errors = [];
+  if (!Array.isArray(loads)) return { valid: true, errors: [] };
+
+  loads.forEach((row, idx) => {
+    const units = Number(row.units);
+    const lec = Number(row.lec);
+    const lab = Number(row.lab);
+    const sections = Number(row.sections);
+
+    if (isNaN(units) || units < 0) errors.push(`Row ${idx + 1}: units must be >= 0.`);
+    if (isNaN(lec) || lec < 0) errors.push(`Row ${idx + 1}: lecture hours must be >= 0.`);
+    if (isNaN(lab) || lab < 0) errors.push(`Row ${idx + 1}: lab hours must be >= 0.`);
+    if (isNaN(sections) || sections < 1) errors.push(`Row ${idx + 1}: sections must be >= 1.`);
+  });
+
+  return { valid: errors.length === 0, errors };
+}
+
+export function parseTime12HourToMinutes(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const meridiem = match[3].toUpperCase();
+
+  if (hour < 1 || hour > 12) return null;
+  if (minute < 0 || minute > 59) return null;
+
+  if (meridiem === "PM" && hour !== 12) hour += 12;
+  if (meridiem === "AM" && hour === 12) hour = 0;
+
+  return hour * 60 + minute;
+}
+
+export function hasOverlappingSchedule(a, b) {
+  const aDay = String(a?.day || "").trim().toLowerCase();
+  const bDay = String(b?.day || "").trim().toLowerCase();
+  if (!aDay || !bDay || aDay !== bDay) return false;
+
+  const aStart = parseTime12HourToMinutes(a?.startTime);
+  const aEnd = parseTime12HourToMinutes(a?.endTime);
+  const bStart = parseTime12HourToMinutes(b?.startTime);
+  const bEnd = parseTime12HourToMinutes(b?.endTime);
+
+  if ([aStart, aEnd, bStart, bEnd].includes(null)) return false;
+  return aStart < bEnd && bStart < aEnd;
+}
+
+/**
+ * Validate course-add payload.
+ * Returns { valid: boolean, errors: string[] }
+ */
+export function validateCourseAdd(body) {
+  const errors = [];
+  const code = (body.code || "").trim();
+  const title = (body.title || "").trim();
+  const day = (body.day || "").trim();
+  const startTime = (body.startTime || "").trim();
+  const endTime = (body.endTime || "").trim();
+  const units = Number(body.units);
+  const sectionRoom = (body.sectionRoom || "").trim();
+
+  if (!code) errors.push("Course code is required.");
+  if (!title) errors.push("Course title is required.");
+  if (!day) errors.push("Day is required.");
+  if (!startTime) errors.push("Start time is required.");
+  if (!endTime) errors.push("End time is required.");
+  if (!sectionRoom) errors.push("Section and room are required.");
+  if (isNaN(units) || units <= 0) errors.push("Units must be greater than 0.");
+
+  const startMinutes = parseTime12HourToMinutes(startTime);
+  const endMinutes = parseTime12HourToMinutes(endTime);
+
+  if (startTime && startMinutes === null) {
+    errors.push("Start time must be in this format: 7:00 AM");
+  }
+
+  if (endTime && endMinutes === null) {
+    errors.push("End time must be in this format: 10:45 AM");
+  }
+
+  if (startMinutes !== null && endMinutes !== null && endMinutes <= startMinutes) {
+    errors.push("End time must be later than start time.");
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Validate approval action.
+ * Returns { valid: boolean, errors: string[] }
+ */
+export function validateApprovalAction(body) {
+  const errors = [];
+  const action = (body.action || "").trim();
+  const remarks = (body.remarks || "").trim();
+  const validActions = ["approve", "reject", "return"];
+
+  if (!validActions.includes(action)) errors.push(`Invalid action. Must be one of: ${validActions.join(", ")}.`);
+  if (remarks.length > 500) errors.push("Remarks must be under 500 characters.");
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Validate program chair action.
+ * Returns { valid: boolean, errors: string[] }
+ */
+export function validateChairAction(body) {
+  const errors = [];
+  const action = (body.action || "").trim();
+  const id = (body.id || "").trim();
+  const validActions = ["send", "return", "sendToDean", "sendToFaculty"];
+
+  if (!id) errors.push("TWS ID is required.");
+  if (!validActions.includes(action)) errors.push(`Invalid action. Must be one of: ${validActions.join(", ")}.`);
+
+  return { valid: errors.length === 0, errors };
+}
+
+export function validateFacultyNote(value) {
+  const errors = [];
+  const note = String(value || "").trim();
+
+  if (note.length > 1500) {
+    errors.push("Faculty notes must be under 1500 characters.");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    note,
+  };
+}

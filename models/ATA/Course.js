@@ -19,5 +19,7 @@ const curriculumSchema = new mongoose.Schema({
 
 // We'll still call the model 'Course' to keep your imports working, 
 // but it now represents a whole Term Curriculum.
-const Course = mongoose.model('Course', curriculumSchema, 'ata_courses');
-export default Course;
+const ATACourse =
+  mongoose.models.ATACourse ||
+  mongoose.model('ATACourse', curriculumSchema, 'ata_courses');
+export default ATACourse;

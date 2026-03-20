@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chalkboard | ATA My Submissions</title>
+    
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="/ATA/css/submissions.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+</head>
+<body data-role="<%= typeof role !== 'undefined' ? role : 'Professor' %>">
+    
+    <% 
+        if (typeof role !== 'undefined') {
+            if (['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) { %>
+                <%- include('../MainPages/admin/partials/adminSideMenuBar') %>
+            <% } else if (role === 'Dean') { %>
+                <%- include('../MainPages/dean/partials/deanMenuBar') %>
+            <% } else if (role === 'Program-Chair') { %>
+                <%- include('../MainPages/progChair/partials/progChairMenuBar') %>
+            <% } else { %>
+                <%- include('../partials/sideMenuBar') %>
+            <% } 
+        } else { %>
+            <%- include('../partials/sideMenuBar') %>
+        <% }
+    %>
+
+    <main class="main-content">
+        
+        <div class="bb-page-header">
+            <div class="header-left">
+                <div class="user-profile-row">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-name">
+                        <% if (typeof filterType !== 'undefined' && filterType === 'approved') { %>
+                            My Approved ATA Forms
+                        <% } else if (typeof filterType !== 'undefined' && filterType === 'pending') { %>
+                            My Pending ATA Forms
+                        <% } else { %>
+                            My ATA Form Submissions
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="dateSearchInput" class="search-input" placeholder="Search by Date (e.g. 03/17/26)...">
+                </div>
+            </div>
+
+            <a href="<%= (typeof role !== 'undefined' && ['Admin', 'VPAA', 'HR', 'HRMO'].includes(role)) ? '/admin/ata' : '/ata/dashboard/window' %>" class="btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="bb-scroll-area">
+            
+            <div class="bb-accent-line"></div>
+
+            <div class="bb-tabs">
+                <div class="bb-tab">
+                    <% if (typeof filterType !== 'undefined' && filterType === 'approved') { %>
+                        Approved Submissions
+                    <% } else if (typeof filterType !== 'undefined' && filterType === 'pending') { %>
+                        Pending Submissions
+                    <% } else { %>
+                        All Submissions
+                    <% } %>
+                </div>
+            </div>
+            
+            <div class="bb-table-container">
+                <table class="bb-table" id="submissionsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;"></th>
+                            <th style="width: 30%;">Approval Track <i class="fas fa-sort"></i></th>
+                            <th style="width: 15%;">Term <i class="fas fa-sort"></i></th>
+                            <th style="width: 15%;">Date Submitted <i class="fas fa-sort"></i></th>
+                            <th style="width: 15%;">Status <i class="fas fa-sort"></i></th>
+                            <th style="width: 10%; text-align: center;">Units <i class="fas fa-sort"></i></th>
+                            <th style="width: 15%; text-align: center;">Action <i class="fas fa-sort"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!forms || forms.length === 0) { %>
+                            <tr class="no-data-row">
+                                <td colspan="7" style="padding: 60px; text-align: center; color: #888; font-size: 16px;">
+                                    <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px; display: block; color: #ccc;"></i>
+                                    No submissions available to display.
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% forms.forEach(form => { %>
+                                <tr class="data-row">
+                                    <td class="row-icon-cell">
+                                        <div class="row-icon-wrapper">
+                                            <% if (form.status !== 'FINALIZED') { %>
+                                                <span class="row-dot"></span>
+                                            <% } else { %>
+                                                <span class="row-dot" style="background-color: transparent;"></span>
+                                            <% } %>
+                                            <i class="fas fa-file-signature row-icon" style="color: #444;"></i>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
+                                            <% const revHistory = [...form.approvalHistory].reverse(); %>
+                                            <ul class="track-list">
+                                                <% revHistory.forEach((log, index) => { %>
+                                                    <li class="track-item <%= index > 0 ? 'hidden-track' : '' %>" style="<%= index > 0 ? 'display: none;' : '' %>">
+                                                        <% if (log.approvalStatus === 'RETURNED' || log.approvalStatus === 'REJECTED') { %>
+                                                            <i class="fas fa-times-circle" style="color: #dc3545; margin-top: 3px;"></i>
+                                                        <% } else { %>
+                                                            <i class="fas fa-check-circle" style="color: #28a745; margin-top: 3px;"></i>
+                                                        <% } %>
+                                                        <div>
+                                                            <strong style="color: #222;"><%= log.approverName || log.approverRole %></strong> 
+                                                            (<%= log.approvalStatus %>) <br>
+                                                            <span style="font-size: 11px; color: #888;"><%= new Date(log.date).toLocaleDateString() %></span>
+                                                            
+                                                            <% if (log.approvalStatus === 'RETURNED' && log.remarks) { %>
+                                                                <div class="track-reason">
+                                                                    <strong>Reason:</strong> <%= log.remarks %>
+                                                                </div>
+                                                            <% } %>
+                                                        </div>
+                                                    </li>
+                                                <% }) %>
+                                            </ul>
+                                            
+                                            <% if (revHistory.length > 1) { %>
+                                                <button type="button" onclick="toggleHistory(this)" style="background: transparent; border: none; color: #a0a0a0; font-size: 11px; font-weight: bold; cursor: pointer; padding: 5px 0 0 0; display: inline-flex; align-items: center; gap: 5px;">
+                                                    <i class="fas fa-chevron-down"></i> <span class="toggle-txt">View <%= revHistory.length - 1 %> older actions</span>
+                                                </button>
+                                            <% } %>
+
+                                        <% } else { %>
+                                            <span style="color: #888; font-style: italic;">No actions yet.</span>
+                                        <% } %>
+                                    </td>
+
+                                    <td>
+                                        <div style="font-weight: 600;"><%= form.term %></div>
+                                        <div style="font-size: 12px; color: #777;"><%= form.academicYear %></div>
+                                    </td>
+
+                                    <td class="searchable-date">
+                                        <%= new Date(form.createdAt).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) %>
+                                    </td>
+
+                                    <td>
+                                        <span style="color: #444; font-weight: 500;">
+                                            <%= form.status.replace('_', ' ') %>
+                                        </span>
+                                    </td>
+
+                                    <td style="text-align: center;">
+                                        <% if (form.totalEffectiveUnits > 0) { %>
+                                            <span class="badge-green"><%= form.totalEffectiveUnits %></span>
+                                        <% } else { %>
+                                            <span class="badge-grey">0</span>
+                                        <% } %>
+                                    </td>
+
+                                    <td style="text-align: center;">
+                                        <div style="display: flex; flex-direction: column; align-items: center;">
+                                            <a href="/ata/view-submission/<%= form._id %>" class="btn-dark">
+                                                View
+                                            </a>
+
+                                            <% if (form.status === 'DRAFT') { %>
+                                                <a href="/ata/edit/<%= form._id %>" class="btn-yellow">
+                                                    Edit
+                                                </a>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+        </div> 
+    </main>
+
+    <script src="/ATA/js/submissions.js"></script>
+   
+</body>
+</html>
