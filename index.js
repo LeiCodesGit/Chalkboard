@@ -56,6 +56,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // ========================
 // Import Routes
 // ========================
+// Redirect root to login
+app.get("/", (req, res) => {
+    res.redirect("/login");
+});                                 
+
+
 // Main Pages
 import loginRoutes from "./routes/MainPages/loginRoutes.js";
 import professorRoutes from "./routes/MainPages/professorRoutes.js";
