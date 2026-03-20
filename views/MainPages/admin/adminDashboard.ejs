@@ -523,7 +523,7 @@
             justify-content: center;
             padding: 30px 16px;
             overflow-y: auto;
-            transform: none !important;
+            transform: none;
         }
 
         .modal-overlay.open {
@@ -616,6 +616,10 @@
         }
         .team-member.leadership span { color: var(--accent-primary, #a01a1e); }
     </style>
+
+    <!--Responsiveness Styles-->
+    <link rel="stylesheet" href="/MainPages/css/adminResponsive.css">
+
 </head>
 <body>
 <div class="page-layout">
@@ -874,7 +878,7 @@
                             </div>
                             <!-- CONTENT AREA -->
                             <div class="rte-content" id="rteContent" contenteditable="true"
-                                 data-placeholder="Detailed information for faculty members..."></div>
+                                data-placeholder="Detailed information for faculty members..."></div>
                             <div class="rte-footer">Word count: <span id="wordCount">0</span></div>
                         </div>
                         <textarea name="messageDetail" id="messageDetailField" style="display:none"></textarea>
