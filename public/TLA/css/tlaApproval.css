@@ -738,3 +738,120 @@ body {
 .chip-approved            { background: #1a7f4e; }
 .chip-returned            { background: #a00100; }
 
+/* ═══════════════════════════════════════════════════════════
+   SIGNATURE TAB BAR  (Upload / Draw toggle)
+   ═══════════════════════════════════════════════════════════ */
+.sig-tab-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.sig-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 10px;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    background: var(--color-white);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.sig-tab-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.sig-tab-btn:hover {
+    border-color: var(--accent-secondary);
+    color: var(--accent-secondary);
+}
+
+.sig-tab-btn.active {
+    background: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+    color: var(--text-on-dark);
+}
+
+
+.draw-canvas-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.sig-canvas {
+    width: 100%;
+    height: 120px;
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    background: #fff;
+    cursor: crosshair;
+    display: block;
+    touch-action: none; /* prevent scroll while drawing on mobile */
+    transition: border-color 0.2s;
+}
+
+.sig-canvas:hover {
+    border-color: var(--accent-secondary);
+}
+
+.draw-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.draw-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.sig-draw-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 10px;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    background: var(--color-white);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.sig-draw-action-btn .material-symbols-outlined {
+    font-size: 15px;
+}
+
+.sig-draw-action-btn:hover {
+    border-color: var(--accent-secondary);
+    color: var(--accent-secondary);
+}
+
+.sig-draw-confirm-btn {
+    background: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+    color: var(--text-on-dark);
+}
+
+.sig-draw-confirm-btn:hover {
+    background: var(--accent-secondary-hover, #001c55);
+    border-color: var(--accent-secondary-hover, #001c55);
+    color: var(--text-on-dark);
+}
+

@@ -337,19 +337,48 @@
                         <!-- E-Signature -->
                         <div class="sidebar-section">
                             <label class="sidebar-label">E-Signature</label>
-                            <div class="signature-wrapper">
-                                <div class="signature-box" id="signature-box">
-                                    <% if (locals.signatureUrl) { %>
-                                        <img src="<%= signatureUrl %>" alt="Signature" class="signature-img">
-                                    <% } else { %>
-                                        <span class="signature-placeholder">Click to upload signature</span>
-                                    <% } %>
-                                    <input type="file" id="signature-upload" accept="image/*" hidden>
-                                </div>
-                                <button type="button" class="signature-remove-btn" id="signature-remove"
-                                        title="Remove signature" style="display: none;">
-                                    <span class="material-symbols-outlined">cancel</span>
+                            <!-- Tab toggle -->
+                            <div class="sig-tab-bar">
+                                <button type="button" class="sig-tab-btn active" id="sig-tab-upload">
+                                    <span class="material-symbols-outlined">upload</span> Upload
                                 </button>
+                                <button type="button" class="sig-tab-btn" id="sig-tab-draw">
+                                    <span class="material-symbols-outlined">draw</span> Draw
+                                </button>
+                            </div>
+
+                            <!-- Upload panel -->
+                            <div id="sig-panel-upload" class="sig-panel">
+                                <div class="signature-wrapper">
+                                    <div class="signature-box" id="signature-box">
+                                        <% if (locals.signatureUrl) { %>
+                                            <img src="<%= signatureUrl %>" alt="Signature" class="signature-img">
+                                        <% } else { %>
+                                            <span class="signature-placeholder">Click to upload signature</span>
+                                        <% } %>
+                                        <input type="file" id="signature-upload" accept="image/*" hidden>
+                                    </div>
+                                    <button type="button" class="signature-remove-btn" id="signature-remove"
+                                            title="Remove signature" style="display: none;">
+                                        <span class="material-symbols-outlined">cancel</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Draw panel -->
+                            <div id="sig-panel-draw" class="sig-panel" style="display:none;">
+                                <div class="draw-canvas-wrap">
+                                    <canvas id="sig-canvas" class="sig-canvas" width="260" height="120"></canvas>
+                                    <p class="draw-hint">Draw your signature above</p>
+                                </div>
+                                <div class="draw-actions">
+                                    <button type="button" class="sig-draw-action-btn" id="sig-canvas-clear">
+                                        <span class="material-symbols-outlined">delete_sweep</span> Clear
+                                    </button>
+                                    <button type="button" class="sig-draw-action-btn sig-draw-confirm-btn" id="sig-canvas-confirm">
+                                        <span class="material-symbols-outlined">check_circle</span> Use Signature
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -422,3 +451,4 @@
     <script src="/TLA/js/tlaApproval.js"></script>
 </body>
 </html>
+

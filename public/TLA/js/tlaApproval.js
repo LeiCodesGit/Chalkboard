@@ -42,6 +42,24 @@ document.addEventListener('DOMContentLoaded', () => {
         syncStatusColor();
     }
 
+    // ─── Signature tab switching (Upload ↔ Draw) ──────────
+    const tabUpload    = document.getElementById('sig-tab-upload');
+    const tabDraw      = document.getElementById('sig-tab-draw');
+    const panelUpload  = document.getElementById('sig-panel-upload');
+    const panelDraw    = document.getElementById('sig-panel-draw');
+
+    function switchSigTab(active) {
+        // active: 'upload' | 'draw'
+        const isUpload = active === 'upload';
+        tabUpload?.classList.toggle('active', isUpload);
+        tabDraw?.classList.toggle('active', !isUpload);
+        if (panelUpload) panelUpload.style.display = isUpload ? '' : 'none';
+        if (panelDraw)   panelDraw.style.display   = isUpload ? 'none' : '';
+    }
+
+    if (tabUpload) tabUpload.addEventListener('click', () => switchSigTab('upload'));
+    if (tabDraw)   tabDraw.addEventListener('click',   () => switchSigTab('draw'));
+
     // ─── Signature upload ──────────────────────────────────
     const sigBox    = document.getElementById('signature-box');
     const sigInput  = document.getElementById('signature-upload');
@@ -71,6 +89,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (sigBox && sigBox.querySelector('.signature-img')) {
             sigRemove.style.display = 'flex';
+        }
+    }
+
+    // ─── Canvas draw signature ─────────────────────────────
+    const canvas  = document.getElementById('sig-canvas');
+    const btnClear   = document.getElementById('sig-canvas-clear');
+    const btnConfirm = document.getElementById('sig-canvas-confirm');
+
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const src  = e.touches ? e.touches[0] : e;
+            return {
+                x: (src.clientX - rect.left) * (canvas.width  / rect.width),
+                y: (src.clientY - rect.top)  * (canvas.height / rect.height)
+            };
+        }
+
+        function startDraw(e) { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        function doDraw(e)    { e.preventDefault(); if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = '#0a1a3a'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
+        function stopDraw()   { drawing = false; }
+
+        canvas.addEventListener('mousedown',  startDraw);
+        canvas.addEventListener('mousemove',  doDraw);
+        canvas.addEventListener('mouseup',    stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+        canvas.addEventListener('touchstart', startDraw, { passive: false });
+        canvas.addEventListener('touchmove',  doDraw,    { passive: false });
+        canvas.addEventListener('touchend',   stopDraw);
+
+        if (btnClear) {
+            btnClear.addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+        }
+
+        if (btnConfirm) {
+            btnConfirm.addEventListener('click', () => {
+                const dataUrl = canvas.toDataURL('image/png');
+                // Inject into signature-box so the existing save/submit flow picks it up
+                if (sigBox) {
+                    sigBox.innerHTML = `<img src="${dataUrl}" alt="Signature" class="signature-img">`;
+                    sigBox.appendChild(sigInput);
+                    if (sigRemove) sigRemove.style.display = 'flex';
+                }
+                // Switch back to upload tab to show the preview
+                switchSigTab('upload');
+            });
         }
     }
 

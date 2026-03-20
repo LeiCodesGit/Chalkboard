@@ -37,16 +37,17 @@
 
     // Action button config per role
     // Chain: Professor → Program-Chair → Dean → HR/HRMO → VPAA (final)
+    // activeStatuses covers both pre-digital and post-digital turns for each role.
     const actionConfig = {
-        'Program-Chair':          { icon: 'thumb_up',     label: 'Endorse',  btnClass: 'btn-purple',  activeStatus: 'Pending' },
-        'Dean':                   { icon: 'approval',     label: 'Approve',  btnClass: 'btn-teal',    activeStatus: 'Chair-Approved' },
-        'HR':                     { icon: 'verified',     label: 'Review',   btnClass: 'btn-green',   activeStatus: 'Dean-Approved' },
-        'HRMO':                   { icon: 'verified',     label: 'Review',   btnClass: 'btn-green',   activeStatus: 'Dean-Approved' },
-        'VPAA':                   { icon: 'check_circle', label: 'Approve',  btnClass: 'btn-cyan',    activeStatus: 'HR-Approved' },
-        'Technical':              { icon: 'visibility',   label: 'View',     btnClass: 'btn-outline', activeStatus: null },
-        'Practicum-Coordinator':  { icon: 'visibility',   label: 'View',     btnClass: 'btn-outline', activeStatus: null },
-        'Admin':                  { icon: 'rate_review',  label: 'Review',   btnClass: 'btn-blue',    activeStatus: null },
-        'Super-Admin':            { icon: 'rate_review',  label: 'Review',   btnClass: 'btn-blue',    activeStatus: null }
+        'Program-Chair':          { icon: 'thumb_up',     label: 'Endorse',  btnClass: 'btn-purple',  activeStatuses: ['Pending', 'Post-Pending'] },
+        'Dean':                   { icon: 'approval',     label: 'Approve',  btnClass: 'btn-teal',    activeStatuses: ['Chair-Approved', 'Post-Chair-Approved'] },
+        'HR':                     { icon: 'verified',     label: 'Review',   btnClass: 'btn-green',   activeStatuses: ['Post-Dean-Approved'] },
+        'HRMO':                   { icon: 'verified',     label: 'Review',   btnClass: 'btn-green',   activeStatuses: ['Post-Dean-Approved'] },
+        'VPAA':                   { icon: 'check_circle', label: 'Approve',  btnClass: 'btn-cyan',    activeStatuses: ['HR-Approved'] },
+        'Technical':              { icon: 'visibility',   label: 'View',     btnClass: 'btn-outline', activeStatuses: [] },
+        'Practicum-Coordinator':  { icon: 'visibility',   label: 'View',     btnClass: 'btn-outline', activeStatuses: [] },
+        'Admin':                  { icon: 'rate_review',  label: 'Review',   btnClass: 'btn-blue',    activeStatuses: [] },
+        'Super-Admin':            { icon: 'rate_review',  label: 'Review',   btnClass: 'btn-blue',    activeStatuses: [] }
     };
     const myAction = actionConfig[role] || actionConfig['Admin'];
 %>
@@ -145,7 +146,9 @@
                         }; %>
                         <% submissions.forEach(function(s, i) {
                             // Determine if this row is actionable by the current role
-                            const isMyTurn = myAction.activeStatus === null || s.macroStatus === myAction.activeStatus;
+                            const isMyTurn = myAction.activeStatuses.length === 0
+                                ? true  // Admin/Technical/Practicum always show their button
+                                : myAction.activeStatuses.includes(s.macroStatus);
                         %>
                             <tr class="tbl-row <%= isMyTurn ? 'your-action' : '' %>" data-status="<%= s.macroStatus %>">
                                 <td><%= i + 1 %></td>

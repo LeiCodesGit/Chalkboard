@@ -137,7 +137,12 @@ app.use("/tla/courses", coursesRoutes);
 app.use("/tla/overview", overviewRoutes);
 app.use("/tla/form", formRoutes);
 app.use("/tla/approval", approvalRoutes);
-app.get("/tla", (req, res) => res.redirect("/tla/courses"));
+app.get("/tla", (req, res) => {
+    const role = req.session?.user?.role;
+    const approvalRoles = ['Program-Chair', 'Dean', 'HR', 'HRMO', 'VPAA', 'Technical', 'Practicum-Coordinator', 'Admin', 'Super-Admin'];
+    if (role && approvalRoles.includes(role)) return res.redirect("/admin/tla");
+    return res.redirect("/tla/courses");
+});
 
 // Redirects for removed TLA routes
 app.get("/tla/admin-overview", (req, res) => res.redirect("/admin/tla"));

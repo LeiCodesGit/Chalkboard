@@ -1,4 +1,4 @@
-﻿import {
+import {
     TLA_Main,   TLA_B1,   TLA_B2,
     Status_Main,Status_B1,Status_B2,
     Pre_Main,   Pre_B1,   Pre_B2,
@@ -6,9 +6,10 @@
 } from '../models/TLA/tlaModels.js';
 import Syllabus from '../models/Syllabus/syllabus.js';
 import SyllabusApprovalStatus from '../models/Syllabus/syllabusApprovalStatus.js';
+import WeeklySchedule from '../models/Syllabus/weeklySchedule.js';
 import userSchema from '../models/user.js';
 import { mainDB } from '../database/mongo-dbconnect.js';
-import { readFileSync, mkdirSync } from 'fs';
+import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
@@ -18,21 +19,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PDF_TEMPLATE = join(__dirname, '../templates/TLA_TEMPLATE_BLANK.pdf');
 const User = mainDB.model("User", userSchema);
 
-// ── Signature file upload (PNG only) ──────────────────────────────────────────
-const SIGNATURE_DIR = join(__dirname, '../public/uploads/signatures');
-mkdirSync(SIGNATURE_DIR, { recursive: true });
-
-const signatureStorage = multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, SIGNATURE_DIR),
-    filename: (req, file, cb) => {
-        const tlaId = req.params.id || 'unknown';
-        const type  = req.body.signatureType === 'post' ? 'post' : 'pre';
-        cb(null, `${tlaId}_${type}_${Date.now()}.png`);
-    }
-});
-
+// ── Signature file upload (PNG only, memory storage — saved as base64 in MongoDB) ──
 export const signatureUpload = multer({
-    storage: signatureStorage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 2 * 1024 * 1024 },  // 2 MB
     fileFilter: (_req, file, cb) => {
         if (file.mimetype === 'image/png') {
@@ -674,6 +663,14 @@ export async function updateTLA(req, res) {
                     TLA_B2.findByIdAndUpdate(id,   postSigUpdate)
                 ]);
             }
+
+            // Lock post-digital section so professor cannot edit while awaiting post approvals.
+            const lockPost = { $set: { accessible: false } };
+            await Promise.all([
+                Post_Main.findOneAndUpdate({ tlaID: id }, lockPost, { upsert: true }),
+                Post_B1.findOneAndUpdate({ tlaID: id },  lockPost, { upsert: true }),
+                Post_B2.findOneAndUpdate({ tlaID: id },  lockPost, { upsert: true })
+            ]);
         }
 
         let tlaStatus = tla.status;
@@ -720,10 +717,15 @@ export async function updateTLA(req, res) {
                 assessmentResults: post_assessmentResults,
                 remarks:           post_remarks
             };
+            // Ensure we don't accidentally overwrite the accessible: false flag set during submit-post
+            if (isPostSubmit) postUpdate.accessible = false;
+
+            const finalUpdate = { $set: postUpdate };
+
             await Promise.all([
-                Post_Main.findOneAndUpdate({ tlaID: id }, postUpdate, { upsert: true }),
-                Post_B1.findOneAndUpdate({ tlaID: id }, postUpdate, { upsert: true }),
-                Post_B2.findOneAndUpdate({ tlaID: id }, postUpdate, { upsert: true })
+                Post_Main.findOneAndUpdate({ tlaID: id }, finalUpdate, { upsert: true }),
+                Post_B1.findOneAndUpdate({ tlaID: id }, finalUpdate, { upsert: true }),
+                Post_B2.findOneAndUpdate({ tlaID: id }, finalUpdate, { upsert: true })
             ]);
         }
 
@@ -853,12 +855,22 @@ export async function getOverview(req, res) {
             }
         }
 
+        let syllabusWeeks = [];
+        if (courseInfo.syllabusId) {
+            syllabusWeeks = await WeeklySchedule.find({ syllabusID: courseInfo.syllabusId });
+        }
+        const activeSyllabusWeekMap = {};
+        for (const sw of syllabusWeeks) {
+            if (sw.week) activeSyllabusWeekMap[sw.week] = sw.dateCovered || '';
+        }
+
         const weeks = [];
         for (let w = 1; w <= 14; w++) {
+            const dCov = activeSyllabusWeekMap[w] || '';
             if (weekMap[w]) {
-                weeks.push({ weekNumber: w, _id: weekMap[w]._id, status: weekMap[w].status });
+                weeks.push({ weekNumber: w, _id: weekMap[w]._id, status: weekMap[w].status, dateCovered: dCov });
             } else {
-                weeks.push({ weekNumber: w, _id: null, status: 'Not Submitted' });
+                weeks.push({ weekNumber: w, _id: null, status: 'Not Submitted', dateCovered: dCov });
             }
         }
 
@@ -1108,6 +1120,18 @@ export async function postApprovalAction(req, res) {
                 ]);
             }
 
+            // When a POST-chain approver (Chair or Dean) returns the TLA,
+            // re-unlock the post-digital section so the professor can edit and resubmit.
+            if (['programChairPost', 'deanPost'].includes(step) && verdict === 'Returned') {
+                const reopenFlag = { $set: { accessible: true } };
+                const upsertOpts = { upsert: true, strict: false };
+                await Promise.all([
+                    Post_Main.findOneAndUpdate({ tlaID }, reopenFlag, upsertOpts),
+                    Post_B1.findOneAndUpdate({ tlaID },  reopenFlag, upsertOpts),
+                    Post_B2.findOneAndUpdate({ tlaID },  reopenFlag, upsertOpts)
+                ]);
+            }
+
             if (req.headers['content-type']?.includes('application/json')) {
                 return res.json({ success: true, status: nextMacro, verdict });
             }
@@ -1234,16 +1258,13 @@ export async function uploadSignatureFile(req, res) {
             return res.status(400).json({ error: 'No file uploaded. Please upload a PNG signature.' });
         }
 
-        // Convert the saved file to a base64 data URL so the existing
-        // signature fields + drawSignatureImage PDF pipeline work unchanged.
-        const fileBuffer = readFileSync(req.file.path);
-        const dataUrl = `data:image/png;base64,${fileBuffer.toString('base64')}`;
+        // Convert in-memory buffer to base64 data URL — no disk write needed.
+        const dataUrl = `data:image/png;base64,${req.file.buffer.toString('base64')}`;
 
         const normalizedType = req.body.signatureType === 'post' ? 'post' : 'pre';
-        const filePath = `/uploads/signatures/${req.file.filename}`;
         const updateFields = normalizedType === 'post'
-            ? { professorPostSignature: dataUrl, professorPostSignatureFile: filePath }
-            : { professorPreSignature: dataUrl, professorSignature: dataUrl, professorPreSignatureFile: filePath };
+            ? { professorPostSignature: dataUrl }
+            : { professorPreSignature: dataUrl, professorSignature: dataUrl };
 
         await Promise.all([
             TLA_Main.findByIdAndUpdate(id, updateFields),
@@ -1251,7 +1272,7 @@ export async function uploadSignatureFile(req, res) {
             TLA_B2.findByIdAndUpdate(id,   updateFields)
         ]);
 
-        return res.json({ success: true, message: 'Signature file uploaded successfully.', filePath });
+        return res.json({ success: true, message: 'Signature uploaded successfully.' });
     } catch (error) {
         console.error('uploadSignatureFile error:', error);
         res.status(500).json({ error: 'Server error' });
@@ -1391,13 +1412,13 @@ async function renderTlaPdf(payload) {
     draw(payload.deanLinePre, 435, 395, { size: 8, maxWidth: 100 });
 
     // POST-DIGITAL signature row
-    await drawSignatureImage(payload.preparedSignaturePost, 45, 345, 160, 110);
-    await drawSignatureImage(payload.programChairSignaturePost, 215, 350, 160, 110);
-    await drawSignatureImage(payload.deanSignaturePost, 385, 350, 160, 110);
+    await drawSignatureImage(payload.preparedSignaturePost, 45, 112, 160, 110);
+    await drawSignatureImage(payload.programChairSignaturePost, 215, 120, 160, 110);
+    await drawSignatureImage(payload.deanSignaturePost, 387, 120, 160, 110);
 
-    draw(payload.preparedByNamePost, 85, 388, { size: 9, maxWidth: 142 });
-    draw(payload.programChairLinePost, 260, 395, { size: 9, maxWidth: 142 });
-    draw(payload.deanLinePost, 435, 395, { size: 9, maxWidth: 142 });
+    draw(payload.preparedByNamePost, 85, 158, { size: 9, maxWidth: 142 });
+    draw(payload.programChairLinePost, 260, 165, { size: 9, maxWidth: 142 });
+    draw(payload.deanLinePost, 435, 165, { size: 9, maxWidth: 142 });
 
     return pdfDoc.save();
 }

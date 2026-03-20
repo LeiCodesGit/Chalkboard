@@ -125,7 +125,105 @@ document.addEventListener('DOMContentLoaded', function () {
     setupSignatureBlock('pre');
     setupSignatureBlock('post');
 
+    // ─── Canvas draw signature ─────────────────────────────
+    function setupCanvasDraw(prefix) {
+        const canvas     = document.getElementById(prefix + '-sig-canvas');
+        const clearBtn   = document.getElementById(prefix + '-canvas-clear');
+        const confirmBtn = document.getElementById(prefix + '-canvas-confirm');
+        const area       = document.getElementById(prefix + '-sig-area');
+        const sigFieldId = prefix === 'post' ? 'professorPostSignature' : 'professorPreSignature';
+        const removeBtn  = document.getElementById(prefix + '-sig-remove');
+        const input      = document.getElementById(prefix + '-sig-input');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const src  = e.touches ? e.touches[0] : e;
+            return {
+                x: (src.clientX - rect.left) * (canvas.width  / rect.width),
+                y: (src.clientY - rect.top)  * (canvas.height / rect.height)
+            };
+        }
+        function startDraw(e) { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        function doDraw(e)    { e.preventDefault(); if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = '#0a1a3a'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
+        function stopDraw()   { drawing = false; }
+
+        canvas.addEventListener('mousedown',  startDraw);
+        canvas.addEventListener('mousemove',  doDraw);
+        canvas.addEventListener('mouseup',    stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+        canvas.addEventListener('touchstart', startDraw, { passive: false });
+        canvas.addEventListener('touchmove',  doDraw,    { passive: false });
+        canvas.addEventListener('touchend',   stopDraw);
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => ctx.clearRect(0, 0, canvas.width, canvas.height));
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                const dataUrl = canvas.toDataURL('image/png');
+
+                // Inject into signature upload area (same as upload flow)
+                if (area) {
+                    area.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = dataUrl; img.alt = 'Signature';
+                    img.className = 'sig-preview-img';
+                    img.id = prefix + '-sig-preview';
+                    area.appendChild(img);
+                    if (input) area.appendChild(input);
+                    if (removeBtn) removeBtn.style.display = 'inline-flex';
+                }
+
+                // Update hidden signature field
+                const sigField = document.getElementById(sigFieldId);
+                if (sigField) sigField.value = dataUrl;
+                const legacyField = document.getElementById('professorSignature');
+                if (legacyField && prefix !== 'post') legacyField.value = dataUrl;
+
+                // Also upload to server immediately (same as file upload)
+                const tlaId = document.querySelector('[name="_tlaId"]');
+                if (tlaId && tlaId.value) {
+                    fetch('/tla/form/' + tlaId.value + '/signature', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ signatureDataUrl: dataUrl, signatureType: prefix })
+                    }).catch(err => console.error('Drawn signature upload error:', err));
+                }
+
+                // Switch back to Upload tab to show the preview
+                switchFormSigTab(prefix, 'upload');
+            });
+        }
+    }
+
+    setupCanvasDraw('pre');
+    setupCanvasDraw('post');
+
 });
+
+
+/**
+ * switchFormSigTab(prefix, tab)
+ * Switches between Upload and Draw panels for a given signature block.
+ * Called from inline onclick in tlaForm.ejs.
+ */
+function switchFormSigTab(prefix, tab) {
+    const isUpload = tab === 'upload';
+    const uploadBtn = document.getElementById(prefix + '-tab-upload');
+    const drawBtn   = document.getElementById(prefix + '-tab-draw');
+    const uploadPanel = document.getElementById(prefix + '-sig-panel-upload');
+    const drawPanel   = document.getElementById(prefix + '-sig-panel-draw');
+
+    if (uploadBtn) uploadBtn.classList.toggle('active', isUpload);
+    if (drawBtn)   drawBtn.classList.toggle('active', !isUpload);
+    if (uploadPanel) uploadPanel.style.display = isUpload ? '' : 'none';
+    if (drawPanel)   drawPanel.style.display   = isUpload ? 'none' : '';
+}
 
 
 /**

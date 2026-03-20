@@ -106,16 +106,52 @@
                         </div>
                         <div class="module-info">
                             <h3 class="module-title">TLA</h3>
-                            <% if (approverMode) { %>
+                            <% 
+                                let overallTlaStatus = 'NOT STARTED';
+                                let overallTlaClass = 'sts-not-started';
+                                let startWeekLink = '/tla/form';
+                                let totalApproved = 0;
+                                let firstIncompleteWeek = null;
+
+                                if (weeks && weeks.length > 0) {
+                                    weeks.forEach(w => {
+                                        if (w.status === 'Approved' || w.status === 'Archived') {
+                                            totalApproved++;
+                                        } else if (!firstIncompleteWeek) {
+                                            firstIncompleteWeek = w;
+                                        }
+                                    });
+
+                                    if (totalApproved === weeks.length) {
+                                        overallTlaStatus = 'APPROVED';
+                                        overallTlaClass = 'sts-approved';
+                                    } else if (totalApproved > 0 || weeks.some(w => w.status && w.status !== 'Not Submitted' && w.status !== 'Draft')) {
+                                        overallTlaStatus = 'IN PROGRESS';
+                                        overallTlaClass = 'sts-pending';
+                                    }
+                                }
+
+                                if (approverMode) { %>
                                 <p class="module-desc">Review TLA submissions</p>
                                 <span class="module-start-link">Review &#x2192;</span>
-                            <% } else { %>
+                            <% } else { 
+                                    if (courseInfo && courseInfo.syllabusId) {
+                                        startWeekLink += '?syllabusId=' + encodeURIComponent(courseInfo.syllabusId);
+                                    }
+                                    if (firstIncompleteWeek) {
+                                        if (firstIncompleteWeek._id && firstIncompleteWeek.status !== 'Not Submitted') {
+                                            startWeekLink = '/tla/form/' + firstIncompleteWeek._id + (courseInfo && courseInfo.syllabusId ? '?syllabusId=' + courseInfo.syllabusId : '');
+                                        } else {
+                                            startWeekLink += (startWeekLink.includes('?') ? '&' : '?') + 'week=' + firstIncompleteWeek.weekNumber;
+                                        }
+                                    }
+                            %>
                                 <p class="module-desc">Teaching-Learning Activity forms</p>
-                                <a class="module-start-link" href="/tla/form<%= courseInfo && courseInfo.syllabusId ? ('?syllabusId=' + courseInfo.syllabusId) : '' %>">Start &#x2192;</a>
+                                <a class="module-start-link" href="<%= startWeekLink %>">Start &#x2192;</a>
                             <% } %>
                         </div>
                         <div class="module-header-status">
-                            STATUS:&nbsp;<span class="sts-label sts-not-started">NOT STARTED</span>
+                            STATUS:&nbsp;<span class="sts-label <%= overallTlaClass %>"><%= overallTlaStatus %></span>
                         </div>
                         <span class="module-chevron material-symbols-outlined" id="tla-chevron">expand_more</span>
                     </div>
@@ -123,37 +159,49 @@
                     <div class="module-body" id="tla-body">
                         <%
                             const dotClassMap = {
-                                'Approved':       'dot-green',
-                                'Archived':       'dot-green',
-                                'HR-Approved':    'dot-blue',
-                                'Dean-Approved':  'dot-blue',
-                                'Chair-Approved': 'dot-blue',
-                                'Pending':        'dot-orange',
-                                'Returned':       'dot-red',
-                                'Draft':          'dot-gray',
-                                'Not Submitted':  'dot-gray'
+                                'Approved':            'dot-green',
+                                'Archived':            'dot-green',
+                                'HR-Approved':         'dot-blue',
+                                'VPAA-Approved':       'dot-blue',
+                                'Dean-Approved':       'dot-blue',
+                                'Chair-Approved':      'dot-blue',
+                                'Post-Dean-Approved':  'dot-blue',
+                                'Post-Chair-Approved': 'dot-blue',
+                                'Pending':             'dot-orange',
+                                'Post-Pending':        'dot-orange',
+                                'Returned':            'dot-red',
+                                'Draft':               'dot-gray',
+                                'Not Submitted':       'dot-gray'
                             };
                             const stsClassMap = {
-                                'Approved':       'sts-approved',
-                                'Archived':       'sts-approved',
-                                'HR-Approved':    'sts-pending',
-                                'Dean-Approved':  'sts-pending',
-                                'Chair-Approved': 'sts-pending',
-                                'Pending':        'sts-pending',
-                                'Returned':       'sts-rejected',
-                                'Draft':          'sts-not-started',
-                                'Not Submitted':  'sts-not-started'
+                                'Approved':            'sts-approved',
+                                'Archived':            'sts-approved',
+                                'HR-Approved':         'sts-pending',
+                                'VPAA-Approved':       'sts-pending',
+                                'Dean-Approved':       'sts-pending',
+                                'Chair-Approved':      'sts-pending',
+                                'Post-Dean-Approved':  'sts-pending',
+                                'Post-Chair-Approved': 'sts-pending',
+                                'Pending':             'sts-pending',
+                                'Post-Pending':        'sts-pending',
+                                'Returned':            'sts-rejected',
+                                'Draft':               'sts-not-started',
+                                'Not Submitted':       'sts-not-started'
                             };
                             const stsTextMap = {
-                                'Approved':       'APPROVED',
-                                'Archived':       'ARCHIVED',
-                                'HR-Approved':    'HR APPROVED',
-                                'Dean-Approved':  'DEAN APPROVED',
-                                'Chair-Approved': 'CHAIR APPROVED',
-                                'Pending':        'PENDING',
-                                'Returned':       'RETURNED',
-                                'Draft':          'DRAFT',
-                                'Not Submitted':  'NOT STARTED'
+                                'Approved':            'APPROVED',
+                                'Archived':            'ARCHIVED',
+                                'HR-Approved':         'HR APPROVED',
+                                'VPAA-Approved':       'VPAA APPROVED',
+                                'Dean-Approved':       'DEAN APPROVED',
+                                'Chair-Approved':      'CHAIR APPROVED',
+                                'Post-Dean-Approved':  'POST DEAN APPROVED',
+                                'Post-Chair-Approved': 'POST CHAIR APPROVED',
+                                'Pending':             'PENDING',
+                                'Post-Pending':        'POST PENDING',
+                                'Returned':            'RETURNED',
+                                'Draft':               'DRAFT',
+                                'Not Submitted':       'NOT STARTED'
                             };
                         %>
                         <% weeks.forEach(function(week) { %>
@@ -164,9 +212,11 @@
                             const wText   = stsTextMap[wStatus]   || 'NOT STARTED';
 
                             let wLink, wLabel, wDisabled;
+                            const dCovStr = week.dateCovered ? (' (' + week.dateCovered + ')') : '';
+                            
                             if (approverMode) {
                                 wLink     = week._id ? '/tla/approval/' + week._id : '#';
-                                wLabel    = 'Week ' + week.weekNumber + ' — TLA Review';
+                                wLabel    = 'Week ' + week.weekNumber + dCovStr + ' — TLA Review';
                                 wDisabled = !week._id;
                             } else {
                                 const q = [];
@@ -174,7 +224,7 @@
                                 if (week && week.weekNumber) q.push('week=' + encodeURIComponent(week.weekNumber));
                                 const query = q.length ? ('?' + q.join('&')) : '';
                                 wLink     = week._id ? '/tla/form/' + week._id + query : '/tla/form' + query;
-                                wLabel    = 'Week ' + week.weekNumber + ' — TLA Form';
+                                wLabel    = 'Week ' + week.weekNumber + dCovStr + ' — TLA Form';
                                 wDisabled = false;
                             }
                         %>
@@ -243,3 +293,4 @@
     <script src="/TLA/js/tlaOverview.js"></script>
 </body>
 </html>
+
