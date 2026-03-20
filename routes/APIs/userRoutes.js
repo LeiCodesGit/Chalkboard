@@ -264,4 +264,35 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// ==========================================
+// UPDATE SIGNATURE - POST /api/users/update-signature
+// ==========================================
+router.post('/update-signature', async (req, res) => {
+    try {
+        const { signatureImage } = req.body;
+        const userId = req.session?.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Not authenticated' });
+        }
+
+        if (!signatureImage || typeof signatureImage !== 'string') {
+            return res.status(400).json({ success: false, message: 'Invalid signature image' });
+        }
+
+        // Update user signature in all databases
+        const updateOp = { signatureImage };
+        await Promise.all([
+            MainUser.findByIdAndUpdate(userId, updateOp),
+            Backup1User.findByIdAndUpdate(userId, updateOp),
+            Backup2User.findByIdAndUpdate(userId, updateOp)
+        ]);
+
+        res.status(200).json({ success: true, message: 'Signature updated successfully' });
+    } catch (error) {
+        console.error('Error updating signature:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 export default router;

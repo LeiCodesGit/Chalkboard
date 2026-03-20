@@ -1,4 +1,4 @@
-﻿* {
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -111,6 +111,24 @@ body {
     border-radius: 5px;
     font-size: 13px;
     background-color: rgba(255, 255, 255, 0.95);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(160, 26, 30, 0.1);
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled,
+.form-group input[readonly],
+.form-group textarea[readonly] {
+    background-color: #f3f4f6;
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .form-group textarea {
@@ -207,6 +225,205 @@ body {
     pointer-events: none;
 }
 
+/* ─── Signature Upload Block ─────────────────────────────── */
+.signature-block {
+    margin-top: 16px;
+}
+
+.signature-block > label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-on-light, #333);
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+}
+
+.sig-format-hint {
+    font-weight: 400;
+    color: #888;
+    text-transform: none;
+    font-size: 10px;
+}
+
+.signature-upload-area {
+    min-height: 80px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #fafafa;
+    transition: border-color 0.2s, background 0.2s;
+    overflow: hidden;
+    position: relative;
+}
+
+.signature-upload-area:hover {
+    border-color: var(--accent-secondary, #002455);
+    background: rgba(0, 36, 85, 0.03);
+}
+
+.sig-placeholder {
+    font-size: 12px;
+    color: #999;
+    font-weight: 500;
+}
+
+.sig-preview-img {
+    max-width: 100%;
+    max-height: 80px;
+    object-fit: contain;
+    padding: 4px;
+}
+
+.sig-file-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.sig-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.sig-upload-btn,
+.sig-remove-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    color: #333;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.sig-upload-btn:hover {
+    border-color: var(--accent-secondary, #002455);
+    color: var(--accent-secondary, #002455);
+}
+
+.sig-remove-btn {
+    color: var(--accent-primary, #a01a1e);
+    border-color: var(--accent-primary, #a01a1e);
+}
+
+.sig-remove-btn:hover {
+    background: var(--accent-primary, #a01a1e);
+    color: #fff;
+}
+
+.sig-upload-btn .material-symbols-outlined,
+.sig-remove-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.sig-error {
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+    padding: 4px 8px;
+    background: #fef2f2;
+    border-radius: 4px;
+    border: 1px solid #fecaca;
+}
+
+/* ─── Signature Tab Bar (Upload / Draw) ─────────────── */
+.sig-tab-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.sig-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text-muted, #777);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.sig-tab-btn .material-symbols-outlined {
+    font-size: 15px;
+}
+
+.sig-tab-btn:hover {
+    border-color: var(--accent-secondary, #002455);
+    color: var(--accent-secondary, #002455);
+}
+
+.sig-tab-btn.active {
+    background: var(--accent-secondary, #002455);
+    border-color: var(--accent-secondary, #002455);
+    color: #fff;
+}
+
+/* ─── Draw Canvas Pad ─────────────── */
+.sig-draw-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-sig-canvas {
+    width: 100%;
+    height: 110px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background: #fff;
+    cursor: crosshair;
+    display: block;
+    touch-action: none; /* prevent scroll while drawing */
+    transition: border-color 0.2s;
+}
+
+.form-sig-canvas:hover {
+    border-color: var(--accent-secondary, #002455);
+}
+
+.form-draw-hint {
+    font-size: 10px;
+    color: var(--text-muted, #777);
+    margin-top: 2px;
+}
+
+.sig-draw-use-btn {
+    background: var(--accent-secondary, #002455);
+    border-color: var(--accent-secondary, #002455);
+    color: #fff;
+}
+
+.sig-draw-use-btn:hover {
+    background: var(--accent-secondary-hover, #001c55);
+    border-color: var(--accent-secondary-hover, #001c55);
+    color: #fff;
+}
+
+
 @media (max-width: 768px) {
     .main-content {
         margin-left: 0;
@@ -224,4 +441,88 @@ body {
     .form-actions {
         flex-direction: column;
     }
+}
+
+/* ============================
+   PILL APPROVAL TRACE
+   ============================ */
+
+.approval-trace-pills {
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.approval-trace-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.approval-trace-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.trace-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    position: relative;
+    cursor: default;
+}
+
+.pill-default { 
+    background-color: var(--page-bg); 
+    border: 1px solid var(--sidebar-line); 
+    color: var(--text-on-light); 
+}
+.pill-approved { 
+    background-color: rgba(24, 176, 107, 0.1); 
+    border: 1px solid var(--status-approved, #18b06b); 
+    color: var(--status-approved, #18b06b); 
+}
+.pill-returned { 
+    background-color: rgba(251, 146, 60, 0.1); 
+    border: 1px solid var(--status-returned, #fb923c); 
+    color: var(--status-returned, #fb923c); 
+}
+.pill-submitted { 
+    background-color: rgba(0, 58, 140, 0.1); 
+    border: 1px solid var(--status-submitted, #002455); 
+    color: var(--status-submitted, #002455); 
+}
+
+.trace-pill-date {
+    opacity: 0.7; 
+    font-size: 0.75rem; 
+    margin-left: 4px;
+}
+
+.trace-pill-chat {
+    font-size: 16px; 
+    margin-left: 4px; 
+    color: var(--status-rejected, #cc2222);
+}
+
+.trace-remarks-box {
+    width: 100%;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--text-on-light);
+    background: rgba(251, 146, 60, 0.05);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid var(--status-returned, #fb923c);
+    margin-top: -4px;
+    margin-bottom: 4px;
 }

@@ -1,7 +1,9 @@
 import express from 'express';
 import { Post_Main, Post_B1, Post_B2 } from '../../../models/TLA/tlaModels.js';
+import { requireLogin } from '../../../controllers/tlaController.js';
 
 const router = express.Router();
+router.use(requireLogin);
 
 // CREATE Post-Digital Session
 router.post('/', async (req, res) => {

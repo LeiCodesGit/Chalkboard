@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMCM Chalkboard | TLA Courses</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
 
     <!-- Material Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
@@ -85,20 +86,27 @@
         <div class="courses-grid" id="courses-grid">
             <% if (locals.courses && courses.length > 0) { %>
                 <% courses.forEach(function(course) { %>
+                    <% const isLocked = course.isLocked; %>
                     <a
-                        class="course-card"
-                        href="/tla/overview/<%= course.syllabusId %>"
+                        class="course-card <%= isLocked ? 'locked' : '' %>"
+                        href="<%= isLocked ? '#' : '/tla/overview/' + course.syllabusId %>"
                         data-course-code="<%= course.courseCode %>"
                         data-course-title="<%= course.courseTitle %>"
                         data-term="A.Y. <%= course.schoolYear || '' %> | <%= course.term || '' %>"
+                        data-is-locked="<%= isLocked %>"
+                        title="<%= isLocked ? 'Course locked - requires approved course syllabus' : '' %>"
                     >
+                        <!-- Lock overlay for locked courses -->
+                        <% if (isLocked) { %>
+                            <div class="lock-overlay">
+                                <span class="material-symbols-outlined lock-icon">lock</span>
+                                <p class="lock-message">Syllabus Approval Required</p>
+                            </div>
+                        <% } %>
+
                         <!-- Card banner image -->
                         <div class="card-banner">
-                            <% if (course.hasBanner) { %>
-                                <img src="/api/syllabus/<%= course.syllabusId %>/image" alt="Course banner" class="card-banner-img">
-                            <% } else { %>
-                                <div class="card-banner-placeholder"></div>
-                            <% } %>
+                            <img src="<%= course.courseImage %>" alt="<%= course.courseTitle %>" class="card-banner-img" onerror="this.style.display='none'">
                         </div>
 
                         <!-- Card body -->

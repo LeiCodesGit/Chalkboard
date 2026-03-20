@@ -1,208 +1,613 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLA | <%= tla ? 'Edit Form' : 'Create Form' %></title>
-    
+    <title>TLA | <%= tla ? 'Edit Form' : 'Create Form' %>
+    </title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+
+    <!-- Material Icons -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
     <!--inside the public file, for colors-->
     <link rel="stylesheet" href="/common/css/variables.css">
 
     <link rel="stylesheet" href="/TLA/css/tlaForm.css">
 </head>
+
 <body>
 
     <%- include('../partials/sideMenuBar') %>
-    
-    <main class="main-content">
-        <div class="background-overlay"></div>
-        
-        <div class="form-container">
 
-            <h1>COLLEGE TEACHING-LEARNING ACTIVITY</h1>
+        <main class="main-content">
+            <div class="background-overlay"></div>
 
-            <!-- Status badge for non-editable records -->
-            <% if (status && ['Pending','Approved','Archived'].includes(status.status)) { %>
-                <div class="status-badge status-badge--locked">
-                    <% if (status.status === 'Pending') { %>
-                        &#9203; This TLA is <strong>Pending</strong> approval. Pre-digital section is locked.
-                    <% } else if (status.status === 'Approved') { %>
-                        &#9989; Pre-digital session <strong>Approved</strong>. You may now fill in the post-digital section.
-                    <% } else { %>
-                        &#128274; This TLA is <strong><%= status.status %></strong> and cannot be edited.
+            <div class="form-container">
+
+                <h1>COLLEGE TEACHING-LEARNING ACTIVITY</h1>
+
+                <!-- Status badge for non-editable records -->
+                <% if (status &&
+                    ['Pending','Chair-Approved','Dean-Approved','Post-Pending','Post-Chair-Approved','Post-Dean-Approved','HR-Approved','Approved','Archived'].includes(status.status))
+                    { %>
+                    <div class="status-badge status-badge--locked">
+                        <% if (status.status==='Pending' ) { %>
+                            &#9203; This TLA is <strong>Pending</strong> Program Chair review. Pre-digital section is
+                            locked.
+                            <% } else if (status.status==='Chair-Approved' ) { %>
+                                &#9203; This TLA is <strong>Chair-Approved</strong>, awaiting Dean review.
+                                <% } else if (status.status==='Dean-Approved' ) { %>
+                                    <% const postIsCompleteAtDean=postDigital && postDigital.moIloCode &&
+                                        postDigital.participantTurnout && postDigital.assessmentResults; %>
+                                        <% if (postIsCompleteAtDean) { %>
+                                            &#9203; This TLA is <strong>Dean-Approved</strong>, awaiting HR/HRMO review.
+                                            <% } else { %>
+                                                &#9203; This TLA is <strong>Dean-Approved</strong>. Please complete and
+                                                submit the Post-Digital section to continue to HR/HRMO review.
+                                                <% } %>
+                                                    <% } else if (status.status==='Post-Pending' ) { %>
+                                                        &#9203; Post-Digital is submitted and awaiting Program Chair
+                                                        post review.
+                                                        <% } else if (status.status==='Post-Chair-Approved' ) { %>
+                                                            &#9203; Post-Digital is
+                                                            <strong>Post-Chair-Approved</strong>, awaiting Dean post
+                                                            review.
+                                                            <% } else if (status.status==='Post-Dean-Approved' ) { %>
+                                                                &#9203; Post-Digital is
+                                                                <strong>Post-Dean-Approved</strong>, awaiting HR/HRMO
+                                                                review.
+                                                                <% } else if (status.status==='HR-Approved' ) { %>
+                                                                    &#9203; This TLA is <strong>HR-Approved</strong>,
+                                                                    awaiting VPAA final approval.
+                                                                    <% } else if (status.status==='Approved' ) { %>
+                                                                        &#9989; This TLA has been
+                                                                        <strong>Approved</strong> by VPAA. Fully
+                                                                        complete.
+                                                                        <% } else { %>
+                                                                            &#128274; This TLA is <strong>
+                                                                                <%= status.status %>
+                                                                            </strong> and cannot be edited.
+                                                                            <% } %>
+                    </div>
                     <% } %>
-                </div>
-            <% } %>
 
-            <%
-                const formAction = tla ? '/tla/form/' + tla._id : '/tla/form';
-                // Pre-digital locked when Pending, Approved, or Archived
-                const isLocked   = status && ['Pending','Approved','Archived'].includes(status.status);
-            %>
-            
-            <form id="tla-form" action="<%= formAction %>" method="POST">
+                        <% 
+                        const approvalTrace = []; 
+                        /* Initial Submitter (Faculty) */
+                        if (tla && tla.status !== 'Draft' && tla.status !== 'Not Submitted') { 
+                            approvalTrace.push({ 
+                                role: 'Professor', 
+                                by: tla.facultyFacilitating || (locals.user ? user.firstName + ' ' + user.lastName : 'Unknown'), 
+                                date: tla.createdAt, /* Close enough approximation in absence of exact log */
+                                status: 'Submitted', 
+                                remarks: '' 
+                            }); 
+                        } 
+                        if (status) { 
+                            const roles = [ 
+                                { key: 'programChair', label: 'Program Chair' }, 
+                                { key: 'dean', label: 'Dean' }, 
+                                { key: 'programChairPost', label: 'Program Chair (Post-Digital)' }, 
+                                { key: 'deanPost', label: 'Dean (Post-Digital)' },
+                                { key: 'hr', label: 'HR / HRMO' }, 
+                                { key: 'vpaa', label: 'VPAA' } 
+                            ]; 
+                            roles.forEach(r => {
+                                if (status[r.key] && (status[r.key].status === 'Approved' || status[r.key].status === 'Returned')) {
+                                    approvalTrace.push({
+                                        role: r.label,
+                                        by: status[r.key].approvedBy,
+                                        date: status[r.key].approvalDate,
+                                        status: status[r.key].status,
+                                        remarks: status[r.key].remarks
+                                    });
+                                }
+                            });
+                        }
+                        %>
 
-                <div class="form-section top-section">
-                    <div class="form-row two-col">
-                        <div class="form-group">
-                            <label>NAME</label>
-                            <input type="text" name="_name" value="<%= user ? user.firstName + ' ' + user.lastName : '' %>" disabled="disabled">
-                        </div>
-                        <div class="form-group">
-                            <label>Faculty Member Facilitating Digital Session</label>
-                            <input type="text" name="facultyFacilitating"
-                                   value="<%= tla && tla.facultyFacilitating ? tla.facultyFacilitating : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row two-col">
-                        <div class="form-group">
-                            <label>Section(s)</label>
-                            <input type="text" name="section"
-                                   value="<%= tla && tla.section ? tla.section : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>Course Code</label>
-                            <input type="text" name="courseCode"
-                                   value="<%= tla && tla.courseCode ? tla.courseCode : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                    </div>
+                            <% if (approvalTrace.length> 0) { %>
+                                <div class="approval-trace-pills">
+                                    <div class="approval-trace-title">Approval Trace:</div>
+                                    <div class="approval-trace-container">
+                                        <% approvalTrace.forEach(function(trace) { 
+                                            let pillClass = 'pill-default';
+                                            let iconName = 'info';
 
-                    <div class="form-row two-col">
-                        <div class="form-group">
-                            <label>Date of Digital Day</label>
-                            <input type="date" name="dateofDigitalDay"
-                                   value="<%= tla && tla.dateofDigitalDay ? tla.dateofDigitalDay : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>Week Number</label>
-                            <input type="number" name="weekNumber" min="1" max="18"
-                                   value="<%= tla && tla.weekNumber ? tla.weekNumber : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label>Course Outcome(s)</label>
-                            <textarea name="courseOutcomes" rows="2" <%= isLocked ? 'disabled' : '' %>><%= tla && tla.courseOutcomes ? tla.courseOutcomes : '' %></textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label>MEDIATING/INTENDED LEARNING OUTCOME(S) AND CODES (ADD ROWS AS NEEDED)</label>
-                            <textarea name="mediatingOutcomes" rows="5" <%= isLocked ? 'disabled' : '' %>><%= tla && tla.mediatingOutcomes ? tla.mediatingOutcomes : '' %></textarea>
-                        </div>
-                    </div>
-                </div>
-                
-                <%
-                    // Post-digital is editable only when the pre-digital has been approved
-                    const postUnlocked = status && status.status === 'Approved';
-                    const postDisabled = isLocked || !postUnlocked;
-                %>
+                                            if (trace.status === 'Approved') {
+                                                pillClass = 'pill-approved'; iconName = 'check_circle';
+                                            } else if (trace.status === 'Returned') {
+                                                pillClass = 'pill-returned'; iconName = 'cancel';
+                                            } else if (trace.status === 'Submitted') {
+                                                pillClass = 'pill-submitted'; iconName = 'send';
+                                            }
+                                        %>
+                                            <div class="trace-pill <%= pillClass %>" title='<%= trace.remarks ? "Remarks: " + trace.remarks : "" %>'>
+                                                <span class="material-symbols-outlined" style="font-size: 16px;">
+                                                    <%= iconName %>
+                                                </span>
+                                                <%= trace.role %> - <%= trace.status %>
+                                                <span class="trace-pill-date">
+                                                    (<%= trace.date ? new Date(trace.date).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '' %>)
+                                                </span>
+                                                <% if (trace.remarks) { %>
+                                                    <span class="material-symbols-outlined trace-pill-chat" title="View remarks">chat</span>
+                                                <% } %>
+                                            </div>
+                                            <% if (trace.remarks) { %>
+                                                <div class="trace-remarks-box">
+                                                    <strong><%= trace.role %>'s Remarks:</strong> "<%= trace.remarks %>"
+                                                </div>
+                                            <% } %>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                                <% } %>
 
-                <div class="form-sections-row">
-                    <div class="form-section half-section">
-                        <h3>PRE-DIGITAL SESSION</h3>
-                        <div class="form-group">
-                            <label>MO/ILO CODE</label>
-                            <input type="text" name="pre_moIloCode"
-                                   value="<%= preDigital && preDigital.moIloCode ? preDigital.moIloCode : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>Teaching Learning Activity</label>
-                            <input type="text" name="pre_teacherLearningActivity"
-                                   value="<%= preDigital && preDigital.teacherLearningActivity ? preDigital.teacherLearningActivity : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>LMS Tool / Digital Tool used to Deliver the TLA</label>
-                            <input type="text" name="pre_lmsDigitalTool"
-                                   value="<%= preDigital && preDigital.lmsDigitalTool ? preDigital.lmsDigitalTool : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>ASSESSMENT</label>
-                            <input type="text" name="pre_assessment"
-                                   value="<%= preDigital && preDigital.assessment ? preDigital.assessment : '' %>"
-                                   <%= isLocked ? 'disabled' : '' %>>
-                        </div>
-                        <button type="button" class="attach-btn">ATTACH SIGNATURE</button>
-                    </div>
-                    
-                    <div class="form-section half-section post-digital-section <%= postDisabled ? 'post-locked' : '' %>">
-                        <h3>POST-DIGITAL SESSION</h3>
+                                    <% 
+                                        const formAction = tla ? '/tla/form/' + tla._id : '/tla/form';
+                                        /* Pre-digital locked when in approval chain or fully approved */
+                                        const isLocked = status && ['Pending','Chair-Approved','Dean-Approved','Post-Pending','Post-Chair-Approved','Post-Dean-Approved','HR-Approved','Approved','Archived'].includes(status.status);
+                                        const backToOverviewLink = (locals.syllabusId && String(locals.syllabusId).trim()) ? ('/tla/overview/' + locals.syllabusId) : '/tla/overview'; 
+                                    %>
 
-                        <% if (postDisabled && !isLocked) { %>
-                        <div class="post-lock-notice">
-                            &#128274; Available after pre-digital session is approved.
-                        </div>
-                        <% } %>
+                                        <form id="tla-form" action="<%= formAction %>" method="POST">
+                                            <% if (tla) { %>
+                                                <input type="hidden" name="_tlaId" value="<%= tla._id %>">
+                                                <% } %>
+                                                    <input type="hidden" name="professorPreSignature"
+                                                        id="professorPreSignature"
+                                                        value="<%= tla && (tla.professorPreSignature || tla.professorSignature) ? (tla.professorPreSignature || tla.professorSignature) : '' %>">
+                                                    <input type="hidden" name="professorPostSignature"
+                                                        id="professorPostSignature"
+                                                        value="<%= tla && tla.professorPostSignature ? tla.professorPostSignature : '' %>">
+                                                    <input type="hidden" name="professorSignature"
+                                                        id="professorSignature"
+                                                        value="<%= tla && (tla.professorPreSignature || tla.professorSignature) ? (tla.professorPreSignature || tla.professorSignature) : '' %>">
+                                                    <div class="form-section top-section">
+                                                        <div class="form-row two-col">
+                                                            <div class="form-group">
+                                                                <label>NAME</label>
+                                                                <input type="text" name="_name"
+                                                                    value="<%= locals.user ? user.firstName + ' ' + user.lastName : '' %>"
+                                                                    readonly class="readonly-field">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Faculty Member Facilitating Digital
+                                                                    Session</label>
+                                                                <input type="text" name="facultyFacilitating"
+                                                                    value="<%= locals.user ? user.firstName + ' ' + user.lastName : '' %>"
+                                                                    readonly class="readonly-field">
+                                                            </div>
+                                                        </div>
 
-                        <div class="form-group">
-                            <label>MO/ILO CODE</label>
-                            <input type="text" name="post_moIloCode"
-                                   value="<%= postDigital && postDigital.moIloCode ? postDigital.moIloCode : '' %>"
-                                   <%= postDisabled ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>PARTICIPANT TURNOUT</label>
-                            <input type="text" name="post_participantTurnout"
-                                   value="<%= postDigital && postDigital.participantTurnout ? postDigital.participantTurnout : '' %>"
-                                   <%= postDisabled ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>ASSESSMENT RESULTS</label>
-                            <input type="text" name="post_assessmentResults"
-                                   value="<%= postDigital && postDigital.assessmentResults ? postDigital.assessmentResults : '' %>"
-                                   <%= postDisabled ? 'disabled' : '' %>>
-                        </div>
-                        <div class="form-group">
-                            <label>REMARKS</label>
-                            <input type="text" name="post_remarks"
-                                   value="<%= postDigital && postDigital.remarks ? postDigital.remarks : '' %>"
-                                   <%= postDisabled ? 'disabled' : '' %>>
-                        </div>
-                        <button type="button" class="attach-btn" <%= postDisabled ? 'disabled' : '' %>>ATTACH SIGNATURE</button>
-                    </div>
-                </div>
-                
-                <div class="form-actions">
-                    <% const currentStatus = status ? status.status : null; %>
+                                                        <div class="form-row two-col">
+                                                            <div class="form-group">
+                                                                <label>Section(s)</label>
+                                                                <input type="text" name="section"
+                                                                    value="<%= locals.courseInfo ? (courseInfo.section || '') : (tla && tla.section ? tla.section : '') %>"
+                                                                    readonly class="readonly-field">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Course Code</label>
+                                                                <input type="text" name="courseCode"
+                                                                    value="<%= locals.courseInfo ? courseInfo.courseCode : (tla && tla.courseCode ? tla.courseCode : (locals.prefillCourseCode || '')) %>"
+                                                                    readonly class="readonly-field">
+                                                            </div>
+                                                        </div>
 
-                    <% if (currentStatus === 'Archived') { %>
-                        <!-- Archived: read-only, no edits -->
-                        <button type="button" class="btn-save" onclick="window.location.href='/tla/overview'">BACK TO DASHBOARD</button>
-                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
+                                                        <div class="form-row two-col">
+                                                            <div class="form-group">
+                                                                <label>Date(s) of Digital Day</label>
+                                                                <input type="text" name="dateofDigitalDay"
+                                                                    placeholder="e.g. Aug 1 - Aug 5"
+                                                                    value="<%= tla && tla.dateofDigitalDay ? tla.dateofDigitalDay : '' %>"
+                                                                    <%=isLocked ? 'disabled' : '' %>>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Week Number</label>
+                                                                <input type="number" name="weekNumber" min="1" max="18"
+                                                                    value="<%= locals.prefillWeekNumber || (tla && tla.weekNumber ? tla.weekNumber : '') %>"
+                                                                    readonly class="readonly-field">
+                                                            </div>
+                                                        </div>
 
-                    <% } else if (currentStatus === 'Pending') { %>
-                        <!-- Pending: waiting for approval, no edits -->
-                        <button type="button" class="btn-save" onclick="window.location.href='/tla/overview'">BACK TO DASHBOARD</button>
-                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
+                                                        <div class="form-row">
+                                                            <div class="form-group full-width">
+                                                                <label>Course Outcome(s)</label>
+                                                                <textarea name="courseOutcomes" rows="2" <%=isLocked
+                                                                    ? 'disabled' : ''
+                                                                    %>><%= tla && tla.courseOutcomes ? tla.courseOutcomes : '' %></textarea>
+                                                            </div>
+                                                        </div>
 
-                    <% } else if (currentStatus === 'Approved') { %>
-                        <!-- Approved: can only fill/submit post-digital -->
-                        <button type="submit" name="action" value="submit-post" class="btn-submit">SUBMIT POST-DIGITAL</button>
-                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
+                                                        <div class="form-row">
+                                                            <div class="form-group full-width">
+                                                                <label>MEDIATING/INTENDED LEARNING OUTCOME(S) AND CODES
+                                                                    (ADD ROWS AS NEEDED)</label>
+                                                                <textarea name="mediatingOutcomes" rows="5" <%=isLocked
+                                                                    ? 'disabled' : ''
+                                                                    %>><%= tla && tla.mediatingOutcomes ? tla.mediatingOutcomes : '' %></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                    <% } else { %>
-                        <!-- Draft / Returned / Not Submitted / new: normal edit -->
-                        <button type="submit" name="action" value="draft" class="btn-save">SAVE AS DRAFT</button>
-                        <button type="button" class="btn-pdf" onclick="printTLAForm()">DOWNLOAD AS PDF</button>
-                        <button type="submit" name="action" value="submit" class="btn-submit">SUBMIT</button>
-                    <% } %>
-                </div>
-            </form>
-        </div>
-    </main>
+                                                    <% 
+                                                        /* Post-digital unlocks only when Program-Chair sets accessible=true. */
+                                                        /* It must immediately re-lock once submitted to the post-digital approval chain. */
+                                                        const postApprovalChainStatuses = ['Post-Pending', 'Post-Chair-Approved', 'Post-Dean-Approved', 'HR-Approved']; 
+                                                        const inPostApprovalChain = status && postApprovalChainStatuses.includes(status.status); 
+                                                        const postUnlocked = postDigital && postDigital.accessible === true && !inPostApprovalChain; 
+                                                        const postDisabled = !postUnlocked; 
+                                                    %>
 
-    <script src="/TLA/js/tlaForm.js"></script>
+                                                        <div class="form-sections-row">
+                                                            <div class="form-section half-section">
+                                                                <h3>PRE-DIGITAL SESSION</h3>
+                                                                <div class="form-group">
+                                                                    <label>MO/ILO CODE</label>
+                                                                    <input type="text" name="pre_moIloCode"
+                                                                        value="<%= preDigital && preDigital.moIloCode ? preDigital.moIloCode : '' %>"
+                                                                        <%=isLocked ? 'disabled' : '' %>>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label>Teaching Learning Activity</label>
+                                                                    <input type="text"
+                                                                        name="pre_teacherLearningActivity"
+                                                                        value="<%= preDigital && preDigital.teacherLearningActivity ? preDigital.teacherLearningActivity : '' %>"
+                                                                        <%=isLocked ? 'disabled' : '' %>>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label>LMS Tool / Digital Tool used to Deliver the
+                                                                        TLA</label>
+                                                                    <input type="text" name="pre_lmsDigitalTool"
+                                                                        value="<%= preDigital && preDigital.lmsDigitalTool ? preDigital.lmsDigitalTool : '' %>"
+                                                                        <%=isLocked ? 'disabled' : '' %>>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label>ASSESSMENT</label>
+                                                                    <input type="text" name="pre_assessment"
+                                                                        value="<%= preDigital && preDigital.assessment ? preDigital.assessment : '' %>"
+                                                                        <%=isLocked ? 'disabled' : '' %>>
+                                                                </div>
+                                                                <div class="signature-block" id="pre-signature-block">
+                                                                    <label>SIGNATURE <span class="sig-format-hint">(PNG
+                                                                            only)</span></label>
+                                                                    <% if (!isLocked) { %>
+                                                                        <!-- Tab bar -->
+                                                                        <div class="sig-tab-bar" id="pre-sig-tab-bar">
+                                                                            <button type="button"
+                                                                                class="sig-tab-btn active"
+                                                                                id="pre-tab-upload"
+                                                                                onclick="switchFormSigTab('pre','upload')">
+                                                                                <span
+                                                                                    class="material-symbols-outlined">upload</span>
+                                                                                Upload
+                                                                            </button>
+                                                                            <button type="button" class="sig-tab-btn"
+                                                                                id="pre-tab-draw"
+                                                                                onclick="switchFormSigTab('pre','draw')">
+                                                                                <span
+                                                                                    class="material-symbols-outlined">draw</span>
+                                                                                Draw
+                                                                            </button>
+                                                                        </div>
+                                                                        <% } %>
+                                                                            <!-- Upload panel -->
+                                                                            <div id="pre-sig-panel-upload"
+                                                                                class="sig-upload-panel">
+                                                                                <div class="signature-upload-area"
+                                                                                    id="pre-sig-area">
+                                                                                    <% const existingSig=(tla &&
+                                                                                        tla.professorSignature) ?
+                                                                                        tla.professorSignature : '' ; %>
+                                                                                        <% if (existingSig) { %>
+                                                                                            <img src="<%= existingSig %>"
+                                                                                                alt="Signature"
+                                                                                                class="sig-preview-img"
+                                                                                                id="pre-sig-preview">
+                                                                                            <% } else { %>
+                                                                                                <span
+                                                                                                    class="sig-placeholder"
+                                                                                                    id="pre-sig-placeholder">Click
+                                                                                                    to upload signature
+                                                                                                    image</span>
+                                                                                                <% } %>
+                                                                                                    <input type="file"
+                                                                                                        accept=".png"
+                                                                                                        class="sig-file-input"
+                                                                                                        id="pre-sig-input"
+                                                                                                        <%=isLocked
+                                                                                                        ? 'disabled'
+                                                                                                        : '' %>>
+                                                                                </div>
+                                                                                <% if (!isLocked) { %>
+                                                                                    <div class="sig-actions">
+                                                                                        <button type="button"
+                                                                                            class="sig-upload-btn"
+                                                                                            id="pre-sig-btn"
+                                                                                            onclick="document.getElementById('pre-sig-input').click()">
+                                                                                            <span
+                                                                                                class="material-symbols-outlined">upload</span>
+                                                                                            Upload Image
+                                                                                        </button>
+                                                                                        <button type="button"
+                                                                                            class="sig-remove-btn"
+                                                                                            id="pre-sig-remove"
+                                                                                            <%=existingSig ? ''
+                                                                                            : 'style="display:none"' %>>
+                                                                                            <span
+                                                                                                class="material-symbols-outlined">delete</span>
+                                                                                            Remove
+                                                                                        </button>
+                                                                                    </div>
+                                                                                    <% } %>
+                                                                            </div>
+                                                                            <!-- Draw panel -->
+                                                                            <% if (!isLocked) { %>
+                                                                                <div id="pre-sig-panel-draw"
+                                                                                    class="sig-draw-panel"
+                                                                                    style="display:none;">
+                                                                                    <canvas id="pre-sig-canvas"
+                                                                                        class="form-sig-canvas"
+                                                                                        width="280"
+                                                                                        height="110"></canvas>
+                                                                                    <p class="form-draw-hint">Draw your
+                                                                                        signature above</p>
+                                                                                    <div class="sig-actions">
+                                                                                        <button type="button"
+                                                                                            class="sig-upload-btn"
+                                                                                            id="pre-canvas-clear">
+                                                                                            <span
+                                                                                                class="material-symbols-outlined">delete_sweep</span>
+                                                                                            Clear
+                                                                                        </button>
+                                                                                        <button type="button"
+                                                                                            class="sig-upload-btn sig-draw-use-btn"
+                                                                                            id="pre-canvas-confirm">
+                                                                                            <span
+                                                                                                class="material-symbols-outlined">check_circle</span>
+                                                                                            Use Signature
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <% } %>
+                                                                                    <div class="sig-error"
+                                                                                        id="pre-sig-error"
+                                                                                        style="display:none"></div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div
+                                                                class="form-section half-section post-digital-section <%= postDisabled ? 'post-locked' : '' %>">
+                                                                <h3>POST-DIGITAL SESSION</h3>
+
+                                                                <% if (postDisabled) { %>
+                                                                    <div class="post-lock-notice">
+                                                                        &#128274; Post-Digital Session becomes available
+                                                                        after Program Chair approves the Pre-Digital
+                                                                        Session.
+                                                                    </div>
+                                                                    <% } %>
+
+                                                                        <div class="form-group">
+                                                                            <label>MO/ILO CODE</label>
+                                                                            <input type="text" name="post_moIloCode"
+                                                                                value="<%= postDigital && postDigital.moIloCode ? postDigital.moIloCode : '' %>"
+                                                                                <%=postDisabled ? 'disabled' : '' %>>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label>PARTICIPANT TURNOUT</label>
+                                                                            <input type="text"
+                                                                                name="post_participantTurnout"
+                                                                                value="<%= postDigital && postDigital.participantTurnout ? postDigital.participantTurnout : '' %>"
+                                                                                <%=postDisabled ? 'disabled' : '' %>>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label>ASSESSMENT RESULTS</label>
+                                                                            <input type="text"
+                                                                                name="post_assessmentResults"
+                                                                                value="<%= postDigital && postDigital.assessmentResults ? postDigital.assessmentResults : '' %>"
+                                                                                <%=postDisabled ? 'disabled' : '' %>>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label>REMARKS</label>
+                                                                            <input type="text" name="post_remarks"
+                                                                                value="<%= postDigital && postDigital.remarks ? postDigital.remarks : '' %>"
+                                                                                <%=postDisabled ? 'disabled' : '' %>>
+                                                                        </div>
+                                                                        <div class="signature-block"
+                                                                            id="post-signature-block">
+                                                                            <label>SIGNATURE <span
+                                                                                    class="sig-format-hint">(PNG
+                                                                                    only)</span></label>
+                                                                            <% if (!postDisabled) { %>
+                                                                                <!-- Tab bar -->
+                                                                                <div class="sig-tab-bar"
+                                                                                    id="post-sig-tab-bar">
+                                                                                    <button type="button"
+                                                                                        class="sig-tab-btn active"
+                                                                                        id="post-tab-upload"
+                                                                                        onclick="switchFormSigTab('post','upload')">
+                                                                                        <span
+                                                                                            class="material-symbols-outlined">upload</span>
+                                                                                        Upload
+                                                                                    </button>
+                                                                                    <button type="button"
+                                                                                        class="sig-tab-btn"
+                                                                                        id="post-tab-draw"
+                                                                                        onclick="switchFormSigTab('post','draw')">
+                                                                                        <span
+                                                                                            class="material-symbols-outlined">draw</span>
+                                                                                        Draw
+                                                                                    </button>
+                                                                                </div>
+                                                                                <% } %>
+                                                                                    <!-- Upload panel -->
+                                                                                    <div id="post-sig-panel-upload"
+                                                                                        class="sig-upload-panel">
+                                                                                        <div class="signature-upload-area"
+                                                                                            id="post-sig-area">
+                                                                                            <% const
+                                                                                                existingPostSig=(tla &&
+                                                                                                tla.professorPostSignature)
+                                                                                                ?
+                                                                                                tla.professorPostSignature
+                                                                                                : '' ; %>
+                                                                                                <% if (existingPostSig)
+                                                                                                    { %>
+                                                                                                    <img src="<%= existingPostSig %>"
+                                                                                                        alt="Signature"
+                                                                                                        class="sig-preview-img"
+                                                                                                        id="post-sig-preview">
+                                                                                                    <% } else { %>
+                                                                                                        <span
+                                                                                                            class="sig-placeholder"
+                                                                                                            id="post-sig-placeholder">Click
+                                                                                                            to upload
+                                                                                                            signature
+                                                                                                            image</span>
+                                                                                                        <% } %>
+                                                                                                            <input
+                                                                                                                type="file"
+                                                                                                                accept=".png"
+                                                                                                                class="sig-file-input"
+                                                                                                                id="post-sig-input"
+                                                                                                                <%=postDisabled
+                                                                                                                ? 'disabled'
+                                                                                                                : '' %>>
+                                                                                        </div>
+                                                                                        <% if (!postDisabled) { %>
+                                                                                            <div class="sig-actions">
+                                                                                                <button type="button"
+                                                                                                    class="sig-upload-btn"
+                                                                                                    id="post-sig-btn"
+                                                                                                    onclick="document.getElementById('post-sig-input').click()">
+                                                                                                    <span
+                                                                                                        class="material-symbols-outlined">upload</span>
+                                                                                                    Upload Image
+                                                                                                </button>
+                                                                                                <button type="button"
+                                                                                                    class="sig-remove-btn"
+                                                                                                    id="post-sig-remove"
+                                                                                                    <%=existingPostSig
+                                                                                                    ? ''
+                                                                                                    : 'style="display:none"'
+                                                                                                    %>>
+                                                                                                    <span
+                                                                                                        class="material-symbols-outlined">delete</span>
+                                                                                                    Remove
+                                                                                                </button>
+                                                                                            </div>
+                                                                                            <% } %>
+                                                                                    </div>
+                                                                                    <!-- Draw panel -->
+                                                                                    <% if (!postDisabled) { %>
+                                                                                        <div id="post-sig-panel-draw"
+                                                                                            class="sig-draw-panel"
+                                                                                            style="display:none;">
+                                                                                            <canvas id="post-sig-canvas"
+                                                                                                class="form-sig-canvas"
+                                                                                                width="280"
+                                                                                                height="110"></canvas>
+                                                                                            <p class="form-draw-hint">
+                                                                                                Draw your signature
+                                                                                                above</p>
+                                                                                            <div class="sig-actions">
+                                                                                                <button type="button"
+                                                                                                    class="sig-upload-btn"
+                                                                                                    id="post-canvas-clear">
+                                                                                                    <span
+                                                                                                        class="material-symbols-outlined">delete_sweep</span>
+                                                                                                    Clear
+                                                                                                </button>
+                                                                                                <button type="button"
+                                                                                                    class="sig-upload-btn sig-draw-use-btn"
+                                                                                                    id="post-canvas-confirm">
+                                                                                                    <span
+                                                                                                        class="material-symbols-outlined">check_circle</span>
+                                                                                                    Use Signature
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <% } %>
+                                                                                            <div class="sig-error"
+                                                                                                id="post-sig-error"
+                                                                                                style="display:none">
+                                                                                            </div>
+                                                                        </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-actions">
+                                                            <% const currentStatus=status ? status.status : null; %>
+
+                                                                <% if (currentStatus==='Approved' ||
+                                                                    currentStatus==='Archived' ) { %>
+                                                                    <!-- Fully approved / archived: read-only -->
+                                                                    <button type="button" class="btn-save"
+                                                                        onclick="window.location.href='<%= backToOverviewLink %>'">BACK
+                                                                        TO DASHBOARD</button>
+                                                                    <button type="button" class="btn-pdf"
+                                                                        onclick="viewTLAForm()">VIEW PDF</button>
+                                                                    <button type="button" class="btn-pdf"
+                                                                        onclick="printTLAForm()">DOWNLOAD AS
+                                                                        PDF</button>
+
+                                                                    <% } else if (postUnlocked && tla && tla.userID &&
+                                                                        tla.userID.toString()===user.id) { %>
+                                                                        <!-- Post-digital unlocked (Chair-Approved+): professor can fill post-digital -->
+                                                                        <button type="button" class="btn-save"
+                                                                            onclick="window.location.href='<%= backToOverviewLink %>'">BACK
+                                                                            TO DASHBOARD</button>
+                                                                        <button type="button" class="btn-pdf"
+                                                                            onclick="viewTLAForm()">VIEW PDF</button>
+                                                                        <button type="button" class="btn-pdf"
+                                                                            onclick="printTLAForm()">DOWNLOAD AS
+                                                                            PDF</button>
+                                                                        <button type="submit" name="action"
+                                                                            value="submit-post"
+                                                                            class="btn-submit">SUBMIT
+                                                                            POST-DIGITAL</button>
+
+                                                                        <% } else if
+                                                                            (['Pending','Chair-Approved','Dean-Approved','Post-Pending','Post-Chair-Approved','Post-Dean-Approved','HR-Approved'].includes(currentStatus))
+                                                                            { %>
+                                                                            <!-- In approval chain: waiting for review, no edits -->
+                                                                            <button type="button" class="btn-save"
+                                                                                onclick="window.location.href='<%= backToOverviewLink %>'">BACK
+                                                                                TO DASHBOARD</button>
+                                                                            <button type="button" class="btn-pdf"
+                                                                                onclick="viewTLAForm()">VIEW
+                                                                                PDF</button>
+                                                                            <button type="button" class="btn-pdf"
+                                                                                onclick="printTLAForm()">DOWNLOAD AS
+                                                                                PDF</button>
+
+                                                                            <% } else { %>
+                                                                                <!-- Draft / Returned / Not Submitted / new: normal edit -->
+                                                                                <button type="submit" name="action"
+                                                                                    value="draft" class="btn-save">SAVE
+                                                                                    AS DRAFT</button>
+                                                                                <button type="button" class="btn-pdf"
+                                                                                    onclick="viewTLAForm()">VIEW
+                                                                                    PDF</button>
+                                                                                <button type="button" class="btn-pdf"
+                                                                                    onclick="printTLAForm()">DOWNLOAD AS
+                                                                                    PDF</button>
+                                                                                <button type="submit" name="action"
+                                                                                    value="submit"
+                                                                                    class="btn-submit">SUBMIT</button>
+                                                                                <% } %>
+                                                        </div>
+                                        </form>
+            </div>
+        </main>
+
+        <script src="/TLA/js/tlaForm.js"></script>
 </body>
+
 </html>

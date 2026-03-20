@@ -14,6 +14,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cards = Array.from(grid.querySelectorAll('.course-card'));
 
+    // ── Prevent navigation and show toast for locked courses ────────────────────
+    cards.forEach(card => {
+        const isLocked = card.dataset.isLocked === 'true';
+        if (isLocked) {
+            card.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showToast('Course locked - requires approved course syllabus', 'warning');
+                return false;
+            });
+        }
+    });
+
+    // ── Simple toast notification ────────────────────────────────────────────────
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${type === 'warning' ? '#ff9800' : '#2196F3'};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 9999;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
     // ── Filter logic ────────────────────────────────────────────────────
     function applyFilters() {
         const query = (searchInput.value || '').trim().toLowerCase();
