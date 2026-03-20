@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TLA | Approval Review</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
 
     <!-- School palette variables -->
     <link rel="stylesheet" href="/common/css/variables.css">
@@ -46,7 +47,7 @@
             <section class="document-panel">
 
                 <!-- Back button -->
-                <a href="/tla/overview" class="back-btn">
+                <a href="<%= locals.user && ['HR','HRMO','Technical','Program-Chair','Practicum-Coordinator','Dean','VPAA','Admin','Super-Admin'].includes(user.role) ? '/admin/tla' : '/tla/overview' %>" class="back-btn">
                     <span class="material-symbols-outlined">arrow_back</span> BACK
                 </a>
 
@@ -164,38 +165,65 @@
             <!-- ─── RIGHT: Approval Sidebar ─────────────────────────── -->
             <aside class="approval-sidebar">
 
-                <h3 class="sidebar-title"><%= locals.user ? user.role : '[USER PERMISSION]' %></h3>
+                <h3 class="sidebar-title">
+                    <%= locals.user ? user.role : '[USER PERMISSION]' %>
+                    <% if (locals.macroStatus) { %>
+                        <span class="macro-status-chip <%=
+                            locals.macroStatus === 'Pending' ? 'chip-pending' :
+                            locals.macroStatus === 'Chair-Approved' ? 'chip-chair-approved' :
+                            locals.macroStatus === 'Dean-Approved' ? 'chip-dean-approved' :
+                            locals.macroStatus === 'Post-Pending' ? 'chip-chair-approved' :
+                            locals.macroStatus === 'Post-Chair-Approved' ? 'chip-chair-approved' :
+                            locals.macroStatus === 'Post-Dean-Approved' ? 'chip-dean-approved' :
+                            locals.macroStatus === 'HR-Approved' ? 'chip-hr-approved' :
+                            locals.macroStatus === 'Approved' ? 'chip-approved' :
+                            locals.macroStatus === 'Returned' ? 'chip-returned' : ''
+                        %>"><%= locals.macroStatus %></span>
+                    <% } %>
+                </h3>
 
-                <!-- ── Approval Progress Tracker ── -->
                 <div class="approval-tracker">
                     <%
-                        // Determine each role's status from the approval data
-                        // Possible statuses: approved, ongoing, pending, rejected
+                        // Build tracker steps for the 5-step chain:
+                        // Faculty → Program Chair → Dean → HR/HRMO → VPAA (final)
+                        // approvalSteps: { faculty, programChair, dean, hr, vpaa }
+
+                        function fmtDate(d) {
+                            if (!d) return '';
+                            try { return new Date(d).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' }); }
+                            catch(e) { return ''; }
+                        }
+
                         const steps = [
                             {
-                                role: 'Faculty',
-                                label: 'Submitted',
-                                status: locals.approvalSteps ? approvalSteps.faculty : 'pending'
+                                role:   'Professor',
+                                label:  'Submitted',
+                                status: locals.approvalSteps ? approvalSteps.faculty : 'pending',
+                                detail: ''
                             },
                             {
-                                role: 'Technical',
-                                label: 'Assessed',
-                                status: locals.approvalSteps ? approvalSteps.technical : 'pending'
+                                role:   'Program Chair',
+                                label:  'Endorsed',
+                                status: locals.approvalSteps ? approvalSteps.programChair : 'pending',
+                                detail: ''
                             },
                             {
-                                role: 'Program Chair',
-                                label: 'Approved',
-                                status: locals.approvalSteps ? approvalSteps.programChair : 'pending'
+                                role:   'Dean',
+                                label:  'Approved',
+                                status: locals.approvalSteps ? approvalSteps.dean : 'pending',
+                                detail: ''
                             },
                             {
-                                role: 'Dean',
-                                label: 'On-Going',
-                                status: locals.approvalSteps ? approvalSteps.dean : 'pending'
+                                role:   'HR / HRMO',
+                                label:  'Reviewed',
+                                status: locals.approvalSteps ? approvalSteps.hr : 'pending',
+                                detail: ''
                             },
                             {
-                                role: 'HR',
-                                label: 'Pending',
-                                status: locals.approvalSteps ? approvalSteps.hr : 'pending'
+                                role:   'VPAA',
+                                label:  'Final Approval',
+                                status: locals.approvalSteps ? approvalSteps.vpaa : 'pending',
+                                detail: ''
                             }
                         ];
                     %>
@@ -210,64 +238,200 @@
                                 <div class="step-labels">
                                     <span class="step-role"><%= step.role %></span>
                                     <span class="step-sublabel"><%= step.label %></span>
+                                    <% if (step.detail) { %>
+                                        <span class="step-detail"><%= step.detail %></span>
+                                    <% } %>
                                 </div>
                             </div>
                         <% }); %>
                     </div>
                 </div>
 
+                <!-- ── Professor Signature (from TLA form) ── -->
+                <% if (locals.tla && locals.tla.professorSignature) { %>
+                    <div class="sidebar-section">
+                        <label class="sidebar-label">Professor - Prepared By</label>
+                        <div class="signature-info">
+                            <p class="approval-name"><strong><%= locals.facultyName || locals.tla.facultyFacilitating || '—' %></strong></p>
+                            <div class="signature-display">
+                                <img src="<%= locals.tla.professorSignature %>" alt="Professor Signature" class="signature-img-display">
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- ── Program Chair Signature (if approved) ── -->
+                <% if (locals.chairStep && locals.chairStep.status === 'Approved' && locals.chairStep.signatureImage) { %>
+                    <div class="sidebar-section">
+                        <label class="sidebar-label">Program Chair - Approved By</label>
+                        <div class="signature-info">
+                            <p class="approval-name"><strong><%= locals.chairStep.approvedBy || '—' %></strong></p>
+                            <div class="signature-display">
+                                <img src="<%= locals.chairStep.signatureImage %>" alt="Program Chair Signature" class="signature-img-display">
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- ── Dean Signature (if approved) ── -->
+                <% if (locals.deanStep && locals.deanStep.status === 'Approved' && locals.deanStep.signatureImage) { %>
+                    <div class="sidebar-section">
+                        <label class="sidebar-label">Dean - Endorsed By</label>
+                        <div class="signature-info">
+                            <p class="approval-name"><strong><%= locals.deanStep.approvedBy || '—' %></strong></p>
+                            <div class="signature-display">
+                                <img src="<%= locals.deanStep.signatureImage %>" alt="Dean Signature" class="signature-img-display">
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
                 <!-- ── Comments ── -->
                 <div class="sidebar-section">
-                    <label class="sidebar-label">Comments</label>
+                    <label class="sidebar-label">
+                        <% if (locals.activeStep) { %>
+                            Your Remarks / Comments
+                        <% } else { %>
+                            Review Comments (Read-Only)
+                        <% } %>
+                    </label>
                     <textarea id="approval-comments" class="comments-box" rows="5"
-                            placeholder="Add comments about the progression..."><%= locals.existingComment || '' %></textarea>
+                              placeholder="<%= locals.activeStep ? 'Add your remarks...' : 'No active comments for your role.' %>"
+                              <%= locals.activeStep ? '' : 'readonly' %>><%= locals.existingComment || '' %></textarea>
                 </div>
 
-                <!-- ── Status Dropdown ── -->
-                <div class="sidebar-section">
-                    <label class="sidebar-label">Status</label>
-                    <div class="status-select-wrapper">
-                        <span class="status-indicator" id="status-indicator"></span>
-                        <select id="approval-status" class="status-select">
-                            <option value="Approved" <%= locals.currentStatus === 'Approved' ? 'selected' : '' %>>Approved</option>
-                            <option value="Returned" <%= locals.currentStatus === 'Returned' ? 'selected' : '' %>>Returned</option>
-                            <option value="Pending"  <%= locals.currentStatus === 'Pending'  ? 'selected' : '' %>>Pending</option>
-                        </select>
-                    </div>
-                </div>
+                <!-- ── Role Action Panel ── -->
+                <% if (locals.activeStep) { %>
+                    <%
+                        const stepLabels = {
+                            programChair:         'Program Chair Endorsement',
+                            dean:                 "Dean's Approval",
+                            programChairPost:     'Program Chair Endorsement (Post-Digital)',
+                            deanPost:             "Dean's Approval (Post-Digital)",
+                            hr:                   'HR/HRMO Workload Review',
+                            vpaa:                 'VPAA Final Approval'
+                        };
+                    %>
+                    <div class="sidebar-section role-action-panel">
+                        <p class="action-panel-title">
+                            <span class="material-symbols-outlined">verified_user</span>
+                            <%= stepLabels[locals.activeStep] || 'Review' %>
+                        </p>
+                        <p class="action-panel-hint">
+                            Select your verdict and submit. A <strong>Returned</strong> verdict will send
+                            the submission back to the Professor with your remarks.
+                        </p>
 
-                <!-- ── Signature Box ── -->
-                <div class="sidebar-section">
-                    <label class="sidebar-label">E-Signature</label>
-                    <div class="signature-wrapper">
-                        <div class="signature-box" id="signature-box">
-                            <% if (locals.signatureUrl) { %>
-                                <img src="<%= signatureUrl %>" alt="Signature" class="signature-img">
-                            <% } else { %>
-                                <span class="signature-placeholder">Click to upload signature</span>
-                            <% } %>
-                            <input type="file" id="signature-upload" accept="image/*" hidden>
+                        <!-- Verdict dropdown -->
+                        <div class="sidebar-section">
+                            <label class="sidebar-label">Verdict</label>
+                            <div class="status-select-wrapper">
+                                <span class="status-indicator" id="status-indicator"></span>
+                                <select id="approval-status" class="status-select">
+                                    <option value="Approved">Approved</option>
+                                    <option value="Returned">Returned</option>
+                                </select>
+                            </div>
                         </div>
-                        <button type="button" class="signature-remove-btn" id="signature-remove" title="Remove signature" style="display: none;">
-                            <span class="material-symbols-outlined">cancel</span>
-                        </button>
-                    </div>
-                </div>
 
-                <!-- ── Action Buttons ── -->
-                <div class="sidebar-actions">
-                    <button type="button" class="btn-action btn-pdf" id="btn-save-pdf">
-                        <span class="material-symbols-outlined">picture_as_pdf</span>
-                        Save as PDF
-                    </button>
-                    <button type="button" class="btn-action btn-draft" id="btn-save-draft">
-                        <span class="material-symbols-outlined">save</span>
-                        Save as Draft
-                    </button>
-                    <button type="button" class="btn-action btn-submit" id="btn-submit">
-                        Submit
-                    </button>
-                </div>
+                        <!-- E-Signature -->
+                        <div class="sidebar-section">
+                            <label class="sidebar-label">E-Signature</label>
+                            <!-- Tab toggle -->
+                            <div class="sig-tab-bar">
+                                <button type="button" class="sig-tab-btn active" id="sig-tab-upload">
+                                    <span class="material-symbols-outlined">upload</span> Upload
+                                </button>
+                                <button type="button" class="sig-tab-btn" id="sig-tab-draw">
+                                    <span class="material-symbols-outlined">draw</span> Draw
+                                </button>
+                            </div>
+
+                            <!-- Upload panel -->
+                            <div id="sig-panel-upload" class="sig-panel">
+                                <div class="signature-wrapper">
+                                    <div class="signature-box" id="signature-box">
+                                        <% if (locals.signatureUrl) { %>
+                                            <img src="<%= signatureUrl %>" alt="Signature" class="signature-img">
+                                        <% } else { %>
+                                            <span class="signature-placeholder">Click to upload signature</span>
+                                        <% } %>
+                                        <input type="file" id="signature-upload" accept="image/*" hidden>
+                                    </div>
+                                    <button type="button" class="signature-remove-btn" id="signature-remove"
+                                            title="Remove signature" style="display: none;">
+                                        <span class="material-symbols-outlined">cancel</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Draw panel -->
+                            <div id="sig-panel-draw" class="sig-panel" style="display:none;">
+                                <div class="draw-canvas-wrap">
+                                    <canvas id="sig-canvas" class="sig-canvas" width="260" height="120"></canvas>
+                                    <p class="draw-hint">Draw your signature above</p>
+                                </div>
+                                <div class="draw-actions">
+                                    <button type="button" class="sig-draw-action-btn" id="sig-canvas-clear">
+                                        <span class="material-symbols-outlined">delete_sweep</span> Clear
+                                    </button>
+                                    <button type="button" class="sig-draw-action-btn sig-draw-confirm-btn" id="sig-canvas-confirm">
+                                        <span class="material-symbols-outlined">check_circle</span> Use Signature
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="sidebar-actions">
+                            <button type="button" class="btn-action btn-pdf" id="btn-view-pdf" onclick="viewTLAApproval()">
+                                <span class="material-symbols-outlined">preview</span>
+                                View PDF
+                            </button>
+                            <button type="button" class="btn-action btn-pdf" id="btn-save-pdf">
+                                <span class="material-symbols-outlined">picture_as_pdf</span>
+                                Save as PDF
+                            </button>
+                            <button type="button" class="btn-action btn-draft" id="btn-save-draft">
+                                <span class="material-symbols-outlined">save</span>
+                                Save Draft
+                            </button>
+                            <button type="button" class="btn-action btn-submit" id="btn-submit">
+                                <span class="material-symbols-outlined">send</span>
+                                Submit Verdict
+                            </button>
+                        </div>
+                    </div>
+
+                <% } else { %>
+                    <!-- ── Read-Only Viewer Panel ── -->
+                    <div class="sidebar-section readonly-panel">
+                        <p class="readonly-title">
+                            <span class="material-symbols-outlined">info</span>
+                            Read-Only View
+                        </p>
+                        <p class="readonly-hint">
+                            <% if (locals.macroStatus === 'Not Submitted') { %>
+                                This TLA has not been submitted by the faculty yet.
+                            <% } else if (locals.macroStatus === 'Approved') { %>
+                                This TLA has been fully approved. No further action is required.
+                            <% } else { %>
+                                This TLA is currently at a different review step. Your role will be
+                                able to act once it reaches your stage.
+                            <% } %>
+                        </p>
+                        <div class="sidebar-actions">
+                            <button type="button" class="btn-action btn-pdf" id="btn-view-pdf" onclick="viewTLAApproval()">
+                                <span class="material-symbols-outlined">preview</span>
+                                View PDF
+                            </button>
+                            <button type="button" class="btn-action btn-pdf" id="btn-save-pdf">
+                                <span class="material-symbols-outlined">picture_as_pdf</span>
+                                Save as PDF
+                            </button>
+                        </div>
+                    </div>
+                <% } %>
             </aside>
         </div>
     </main>
@@ -276,13 +440,15 @@
         Hidden data attributes for JS
     ═══════════════════════════════════════════════════════════ -->
     <script>
-        // Data for JS interactions
         const APPROVAL_DATA = {
-            tlaID:    '<%= locals.tla ? tla._id : "" %>',
-            statusID: '<%= locals.approvalStatusId || "" %>',
-            userRole: '<%= locals.user ? user.role : "" %>'
+            tlaID:      '<%= locals.tla ? tla._id : "" %>',
+            statusID:   '<%= locals.approvalStatusId || "" %>',
+            userRole:   '<%= locals.user ? user.role : "" %>',
+            activeStep: '<%= locals.activeStep || "" %>',
+            macroStatus:'<%= locals.macroStatus || "" %>'
         };
     </script>
     <script src="/TLA/js/tlaApproval.js"></script>
 </body>
 </html>
+

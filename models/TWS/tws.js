@@ -80,6 +80,7 @@ const twsSchema = new Schema(
       enum: [
         "Draft",
         "Sent to Faculty",
+        "Faculty Approved",
         "Sent to Dean",
         "Approved",
         "Rejected",
@@ -98,6 +99,10 @@ const twsSchema = new Schema(
     sentToDeanAt: { type: Date, default: null },
     approvedAt: { type: Date, default: null },
     archivedAt: { type: Date, default: null },
+
+    facultyNotes: { type: String, default: "" },
+    facultyNotesUpdatedAt: { type: Date, default: null },
+    facultyNotesUpdatedBy: { type: String, default: "" },
 
     loads: {
       type: [loadRowSchema],

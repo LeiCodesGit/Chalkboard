@@ -14,6 +14,7 @@
       if (st === 'approved') return 'tws-status-approved';
       if (st === 'archived') return 'tws-status-archived';
       if (st === 'rejected') return 'tws-status-rejected';
+      if (st === 'faculty approved') return 'tws-status-sent';
       if (st.includes('returned')) return 'tws-status-returned';
       if (st.includes('sent')) return 'tws-status-sent';
       return 'tws-status-draft';
@@ -81,8 +82,8 @@
 
             <% (list || []).forEach(function(tws) {
                  const currentStatus = tws.status || 'Draft';
-                 const canSendToFaculty = ['Draft', 'Returned to Program Chair'].includes(currentStatus);
-                 const canSendToDean = currentStatus === 'Sent to Faculty' && !!tws.facultySigned;
+                const canSendToFaculty = ['Draft', 'Returned to Program Chair', 'Rejected'].includes(currentStatus);
+                const canSendToDean = ['Sent to Faculty', 'Faculty Approved'].includes(currentStatus) && !!tws.facultySigned;
             %>
               <article
                 class="tws-board-card pc-card <%= statusClass(currentStatus) %>"
@@ -104,6 +105,12 @@
                     <strong>Status:</strong>
                     <span class="<%= statusClass(currentStatus) %>"><%= currentStatus %></span>
                   </div>
+
+                  <% if (tws.facultyNotes) { %>
+                    <div class="tws-board-note" style="margin-top:8px;">
+                      <b>Faculty Note:</b> <%= String(tws.facultyNotes).slice(0, 160) %><%= String(tws.facultyNotes).length > 160 ? '...' : '' %>
+                    </div>
+                  <% } %>
 
                   <div class="tws-board-card-footer">
                     <div class="tws-board-chip-row">
@@ -241,5 +248,7 @@
       pcArchiveIcon.textContent = pcArchiveGrid.classList.contains('tws-board-hidden') ? 'chevron_right' : 'expand_more';
     });
   </script>
+
+  <%- include("./partials/twsNotifications") %>
 </body>
 </html>

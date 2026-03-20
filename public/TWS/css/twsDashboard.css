@@ -203,8 +203,9 @@ select {
 
 .tws-board-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 320px));
   gap: 26px;
+  justify-content: start;
 }
 
 .tws-board-empty {
@@ -214,7 +215,8 @@ select {
 }
 
 .tws-board-card {
-  width: 100%;
+  width: 320px;
+  min-height: 190px;
   background: var(--tws-board-card);
   border: 1px solid var(--tws-board-border);
   border-left: 5px solid transparent;
@@ -225,12 +227,59 @@ select {
 }
 
 .tws-board-card-hero {
-  height: 88px;
-  background: linear-gradient(
-    135deg,
-    rgba(123, 32, 32, 0.14),
-    rgba(13, 110, 253, 0.08)
-  );
+  height: 30px;
+  background: rgba(123, 32, 32, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* STATUS COLOR STRIP */
+.tws-board-card.tws-status-approved .tws-board-card-hero {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.tws-board-card.tws-status-sent .tws-board-card-hero {
+  background: rgba(13, 110, 253, 0.18);
+}
+
+.tws-board-card.tws-status-returned .tws-board-card-hero {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+.tws-board-card.tws-status-rejected .tws-board-card-hero {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.tws-board-card.tws-status-archived .tws-board-card-hero {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.tws-board-card.tws-status-draft .tws-board-card-hero {
+  background: rgba(123, 32, 32, 0.08);
+}
+
+.tws-board-card.tws-status-approved .tws-board-card-hero {
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.tws-board-card.tws-status-sent .tws-board-card-hero,
+.tws-board-card.tws-status-pending .tws-board-card-hero {
+  background: rgba(13, 110, 253, 0.14);
+}
+
+.tws-board-card.tws-status-returned .tws-board-card-hero {
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.tws-board-card.tws-status-rejected .tws-board-card-hero {
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.tws-board-card.tws-status-archived .tws-board-card-hero {
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.tws-board-card.tws-status-draft .tws-board-card-hero {
+  background: rgba(123, 32, 32, 0.08);
 }
 
 .tws-board-card-body {
@@ -380,7 +429,7 @@ select {
 #deanArchiveGrid,
 #hrArchiveGrid,
 #pcArchiveGrid {
-  grid-template-columns: repeat(auto-fit, minmax(260px, max-content));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 320px));
   justify-content: start;
 }
 
@@ -416,8 +465,12 @@ select {
     border-radius: 0;
   }
 
-  .tws-board-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  .tws-board-grid,
+  #facultyArchiveGrid,
+  #deanArchiveGrid,
+  #hrArchiveGrid,
+  #pcArchiveGrid {
+    grid-template-columns: 1fr;
   }
 
   .tws-board-card {

@@ -11,11 +11,7 @@
       grid-row: var(--row, auto) / span var(--span, 1);
     }
 
-    /* make schedule blocks solid and clickable */
     .tws-timetable .tws-block.tws-block-assigned {
-      background: #c7d4e8 !important;
-      border: 1px solid #a9b9d2 !important;
-      color: #10233d !important;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
       opacity: 1 !important;
     }
@@ -26,42 +22,6 @@
       color: #5d1d1d !important;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
       opacity: 1 !important;
-    }
-
-    .tws-timetable .tws-block.color-1 {
-      background: #dbeafe !important;
-      border: 1px solid #93c5fd !important;
-      color: #10233d !important;
-    }
-
-    .tws-timetable .tws-block.color-2 {
-      background: #dcfce7 !important;
-      border: 1px solid #86efac !important;
-      color: #14532d !important;
-    }
-
-    .tws-timetable .tws-block.color-3 {
-      background: #fef3c7 !important;
-      border: 1px solid #fcd34d !important;
-      color: #78350f !important;
-    }
-
-    .tws-timetable .tws-block.color-4 {
-      background: #fce7f3 !important;
-      border: 1px solid #f9a8d4 !important;
-      color: #831843 !important;
-    }
-
-    .tws-timetable .tws-block.color-5 {
-      background: #ede9fe !important;
-      border: 1px solid #c4b5fd !important;
-      color: #4c1d95 !important;
-    }
-
-    .tws-timetable .tws-block.color-6 {
-      background: #ffe4e6 !important;
-      border: 1px solid #fda4af !important;
-      color: #881337 !important;
     }
 
     .tws-block-clickable {
@@ -142,7 +102,7 @@
 </head>
 
 <body class="tws-app-body" data-view-only="<%= isViewOnly ? 'true' : 'false' %>">
-    <div class="tws-app-layout">
+  <div class="tws-app-layout">
 
     <aside class="tws-app-sidebar">
       <%- include("../partials/sideMenuBar", { currentPageCategory: "tws" }) %>
@@ -161,6 +121,12 @@
 
         <section class="tws-card tws-card-wide tws-created-sheet">
           <div class="tws-card-title">Created Teaching Workload Sheet</div>
+
+          <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+            <div style="margin: 0 0 12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#1f2937; border-radius:12px; padding:10px 12px; font-size:12px;">
+              <b>Scheduling conflict:</b> <%= errorMessage %>
+            </div>
+          <% } %>
 
           <div class="tws-schedule-layout">
 
@@ -247,6 +213,31 @@
                   return { day: normalizedDay, startStr, endStr, startMin, endMin, row, span };
                 }
 
+                function getSubjectKey(item) {
+  return `${String(item.code || "").trim()}|${String(item.sectionRoom || "").trim()}`;
+}
+
+                function buildColorMap(workload) {
+                  const subjectColors = ["color-1", "color-2", "color-3", "color-4", "color-5", "color-6"];
+                  const uniqueKeys = [];
+
+                  (workload || []).forEach((item) => {
+                    const key = getSubjectKey(item);
+                    if (key && !uniqueKeys.includes(key)) {
+                      uniqueKeys.push(key);
+                    }
+                  });
+
+                  uniqueKeys.sort();
+
+                  const colorMap = {};
+                  uniqueKeys.forEach((key, index) => {
+                    colorMap[key] = subjectColors[index % subjectColors.length];
+                  });
+
+                  return colorMap;
+                }
+
                 const parsedBlocks = (tws?.createdWorkload || []).map((item) => {
                   const parsed = parseSchedule(item);
                   return {
@@ -255,6 +246,8 @@
                     isConflict: false,
                   };
                 });
+
+                const subjectColorMap = buildColorMap(tws?.createdWorkload || []);
 
                 for (let i = 0; i < parsedBlocks.length; i++) {
                   for (let j = i + 1; j < parsedBlocks.length; j++) {
@@ -270,15 +263,14 @@
                   }
                 }
 
-                parsedBlocks.forEach((block, index) => {
+                parsedBlocks.forEach((block) => {
                   const s = block.item;
                   const p = block.parsed;
                   if (!p) return;
                   const col = dayMap[p.day];
                   const row = p.row;
 
-                  const subjectColors = ["color-1", "color-2", "color-3", "color-4", "color-5", "color-6"];
-                  const assignedColorClass = subjectColors[index % subjectColors.length];
+                  const assignedColorClass = subjectColorMap[getSubjectKey(s)] || "color-1";
                   const colorClass = block.isConflict ? "tws-block-conflict" : `${assignedColorClass} tws-block-assigned`;
 
                   const compactSectionRoom = String(s.sectionRoom || "").replace(/\s*\|\s*/g, "|");
@@ -527,6 +519,6 @@
       );
     });
   });
-</script>
+  </script>
 </body>
 </html>

@@ -341,25 +341,72 @@
       const row = clampedStartSlot + 2;
       const span = Math.max(1, clampedEndSlot - clampedStartSlot);
 
-      return { day, row, span, start, end };
+      return { day, row, span, start, end, startMin, endMin };
     }
 
-    const palette = [
-      "#6da9d8", "#c8a2d8", "#9fb9d8", "#d8b0b8", "#d3e0ef", "#e9d181", "#a7cf7c", "#ddb895", "#4f7fbf", "#b28be0", "#e0bf96", "#f0e7c6"
-    ];
-
-    function colorForCode(code, idx) {
-      const text = String(code || "");
-      let sum = idx;
-      for (let i = 0; i < text.length; i += 1) sum += text.charCodeAt(i);
-      return palette[Math.abs(sum) % palette.length];
+    function getSubjectKey(item) {
+      return `${String(item?.code || "").trim()}|${String(item?.sectionRoom || "").trim()}`;
     }
 
-    const blocks = createdWorkload.map((item, idx) => ({
+    function buildColorMap(workload) {
+      const subjectColors = {
+        "color-1": "#dbeafe",
+        "color-2": "#dcfce7",
+        "color-3": "#fef3c7",
+        "color-4": "#fce7f3",
+        "color-5": "#ede9fe",
+        "color-6": "#ffe4e6"
+      };
+
+      const orderedKeys = [];
+      (workload || []).forEach((item) => {
+        const key = getSubjectKey(item);
+        if (key && !orderedKeys.includes(key)) {
+          orderedKeys.push(key);
+        }
+      });
+
+      orderedKeys.sort();
+
+      const classes = Object.keys(subjectColors);
+      const colorMap = {};
+
+      orderedKeys.forEach((key, index) => {
+        const className = classes[index % classes.length];
+        colorMap[key] = subjectColors[className];
+      });
+
+      return colorMap;
+    }
+
+    const subjectColorMap = buildColorMap(createdWorkload);
+
+    const blocks = createdWorkload.map((item) => ({
       item,
       parsed: parseSchedule(item),
-      color: colorForCode(item?.code, idx),
+      color: subjectColorMap[getSubjectKey(item)] || "#dbeafe",
+      isConflict: false,
     }));
+
+    for (let i = 0; i < blocks.length; i += 1) {
+      for (let j = i + 1; j < blocks.length; j += 1) {
+        const a = blocks[i].parsed;
+        const b = blocks[j].parsed;
+        if (!a || !b) continue;
+        if (a.day !== b.day) continue;
+        const overlaps = a.startMin < b.endMin && b.startMin < a.endMin;
+        if (overlaps) {
+          blocks[i].isConflict = true;
+          blocks[j].isConflict = true;
+        }
+      }
+    }
+
+    blocks.forEach((block) => {
+      if (block.isConflict) {
+        block.color = "#efc0c0";
+      }
+    });
 
     const facultyName = String(tws?.faculty?.name || tws?.facultySignerName || "").trim();
     const termLabel = String(tws?.term || tws?.faculty?.term || "N/A").trim();
@@ -422,8 +469,8 @@
           <% blocks.forEach((block) => {
                if (!block.parsed) return;
                const schedule = block.parsed;
-            const sectionRoom = String(block.item?.sectionRoom || "").trim().replace(/\s*\|\s*/g, "|");
-            const timeLabel = `${schedule.start} - ${schedule.end}`.replace(/\s*-\s*/g, "-");
+               const sectionRoom = String(block.item?.sectionRoom || "").trim().replace(/\s*\|\s*/g, "|");
+               const timeLabel = `${schedule.start} - ${schedule.end}`.replace(/\s*-\s*/g, "-");
           %>
             <div
               class="block"

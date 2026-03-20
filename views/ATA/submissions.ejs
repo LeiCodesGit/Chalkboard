@@ -3,346 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapúa MCM - My Submissions</title>
+    <title>Chalkboard | ATA My Submissions</title>
     
     <link rel="stylesheet" href="/common/css/variables.css">
     <link rel="stylesheet" href="/ATA/css/style.css">
+    <link rel="stylesheet" href="/ATA/css/submissions.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    
-    <style>
-        /* ====================================================================
-           NUKE PREVIOUS STYLE.CSS INTERFERENCE (Forces Full-Screen Layout)
-           ==================================================================== */
-        body, html {
-            background-color: #f9f9f9 !important;
-            background-image: none !important;
-            color: #333333;
-            margin: 0 !important;
-            padding: 0 !important;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            overflow: hidden !important; 
-            display: block !important;
-        }
 
-        .main-content {
-            position: absolute !important;
-            top: 0 !important;
-            left: 260px !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: calc(100vw - 260px) !important;
-            height: 100vh !important;
-            max-width: none !important;
-            background-color: #ffffff !important;
-            background-image: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            backdrop-filter: none !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: stretch !important; 
-            justify-content: flex-start !important; 
-            z-index: 10;
-        }
-
-        /* ====================================================================
-           BLACKBOARD LEARN "GRADES" THEME (LIGHT & CLEAN)
-           ==================================================================== */
-        
-        *, *::before, *::after {
-            box-sizing: border-box !important;
-        }
-
-        /* --- Header Section (User Profile & Title & Search) --- */
-        .bb-page-header {
-            padding: 20px 40px !important;
-            background: #ffffff !important;
-            border-bottom: 1px solid #e0e0e0 !important;
-            flex-shrink: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            width: 100% !important;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 40px;
-        }
-
-        .user-profile-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 0; 
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background-color: #444;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .user-name {
-            font-size: 22px;
-            color: #222;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        /* --- Search Box --- */
-        .search-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .search-wrapper i {
-            position: absolute;
-            left: 14px;
-            color: #888;
-            font-size: 14px;
-        }
-
-        .search-input {
-            padding: 10px 15px 10px 38px;
-            border: 1px solid #ccc;
-            border-radius: 25px;
-            font-size: 14px;
-            width: 280px;
-            outline: none;
-            transition: all 0.2s ease;
-            background-color: #f8f9fa;
-        }
-
-        .search-input:focus {
-            border-color: #8e24aa;
-            box-shadow: 0 0 5px rgba(142, 36, 170, 0.2);
-            background-color: #ffffff;
-        }
-
-        /* --- Professional Top Back Button --- */
-        .btn-outline {
-            background: #ffffff;
-            color: #333;
-            border: 1px solid #d1d5db;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .btn-outline:hover {
-            background: #f8f9fa;
-            border-color: #adb5bd;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transform: translateY(-1px);
-        }
-
-        /* --- Scrollable Body Area --- */
-        .bb-scroll-area {
-            flex: 1 !important;
-            overflow-y: auto !important; 
-            display: flex !important;
-            flex-direction: column !important;
-            width: 100% !important;
-        }
-
-        .bb-accent-line {
-            height: 4px;
-            background-color: #00d2ff; 
-            width: 100%;
-            flex-shrink: 0;
-        }
-
-        /* --- Tabs --- */
-        .bb-tabs {
-            display: flex;
-            padding: 0 40px;
-            border-bottom: 1px solid #e0e0e0;
-            background: #ffffff;
-            flex-shrink: 0;
-        }
-
-        .bb-tab {
-            padding: 15px 20px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #333;
-            border-bottom: 3px solid #8e24aa; 
-            margin-bottom: -1px;
-        }
-
-        /* --- Table Container & Data --- */
-        .bb-table-container {
-            padding: 0 40px 40px 40px;
-            flex: 1;
-            background: #ffffff;
-        }
-
-        .bb-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .bb-table th {
-            text-align: left;
-            padding: 15px 10px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #444;
-            border-bottom: 1px solid #e0e0e0;
-            white-space: nowrap;
-        }
-
-        .bb-table th i.fa-sort {
-            color: #aaa;
-            margin-left: 5px;
-            font-size: 10px;
-        }
-
-        .bb-table td {
-            padding: 20px 10px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f0f0f0;
-            color: #222;
-            font-size: 14px;
-        }
-
-        .bb-table tr:hover td {
-            background-color: #fcfcfc;
-        }
-
-        .row-icon-cell {
-            text-align: center;
-            width: 50px;
-        }
-        
-        .row-icon-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .row-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #9c27b0; 
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .row-icon {
-            font-size: 20px;
-            color: #555;
-        }
-
-        /* --- Badges & Buttons --- */
-        .badge-green {
-            background-color: #28a745;
-            color: #ffffff;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            display: inline-block;
-            text-align: center;
-            min-width: 60px;
-        }
-
-        .badge-grey {
-            background-color: #e9ecef;
-            color: #555;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-            text-align: center;
-            min-width: 50px;
-        }
-
-        .btn-dark {
-            background-color: #333333;
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-            transition: background-color 0.2s;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .btn-dark:hover {
-            background-color: #000000;
-        }
-        
-        .btn-yellow {
-            background-color: #ffc107;
-            color: #000000 !important;
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-            transition: background-color 0.2s;
-            text-align: center;
-            min-width: 80px;
-            margin-top: 5px;
-        }
-        
-        .btn-yellow:hover {
-            background-color: #e0a800;
-        }
-
-        /* --- Approval Track Formatting --- */
-        .track-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            font-size: 13px;
-            color: #555;
-            line-height: 1.5;
-        }
-
-        .track-item {
-            margin-bottom: 6px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .track-reason {
-            margin-top: 4px;
-            padding: 6px 10px;
-            background-color: #fff3f3;
-            border-left: 3px solid #dc3545;
-            color: #dc3545;
-            font-size: 12px;
-            border-radius: 0 4px 4px 0;
-        }
-    </style>
 </head>
 <body data-role="<%= typeof role !== 'undefined' ? role : 'Professor' %>">
     
@@ -445,9 +114,10 @@
 
                                     <td>
                                         <% if (form.approvalHistory && form.approvalHistory.length > 0) { %>
+                                            <% const revHistory = [...form.approvalHistory].reverse(); %>
                                             <ul class="track-list">
-                                                <% form.approvalHistory.forEach(log => { %>
-                                                    <li class="track-item">
+                                                <% revHistory.forEach((log, index) => { %>
+                                                    <li class="track-item <%= index > 0 ? 'hidden-track' : '' %>" style="<%= index > 0 ? 'display: none;' : '' %>">
                                                         <% if (log.approvalStatus === 'RETURNED' || log.approvalStatus === 'REJECTED') { %>
                                                             <i class="fas fa-times-circle" style="color: #dc3545; margin-top: 3px;"></i>
                                                         <% } else { %>
@@ -467,6 +137,13 @@
                                                     </li>
                                                 <% }) %>
                                             </ul>
+                                            
+                                            <% if (revHistory.length > 1) { %>
+                                                <button type="button" onclick="toggleHistory(this)" style="background: transparent; border: none; color: #a0a0a0; font-size: 11px; font-weight: bold; cursor: pointer; padding: 5px 0 0 0; display: inline-flex; align-items: center; gap: 5px;">
+                                                    <i class="fas fa-chevron-down"></i> <span class="toggle-txt">View <%= revHistory.length - 1 %> older actions</span>
+                                                </button>
+                                            <% } %>
+
                                         <% } else { %>
                                             <span style="color: #888; font-style: italic;">No actions yet.</span>
                                         <% } %>
@@ -518,30 +195,7 @@
         </div> 
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('dateSearchInput');
-            const tableRows = document.querySelectorAll('#submissionsTable tbody .data-row');
-
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const query = this.value.toLowerCase().trim();
-                    
-                    tableRows.forEach(row => {
-                        const dateCell = row.querySelector('.searchable-date');
-                        
-                        if (dateCell) {
-                            const dateText = dateCell.textContent.toLowerCase().trim();
-                            if (dateText.includes(query)) {
-                                row.style.display = ''; 
-                            } else {
-                                row.style.display = 'none'; 
-                            }
-                        }
-                    });
-                });
-            }
-        });
-    </script>
+    <script src="/ATA/js/submissions.js"></script>
+   
 </body>
 </html>

@@ -5,7 +5,8 @@ const postDigitalSessionSchema = new Schema({
   moIloCode: String,
   participantTurnout: String,
   assessmentResults: String,
-  remarks: String
+  remarks: String,
+  accessible: { type: Boolean, default: false }
 },{ timestamps:true });
 
 const PostDigitalSession = model("PostDigitalSession", postDigitalSessionSchema);

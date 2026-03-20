@@ -14,6 +14,7 @@
       if (st === 'approved') return 'tws-status-approved';
       if (st === 'archived') return 'tws-status-archived';
       if (st === 'rejected') return 'tws-status-rejected';
+      if (st === 'faculty approved') return 'tws-status-sent';
       if (st.includes('returned')) return 'tws-status-returned';
       if (st.includes('sent')) return 'tws-status-sent';
       return 'tws-status-draft';
@@ -78,6 +79,7 @@
             <% (list || []).forEach(function(tws) {
                  const currentStatus = tws.status || 'Draft';
                  const canSignNow = currentStatus === 'Sent to Faculty' && !tws.facultySigned;
+                const canReturnNow = currentStatus === 'Sent to Faculty' || currentStatus === 'Faculty Approved';
             %>
               <article
                 class="tws-board-card faculty-card"
@@ -98,6 +100,12 @@
                     <span class="<%= statusClass(currentStatus) %>"><%= currentStatus %></span>
                   </div>
 
+                  <% if (tws.facultyNotes) { %>
+                    <div class="tws-board-note" style="margin-top:8px;">
+                      <b>Your note:</b> <%= String(tws.facultyNotes).slice(0, 140) %><%= String(tws.facultyNotes).length > 140 ? '...' : '' %>
+                    </div>
+                  <% } %>
+
                   <div class="tws-board-card-footer">
                     <div class="tws-board-card-date">Created: <%= formatDate(tws.createdAt) %></div>
 
@@ -106,25 +114,29 @@
                         <span class="material-symbols-outlined">visibility</span>
                       </a>
 
-                      <% if (canSignNow) { %>
-                        <% if (signatureReady) { %>
+                      <% if (canSignNow || canReturnNow) { %>
+                        <% if (canSignNow && signatureReady) { %>
                           <form method="POST" action="/tws/signature" style="display:inline;">
                             <input type="hidden" name="id" value="<%= tws.id %>" />
                             <button class="tws-board-icon-btn -approve" type="submit" title="Sign" onclick="return confirm('Use your saved e-signature for this TWS?')">
                               <span class="material-symbols-outlined">draw</span>
                             </button>
                           </form>
-                        <% } else { %>
+                        <% } %>
+
+                        <% if (canSignNow && !signatureReady) { %>
                           <a class="tws-board-icon-btn" href="/tws/signature-settings" title="Set signature first">
                             <span class="material-symbols-outlined">edit</span>
                           </a>
                         <% } %>
 
-                        <form method="POST" action="/tws/faculty-return/<%= tws.id %>" style="display:inline;">
-                          <button class="tws-board-icon-btn -danger" type="submit" title="Return" onclick="return confirm('Return this TWS to the Program Chair?')">
-                            <span class="material-symbols-outlined">reply</span>
-                          </button>
-                        </form>
+                        <% if (canReturnNow) { %>
+                          <form method="POST" action="/tws/faculty-return/<%= tws.id %>" style="display:inline;">
+                            <button class="tws-board-icon-btn -danger" type="submit" title="Return" onclick="return confirm('Return this TWS to the Program Chair?')">
+                              <span class="material-symbols-outlined">reply</span>
+                            </button>
+                          </form>
+                        <% } %>
                       <% } %>
                     </div>
                   </div>
@@ -204,5 +216,7 @@
       archiveIcon.textContent = archiveGrid.classList.contains('tws-board-hidden') ? 'chevron_right' : 'expand_more';
     });
   </script>
+
+  <%- include("./partials/twsNotifications") %>
 </body>
 </html>

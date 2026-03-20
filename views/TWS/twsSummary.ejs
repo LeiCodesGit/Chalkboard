@@ -34,15 +34,27 @@
           <% const isProfessor = !!(user && user.role === "Professor"); %>
           <% const isProgramChair = !!(user && user.role === "Program-Chair"); %>
           <% const isDean = !!(user && user.role === "Dean"); %>
-          <% const canFacultyAct = isProfessor && currentStatus === "Sent to Faculty" && !tws.facultySigned; %>
-          <% const canSendToFaculty = isChair && ["Draft", "Returned to Program Chair"].includes(currentStatus); %>
-          <% const canSendToDean = isChair && isProgramChair && currentStatus === "Sent to Faculty" && !!tws.facultySigned; %>
+          <% const canFacultyReview = isProfessor && ["Sent to Faculty", "Faculty Approved"].includes(currentStatus); %>
+          <% const canFacultySign = isProfessor && currentStatus === "Sent to Faculty" && !tws.facultySigned; %>
+          <% const canFacultyReturn = canFacultyReview; %>
+          <% const canFacultySaveNotes = canFacultyReview; %>
+          <% const canSendToFaculty = isChair && !selfAssignedProgramChair && ["Draft", "Returned to Program Chair", "Rejected"].includes(currentStatus); %>          
+          <% const canSendToDean = isChair && isProgramChair && (
+            (selfAssignedProgramChair && ["Draft", "Returned to Program Chair", "Rejected"].includes(currentStatus)) ||
+            (["Sent to Faculty", "Faculty Approved"].includes(currentStatus) && !!tws.facultySigned)
+          ); %>
           <% const canEdit = isChair && ["Draft", "Returned to Program Chair", "Rejected"].includes(currentStatus); %>
           <% const canDownloadPdf = currentStatus === "Approved" || currentStatus === "Archived"; %>
 
           <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
-            <div style="margin-bottom:12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#fff; border-radius:12px; padding:10px 12px; font-size:12px;">
+            <div style="margin-bottom:12px; background: rgba(220,38,38,0.2); border:1px solid rgba(220,38,38,0.45); color:#1f2937; border-radius:12px; padding:10px 12px; font-size:12px;">
               <b>Action blocked:</b> <%= errorMessage %>
+            </div>
+          <% } %>
+
+          <% if (typeof noteSaved !== "undefined" && noteSaved) { %>
+            <div style="margin-bottom:12px; background: rgba(22,163,74,0.2); border:1px solid rgba(22,163,74,0.45); color:#1f2937; border-radius:12px; padding:10px 12px; font-size:12px;">
+              <b>Saved:</b> Faculty notes were updated successfully.
             </div>
           <% } %>
 
@@ -89,6 +101,19 @@
                       Signed
                       <% if (tws.deanSignedAt) { %>
                         - <%= new Date(tws.deanSignedAt).toLocaleString("en-US", { timeZone: "Asia/Manila" }) %> (PHT)
+                      <% } %>
+                    </div>
+                  <% } %>
+
+                  <% if (tws.facultyNotes) { %>
+                    <div style="font-weight:800;">Faculty Notes:</div>
+                    <div class="tws-faculty-notes-display"><%= tws.facultyNotes %></div>
+
+                    <div style="font-weight:800;">Notes Updated:</div>
+                    <div>
+                      <%= tws.facultyNotesUpdatedAt ? new Date(tws.facultyNotesUpdatedAt).toLocaleString("en-US", { timeZone: "Asia/Manila" }) + " (PHT)" : "—" %>
+                      <% if (tws.facultyNotesUpdatedBy) { %>
+                        by <%= tws.facultyNotesUpdatedBy %>
                       <% } %>
                     </div>
                   <% } %>
@@ -139,7 +164,6 @@
                     <% } %>
                   </div>
                 <% } %>
- 
 
                 <% if (isDean && tws.status === "Approved") { %>
                   <button
@@ -185,7 +209,7 @@
                   Back
                 </a>
 
-                <% if (canFacultyAct) { %>
+                <% if (canFacultySign) { %>
                   <button
                     type="submit"
                     formaction="/tws/signature"
@@ -196,7 +220,9 @@
                   >
                     Sign TWS
                   </button>
+                <% } %>
 
+                <% if (canFacultyReturn) { %>
                   <button
                     type="submit"
                     formaction="/tws/faculty-return/<%= tws.id %>"
@@ -211,18 +237,35 @@
               </div>
             </div>
 
-            <% if (canFacultyAct) { %>
+            <% if (canFacultySign) { %>
               <input type="hidden" name="id" value="<%= tws.id %>" />
+            <% } %>
 
-              <div style="margin-top:14px; display:grid; gap:8px; max-width:640px;">
-                <label for="facultyReturnRemarks" style="font-size:12px; font-weight:800;">Revision Notes (optional)</label>
+            <% if (canFacultySaveNotes) { %>
+              <div class="tws-revision-box">
+                <label for="facultyReturnRemarks" class="tws-revision-label">Revision Notes (optional)</label>
+                <div class="tws-revision-help">
+                  If you want changes in your schedule, write the requested revisions here before returning this TWS to the Program Chair.
+                </div>
                 <textarea
                   id="facultyReturnRemarks"
                   name="remarks"
                   rows="3"
                   placeholder="State what needs to be revised before approval."
-                  style="width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.35); background:rgba(255,255,255,0.08); color:#fff; padding:10px 12px; resize:vertical; font-size:12px;"
-                ></textarea>
+                  class="tws-revision-textarea"
+                ><%= tws.facultyNotes || "" %></textarea>
+
+                <div class="tws-revision-actions">
+                  <button
+                    type="submit"
+                    formaction="/tws/faculty-note/<%= tws.id %>"
+                    formmethod="POST"
+                    class="tws-btn-white"
+                    style="cursor:pointer;"
+                  >
+                    Save Notes
+                  </button>
+                </div>
               </div>
             <% } %>
 
@@ -320,6 +363,31 @@
                     };
                   }
 
+                  function getSubjectKey(item) {
+  return `${String(item.code || "").trim()}|${String(item.sectionRoom || "").trim()}`;
+}
+
+                  function buildColorMap(workload) {
+                    const subjectColors = ["color-1", "color-2", "color-3", "color-4", "color-5", "color-6"];
+                    const uniqueKeys = [];
+
+                    (workload || []).forEach((item) => {
+                      const key = getSubjectKey(item);
+                      if (key && !uniqueKeys.includes(key)) {
+                        uniqueKeys.push(key);
+                      }
+                    });
+
+                    uniqueKeys.sort();
+
+                    const colorMap = {};
+                    uniqueKeys.forEach((key, index) => {
+                      colorMap[key] = subjectColors[index % subjectColors.length];
+                    });
+
+                    return colorMap;
+                  }
+
                   const parsedBlocks = (tws?.createdWorkload || []).map(function(item) {
                     return {
                       item: item,
@@ -327,6 +395,8 @@
                       isConflict: false,
                     };
                   });
+
+                  const subjectColorMap = buildColorMap(tws?.createdWorkload || []);
 
                   for (let i = 0; i < parsedBlocks.length; i++) {
                     for (let j = i + 1; j < parsedBlocks.length; j++) {
@@ -346,7 +416,8 @@
                     if (!p) return;
                     const col = dayMap[p.day];
                     const row = p.row;
-                    const colorClass = block.isConflict ? "tws-block-conflict" : "tws-block-assigned";
+                    const assignedColorClass = subjectColorMap[getSubjectKey(block.item)] || "color-1";
+                    const colorClass = block.isConflict ? "tws-block-conflict" : `${assignedColorClass} tws-block-assigned`;
                     const compactSectionRoom = String(block.item.sectionRoom || "").replace(/\s*\|\s*/g, "|");
                     const compactTimeRange = `${p.startStr} - ${p.endStr}`.replace(/\s*-\s*/g, "-");
                 %>
@@ -443,5 +514,7 @@
       </div>
     </main>
   </div>
+
+  <%- include("./partials/twsNotifications") %>
 </body>
 </html>

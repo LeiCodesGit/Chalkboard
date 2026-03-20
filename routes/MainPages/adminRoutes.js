@@ -4,6 +4,7 @@ import userSchema from "../../models/user.js";
 import Announcement from "../../models/MainPages/announcement.js";
 import { isAuthenticated, authorizeRoles } from "../../middleware/authMiddleware.js";
 import { renderDashboard } from "../../controllers/ataController.js";
+import { requireLogin, requireApprovalRole, getAdminTLA } from "../../controllers/tlaController.js";
 
 const adminRoutes = express.Router();
 const MainUser    = mainDB.model("User", userSchema);
@@ -110,6 +111,19 @@ adminRoutes.get(
     isAuthenticated,
     authorizeRoles("Admin", "Super-Admin", "VPAA", "HR", "HRMO"),
     renderDashboard
+);
+
+// ==========================================
+// GET /admin/tla  —  TLA review queue + archive
+// Accessible to: Program-Chair, Dean, HR, HRMO, VPAA, Technical,
+// Practicum-Coordinator, Admin, Super-Admin
+// ==========================================
+
+adminRoutes.get(
+    "/tla",
+    requireLogin,
+    requireApprovalRole,
+    getAdminTLA
 );
 
 export default adminRoutes;

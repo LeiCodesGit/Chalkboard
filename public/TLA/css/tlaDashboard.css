@@ -66,6 +66,42 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
+/* ── Status legend ── */
+
+.status-legend {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 30px;
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+.legend-dot.draft { background: #6b7280; }
+.legend-dot.pending { background: #f59e0b; }
+.legend-dot.returned { background: #ef4444; }
+.legend-dot.archived { background: #10b981; }
+
 .cards-container {
     position: relative;
     z-index: 2;
@@ -84,11 +120,17 @@ body {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     transition: all 0.3s;
     cursor: pointer;
+    border-left: 4px solid transparent;
 }
 
+.card.card-status-draft { border-left-color: #6b7280; }
+.card.card-status-pending { border-left-color: #f59e0b; }
+.card.card-status-returned { border-left-color: #ef4444; }
+.card.card-status-archived { border-left-color: #10b981; }
+
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     background-color: rgba(255, 255, 255, 1);
 }
 
@@ -253,6 +295,23 @@ body {
     text-decoration: underline;
 }
 
+.empty-state {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.7);
+}
+.empty-state .material-symbols-outlined {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+.empty-state p {
+    font-size: 1rem;
+}
+
 /* ── Toast notification ─── */
 
 .tla-toast {
@@ -289,20 +348,10 @@ body {
         margin-left: 0;
         padding: 40px 20px;
     }
-    
+
     .cards-container {
         grid-template-columns: 1fr;
         gap: 25px;
-    }
-}
-
-@media (max-width: 768px) {
-    .cards-container {
-        grid-template-columns: 1fr;
         max-width: 400px;
-    }
-    
-    .main-content {
-        margin-left: 0;
     }
 }

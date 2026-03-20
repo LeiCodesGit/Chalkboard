@@ -1,0 +1,479 @@
+<style>
+  .tws-notif-root {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 1200;
+    display: grid;
+    gap: 8px;
+    justify-items: end;
+  }
+
+  .tws-notif-bell {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.92);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    padding: 0;
+  }
+
+  .tws-notif-bell-icon {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .tws-notif-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 0 6px;
+    border: 2px solid rgba(15, 23, 42, 0.92);
+  }
+
+  .tws-notif-panel {
+    width: min(360px, calc(100vw - 28px));
+    max-height: 360px;
+    overflow: auto;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    background: rgba(2, 6, 23, 0.95);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    padding: 8px;
+  }
+
+  .tws-notif-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 4px 8px;
+  }
+
+  .tws-notif-toolbar-title {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .tws-notif-clear-btn {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .tws-notif-clear-btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .tws-notif-item {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .tws-notif-item.-unread {
+    border-color: rgba(34, 197, 94, 0.85);
+    background: rgba(34, 197, 94, 0.1);
+  }
+
+  .tws-notif-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tws-notif-title {
+    font-size: 12px;
+    color: #fff;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .tws-notif-remove-btn {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .tws-notif-message {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.94);
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+
+  .tws-notif-meta {
+    margin-top: 4px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .tws-notif-empty {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 11px;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .tws-notif-toast-stack {
+    display: grid;
+    gap: 8px;
+    justify-items: end;
+  }
+
+  .tws-notif-toast {
+    width: min(340px, calc(100vw - 28px));
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(2, 6, 23, 0.95);
+    color: #fff;
+    padding: 10px 12px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    animation: twsNotifSlideIn 180ms ease-out;
+    cursor: pointer;
+  }
+
+  @keyframes twsNotifSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<div class="tws-notif-root" id="twsNotifRoot">
+  <div class="tws-notif-toast-stack" id="twsNotifToastStack"></div>
+
+  <div class="tws-notif-panel" id="twsNotifPanel" hidden>
+    <div class="tws-notif-toolbar">
+      <div class="tws-notif-toolbar-title">Recent Updates</div>
+      <button type="button" class="tws-notif-clear-btn" id="twsNotifClearAllBtn">Clear All</button>
+    </div>
+    <div id="twsNotifList"></div>
+  </div>
+
+  <button type="button" class="tws-notif-bell" id="twsNotifBell" aria-label="Open notifications">
+    <span class="material-symbols-outlined tws-notif-bell-icon">notifications</span>
+    <span class="tws-notif-count" id="twsNotifCount">0</span>
+  </button>
+</div>
+
+<script>
+  (function () {
+    const bell = document.getElementById("twsNotifBell");
+    const countEl = document.getElementById("twsNotifCount");
+    const panel = document.getElementById("twsNotifPanel");
+    const list = document.getElementById("twsNotifList");
+    const toastStack = document.getElementById("twsNotifToastStack");
+    const clearAllBtn = document.getElementById("twsNotifClearAllBtn");
+
+    if (!bell || !countEl || !panel || !list || !toastStack || !clearAllBtn) return;
+
+    let notifications = [];
+
+    function toDateText(value) {
+      const date = new Date(value || Date.now());
+      if (Number.isNaN(date.getTime())) return "Just now";
+      return date.toLocaleString("en-US", { timeZone: "Asia/Manila" }) + " PHT";
+    }
+
+    function unreadCount() {
+      return notifications.reduce((total, n) => total + (n.isRead ? 0 : 1), 0);
+    }
+
+    function resolveTarget(notification) {
+      const target = String(notification?.targetUrl || "").trim();
+      if (target) return target;
+
+      const twsId = String(notification?.twsID || "").trim();
+      if (!twsId) return "/tws/dashboard";
+      return `/tws/summary/${encodeURIComponent(twsId)}`;
+    }
+
+    function updateCount() {
+      const count = unreadCount();
+      countEl.textContent = String(count);
+      countEl.style.display = count > 0 ? "inline-flex" : "none";
+    }
+
+    async function markAsRead(notificationId) {
+      if (!notificationId) return;
+
+      try {
+        await fetch(`/tws/notifications/${encodeURIComponent(notificationId)}/read`, {
+          method: "POST",
+          headers: { "Accept": "application/json" },
+        });
+      } catch (error) {
+        console.error("Unable to mark notification as read:", error);
+      }
+    }
+
+    async function removeNotification(notificationId) {
+      if (!notificationId) return false;
+
+      try {
+        const response = await fetch(`/tws/notifications/${encodeURIComponent(notificationId)}/remove`, {
+          method: "POST",
+          headers: { "Accept": "application/json" },
+        });
+        return response.ok;
+      } catch (error) {
+        console.error("Unable to remove notification:", error);
+        return false;
+      }
+    }
+
+    async function clearAllNotifications() {
+      try {
+        const response = await fetch("/tws/notifications/remove-all", {
+          method: "POST",
+          headers: { "Accept": "application/json" },
+        });
+        return response.ok;
+      } catch (error) {
+        console.error("Unable to clear notifications:", error);
+        return false;
+      }
+    }
+
+    function renderList() {
+      list.innerHTML = "";
+
+      if (!notifications.length) {
+        const empty = document.createElement("div");
+        empty.className = "tws-notif-empty";
+        empty.textContent = "No notifications yet.";
+        list.appendChild(empty);
+        updateCount();
+        clearAllBtn.disabled = true;
+        return;
+      }
+
+      notifications.forEach((notification) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = `tws-notif-item ${notification.isRead ? "" : "-unread"}`.trim();
+        item.style.width = "100%";
+        item.style.textAlign = "left";
+        item.style.cursor = "pointer";
+
+        const itemTop = document.createElement("div");
+        itemTop.className = "tws-notif-item-top";
+
+        const title = document.createElement("div");
+        title.className = "tws-notif-title";
+        title.textContent = notification.title || "TWS Update";
+
+        const titleWrap = document.createElement("div");
+        titleWrap.appendChild(title);
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "tws-notif-remove-btn";
+        removeBtn.textContent = "Remove";
+        removeBtn.title = "Remove this notification";
+
+        removeBtn.addEventListener("click", async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const ok = await removeNotification(notification.id);
+          if (!ok) return;
+
+          notifications = notifications.filter((entry) => entry.id !== notification.id);
+          renderList();
+        });
+
+        itemTop.appendChild(titleWrap);
+        itemTop.appendChild(removeBtn);
+
+        const message = document.createElement("div");
+        message.className = "tws-notif-message";
+        message.textContent = notification.message || "";
+
+        const meta = document.createElement("div");
+        meta.className = "tws-notif-meta";
+        meta.textContent = toDateText(notification.createdAt);
+
+        item.appendChild(itemTop);
+        item.appendChild(message);
+        item.appendChild(meta);
+
+        item.addEventListener("click", async () => {
+          const targetUrl = resolveTarget(notification);
+          if (!notification.isRead) {
+            notification.isRead = true;
+            updateCount();
+            item.classList.remove("-unread");
+            markAsRead(notification.id);
+          }
+          window.location.assign(targetUrl);
+        });
+
+        list.appendChild(item);
+      });
+
+      updateCount();
+      clearAllBtn.disabled = notifications.length === 0;
+    }
+
+    function showToast(notification) {
+      const toast = document.createElement("div");
+      toast.className = "tws-notif-toast";
+      toast.title = "Open this update";
+
+      const title = document.createElement("div");
+      title.className = "tws-notif-title";
+      title.textContent = notification.title || "TWS Update";
+
+      const message = document.createElement("div");
+      message.className = "tws-notif-message";
+      message.textContent = notification.message || "";
+
+      toast.appendChild(title);
+      toast.appendChild(message);
+
+      toast.addEventListener("click", () => {
+        const targetUrl = resolveTarget(notification);
+        if (!notification.isRead) {
+          notification.isRead = true;
+          updateCount();
+          markAsRead(notification.id);
+        }
+        window.location.assign(targetUrl);
+      });
+
+      toastStack.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
+    }
+
+    function upsertNotification(incoming, options) {
+      if (!incoming || !incoming.id) return;
+      const isStream = Boolean(options && options.isStream);
+
+      const existingIndex = notifications.findIndex((n) => n.id === incoming.id);
+      if (existingIndex !== -1) {
+        notifications[existingIndex] = {
+          ...notifications[existingIndex],
+          ...incoming,
+        };
+      } else {
+        notifications.unshift(incoming);
+        notifications = notifications.slice(0, 20);
+      }
+
+      if (isStream) {
+        showToast(incoming);
+      }
+
+      renderList();
+    }
+
+    async function loadInitialNotifications() {
+      try {
+        const response = await fetch("/tws/notifications?limit=12", {
+          headers: { "Accept": "application/json" },
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const list = Array.isArray(data?.notifications) ? data.notifications : [];
+        notifications = list;
+        renderList();
+      } catch (error) {
+        console.error("Unable to load TWS notifications:", error);
+      }
+    }
+
+    bell.addEventListener("click", () => {
+      panel.hidden = !panel.hidden;
+    });
+
+    clearAllBtn.addEventListener("click", async () => {
+      const ok = await clearAllNotifications();
+      if (!ok) return;
+      notifications = [];
+      renderList();
+    });
+
+    document.addEventListener("click", (event) => {
+      const root = document.getElementById("twsNotifRoot");
+      if (!root) return;
+      if (root.contains(event.target)) return;
+      panel.hidden = true;
+    });
+
+    const stream = new EventSource("/tws/notifications/stream");
+
+    stream.addEventListener("bootstrap", (event) => {
+      try {
+        const data = JSON.parse(event.data || "[]");
+        if (!Array.isArray(data)) return;
+        notifications = data;
+        renderList();
+      } catch (error) {
+        console.error("Invalid notification bootstrap payload:", error);
+      }
+    });
+
+    stream.addEventListener("notification", (event) => {
+      try {
+        const data = JSON.parse(event.data || "{}");
+        upsertNotification(data, { isStream: true });
+      } catch (error) {
+        console.error("Invalid realtime notification payload:", error);
+      }
+    });
+
+    stream.onerror = () => {
+      // EventSource retries automatically.
+    };
+
+    window.addEventListener("beforeunload", () => {
+      stream.close();
+    });
+
+    loadInitialNotifications();
+  })();
+</script>
