@@ -318,3 +318,107 @@ body, html {
   background: white; border-radius: 5px; height: 100px; display: flex; 
   justify-content: center; align-items: center; overflow: hidden;
 }
+
+/* ====================================================================
+   TABLET RESPONSIVENESS (Screens 769px to 1024px - iPad)
+   ==================================================================== */
+@media (max-width: 1024px) and (min-width: 769px) {
+
+    .bb-page-header, 
+    .bb-tabs-wrapper { 
+        padding: 20px 25px !important; 
+    }
+    
+    .bb-table-container { 
+        padding: 0 25px 40px 25px !important; 
+        overflow-x: auto !important; 
+    }
+
+    .search-input { width: 220px; }
+}
+
+/* ====================================================================
+   MOBILE RESPONSIVENESS (Screens 768px and smaller)
+   ==================================================================== */
+@media (max-width: 768px) {
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100vw !important;
+    }
+
+
+    .bb-page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        padding: 20px 15px !important;
+    }
+
+    .search-wrapper, .search-input {
+        width: 100% !important;
+    }
+    .btn-outline {
+        margin-left: 0 !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .bb-tabs-wrapper {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 15px !important;
+        gap: 15px !important;
+    }
+    .signature-actions-bar {
+        width: 100% !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-start !important;
+    }
+    .btn-action {
+        flex: 1 1 auto; 
+        justify-content: center !important;
+    }
+
+    .bb-table-container {
+        padding: 10px 15px 30px 15px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .signature-modal {
+        width: 95% !important; 
+        padding: 20px 15px !important;
+        max-height: 90vh !important; 
+        overflow-y: auto !important;
+    }
+    
+    #vipSignatureCanvas {
+        width: 100% !important;
+        max-width: 440px !important;
+        height: auto !important;
+        touch-action: none; 
+    }
+
+    .signature-modal div[style*="display: flex"] {
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        gap: 10px !important;
+        justify-content: space-between !important;
+        margin-top: 10px !important;
+    }
+
+    .signature-modal .btn-action {
+        flex: 1 1 40% !important;
+        justify-content: center !important;
+        padding: 12px 10px !important;
+        font-size: 14px !important;
+        margin: 0 !important;
+    }
+
+    #saveVipSigBtn {
+        flex: 1 1 100% !important; 
+        padding: 14px !important;
+        font-size: 16px !important;
+    }
+}

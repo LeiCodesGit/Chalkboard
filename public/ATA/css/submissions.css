@@ -328,3 +328,80 @@ body, html {
     font-size: 12px;
     border-radius: 0 4px 4px 0;
 }
+
+/* ====================================================================
+   TABLET RESPONSIVENESS (Screens 769px to 1024px - iPad)
+   ==================================================================== */
+@media (max-width: 1024px) and (min-width: 769px) {
+
+    .bb-page-header, 
+    .bb-tabs, 
+    .bb-table-container { 
+        padding-left: 25px !important; 
+        padding-right: 25px !important; 
+    }
+    
+    .bb-table-container { 
+        overflow-x: auto !important; 
+    }
+
+    .search-input { 
+        width: 220px; 
+    }
+}
+
+/* ====================================================================
+   MOBILE RESPONSIVENESS (Screens 768px and smaller)
+   ==================================================================== */
+@media (max-width: 768px) {
+
+    .main-content {
+        left: 0 !important;
+        margin-left: 0 !important;
+        width: 100vw !important;
+    }
+
+  
+    .bb-page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        padding: 20px 15px !important;
+    }
+
+    .header-left {
+        gap: 15px !important;
+    }
+
+
+    .search-wrapper, .search-input {
+        width: 100% !important;
+    }
+    .search-input {
+        height: 48px !important;
+        font-size: 16px !important;
+    }
+
+    .btn-outline {
+        width: 100% !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        height: 44px !important;
+    }
+
+    .bb-tabs {
+        padding: 0 15px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+    .bb-tab {
+        padding: 12px 15px !important;
+    }
+
+    .bb-table-container {
+        padding: 10px 15px 30px 15px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}

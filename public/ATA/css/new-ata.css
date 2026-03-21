@@ -302,3 +302,80 @@ select.form-input option { color: #333 !important; }
 .summary-total { display: flex; padding: 20px 0; font-weight: bold; color: #333; border-top: 2px solid #aaa; margin-top: 10px; }
 
 .acceptance-label { color: #333; font-size: 14px; font-weight: 600; }
+
+
+/* ====================================================================
+   TABLET RESPONSIVENESS (Screens 769px to 1024px)
+   ==================================================================== */
+@media (max-width: 1024px) and (min-width: 769px) {
+
+    .bb-top-bar { padding: 15px 25px; }
+    .form-cards-container { padding: 0 25px 80px 25px; }
+
+    .bb-nav-row { gap: 30px; }
+    .progress-steps { gap: 25px; }
+
+    .form-label { width: 140px; padding-right: 15px; }
+    .form-field { padding-left: 20px; }
+    
+    .form-field { overflow-x: auto; }
+    .table-header, .course-row, .admin-row, .practicum-row, .employment-row, .remedial-row {
+        min-width: 650px; 
+    }
+}
+
+/* ====================================================================
+   MOBILE RESPONSIVENESS (Screens 768px and smaller)
+   ==================================================================== */
+@media (max-width: 768px) {
+
+    #multiStepSection {
+        margin-left: 0 !important;
+        width: 100vw !important;
+    }
+
+    .bb-top-bar { padding: 15px 20px; }
+    .form-cards-container { padding: 0 15px 80px 15px; }
+
+
+    .bb-nav-container { padding: 15px 0; }
+    .bb-nav-row { 
+        gap: 10px; 
+        width: 100%; 
+        justify-content: space-between; 
+        padding: 0 10px; 
+    }
+    .progress-steps { gap: 15px; }
+    #formTitle h1 { font-size: 20px !important; margin-bottom: 10px !important; }
+
+    .form-row {
+        flex-direction: column;
+        min-height: auto;
+    }
+    .form-label {
+        width: 100%;
+        text-align: left;
+        border-right: none; 
+        padding: 15px 0 5px 0;
+        font-size: 12px;
+    }
+    .form-label::after {
+        display: none; 
+    }
+    
+    .form-field {
+        padding: 0 0 20px 0;
+        width: 100%;
+        border-bottom: 1px solid #f0f0f0; 
+        
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .form-input { max-width: 100% !important; font-size: 16px !important; }
+    .radio-group { flex-direction: column !important; align-items: flex-start !important; gap: 12px; }
+
+    .table-header, .course-row, .admin-row, .practicum-row, .employment-row, .remedial-row, .total-units-row, .summary-header, .summary-row, .summary-total {
+        min-width: 650px; 
+    }
+}

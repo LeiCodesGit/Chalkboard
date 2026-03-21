@@ -309,3 +309,98 @@ body, html {
     text-decoration: none;
 }
 .btn-outline:hover { background-color: #f4f5f7; border-color: #aaa; }
+
+/* ====================================================================
+   TABLET RESPONSIVENESS (Screens 769px to 1024px - iPad Landscape)
+   ==================================================================== */
+@media (max-width: 1024px) and (min-width: 769px) {
+    
+    .bb-header,
+    .bb-toolbar-wrapper {
+        padding: 15px 20px !important;
+    }
+
+    .bb-scroll-area {
+        padding: 20px 20px 40px 20px !important;
+    }
+
+    .bb-search-box {
+        max-width: 350px; 
+    }
+
+    .bb-filter-group {
+        max-width: 220px; 
+    }
+    
+    .folder-body {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+
+/* ====================================================================
+   MOBILE RESPONSIVENESS (Screens 768px and smaller)
+   ==================================================================== */
+@media (max-width: 768px) {
+    .main-content {
+        left: 0 !important;
+        width: 100vw !important;
+    }
+
+    .bb-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        padding: 15px 20px !important;
+    }
+
+    .bb-toolbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 15px !important;
+    }
+    .bb-search-box, 
+    .bb-filter-group {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    .bb-toolbar-wrapper {
+        padding: 15px 20px !important;
+    }
+
+    .bb-scroll-area {
+        padding: 15px 20px 80px 20px !important;
+    }
+    .bb-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 15px 20px;
+    }
+    .folder-body {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .bb-title {
+        padding-left: 45px !important; 
+        font-size: 22px !important; 
+    }
+    .bb-search-box, 
+    .bb-filter-select {
+        height: 48px !important; 
+        min-height: 48px !important; 
+    }
+    
+    .bb-search-box input {
+        height: 100% !important; 
+        font-size: 16px !important; 
+        background: transparent !important;
+        margin: 0 !important;
+    }
+
+    .bb-filter-select {
+        font-size: 16px !important; 
+    }
+}

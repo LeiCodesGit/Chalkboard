@@ -20,3 +20,80 @@ body { margin: 0; overflow: hidden; background: #1a1a1a; }
 .audit-scroll::-webkit-scrollbar-track { background: transparent; }
 .audit-scroll::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
 .audit-scroll::-webkit-scrollbar-thumb:hover { background: #888; }
+
+/* ====================================================================
+   TABLET RESPONSIVENESS (Screens 769px to 1024px - iPad)
+   ==================================================================== */
+@media (max-width: 1024px) and (min-width: 769px) {
+
+    .sticky-action-bar {
+        padding: 0 20px !important;
+    }
+}
+
+/* ====================================================================
+   MOBILE RESPONSIVENESS (Screens 768px and smaller)
+   ==================================================================== */
+@media (max-width: 768px) {
+    /* 1. Force the main container to be exactly the size of the phone screen */
+    main {
+        margin-left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important; /* THIS FIXES THE EMPTY BOTTOM SPACE! */
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* 2. The PDF Container expands like a balloon to fill all remaining space */
+    .pdf-container {
+        flex: 1 1 auto !important;
+        height: 0 !important; /* Ignores default iframe heights so Flexbox takes over */
+        width: 100% !important;
+    }
+
+    /* 3. The Action Bar hugs the bottom tightly */
+    .sticky-action-bar {
+        height: auto !important;
+        min-height: auto !important;
+        flex-shrink: 0 !important; /* Prevents the PDF from squishing the buttons */
+        flex-direction: column !important;
+        padding: 15px 20px !important;
+        gap: 15px !important;
+    }
+
+    /* 4. Make the Status and Audit Trail stack cleanly */
+    .sticky-action-bar > div:first-child {
+        width: 100% !important;
+        flex-direction: column !important; 
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    .audit-scroll {
+        width: 100% !important;
+        padding-bottom: 5px !important;
+    }
+
+    /* 5. Make the Action Buttons stack into massive thumb-targets */
+    .sticky-action-bar > div:last-child {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        flex-direction: column !important; 
+        gap: 10px !important;
+    }
+
+    .form-btn {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 14px !important;
+        font-size: 16px !important; /* Prevents iOS auto-zoom */
+        justify-content: center !important;
+    }
+
+    /* (Specific to review-ata.css) Justification Input sizing */
+    #justificationInput {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
