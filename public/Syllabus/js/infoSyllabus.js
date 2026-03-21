@@ -202,7 +202,32 @@ function loadInfoFromServer() {
     if (!window.SERVER_SYLLABUS_DATA) return;
     const { outcomes, mapping, syl } = window.SERVER_SYLLABUS_DATA;
 
-    // 1. Basic Info & Multilines (Mostly handled by EJS, but ensure placeholders)
+    // 1. Basic Info from the Syllabus document
+    if (syl) {
+        const courseCodeEl = document.querySelector('.info-item.small .course-editable-text');
+        const courseTitleEl = document.querySelector('.info-item.large .course-editable-text');
+        if (courseCodeEl && syl.courseCode && !courseCodeEl.innerText.trim()) courseCodeEl.innerText = syl.courseCode;
+        if (courseTitleEl && syl.courseTitle && !courseTitleEl.innerText.trim()) courseTitleEl.innerText = syl.courseTitle;
+
+        // Also fill other basic info fields if available
+        const setGridText = (rowIdx, itemIdx, val) => {
+            const el = document.querySelectorAll('.info-row')[rowIdx]?.querySelectorAll('.course-editable-text')[itemIdx];
+            if (el && val && !el.innerText.trim()) el.innerText = val;
+        };
+        setGridText(1, 0, syl.preRequisite);
+        setGridText(1, 1, syl.coRequisite);
+        setGridText(1, 2, syl.creditUnits);
+        setGridText(2, 0, syl.classSchedule);
+        setGridText(2, 1, syl.courseDesign);
+
+        const desc = document.querySelector('.multiline[data-placeholder*="course description"]');
+        if (desc && syl.courseDescription && !desc.innerText.trim()) desc.innerText = syl.courseDescription;
+        const txt = document.querySelector('.multiline[data-placeholder*="textbook"]');
+        if (txt && syl.textbook && !txt.innerText.trim()) txt.innerText = syl.textbook;
+        const ref = document.querySelector('.multiline[data-placeholder*="references"]');
+        if (ref && syl.references && !ref.innerText.trim()) ref.innerText = syl.references;
+    }
+
     refreshPlaceholders();
 
     // 2. Course Outcomes Grid (Simple list)
@@ -980,7 +1005,10 @@ window.onload = () => {
 };
 
 window.addEventListener('load', () => {
-    // Load first
+    // Load server data first (course code, title, outcomes, mapping, etc.)
+    loadInfoFromServer();
+
+    // Then overlay any session draft data on top (user edits in progress)
     loadInfoFromSession();
 
     // Then start watching for changes anywhere on the document

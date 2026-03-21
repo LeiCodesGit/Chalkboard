@@ -65,7 +65,8 @@ coursesOverviewFacultyRouter.get('/', async (req, res) => {
             courses: formattedCourses,
             userId: 'faculty',
             searchQuery: req.query.search || '',
-            currentPageCategory: 'syllabus'
+            currentPageCategory: 'syllabus',
+            user: req.session.user
         });
     } catch (error) {
         console.error("Faculty Dashboard error:", error);
@@ -73,7 +74,8 @@ coursesOverviewFacultyRouter.get('/', async (req, res) => {
             courses: [],
             userId: 'faculty',
             searchQuery: '',
-            currentPageCategory: 'syllabus'
+            currentPageCategory: 'syllabus',
+            user: req.session.user
         });
     }
 });

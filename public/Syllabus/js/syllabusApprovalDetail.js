@@ -388,8 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const actionLabel = SYLLABUS_APPROVAL_DATA.actionLabel || 'submission';
             const signatoryName = document.getElementById('signatory-name-input')?.value || '';
             const signatureImg = document.querySelector('.ad-signature-img');
+            
+            const approveVal = typeof SYLLABUS_APPROVAL_DATA !== 'undefined' ? (SYLLABUS_APPROVAL_DATA.optionApproveValue || 'PC_Approved') : 'PC_Approved';
 
             // ─── Submission Confirmation ────────────────────────
+            if (status === approveVal && signatoryName.trim() === '') {
+                alert('Signatory Name is required before approving/endorsing.');
+                return;
+            }
+
             if (!confirm(`Are you sure you want to submit this ${actionLabel} as "${status}"?`)) return;
 
             const payload = {

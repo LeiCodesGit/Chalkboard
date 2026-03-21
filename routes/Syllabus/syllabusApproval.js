@@ -150,11 +150,11 @@ syllabusApprovalRouter.get('/', async (req, res) => {
             approvedCount = drafts.filter(d => d.status === 'Approved').length;
         }
 
-        res.render('Syllabus/syllabusApproval', { drafts, pendingCount, approvedCount, returnUrl, currentPageCategory: 'syllabus' });
+        res.render('Syllabus/syllabusApproval', { drafts, pendingCount, approvedCount, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
 
     } catch (error) {
         console.error('Approval queue error:', error);
-        res.render('Syllabus/syllabusApproval', { drafts: DUMMY_DRAFTS, pendingCount: 2, approvedCount: 1, returnUrl, currentPageCategory: 'syllabus' });
+        res.render('Syllabus/syllabusApproval', { drafts: DUMMY_DRAFTS, pendingCount: 2, approvedCount: 1, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
     }
 });
 

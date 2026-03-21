@@ -9,7 +9,7 @@ function addScheduleRow() {
 
 function addEvaluationRow() {
     const tbody = document.getElementById('evaluation-editor-body');
-    addRow(tbody, 6);
+    addRow(tbody, 7);
 }
 
 function addAssessmentRow() {

@@ -142,14 +142,16 @@ endorseSyllabusRouter.get('/', async (req, res) => {
         res.render('Syllabus/courseOverviewProgChair', {
             courses,
             currentPageCategory: 'syllabus',
-            userId: req.session.user ? req.session.user.id : 'prog-chair-demo'
+            userId: req.session.user ? req.session.user.id : 'prog-chair-demo',
+            user: req.session.user
         });
     } catch (error) {
         console.error('PC Course Overview error:', error);
         res.render('Syllabus/courseOverviewProgChair', {
             courses: [],
             currentPageCategory: 'syllabus',
-            userId: req.session.user ? req.session.user.id : 'prog-chair-demo'
+            userId: req.session.user ? req.session.user.id : 'prog-chair-demo',
+            user: req.session.user
         });
     }
 });
@@ -296,14 +298,16 @@ endorseSyllabusRouter.get('/approve', async (req, res) => {
             rejectedFilter: 'Rejected',
             rejectedLabel: 'Rejected',
             queueTitle: 'Syllabus Endorsement Queue',
-            queueSubtitle: 'Review and endorse syllabuses submitted by faculty to the Dean.'
+            queueSubtitle: 'Review and endorse syllabuses submitted by faculty to the Dean.',
+            user: req.session.user
         });
     } catch (error) {
         console.error('Approval Queue error:', error);
         res.render('Syllabus/syllabusEndorsementQueue', {
             drafts: [], pendingCount: 0, endorsedCount: 0, currentPageCategory: 'syllabus',
             actionUrlPrefix: '/syllabus/prog-chair/approve', actionLabel: 'Review',
-            queueTitle: 'Program Chair Approval Queue', queueSubtitle: ''
+            queueTitle: 'Program Chair Approval Queue', queueSubtitle: '',
+            user: req.session.user
         });
     }
 });
@@ -520,13 +524,15 @@ endorseSyllabusRouter.get('/endorse', async (req, res) => {
             approvedLabel: 'Endorsed',
             approvedFilter: 'Endorsed',
             queueTitle: 'Program Chair Endorsement Queue',
-            queueSubtitle: 'Finalize and endorse approved syllabuses to the Dean.'
+            queueSubtitle: 'Finalize and endorse approved syllabuses to the Dean.',
+            user: req.session.user
         });
     } catch (error) {
         console.error('Endorsement Queue error:', error);
         res.render('Syllabus/syllabusEndorsementQueue', {
             drafts: [], pendingCount: 0, endorsedCount: 0, currentPageCategory: 'syllabus',
-            actionUrlPrefix: '/syllabus/prog-chair/endorse', actionLabel: 'Endorse', queueTitle: 'Program Chair Endorsement Queue', queueSubtitle: ''
+            actionUrlPrefix: '/syllabus/prog-chair/endorse', actionLabel: 'Endorse', queueTitle: 'Program Chair Endorsement Queue', queueSubtitle: '',
+            user: req.session.user
         });
     }
 });

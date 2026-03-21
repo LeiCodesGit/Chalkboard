@@ -53,7 +53,8 @@ deanRoutes.get("/institution", isAuthenticated, authorizeRoles("Dean"), async (r
 });
 
 deanRoutes.get("/syllabus", isAuthenticated, authorizeRoles("Dean"), async (req, res) => {
-    res.redirect("/syllabus/approve");
+    const userId = req.session.user ? (req.session.user.id || req.session.user._id) : '';
+    res.redirect(`/syllabus/${userId}`);
 });
 
 export default deanRoutes;

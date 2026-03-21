@@ -156,7 +156,7 @@
             </a>
         </li>
         <% } %>
-        <% if (isProf || isChair || isDean || isAdmin) { %>
+        <% if (isProf || isChair || isDean || isAdmin || isHR) { %>
         <li>
             <a href="<%= (locals.user && (user.role === 'Admin' || user.role === 'HR')) ? '/syllabus/hr' : (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? '/dean/syllabus' : (locals.user && (user.role === 'Program-Chair' || user.role === 'program-chair')) ? '/syllabus/prog-chair' : (locals.user && (user.role === 'Professor' || user.role === 'professor')) ? '/faculty' : '/syllabus' %>"
                 class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
