@@ -6,7 +6,9 @@ import User from "../../models/user.js";
 import mongoose from "mongoose";
 import Subject from "../../models/TWS/subject.js";
 import { calculateTwsLoadsFromCourses } from "../../utils/twsLoadCalculator.js";
-import puppeteer from "puppeteer";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fs from "fs";
+import path from "path";
 import ATACourse from "../../models/ATA/Course.js";
 import {
   getSessionUser, getSessionUserId, getSessionUserRole,
@@ -36,6 +38,8 @@ const router = express.Router();
 
 /* ── User model — user.js exports a schema, not a model ── */
 const UserModel = mongoose.models.User || mongoose.model("User", User);
+
+const LOGO_PATH = path.join(process.cwd(), "public", "ATA", "images", "mapua_logo.png");
 
 /* ======================================================
    MIDDLEWARE
@@ -138,6 +142,525 @@ async function getAnyTwsOr404(req, res) {
   }
 
   return tws;
+}
+
+function safeNum(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function format2(value) {
+    return safeNum(value).toFixed(2);
+  }
+
+  function truncateText(text, max = 40) {
+    const str = String(text || "").trim();
+    if (str.length <= max) return str;
+    return str.slice(0, max - 3) + "...";
+  }
+
+  function toMinutes(timeStr) {
+    if (!timeStr) return null;
+    const raw = String(timeStr).trim();
+    const hasAmPm = /\b(AM|PM)\b/i.test(raw);
+    const normalized = hasAmPm ? raw : `${raw} AM`;
+    const match = normalized.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return null;
+
+    let hour = Number(match[1]);
+    const minute = Number(match[2]);
+    const ampm = String(match[3]).toUpperCase();
+
+    if (ampm === "PM" && hour !== 12) hour += 12;
+    if (ampm === "AM" && hour === 12) hour = 0;
+
+    return hour * 60 + minute;
+  }
+
+  function parseSchedule(item) {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const rawDay = String(item?.day || "").trim();
+    const rawStart = String(item?.startTime || "").trim();
+    const rawEnd = String(item?.endTime || "").trim();
+    const rawSlot = String(item?.timeSlot || "").trim();
+
+    let day = rawDay;
+    let start = rawStart;
+    let end = rawEnd;
+
+    if ((!start || !end) && rawSlot) {
+      const match = rawSlot.match(/^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+)?(.+?)\s*-\s*(.+)$/i);
+      if (match) {
+        day = day || String(match[1] || "").trim();
+        start = start || String(match[2] || "").trim();
+        end = end || String(match[3] || "").trim();
+      }
+    }
+
+    if (!days.includes(day)) return null;
+
+    const startMin = toMinutes(start);
+    const endMin = toMinutes(end);
+
+    if (startMin == null || endMin == null || endMin <= startMin) return null;
+
+    return { day, start, end, startMin, endMin };
+  }
+
+  async function embedSignatureImage(pdfDoc, dataUrl) {
+    if (!dataUrl || typeof dataUrl !== "string" || !dataUrl.startsWith("data:image")) {
+      return null;
+    }
+
+    try {
+      const base64Part = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+      const buffer = Buffer.from(base64Part, "base64");
+
+      if (dataUrl.startsWith("data:image/png")) {
+        return await pdfDoc.embedPng(buffer);
+      }
+
+      if (
+        dataUrl.startsWith("data:image/jpeg") ||
+        dataUrl.startsWith("data:image/jpg")
+      ) {
+        return await pdfDoc.embedJpg(buffer);
+      }
+
+      return null;
+    } catch (err) {
+      console.error("Failed to embed signature image:", err.message);
+      return null;
+    }
+  }
+
+  async function embedLogo(pdfDoc) {
+    try {
+      if (!fs.existsSync(LOGO_PATH)) return null;
+      const bytes = fs.readFileSync(LOGO_PATH);
+      return await pdfDoc.embedPng(bytes);
+    } catch (err) {
+      console.error("Failed to load logo:", err.message);
+      return null;
+    }
+  }
+
+  async function renderTwsPdf(payload) {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([842, 595]); // A4 landscape approx
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  const black = rgb(0, 0, 0);
+  const gray = rgb(0.2, 0.2, 0.2);
+
+  const drawText = (text, x, y, opts = {}) => {
+    if (text == null || text === "") return;
+    page.drawText(String(text), {
+      x,
+      y,
+      size: opts.size || 9,
+      font: opts.bold ? bold : font,
+      color: opts.color || black,
+    });
+  };
+
+  const drawCenteredText = (text, centerX, y, opts = {}) => {
+    if (text == null || text === "") return;
+    const value = String(text);
+    const f = opts.bold ? bold : font;
+    const size = opts.size || 9;
+    const width = f.widthOfTextAtSize(value, size);
+    page.drawText(value, {
+      x: centerX - width / 2,
+      y,
+      size,
+      font: f,
+      color: opts.color || black,
+    });
+  };
+
+  const drawRightText = (text, rightX, y, opts = {}) => {
+    if (text == null || text === "") return;
+    const value = String(text);
+    const f = opts.bold ? bold : font;
+    const size = opts.size || 9;
+    const width = f.widthOfTextAtSize(value, size);
+    page.drawText(value, {
+      x: rightX - width,
+      y,
+      size,
+      font: f,
+      color: opts.color || black,
+    });
+  };
+
+  const drawLine = (x1, y1, x2, y2, thickness = 1) => {
+    page.drawLine({
+      start: { x: x1, y: y1 },
+      end: { x: x2, y: y2 },
+      thickness,
+      color: black,
+    });
+  };
+
+  const drawRect = (x, y, w, h, fillColor = null, borderWidth = 1) => {
+    page.drawRectangle({
+      x,
+      y,
+      width: w,
+      height: h,
+      borderColor: black,
+      borderWidth,
+      color: fillColor || undefined,
+    });
+  };
+
+  const drawWrappedText = (text, x, y, maxWidth, opts = {}) => {
+    if (!text) return;
+    const size = opts.size || 8;
+    const lineHeight = opts.lineHeight || (size + 2);
+    const useBold = !!opts.bold;
+    const f = useBold ? bold : font;
+    const words = String(text).split(/\s+/);
+    let line = "";
+    let currentY = y;
+
+    for (const word of words) {
+      const test = line ? `${line} ${word}` : word;
+      const testWidth = f.widthOfTextAtSize(test, size);
+
+      if (testWidth > maxWidth && line) {
+        page.drawText(line, {
+          x,
+          y: currentY,
+          size,
+          font: f,
+          color: opts.color || black,
+        });
+        currentY -= lineHeight;
+        line = word;
+      } else {
+        line = test;
+      }
+    }
+
+    if (line) {
+      page.drawText(line, {
+        x,
+        y: currentY,
+        size,
+        font: f,
+        color: opts.color || black,
+      });
+    }
+  };
+
+  const logo = await embedLogo(pdfDoc);
+
+  const leftMargin = 28;
+  const rightMargin = 814;
+  const topY = 555;
+
+  // Header
+  if (logo) {
+    page.drawImage(logo, { x: leftMargin, y: 495, width: 50, height: 50 });
+  }
+
+  drawText("Mapua Malayan Colleges Mindanao", 80, 532, { size: 12, bold: true });
+  drawText("General Douglas MacArthur Highway, Matina, Davao City", 80, 518, { size: 8, color: gray });
+  drawText("www.mmcm.edu.ph", 80, 506, { size: 8, color: gray });
+
+  drawRightText("Instructor Schedule", rightMargin, 532, { size: 12, bold: true });
+  drawRightText(`${payload.termLabel} | AY ${payload.ayLabel}`, rightMargin, 518, { size: 9, bold: true });
+
+  drawCenteredText(String(payload.facultyName || "INSTRUCTOR").toUpperCase(), 421, 480, {
+    size: 12,
+    bold: true,
+    color: rgb(0.70, 0.16, 0.16),
+  });
+
+  // Main layout
+  const scheduleX = 28;
+  const scheduleY = 145;
+  const scheduleW = 560;
+  const scheduleH = 315;
+
+  const detailsX = 620;
+  const detailsY = 145;
+  const detailsW = 195;
+  const detailsH = 315;
+
+  drawRect(scheduleX, scheduleY, scheduleW, scheduleH, null, 1);
+  drawRect(detailsX, detailsY, detailsW, detailsH, null, 1);
+
+  // Schedule grid
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const times = [
+    "7:00", "8:15", "9:30", "10:45", "12:00", "1:15 PM",
+    "2:30", "3:45", "5:00", "6:15", "7:30", "8:45"
+  ];
+
+  const timeColW = 54;
+  const dayColW = (scheduleW - timeColW) / 7;
+  const headerH = 24;
+  const rowH = (scheduleH - headerH) / 12;
+
+  // Vertical lines
+  for (let i = 0; i <= 7; i++) {
+    const x = scheduleX + timeColW + i * dayColW;
+    if (i < 7) {
+      drawLine(x, scheduleY, x, scheduleY + scheduleH, 1);
+    }
+  }
+
+  drawLine(scheduleX + timeColW, scheduleY, scheduleX + timeColW, scheduleY + scheduleH, 1);
+
+  // Horizontal lines
+  drawLine(scheduleX, scheduleY + scheduleH - headerH, scheduleX + scheduleW, scheduleY + scheduleH - headerH, 1);
+
+  for (let i = 1; i <= 12; i++) {
+    const y = scheduleY + scheduleH - headerH - i * rowH;
+    drawLine(scheduleX, y, scheduleX + scheduleW, y, 1);
+  }
+
+  // Day headers
+  for (let i = 0; i < days.length; i++) {
+    const centerX = scheduleX + timeColW + i * dayColW + dayColW / 2;
+    drawCenteredText(days[i], centerX, scheduleY + scheduleH - 16, {
+      size: 9,
+      bold: true,
+    });
+  }
+
+  // Time labels
+  for (let i = 0; i < times.length; i++) {
+    const centerY = scheduleY + scheduleH - headerH - i * rowH - rowH / 2 - 3;
+    drawCenteredText(times[i], scheduleX + timeColW / 2, centerY, {
+      size: 8,
+      bold: true,
+    });
+  }
+
+  const dayMap = {
+    Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6,
+  };
+
+  const colorList = [
+    rgb(0.86, 0.93, 0.99),
+    rgb(0.86, 0.97, 0.89),
+    rgb(0.99, 0.95, 0.78),
+    rgb(0.99, 0.91, 0.95),
+    rgb(0.93, 0.91, 0.99),
+    rgb(1.0, 0.89, 0.90),
+  ];
+
+  const keyOrder = [];
+  const keyToColor = {};
+
+  for (const item of payload.createdWorkload) {
+    const key = `${String(item?.code || "").trim()}|${String(item?.sectionRoom || "").trim()}`;
+    if (key && !keyOrder.includes(key)) keyOrder.push(key);
+  }
+
+  keyOrder.sort();
+
+  keyOrder.forEach((key, idx) => {
+    keyToColor[key] = colorList[idx % colorList.length];
+  });
+
+  for (const item of payload.createdWorkload) {
+    const parsed = parseSchedule(item);
+    if (!parsed) continue;
+
+    const dayIndex = dayMap[parsed.day];
+    if (dayIndex == null) continue;
+
+    const startOffset = (parsed.startMin - 420) / 75; // 7:00 AM base
+    const endOffset = (parsed.endMin - 420) / 75;
+
+    const rowStart = Math.max(0, startOffset);
+    const rowSpan = Math.max(1, endOffset - startOffset);
+
+    const blockX = scheduleX + timeColW + dayIndex * dayColW + 1.5;
+    const blockY = scheduleY + scheduleH - headerH - (rowStart + rowSpan) * rowH + 1.5;
+    const blockW = dayColW - 3;
+    const blockH = rowSpan * rowH - 3;
+
+    const key = `${String(item?.code || "").trim()}|${String(item?.sectionRoom || "").trim()}`;
+    const fill = keyToColor[key] || colorList[0];
+
+    page.drawRectangle({
+      x: blockX,
+      y: blockY,
+      width: blockW,
+      height: blockH,
+      color: fill,
+      borderColor: black,
+      borderWidth: 1,
+    });
+
+    const code = item?.code || "-";
+    const sectionRoom = String(item?.sectionRoom || "-").replace(/\s*\|\s*/g, " | ");
+
+    if (blockH < 38) {
+      // small block: code + section/room
+      drawCenteredText(truncateText(code, 14), blockX + blockW / 2, blockY + blockH - 10, {
+        size: 6.0,
+        bold: true,
+      });
+      drawCenteredText(truncateText(sectionRoom, 16), blockX + blockW / 2, blockY + 5, {
+        size: 4.8,
+      });
+    } else {
+      // normal block: code + section/room
+      drawCenteredText(truncateText(code, 16), blockX + blockW / 2, blockY + blockH - 10, {
+        size: 6.4,
+        bold: true,
+      });
+      drawCenteredText(truncateText(sectionRoom, 18), blockX + blockW / 2, blockY + blockH - 21, {
+        size: 5.2,
+      });
+    }
+  }
+
+  let detailY = detailsY + detailsH - 40;
+
+  const statRow = (label, value, isBold = false) => {
+    drawText(label, detailsX + 10, detailY, { size: 8.5, bold: isBold });
+    drawRightText(value, detailsX + detailsW - 10, detailY, { size: 8.5, bold: true });
+    detailY -= 14;
+  };
+
+  const divider = () => {
+    drawLine(detailsX + 8, detailY + 6, detailsX + detailsW - 8, detailY + 6, 1);
+    detailY -= 8;
+  };
+
+  statRow("Teaching Hours", format2(payload.teachingHours));
+  statRow("Advising Hours", format2(payload.advisingHours));
+  statRow("Consultation Hours", format2(payload.consultationHours));
+  statRow("Committee Works", format2(payload.committeeWorks));
+  divider();
+  statRow("Total Hours", format2(payload.totalHours), true);
+  divider();
+
+  // Reserve space at the bottom for Unit Distribution
+  const reservedBottomSpace = 110;
+  const detailBottomLimit = detailsY + reservedBottomSpace;
+
+  if (!payload.createdWorkload.length) {
+    drawText("No schedule assigned.", detailsX + 10, detailY, { size: 7.5 });
+    detailY -= 14;
+  } else {
+    const sortedWorkload = [...payload.createdWorkload].sort((a, b) => {
+      return String(a?.code || "").localeCompare(String(b?.code || ""));
+    });
+
+    for (const item of sortedWorkload) {
+      const estimatedNeeded = 18;
+
+      if (detailY - estimatedNeeded < detailBottomLimit) break;
+
+      drawText(`${truncateText(item?.code || "-", 16)}`, detailsX + 10, detailY, {
+        size: 7.2,
+        bold: true,
+      });
+
+      drawRightText(format2(item?.units || 0), detailsX + detailsW - 10, detailY, {
+        size: 7.2,
+        bold: true,
+      });
+
+      detailY -= 8;
+
+      const lineText = `${item?.day || ""} ${item?.startTime || ""} - ${item?.endTime || ""} | ${item?.sectionRoom || "-"}`;
+
+      drawWrappedText(
+        lineText,
+        detailsX + 10,
+        detailY,
+        detailsW - 20,
+        { size: 5.8, lineHeight: 6.5 }
+      );
+
+      detailY -= 11;
+
+      drawLine(detailsX + 8, detailY + 3, detailsX + detailsW - 8, detailY + 3, 0.5);
+      detailY -= 4;
+    }
+  }
+
+  divider();
+  drawCenteredText("Unit Distribution", detailsX + detailsW / 2, detailY + 4, {
+    size: 9,
+    bold: true,
+  });
+  detailY -= 10;
+
+  const compactStatRow = (label, value, isBold = false) => {
+    drawText(label, detailsX + 10, detailY, { size: 8, bold: isBold });
+    drawRightText(value, detailsX + detailsW - 10, detailY, { size: 8, bold: true });
+    detailY -= 11;
+  };
+
+  compactStatRow("Academic", format2(payload.academicUnits));
+  compactStatRow("PE", format2(payload.peUnits));
+  compactStatRow("Values", format2(payload.valuesUnits));
+  compactStatRow("NSTP", format2(payload.nstpUnits));
+  compactStatRow("Deloading", format2(payload.deloadingUnits));
+
+  drawLine(detailsX + 8, detailY + 5, detailsX + detailsW - 8, detailY + 5, 1);
+  detailY -= 7;
+
+  compactStatRow("Total Units", format2(payload.totalUnits), true);
+
+  // Signatures
+  const sigTopY = 62;
+  const sigWidth = 210;
+  const sigHeight = 40;
+
+  const sigCols = [
+    { x: 60, label: "Dean", image: payload.deanSignatureImage, name: payload.deanSignerName || payload.deanName || "" },
+    { x: 315, label: "Program Chair", image: payload.programChairSignatureImage, name: payload.programChairSignerName || payload.programChairName || "" },
+    { x: 570, label: "Instructor", image: payload.facultySignatureImage, name: payload.facultySignerName || payload.facultyName || "Instructor" },
+  ];
+
+  for (const sig of sigCols) {
+    const img = await embedSignatureImage(pdfDoc, sig.image);
+
+    if (img) {
+      const scale = Math.min(120 / img.width, 24 / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+
+      page.drawImage(img, {
+        x: sig.x + (sigWidth - w) / 2,
+        y: sigTopY + 18,
+        width: w,
+        height: h,
+      });
+    }
+
+    drawLine(sig.x + 15, sigTopY + 14, sig.x + sigWidth - 15, sigTopY + 14, 1);
+    drawCenteredText(sig.name || "", sig.x + sigWidth / 2, sigTopY + 4, {
+      size: 8,
+      bold: true,
+    });
+    drawCenteredText(sig.label, sig.x + sigWidth / 2, sigTopY - 8, {
+      size: 8,
+      color: gray,
+    });
+  }
+
+  drawRightText(
+    `Generated on ${payload.generatedAt}`,
+    rightMargin,
+    18,
+    { size: 7.5, color: gray }
+  );
+
+  return pdfDoc.save();
 }
 
 async function getAccessibleTwsOr404(req, res) {
@@ -1709,61 +2232,70 @@ router.get(
     const twsView = normalizeTwsForView(tws, courses, approval);
     twsView.deanName = deanName;
     twsView.programChairName = programChairName;
-    const assetBaseUrl = `${req.protocol}://${req.get("host")}`;
 
-    const html = await new Promise((resolve, reject) => {
-      req.app.render(
-        "TWS/twsPdf",
-        {
-          tws: twsView,
-          user: req.twsUser,
-          currentPageCategory: "tws",
-          generatedAt: new Date(),
-          assetBaseUrl,
-        },
-        (err, renderedHtml) => {
-          if (err) return reject(err);
-          resolve(renderedHtml);
-        }
-      );
-    });
+    const createdWorkload = Array.isArray(twsView?.createdWorkload) ? twsView.createdWorkload : [];
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    const teachingHours = safeNum(twsView?.teachingHours);
+    const advisingHours = safeNum(twsView?.advisingHours);
+    const consultationHours = safeNum(twsView?.consultationHours);
+    const committeeWorks = safeNum(twsView?.committeeWorks);
+    const computedHours = teachingHours + advisingHours + consultationHours + committeeWorks;
+    const totalHours = safeNum(
+      twsView?.totalHours != null ? twsView.totalHours : (twsView?.totals?.totalHours ?? computedHours)
+    );
 
-    try {
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: "networkidle0" });
+    const computedUnits = createdWorkload.reduce((acc, item) => acc + safeNum(item?.units), 0);
+    const totalUnits = safeNum(
+      twsView?.totalUnits != null ? twsView.totalUnits : (twsView?.totals?.totalUnits ?? computedUnits)
+    );
 
-      const pdfBytes = await page.pdf({
-        format: "A4",
-        landscape: true,
-        printBackground: true,
-        margin: {
-          top: "8mm",
-          right: "8mm",
-          bottom: "8mm",
-          left: "8mm",
-        },
-      });
+    const payload = {
+      facultyName: String(twsView?.faculty?.name || twsView?.facultySignerName || "").trim(),
+      termLabel: String(twsView?.term || twsView?.faculty?.term || "N/A").trim(),
+      ayLabel: String(twsView?.schoolYear || twsView?.faculty?.acadYear || "N/A").trim(),
 
-      const pdfBuffer = Buffer.isBuffer(pdfBytes)
-        ? pdfBytes
-        : Buffer.from(pdfBytes);
+      teachingHours,
+      advisingHours,
+      consultationHours,
+      committeeWorks,
+      totalHours,
 
-      tws.pdf = pdfBuffer;
-      await tws.save();
+      academicUnits: safeNum(twsView?.academicUnits),
+      peUnits: safeNum(twsView?.peUnits),
+      nstpUnits: safeNum(twsView?.nstpUnits),
+      valuesUnits: safeNum(twsView?.valuesUnits),
+      deloadingUnits: safeNum(twsView?.deloadingUnits),
+      totalUnits,
 
-      const filename = buildPdfFilename(tws);
+      createdWorkload,
 
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
-      return res.send(pdfBuffer);
-    } finally {
-      await browser.close();
-    }
+      deanName: twsView?.deanName || "",
+      deanSignerName: twsView?.deanSignerName || "",
+      deanSignatureImage: twsView?.deanSignatureImage || "",
+
+      programChairName: twsView?.programChairName || "",
+      programChairSignerName: twsView?.programChairSignerName || "",
+      programChairSignatureImage: twsView?.programChairSignatureImage || "",
+
+      facultySignerName: twsView?.facultySignerName || "",
+      facultySignatureImage: twsView?.facultySignatureImage || "",
+
+      generatedAt: new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Manila",
+      }),
+    };
+
+    const pdfBytes = await renderTwsPdf(payload);
+    const pdfBuffer = Buffer.from(pdfBytes);
+
+    tws.pdf = pdfBuffer;
+    await tws.save();
+
+    const filename = buildPdfFilename(tws);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    return res.send(pdfBuffer);
   })
 );
 
