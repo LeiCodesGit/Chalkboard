@@ -56,6 +56,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // ========================
 // Import Routes
 // ========================
+// Redirect root to login
+app.get("/", (req, res) => {
+    res.redirect("/login");
+});                                 
+
+
 // Main Pages
 import loginRoutes from "./routes/MainPages/loginRoutes.js";
 import professorRoutes from "./routes/MainPages/professorRoutes.js";
@@ -137,7 +143,16 @@ app.use("/tla/courses", coursesRoutes);
 app.use("/tla/overview", overviewRoutes);
 app.use("/tla/form", formRoutes);
 app.use("/tla/approval", approvalRoutes);
-app.get("/tla", (req, res) => res.redirect("/tla/courses"));
+app.get("/tla", (req, res) => {
+    const role = req.session?.user?.role;
+    const approvalRoles = ['Program-Chair', 'Dean', 'HR', 'HRMO', 'VPAA', 'Technical', 'Practicum-Coordinator', 'Admin', 'Super-Admin'];
+    if (role && approvalRoles.includes(role)) return res.redirect("/admin/tla");
+    return res.redirect("/tla/courses");
+});
+
+// Redirects for removed TLA routes
+app.get("/tla/admin-overview", (req, res) => res.redirect("/admin/tla"));
+app.get("/tla/hr", (req, res) => res.redirect("/admin/tla"));
 
 // TLA APIs
 app.use("/api/tla/approval",      tlaApprovalApiRoutes);

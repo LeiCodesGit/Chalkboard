@@ -1,0 +1,109 @@
+@media (max-width: 768px) {
+
+    .main-content {
+        width: 100%;
+        min-width: 0;
+        grid-column: 2;
+    }
+    
+    .admin-hero {
+        min-height: 200px;
+        padding: 20px;
+        width: 100%;
+    }
+
+    .admin-hero h1 {
+        font-size: 1.4rem;
+    }
+
+    .admin-hero p {
+        font-size: 0.85rem;
+    }
+
+    .btn-proj-overview {
+        padding: 10px 24px;
+        font-size: 0.85rem;
+    }
+
+    .admin-panel {
+        padding: 24px 18px;
+        margin: 20px auto;
+        width: 95%;
+    }
+
+    .admin-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .full-width {
+        grid-column: span 1 !important;
+    }
+
+    .announcement-box {
+        padding: 20px 16px;
+        width: 95%;
+    }
+
+    .announcement-item {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-delete {
+        align-self: flex-start;
+    }
+
+    .rte-toolbar {
+        gap: 0;
+        padding: 4px 6px;
+    }
+
+    .rte-btn {
+        padding: 5px 5px;
+    }
+
+    .modal-content {
+        padding: 20px 14px;
+        max-height: 90vh;
+    }
+
+    .team-list {
+        grid-template-columns: 1fr;
+    }
+
+    .team-group-label {
+        grid-column: span 1;
+    }
+
+    .team-member {
+        font-size: 0.78rem;
+        padding: 6px 10px;
+    }
+
+    .team-member span {
+        font-size: 0.78rem;
+    }
+
+    .team-member small {
+        font-size: 0.7rem;
+        white-space: nowrap;
+    }
+
+    .rte-toast {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        text-align: center;
+    }
+
+    .announcement-box > div:first-child {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .btn-submit {
+        display: block;
+        width: 100%;
+    }
+}

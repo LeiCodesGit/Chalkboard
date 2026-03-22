@@ -1,7 +1,6 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
 <style>
-    /* Scope all styles to #main-sidebar to prevent leakage */
     #main-sidebar.sidebar {
         position: fixed;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -17,6 +16,7 @@
         display: flex;
         flex-direction: column;
         z-index: 1000;
+        transition: transform 0.3s ease;
     }
 
     #main-sidebar .sidebar-logo {
@@ -58,18 +58,17 @@
         display: flex;
         align-items: center;
         padding: 12px 20px;
-        color: var(--text-muted); 
+        color: var(--text-muted);
         text-decoration: none;
         transition: all 0.3s ease;
     }
 
-    /* Scoped Active State */
     #main-sidebar .sidebar-menu li a.active {
-        background-color: var(--accent-primary); 
+        background-color: var(--accent-primary);
         color: var(--text-on-dark);
         border-left: 4px solid var(--text-on-dark);
         font-weight: 600;
-        pointer-events: none; 
+        pointer-events: none;
         cursor: default;
     }
 
@@ -106,7 +105,76 @@
         margin-right: 15px;
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
+
+    #hamburger-btn {
+        display: none;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 99999;
+        background-color: #272727;
+        border: none;
+        border-radius: 8px;
+        padding: 8px;
+        cursor: pointer;
+        color: #fff;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #hamburger-btn .material-symbols-outlined {
+        margin-right: 0;
+        font-size: 28px;
+        color: #fff;
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+    }
+
+    #sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    #sidebar-overlay.active {
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        #main-sidebar.sidebar {
+            transform: translateX(-100%);
+        }
+
+        #main-sidebar.sidebar.open {
+            transform: translateX(0);
+        }
+
+        .page-layout {
+            grid-template-columns: 0 1fr;
+        }
+
+        .side-menu-container {
+            width: 0;
+            min-width: 0;
+            overflow: visible;
+            padding: 0;
+        }
+
+    }
 </style>
+
+<button id="hamburger-btn" aria-label="Toggle menu">
+    <span class="material-symbols-outlined">menu</span>
+</button>
+
+<div id="sidebar-overlay"></div>
 
 <nav id="main-sidebar" class="sidebar">
     <div class="sidebar-logo">
@@ -170,7 +238,31 @@
 </nav>
 
 <script>
-    const signOutBtn = document.getElementById('btn-signout');
+    const signOutBtn   = document.getElementById('btn-signout');
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidebar      = document.getElementById('main-sidebar');
+    const overlay      = document.getElementById('sidebar-overlay');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+
+    function handleHamburgerVisibility() {
+        if (window.innerWidth <= 768) {
+            hamburgerBtn.style.display = 'flex';
+        } else {
+            hamburgerBtn.style.display = 'none';
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+    }
+
+    handleHamburgerVisibility();
+    window.addEventListener('resize', handleHamburgerVisibility);
+
+    hamburgerBtn.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
 
     signOutBtn.addEventListener('click', (e) => {
         e.preventDefault();

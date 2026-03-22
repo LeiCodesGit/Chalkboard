@@ -122,6 +122,28 @@
         text-align: center;
         display: none; /* Hidden by default */
         }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+                padding: 20px;
+                box-sizing: border-box;
+                justify-content: flex-start;
+                padding-top: 200px;
+            }
+
+            #logo img {
+                max-width: 350px;
+                margin-bottom: 30px;
+            }
+
+            #credentials {
+                width: 100%;
+                max-width: 380px;
+                padding: 0 10px;
+                box-sizing: border-box;
+            }
+        }
     </style>
 </head>
 <body>
@@ -149,9 +171,6 @@
             </div>
         </form>
 
-        <div class="footer-links">
-            <a href="#">Forgot Password?</a>
-        </div>
     </section>
 
     <script>

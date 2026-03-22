@@ -1,0 +1,136 @@
+@media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .main-content {
+        overflow-x: hidden;
+    }
+
+    .page-layout {
+        grid-template-columns: 0 1fr;
+    }
+
+    .side-menu-container {
+        width: 0;
+        min-width: 0;
+        overflow: visible;
+        padding: 0;
+    }
+
+    .main-content {
+        width: 100%;
+        min-width: 0;
+        grid-column: 2;
+    }
+
+    .main-content > * {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .about {
+        height: auto;
+        min-height: 200px;
+        padding: 20px;
+    }
+
+    .about h1 {
+        font-size: 1.4rem;
+    }
+
+    .about p {
+        font-size: 0.85rem;
+    }
+
+    .btn-proj-overview {
+        padding: 10px 24px;
+        font-size: 0.85rem;
+    }
+
+    .announcement-box {
+        padding: 20px 16px;
+        width: 95%;
+        margin: 20px auto;
+    }
+
+    .announcement-item {
+        padding: 15px 0;
+    }
+
+    .modal-content {
+        padding: 20px 14px;
+        max-height: 90vh;
+        width: 95%;
+    }
+
+    .team-list {
+        gap: 6px;
+    }
+
+    .team-member {
+        font-size: 0.78rem;
+        padding: 8px 10px;
+    }
+
+    .team-member small {
+        font-size: 0.7rem;
+    }
+
+    .about {
+        height: auto;
+        min-height: 200px;
+        padding: 40px 30px 30px 30px;
+    }
+
+    .about h1 {
+        font-size: 1.4rem;
+        margin-top: 20px;
+    }
+
+    .about p {
+        font-size: 0.85rem;
+        padding: 0 10px;
+    }
+
+    .meta-tag {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .meta-tag span[style*="float:right"],
+    .meta-tag span[style*="float: right"] {
+        float: none !important;
+        width: 100%;
+        order: -1;
+        margin-bottom: 3px;
+    }
+
+    .announcement-box {
+        padding: 20px 16px;
+        width: 95%;
+        margin: 20px auto;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .announcement-body {
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+    }
+
+    .announcement-body img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .announcement-body table {
+        max-width: 100%;
+        overflow-x: auto;
+        display: block;
+    }
+}

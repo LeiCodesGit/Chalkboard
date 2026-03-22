@@ -5,8 +5,10 @@ import {
     Post_Main, Post_B1, Post_B2,
     Status_Main, Status_B1, Status_B2
 } from '../../../models/TLA/tlaModels.js';
+import { requireLogin } from '../../../controllers/tlaController.js';
 
 const router = express.Router();
+router.use(requireLogin);
 
 // ── Helpers ──
 function syncBackup(model1, model2, id, data) {
@@ -117,15 +119,25 @@ router.put('/:id', async (req, res) => {
 router.patch('/:id/submit', async (req, res) => {
     try {
         const { id } = req.params;
-        const update = { status: 'Pending', approvalDate: null, remarks: null };
+        const update = {
+            status: 'Pending',
+            approvalDate: null,
+            remarks: null,
+            programChair: { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' },
+            dean:         { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' },
+            hr:           { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' },
+            vpaa:         { status: 'Pending', approvedBy: '', approvalDate: null, remarks: '' }
+        };
 
         const statusDoc = await Status_Main.findOneAndUpdate(
             { tlaID: id },
             update,
             { new: true }
         );
-        await Status_B1.findOneAndUpdate({ tlaID: id }, update);
-        await Status_B2.findOneAndUpdate({ tlaID: id }, update);
+        await Promise.all([
+            Status_B1.findOneAndUpdate({ tlaID: id }, update),
+            Status_B2.findOneAndUpdate({ tlaID: id }, update)
+        ]);
 
         // Also update tla status field
         await TLA_Main.findByIdAndUpdate(id, { status: 'Pending' });
@@ -142,6 +154,13 @@ router.patch('/:id/submit', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Block deletion if TLA is in the approval chain or fully approved
+        const tla = await TLA_Main.findById(id);
+        if (tla && ['Pending', 'Chair-Approved', 'Dean-Approved', 'HR-Approved', 'Approved'].includes(tla.status)) {
+            return res.status(403).json({ message: 'Cannot delete a TLA that is in the approval chain or already approved.' });
+        }
+
         await Promise.all([
             TLA_Main.findByIdAndDelete(id),
             TLA_B1.findByIdAndDelete(id),

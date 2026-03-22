@@ -34,7 +34,9 @@ body {
     position: relative;
     width: 100%;
     height: 180px;
-    background: url('/TLA/images/background_overview.jpg') center center / cover no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-color: #e9ecef;
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -82,6 +84,53 @@ body {
     font-weight: 700;
     letter-spacing: 1px;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* ============================================================
+   COURSE STATUS ALERT
+   ============================================================ */
+
+.course-status-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: #fff3cd;
+    border-left: 4px solid #ff9800;
+    padding: 14px 18px;
+    margin: 18px 24px 0;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.alert-icon {
+    font-size: 22px;
+    color: #ff9800;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #d97000;
+    margin-bottom: 4px;
+}
+
+.alert-message {
+    font-size: 13px;
+    color: #856404;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.alert-action {
+    font-size: 12px;
+    color: #856404;
+    font-style: italic;
 }
 
 /* ============================================================
@@ -232,7 +281,7 @@ body {
     cursor: pointer;
     text-decoration: none;
     color: inherit;
-    transition: background 0.15s;
+    transition: all 0.2s ease;
 }
 
 .form-item:last-child {
@@ -240,11 +289,12 @@ body {
 }
 
 .form-item:hover {
-    background: #f7f7f7;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Disabled week row (no TLA submitted yet — nothing to review) */
-.form-item-disabled {
+.form-item.form-item-disabled {
     opacity: 0.45;
     pointer-events: none;
     cursor: default;
@@ -343,15 +393,15 @@ body {
 /* Role badge shown under approver name */
 .panel-role-badge {
     display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    padding: 4px 16px;
+    background: var(--accent-primary, #a01a1e);
     color: #fff;
-    background: var(--color-mapua-red, #c0392b);
-    padding: 3px 14px;
-    border-radius: 12px;
-    text-align: center;
-    margin: 4px auto 8px;
+    border-radius: 16px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
 }
 
 /* Info / Schedule sections */

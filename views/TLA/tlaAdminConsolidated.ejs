@@ -1,0 +1,269 @@
+                                                                                                                                                <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMCM Chalkboard | TLA Management</title>
+    <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
+    <link rel="stylesheet" href="/common/css/variables.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="/TLA/css/tlaAdminConsolidated.css">
+</head>
+<body>
+<%
+    // ── Role-based config ──
+    const isHR          = role === 'HR' || role === 'HRMO';
+    const isAdmin       = role === 'Admin' || role === 'Super-Admin';
+    const isDean        = role === 'Dean';
+    const isChair       = role === 'Program-Chair';
+    const isTech        = role === 'Technical';
+    const isVPAA        = role === 'VPAA';
+    const isPracticum   = role === 'Practicum-Coordinator';
+    const canArchive    = isAdmin;
+
+    // Which sidebar to include
+    let sidebarPath = '../MainPages/admin/partials/adminSideMenuBar';
+    if (isDean || isVPAA) sidebarPath = '../MainPages/dean/partials/deanMenuBar';
+    if (isChair || isPracticum) sidebarPath = '../MainPages/progChair/partials/progChairMenuBar';
+    if (isTech) sidebarPath = '../partials/sideMenuBar';
+
+    // Role labels
+    const roleLabels = {
+        'Technical':'Technical Assistant', 'Program-Chair':'Program Chair',
+        'Practicum-Coordinator':'Practicum Coordinator', 'Dean':'Dean',
+        'VPAA':'VP for Academic Affairs', 'HR':'Human Resources', 'HRMO':'HR Management Office',
+        'Admin':'Administrator', 'Super-Admin':'Super Administrator'
+    };
+
+    // Action button config per role
+    // Chain: Professor → Program-Chair → Dean → HR/HRMO → VPAA (final)
+    // activeStatuses covers both pre-digital and post-digital turns for each role.
+    const actionConfig = {
+        'Program-Chair':          { icon: 'thumb_up',     label: 'Endorse',  btnClass: 'btn-purple',  activeStatuses: ['Pending', 'Post-Pending'] },
+        'Dean':                   { icon: 'approval',     label: 'Approve',  btnClass: 'btn-teal',    activeStatuses: ['Chair-Approved', 'Post-Chair-Approved'] },
+        'HR':                     { icon: 'verified',     label: 'Review',   btnClass: 'btn-green',   activeStatuses: ['Post-Dean-Approved'] },
+        'HRMO':                   { icon: 'verified',     label: 'Review',   btnClass: 'btn-green',   activeStatuses: ['Post-Dean-Approved'] },
+        'VPAA':                   { icon: 'check_circle', label: 'Approve',  btnClass: 'btn-cyan',    activeStatuses: ['HR-Approved'] },
+        'Technical':              { icon: 'visibility',   label: 'View',     btnClass: 'btn-outline', activeStatuses: [] },
+        'Practicum-Coordinator':  { icon: 'visibility',   label: 'View',     btnClass: 'btn-outline', activeStatuses: [] },
+        'Admin':                  { icon: 'rate_review',  label: 'Review',   btnClass: 'btn-blue',    activeStatuses: [] },
+        'Super-Admin':            { icon: 'rate_review',  label: 'Review',   btnClass: 'btn-blue',    activeStatuses: [] }
+    };
+    const myAction = actionConfig[role] || actionConfig['Admin'];
+%>
+
+<div class="page-layout">
+    <aside class="side-menu-container">
+        <%- include(sidebarPath) %>
+    </aside>
+
+    <main class="main-content">
+        <!-- Hero -->
+        <div class="tla-hero">
+            <h1>TLA Management</h1>
+            <p>Teaching-Learning Activity Submissions</p>
+            <span class="role-chip"><%= roleLabels[role] || role %></span>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="queue">
+                <span class="material-symbols-outlined">rate_review</span>
+                Review Queue <span class="badge badge-orange"><%= submissions.length %></span>
+            </button>
+            <button class="tab-btn <%= canArchive ? '' : 'tab-btn-disabled' %>" data-tab="archive-pending" <%= canArchive ? '' : 'disabled title="Admin only"' %>>
+                <span class="material-symbols-outlined">pending_actions</span>
+                Pending Archive <span class="badge badge-orange"><%= toArchive.length %></span>
+            </button>
+            <button class="tab-btn <%= canArchive ? '' : 'tab-btn-disabled' %>" data-tab="archived" <%= canArchive ? '' : 'disabled title="Admin only"' %>>
+                <span class="material-symbols-outlined">inventory_2</span>
+                Archived <span class="badge badge-green"><%= archived.length %></span>
+            </button>
+        </div>
+
+        <!-- ═══════ TAB 1: REVIEW QUEUE ═══════ -->
+        <div class="tab-panel active" id="tab-queue">
+            <%
+                const counts = { Pending:0, 'Chair-Approved':0, 'Dean-Approved':0, 'HR-Approved':0, Returned:0 };
+                submissions.forEach(s => { if (counts[s.macroStatus] !== undefined) counts[s.macroStatus]++; });
+            %>
+            <div class="stats-row">
+                <div class="stat-card stat-pending"><div class="stat-num"><%= counts['Pending'] %></div><div class="stat-label">Pending</div></div>
+                <div class="stat-card stat-chair"><div class="stat-num"><%= counts['Chair-Approved'] %></div><div class="stat-label">Chair-Approved</div></div>
+                <div class="stat-card stat-dean"><div class="stat-num"><%= counts['Dean-Approved'] %></div><div class="stat-label">Dean-Approved</div></div>
+                <div class="stat-card stat-vpaa"><div class="stat-num"><%= counts['HR-Approved'] %></div><div class="stat-label">HR-Approved</div></div>
+                <div class="stat-card stat-returned"><div class="stat-num"><%= counts['Returned'] %></div><div class="stat-label">Returned</div></div>
+            </div>
+
+            <div class="legend">
+                <span class="legend-item"><span class="dot dot-orange"></span> Pending (Program Chair)</span>
+                <span class="legend-item"><span class="dot dot-purple"></span> Chair-Approved (Dean)</span>
+                <span class="legend-item"><span class="dot dot-teal"></span> Dean-Approved (HR/HRMO)</span>
+                <span class="legend-item"><span class="dot dot-cyan"></span> HR-Approved (VPAA)</span>
+                <span class="legend-item"><span class="dot dot-red"></span> Returned</span>
+            </div>
+
+            <% if (submissions.length === 0) { %>
+                <div class="empty">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <p>No submissions in your queue right now.</p>
+                </div>
+            <% } else { %>
+                <div class="filter-bar">
+                    <input type="text" id="searchInput" class="filter-input" placeholder="Search by course code, section, or faculty name...">
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Chair-Approved">Chair-Approved</option>
+                        <option value="Dean-Approved">Dean-Approved</option>
+                        <option value="HR-Approved">HR-Approved</option>
+                        <option value="Returned">Returned</option>
+                    </select>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="submissionsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Course</th>
+                                <th>Week</th>
+                                <th>Section</th>
+                                <th>Faculty</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <% const stsClass = {
+                            'Pending':'sts-pending',
+                            'Chair-Approved':'sts-chair-approved',
+                            'Dean-Approved':'sts-dean-approved',
+                            'HR-Approved':'sts-hr-approved',
+                            'Approved':'sts-approved',
+                            'Returned':'sts-returned'
+                        }; %>
+                        <% submissions.forEach(function(s, i) {
+                            // Determine if this row is actionable by the current role
+                            const isMyTurn = myAction.activeStatuses.length === 0
+                                ? true  // Admin/Technical/Practicum always show their button
+                                : myAction.activeStatuses.includes(s.macroStatus);
+                        %>
+                            <tr class="tbl-row <%= isMyTurn ? 'your-action' : '' %>" data-status="<%= s.macroStatus %>">
+                                <td><%= i + 1 %></td>
+                                <td><strong><%= s.courseCode %></strong></td>
+                                <td>Week <%= s.weekNumber || '—' %></td>
+                                <td><%= s.section || '—' %></td>
+                                <td><%= s.facultyName %></td>
+                                <td><%= s.department %></td>
+                                <td><span class="sts <%= stsClass[s.macroStatus] || '' %>"><%= s.macroStatus %></span></td>
+                                <td class="date-cell"><%= s.updatedAt ? new Date(s.updatedAt).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' }) : '—' %></td>
+                                <td>
+                                    <% if (isMyTurn) { %>
+                                        <a href="/tla/approval/<%= s._id %>" class="btn <%= myAction.btnClass %>">
+                                            <span class="material-symbols-outlined"><%= myAction.icon %></span> <%= myAction.label %>
+                                        </a>
+                                    <% } else { %>
+                                        <a href="/tla/approval/<%= s._id %>" class="btn btn-outline">
+                                            <span class="material-symbols-outlined">visibility</span> View
+                                        </a>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="empty" style="display:none;">
+                    <span class="material-symbols-outlined">search_off</span>
+                    <p>No submissions match your search.</p>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- ═══════ TAB 2: PENDING ARCHIVE ═══════ -->
+        <div class="tab-panel" id="tab-archive-pending">
+            <div class="section-heading">
+                <h2><span class="material-symbols-outlined">pending_actions</span> Pending Archival <span class="count"><%= toArchive.length %></span></h2>
+            </div>
+            <% if (!canArchive) { %>
+                <div class="empty">
+                    <span class="material-symbols-outlined">lock</span>
+                    <p>Pending Archive is available to Administrator and Super Administrator only.</p>
+                </div>
+            <% } else if (toArchive.length === 0) { %>
+                <div class="empty">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <p>No TLAs pending archival.</p>
+                </div>
+            <% } else { %>
+                <div class="cards-grid">
+                <% toArchive.forEach(function(s) { %>
+                    <div class="archive-card card-pending">
+                        <div class="card-fields">
+                            <div class="card-field"><label>Course / Week</label><span><%= s.courseCode %> — Wk <%= s.weekNumber || '—' %></span></div>
+                            <div class="card-field"><label>Section</label><span><%= s.section || '—' %></span></div>
+                            <div class="card-field"><label>Faculty</label><span><%= s.facultyName %></span></div>
+                            <div class="card-field"><label>Dept</label><span><%= s.department %></span></div>
+                            <div class="card-field"><label>VPAA Approved</label><span><%= s.vpaaApprovedAt ? new Date(s.vpaaApprovedAt).toLocaleDateString('en-PH', {year:'numeric',month:'short',day:'numeric'}) : '—' %></span></div>
+                        </div>
+                        <div class="card-actions">
+                            <a href="/tla/approval/<%= s._id %>" class="btn btn-blue"><span class="material-symbols-outlined">visibility</span> View</a>
+                            <form method="POST" action="/admin/tla/archive/<%= s._id %>" class="archive-form"
+                                  onsubmit="return confirm('Archive this TLA? This marks it as fully processed.');">
+                                <input type="hidden" name="comment" value="Archived by <%= role %>">
+                                <button type="submit" class="btn btn-red"><span class="material-symbols-outlined">archive</span> Archive</button>
+                            </form>
+                        </div>
+                    </div>
+                <% }); %>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- ═══════ TAB 3: ARCHIVED ═══════ -->
+        <div class="tab-panel" id="tab-archived">
+            <div class="section-heading">
+                <h2><span class="material-symbols-outlined">inventory_2</span> Archived Records <span class="count"><%= archived.length %></span></h2>
+            </div>
+            <% if (!canArchive) { %>
+                <div class="empty">
+                    <span class="material-symbols-outlined">lock</span>
+                    <p>Archive is available to Administrator and Super Administrator only.</p>
+                </div>
+            <% } else if (archived.length === 0) { %>
+                <div class="empty">
+                    <span class="material-symbols-outlined">folder_open</span>
+                    <p>No archived records yet.</p>
+                </div>
+            <% } else { %>
+                <div class="filter-bar">
+                    <input type="text" id="archiveSearch" class="filter-input" placeholder="Search archived records...">
+                </div>
+                <div class="cards-grid" id="archivedGrid">
+                <% archived.forEach(function(s) { %>
+                    <div class="archive-card card-archived archive-row">
+                        <div class="card-fields">
+                            <div class="card-field"><label>Course / Week</label><span><%= s.courseCode %> — Wk <%= s.weekNumber || '—' %></span></div>
+                            <div class="card-field"><label>Section</label><span><%= s.section || '—' %></span></div>
+                            <div class="card-field"><label>Faculty</label><span><%= s.facultyName %></span></div>
+                            <div class="card-field"><label>Dept</label><span><%= s.department %></span></div>
+                            <div class="card-field"><label>Approved On</label><span><%= s.vpaaApprovedAt ? new Date(s.vpaaApprovedAt).toLocaleDateString('en-PH', {year:'numeric',month:'short',day:'numeric'}) : '—' %></span></div>
+                            <div class="card-field"><span class="sts sts-approved">APPROVED</span></div>
+                        </div>
+                        <div class="card-actions">
+                            <a href="/tla/approval/<%= s._id %>" class="btn btn-outline"><span class="material-symbols-outlined">visibility</span> View</a>
+                        </div>
+                    </div>
+                <% }); %>
+                </div>
+            <% } %>
+        </div>
+
+    </main>
+</div>
+
+<script src="/TLA/js/tlaAdminConsolidated.js"></script>
+</body>
+</html>

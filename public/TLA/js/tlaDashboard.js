@@ -22,32 +22,6 @@ function openTLA(id) {
     window.location.href = `/tla/form/${id}`;
 }
 
-async function updateApprovalStatus(tlaID, newStatus, remarks = '') {
-    try {
-        const findRes = await fetch(`/api/tla/approval/tla/${tlaID}`);
-        if (!findRes.ok) throw new Error('Approval record not found');
-        const approval = await findRes.json();
-
-        const res = await fetch(`/api/tla/approval/${approval._id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                status: newStatus,
-                remarks,
-                approvedBy: '',
-                approvalDate: new Date().toISOString()
-            })
-        });
-
-        if (!res.ok) throw new Error((await res.json()).message || 'Update failed');
-        showToast(`Status updated to ${newStatus}`);
-        return true;
-    } catch (err) {
-        showToast(err.message, 'error');
-        return false;
-    }
-}
-
 async function deleteTLA(id, weekLabel) {
     const confirmed = confirm(
         `Delete "${weekLabel}"?\n\nThis will permanently remove the TLA form and all related pre/post-digital session data. This cannot be undone.`

@@ -3,7 +3,8 @@ import {
     requireLogin,
     requireApprovalRole,
     getApprovalPage,
-    postApprovalAction
+    postApprovalAction,
+    previewApprovalTlaPdf
 } from '../../controllers/tlaController.js';
 
 const approvalRoutes = express.Router();
@@ -16,5 +17,8 @@ approvalRoutes.get('/:id', requireLogin, requireApprovalRole, getApprovalPage);
 
 // POST /tla/approval/:id   — save draft or submit verdict
 approvalRoutes.post('/:id', requireLogin, requireApprovalRole, postApprovalAction);
+
+// POST /tla/approval/:id/preview-pdf — preview PDF with current unsaved signature upload
+approvalRoutes.post('/:id/preview-pdf', requireLogin, requireApprovalRole, previewApprovalTlaPdf);
 
 export default approvalRoutes;
