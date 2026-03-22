@@ -223,9 +223,15 @@
             </a>
         </li>
         <li>
-            <a href="/tla" class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
+            <a href="/tla/courses" class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
                 <span class="material-symbols-outlined">assignment</span>
-                <span class="menu-text">TLA</span>
+                <span class="menu-text">My TLA</span>
+            </a>
+        </li>
+        <li>
+            <a href="/admin/tla" class="<%= (locals.currentPageCategory === 'tla-approval') ? 'active' : '' %>">
+                <span class="material-symbols-outlined">rate_review</span>
+                <span class="menu-text">TLA Approvals</span>
             </a>
         </li>
     </ul>

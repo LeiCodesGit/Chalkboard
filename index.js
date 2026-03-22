@@ -145,8 +145,9 @@ app.use("/tla/form", formRoutes);
 app.use("/tla/approval", approvalRoutes);
 app.get("/tla", (req, res) => {
     const role = req.session?.user?.role;
-    const approvalRoles = ['Program-Chair', 'Dean', 'HR', 'HRMO', 'VPAA', 'Technical', 'Practicum-Coordinator', 'Admin', 'Super-Admin'];
-    if (role && approvalRoles.includes(role)) return res.redirect("/admin/tla");
+    // Chair and Dean act as both professors and approvers — send them to the professor flow.
+    const approvalOnly = ['HR', 'HRMO', 'VPAA', 'Technical', 'Practicum-Coordinator', 'Admin', 'Super-Admin'];
+    if (role && approvalOnly.includes(role)) return res.redirect("/admin/tla");
     return res.redirect("/tla/courses");
 });
 
