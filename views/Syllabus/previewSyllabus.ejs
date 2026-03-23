@@ -248,6 +248,10 @@
                                     <label>COURSE TITLE</label>
                                     <div class="course-editable-text"><%= locals.courseTitle || '' %></div>
                                 </div>
+                                <div class="info-item small">
+                                    <label>AY/TERM</label>
+                                    <div class="course-editable-text"><%= locals.syl && locals.syl.schoolYear ? locals.syl.schoolYear : '' %> / <%= locals.syl && locals.syl.term ? locals.syl.term : '' %></div>
+                                </div>
                             </div>
 
                             <div class="info-row">
