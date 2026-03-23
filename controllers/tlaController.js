@@ -1,4 +1,4 @@
-import {
+﻿import {
     TLA_Main,   TLA_B1,   TLA_B2,
     Status_Main,Status_B1,Status_B2,
     Pre_Main,   Pre_B1,   Pre_B2,
@@ -43,6 +43,9 @@ const APPROVAL_ROLES = [
     'Technical', 'Practicum-Coordinator',
     'Admin', 'Super-Admin'
 ];
+
+// Roles that act as both professors (own TLAs) AND approvers
+const DUAL_ROLES = ['Program-Chair', 'Dean'];
 
 // ===============================================================================
 //  MIDDLEWARE GUARDS
@@ -336,7 +339,7 @@ export async function getCourses(req, res) {
     try {
         const user = req.session.user;
 
-        if (APPROVAL_ROLES.includes(user?.role)) {
+        if (APPROVAL_ROLES.includes(user?.role) && !DUAL_ROLES.includes(user?.role)) {
             return res.redirect('/admin/tla');
         }
 
@@ -781,7 +784,7 @@ export async function getOverview(req, res) {
         const userID   = req.session.user.id;
         const userRole = req.session.user.role;
 
-        if (APPROVAL_ROLES.includes(userRole)) {
+        if (APPROVAL_ROLES.includes(userRole) && !DUAL_ROLES.includes(userRole)) {
             return res.redirect('/admin/tla');
         }
 
@@ -874,7 +877,7 @@ export async function getOverview(req, res) {
             }
         }
 
-        const isApprover = APPROVAL_ROLES.includes(userRole);
+        const isApprover = APPROVAL_ROLES.includes(userRole) && !DUAL_ROLES.includes(userRole);
 
         res.render('TLA/tlaOverview', {
             currentPageCategory: 'tla',
@@ -1736,7 +1739,7 @@ export async function getAdminTLA(req, res) {
         ]);
 
         res.render('TLA/tlaAdminConsolidated', {
-            currentPageCategory: 'tla',
+            currentPageCategory: 'tla-approval',
             user: req.session.user,
             submissions,
             toArchive: archiveData.toArchive,

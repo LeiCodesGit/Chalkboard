@@ -20,7 +20,14 @@
 
 <body>
 
-    <%- include('../partials/sideMenuBar') %>
+    <%
+        let sidebarPath = '../partials/sideMenuBar';
+        if (user && (user.role === 'Dean' || user.role === 'VPAA'))
+            sidebarPath = '../MainPages/dean/partials/deanMenuBar';
+        if (user && (user.role === 'Program-Chair' || user.role === 'Practicum-Coordinator'))
+            sidebarPath = '../MainPages/progChair/partials/progChairMenuBar';
+    %>
+    <%- include(sidebarPath) %>
 
         <main class="main-content">
             <div class="background-overlay"></div>
