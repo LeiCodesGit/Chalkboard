@@ -174,7 +174,7 @@ export async function generateSyllabusPdf(req, res) {
 
         res.set({
             'Content-Type': 'application/pdf',
-            'Content-Disposition': 'inline; filename="Syllabus_' + (syl.courseCode || 'Draft') + '.pdf"',
+            'Content-Disposition': 'attachment; filename="Syllabus_' + (syl.courseCode || 'Draft') + '.pdf"',
             'Content-Length': pdfBuffer.length
         });
         res.send(pdfBuffer);

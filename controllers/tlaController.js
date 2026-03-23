@@ -1,4 +1,4 @@
-﻿import {
+import {
     TLA_Main,   TLA_B1,   TLA_B2,
     Status_Main,Status_B1,Status_B2,
     Pre_Main,   Pre_B1,   Pre_B2,
@@ -45,7 +45,7 @@ const APPROVAL_ROLES = [
 ];
 
 // Roles that act as both professors (own TLAs) AND approvers
-const DUAL_ROLES = ['Program-Chair', 'Dean'];
+const DUAL_ROLES = ['Program-Chair', 'Dean', 'Admin', 'Super-Admin', 'HR'];
 
 // ===============================================================================
 //  MIDDLEWARE GUARDS
@@ -345,12 +345,9 @@ export async function getCourses(req, res) {
 
         const userId = user?.id;
 
-        // Only show courses assigned to the logged-in faculty (or created by them)
+        // Only show courses specifically assigned to the logged-in faculty
         const syllabi = await Syllabus.find({
-            $or: [
-                { assignedInstructor: userId },
-                { userID: userId }
-            ]
+            assignedInstructor: userId
         });
         const syllabusIds = syllabi.map(s => s._id.toString());
         

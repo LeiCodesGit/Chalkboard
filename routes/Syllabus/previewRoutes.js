@@ -68,7 +68,8 @@ previewRoutes.get('/:syllabusId', async (req, res) => {
             sos: sos,
             schedules: schedules,
             evaluation: evaluation,
-            status: approval ? approval.status : 'Not Submitted'
+            status: approval ? approval.status : 'Not Submitted',
+            user: req.session.user
         });
     } catch (err) {
         console.error("Error fetching syllabus for preview page:", err);

@@ -375,7 +375,8 @@ endorseSyllabusRouter.get('/approve/:syllabusId', async (req, res) => {
                 optionApproveValue: 'PC_Approved', // Value submitted when approved
                 actionTitle: 'Syllabus Endorsement',
                 workflowStep: 'endorsement',
-                actionLabel: 'Endorse Syllabus'
+                actionLabel: 'Endorse Syllabus',
+                user: req.session.user
             });
         }
     } catch (err) { console.error('Approval detail error:', err); }
@@ -598,7 +599,8 @@ endorseSyllabusRouter.get('/endorse/:syllabusId', async (req, res) => {
                 actionUrlPrefix: '/syllabus/prog-chair/endorse',
                 optionApproveValue: 'Approved', // Value submitted when endorsed
                 actionTitle: 'Program Chair Endorsement',
-                workflowStep: 'endorsement'
+                workflowStep: 'endorsement',
+                user: req.session.user
             });
         }
     } catch (err) { console.error('Endorsement detail error:', err); }

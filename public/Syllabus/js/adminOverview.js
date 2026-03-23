@@ -28,7 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
 
         rows.forEach(row => {
-            const statusMatch = activeFilter === 'all' || row.dataset.status === activeFilter;
+            const rowStatus = row.dataset.status || '';
+            const statusMatch = activeFilter === 'all'
+                || rowStatus === activeFilter
+                || (activeFilter === 'Returned' && rowStatus.startsWith('Returned'));
             const searchMatch = !query
                 || row.dataset.title.includes(query)
                 || row.dataset.code.includes(query);

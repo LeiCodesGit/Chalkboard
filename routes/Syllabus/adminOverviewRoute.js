@@ -76,7 +76,7 @@ adminOverviewRouter.get('/', async (req, res) => {
 
     try {
         const approvals = await SyllabusApprovalStatus.find({
-            status: { $in: ['Approved', 'Archived', 'Endorsed'] }
+            status: { $in: ['Approved', 'Archived', 'Endorsed', 'Returned to PC', 'Returned to Dean'] }
         });
 
         if (approvals.length > 0) {
@@ -122,9 +122,10 @@ adminOverviewRouter.get('/', async (req, res) => {
 
         const approvedCount = items.filter(d => d.status === 'Approved').length;
         const archivedCount = items.filter(d => d.status === 'Archived').length;
+        const rejectedCount = items.filter(d => d.status === 'Returned to PC' || d.status === 'Returned to Dean').length;
 
         res.render('Syllabus/courseOverviewAdmin', {
-            items, approvedCount, archivedCount, returnUrl,
+            items, approvedCount, archivedCount, rejectedCount, returnUrl,
             currentPageCategory: 'syllabus',
             user: req.session.user
         });
@@ -189,7 +190,9 @@ adminOverviewRouter.get('/review/:syllabusId', async (req, res) => {
             pcSignatoryName: approval ? (approval.PC_SignatoryName || '') : '',
             deanSignature: approval ? (approval.Dean_Signature || null) : null,
             deanSignatoryName: approval ? (approval.Dean_SignatoryName || '') : '',
-            syl: course
+            syl: course,
+            currentPageCategory: 'syllabus',
+            user: req.session.user
         };
 
         res.render('Syllabus/syllabusApprovalHR', viewData);

@@ -317,23 +317,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // ─── Save as PDF ───────────────────────────────────────
     const btnPdf = document.getElementById('btn-save-pdf');
     if (btnPdf) {
-        btnPdf.addEventListener('click', () => {
+        btnPdf.addEventListener('click', async () => {
             const syllabusId = SYLLABUS_APPROVAL_DATA.syllabusId || SYLLABUS_APPROVAL_DATA.syllabusID;
             if (!syllabusId) {
                 alert('Syllabus ID not found.');
                 return;
             }
-            // Show loading state (optional but recommended)
+            // Show loading state
             const originalText = btnPdf.innerHTML;
             btnPdf.innerHTML = '<span class="material-symbols-outlined">sync</span> Generating...';
             btnPdf.disabled = true;
 
-            // Open PDF in a new tab for preview
-            window.open(`/syllabus/preview/generate-pdf/${syllabusId}`, '_blank');
-
-            // Reset button immediately since it's a new tab
-            btnPdf.innerHTML = originalText;
-            btnPdf.disabled = false;
+            try {
+                const response = await fetch(`/syllabus/preview/generate-pdf/${syllabusId}`);
+                if (!response.ok) {
+                    throw new Error('PDF generation failed: ' + response.statusText);
+                }
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Syllabus_' + syllabusId + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error('PDF download error:', err);
+                alert('Failed to download PDF: ' + err.message);
+            } finally {
+                btnPdf.innerHTML = originalText;
+                btnPdf.disabled = false;
+            }
         });
     }
 

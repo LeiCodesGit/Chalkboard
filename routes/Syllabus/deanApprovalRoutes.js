@@ -47,7 +47,8 @@ deanApprovalRouter.get('/:syllabusId', async (req, res) => {
                 schedules,
                 syl,
                 pcSignature: approval ? (approval.PC_Signature || null) : null,
-                pcSignatoryName: approval ? (approval.PC_SignatoryName || '') : ''
+                pcSignatoryName: approval ? (approval.PC_SignatoryName || '') : '',
+                user: req.session.user
             });
         }
     } catch (err) {

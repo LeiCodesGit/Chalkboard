@@ -42,6 +42,12 @@
                                             <%= archivedCount %> Verified by HR
                                         </span>
                                     </div>
+                                    <div class="stat-pill" style="background: rgba(217, 48, 37, 0.1); color: #d93025;">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span>
+                                            <%= locals.rejectedCount || 0 %> Returned
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -51,6 +57,7 @@
                             <button class="tab-btn active" data-filter="all">All</button>
                             <button class="tab-btn" data-filter="Approved">Approved by Dean</button>
                             <button class="tab-btn" data-filter="Archived">Verified by HR</button>
+                            <button class="tab-btn" data-filter="Returned">Returned</button>
                         </div>
 
                         <!-- Search Bar -->
@@ -141,6 +148,10 @@
                                                                 style="display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; background: #455a64; color: #fff; transition: all 0.2s ease;">
                                                                 <i class="fas fa-eye"></i> View
                                                             </button>
+                                                            <% } else if (d.status==='Returned to PC' || d.status==='Returned to Dean') { %>
+                                                                <span class="status-badge" style="background: rgba(217, 48, 37, 0.1); color: #d93025; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                                                    <i class="fas fa-times-circle"></i> <%= d.status %>
+                                                                </span>
                                                             <% } %>
                                                 </div>
                                             </div>
