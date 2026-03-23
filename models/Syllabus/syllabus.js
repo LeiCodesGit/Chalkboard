@@ -20,7 +20,8 @@ const syllabusSchema = new Schema({
   textbook: String,
   references: String,
   pdf: Buffer,
-  courseImage: String
+  courseImage: String,
+  conceptMap: String
 }, { timestamps: true });
 
 const Syllabus = mainDB.models.Syllabus || mainDB.model("Syllabus", syllabusSchema);

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Syllabus Preview</title>
+    <link rel="stylesheet" href="/Syllabus/css/newSyllabus.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet" href="/Syllabus/css/infoSyllabus.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet" href="/Syllabus/css/outcomesTable.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet" href="/Syllabus/css/scheduleSyllabus.css?v=<%= new Date().getTime() %>" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        /* Global Preview Overrides */
+        body {
+            overflow: auto !important;
+            height: auto !important;
+            background: #f4f7f6 !important;
+        }
+        .main-content {
+            overflow: visible !important;
+            padding-bottom: 100px;
+        }
+        .syllabus-scroll-area {
+            overflow: visible !important;
+            padding-bottom: 0 !important;
+        }
+        
+        /* Force panels to show properly */
+        .content-panel-transparent {
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px);
+            opacity: 1 !important;
+            visibility: visible !important;
+            margin-bottom: 30px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+            border: 1px solid rgba(0,0,0,0.05) !important;
+        }
+
+        /* Keep the layout but make it look read-only */
+        .course-editable-text, .peo-editable-text, .outcomes-editable-text, .editable-cell {
+            border: 1px solid #eee !important;
+            background: #fafafa !important;
+            cursor: default !important;
+            pointer-events: none !important;
+        }
+
+        .course-editable-text.multiline {
+            min-height: 45px;
+            height: auto !important;
+        }
+
+        /* Alignment fixes */
+        .peo-checkbox-side {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #002455;
+            cursor: default;
+        }
+
+        /* Hide interactive elements */
+        .no-pdf, .add-row-wrapper, .btn-delete-row, .outcomes-toolbar {
+            display: none !important;
+        }
+
+        /* Table header styling */
+        .schedule-editor-table th, .mapping-table th {
+            background-color: #f8f9fa !important;
+            color: #333 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Top Bar Styling */
+        .syllabus-top-bar {
+            background: #272727 !important;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-badge {
+            background: #00875a;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 20px;
+        }
+        
+        .floating-close-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #272727;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 9999;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .floating-close-btn:hover {
+            background: #444;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <main class="main-content">
+            <div class="syllabus-top-bar">
+                <button type="button" class="back-btn" onclick="window.history.back()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>Back to Overview</span>
+                </button>
+                <div class="preview-badge">Read-Only Preview</div>
+            </div>
+
+            <div class="syllabus-scroll-area">
+                <div class="syllabus-banner">
+                    <span class="syllabus-banner-title">SYLLABUS PREVIEW</span>
+                </div>
+
+                <div class="syllabus-content-section">
+                    <h2 class="college-header-outside">COLLEGE OF ENGINEERING AND ARCHITECTURE</h2>
+                    <p style="text-align: center; color: #666; font-style: italic; margin-bottom: 40px;">Status: <%= locals.status === 'Archived' ? 'Verified' : (locals.status || 'Not Submitted') %></p>
+
+                    <!-- Vision & Mission Section -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">Vision</div>
+                            <div class="content-body-simple">
+                                <p>Malayan Colleges Mindanao shall be a school of global standards and of great significance locally and beyond.</p>
+                            </div>
+                            <br />
+                            <div class="content-label-simple">Mission</div>
+                            <div class="content-body-simple">
+                                <p>
+                                    A. The institute shall provide a learning environment in order for its students to acquire the attributes that will make them globally competitive & locally in-demand.<br />
+                                    B. The institute shall engage in cutting edge and economically viable research, development and innovation that is relevant locally and beyond.<br />
+                                    C. The institute shall provide state-of-the-art solutions to problems of industries and communities locally and beyond.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- PEO Section -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">PROGRAM EDUCATIONAL OBJECTIVES (PEO)</div>
+                            <div class="peo-grid-container">
+                                <div class="peo-top-header">
+                                    <p class="peo-intro">Three years after graduation, graduates of the Engineering Program shall:</p>
+                                    <div class="mission-column-header">
+                                        <span class="mission-main-text">MISSION</span>
+                                        <div class="mission-labels"><span>A</span><span>B</span><span>C</span></div>
+                                    </div>
+                                </div>
+
+                                <% if (locals.peos && peos.description && peos.description.length > 0) { %>
+                                    <% peos.description.forEach((desc, idx) => { %>
+                                        <div class="peo-row">
+                                            <div class="peo-text-side">
+                                                <span class="peo-number"><%= idx + 1 %>.</span>
+                                                <div class="peo-editable-text"><%= desc %></div>
+                                            </div>
+                                            <div class="peo-checkbox-side">
+                                                <% const rating = peos.rating && peos.rating[idx] ? peos.rating[idx] : '' %>
+                                                <input type="checkbox" <%= rating.includes('A') ? 'checked' : '' %>>
+                                                <input type="checkbox" <%= rating.includes('B') ? 'checked' : '' %>>
+                                                <input type="checkbox" <%= rating.includes('C') ? 'checked' : '' %>>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <p style="padding: 20px; color: #999; text-align: center;">No PEOs defined.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- SO Section -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">STUDENT OUTCOMES (SO)</div>
+                            <div class="peo-grid-container">
+                                <div class="peo-top-header">
+                                    <p class="peo-intro">By the time of graduation, the students of the program shall have the ability to:</p>
+                                    <div class="mission-column-header">
+                                        <span class="mission-main-text">PEO</span>
+                                        <div class="mission-labels"><span>1</span><span>2</span><span>3</span></div>
+                                    </div>
+                                </div>
+
+                                <% if (locals.sos && sos.description && sos.description.length > 0) { %>
+                                    <% sos.description.forEach((desc, idx) => { %>
+                                        <div class="peo-row">
+                                            <div class="peo-text-side">
+                                                <span class="peo-number"><%= String.fromCharCode(97 + idx) %>.</span>
+                                                <div class="peo-editable-text"><%= desc %></div>
+                                            </div>
+                                            <div class="peo-checkbox-side">
+                                                <% const rating = sos.rating && sos.rating[idx] ? sos.rating[idx] : '' %>
+                                                <input type="checkbox" <%= rating.includes('1') ? 'checked' : '' %>>
+                                                <input type="checkbox" <%= rating.includes('2') ? 'checked' : '' %>>
+                                                <input type="checkbox" <%= rating.includes('3') ? 'checked' : '' %>>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <p style="padding: 20px; color: #999; text-align: center;">No Student Outcomes defined.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </section>
+
+                    <h2 class="college-header-outside" style="margin-top: 60px;">COURSE SYLLABUS</h2>
+
+                    <!-- Course Information Section -->
+                    <section class="content-panel-transparent">
+                        <div class="course-info-container">
+                            <div class="info-row">
+                                <div class="info-item small">
+                                    <label>COURSE CODE</label>
+                                    <div class="course-editable-text"><%= locals.courseCode || '' %></div>
+                                </div>
+                                <div class="info-item large">
+                                    <label>COURSE TITLE</label>
+                                    <div class="course-editable-text"><%= locals.courseTitle || '' %></div>
+                                </div>
+                                <div class="info-item small">
+                                    <label>AY/TERM</label>
+                                    <div class="course-editable-text"><%= locals.syl && locals.syl.schoolYear ? locals.syl.schoolYear : '' %> / <%= locals.syl && locals.syl.term ? locals.syl.term : '' %></div>
+                                </div>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <label>PRE-REQUISITE</label>
+                                    <div class="course-editable-text"><%= locals.syl && syl.preRequisite ? syl.preRequisite : 'None' %></div>
+                                </div>
+                                <div class="info-item">
+                                    <label>CO-REQUISITE</label>
+                                    <div class="course-editable-text"><%= locals.syl && syl.coRequisite ? syl.coRequisite : 'None' %></div>
+                                </div>
+                                <div class="info-item">
+                                    <label>CREDIT UNIT(S)</label>
+                                    <div class="course-editable-text"><%= locals.syl && syl.units ? syl.units : 'N/A' %></div>
+                                </div>
+                            </div>
+
+                            <div class="info-row">
+                                <div class="info-item">
+                                    <label>CLASS SCHEDULE</label>
+                                    <div class="course-editable-text"><%= locals.syl && syl.classSchedule ? syl.classSchedule : 'Not set' %></div>
+                                </div>
+                                <div class="info-item">
+                                    <label>COURSE DESIGN</label>
+                                    <div class="course-editable-text"><%= locals.syl && syl.courseDesign ? syl.courseDesign : 'Not set' %></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Course Description Section -->
+                    <section class="content-panel-transparent">
+                        <div class="info-item">
+                            <label>COURSE DESCRIPTION</label>
+                            <div class="course-editable-text multiline"><%= locals.syl && syl.courseDescription ? syl.courseDescription : 'No description provided.' %></div>
+                        </div>
+                    </section>
+
+                    <!-- Course Outcomes Section -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">COURSE OUTCOMES</div>
+
+                            <div class="outcome-grid-container" id="outcomes-container">
+                                <div class="outcomes-top-header">
+                                    <p class="outcomes-intro">Upon completion of the course, the student will be able to:</p>
+                                    <div class="skills-column-header">
+                                        <span class="skills-main-text">THINKING SKILLS</span>
+                                    </div>
+                                </div>
+
+                                <% if (locals.outcomes && outcomes.length > 0) { %>
+                                    <% outcomes.forEach((co, index) => { %>
+                                        <div class="outcomes-row">
+                                            <div class="outcomes-statement">
+                                                <span class="outcomes-number">CO<%= index + 1 %>.</span>
+                                                <div class="outcomes-editable-text"><%= co.statement %></div>
+                                            </div>
+                                            <div class="outcomes-skills-side">
+                                                <div class="outcomes-editable-text"><%= co.thinkingSkills %></div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <p style="padding: 20px; text-align: center; color: #999;">No course outcomes defined.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Course Mapping -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">COURSE MAPPING</div>
+                        </div>
+                        <div class="course-mapping-container">
+                            <table class="mapping-table">
+                                <thead>
+                                    <tr>
+                                        <th>COURSE OUTCOMES</th>
+                                        <th>PROGRAM</th>
+                                        <th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th>g</th><th>h</th><th>i</th><th>j</th><th>k</th><th>l</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (locals.mapping && mapping.length > 0) { %>
+                                        <% mapping.forEach(m => { %>
+                                            <tr>
+                                                <td>CO<%= m.coNumber || m.numberOfCO %></td>
+                                                <td><%= m.programCode || m.program %></td>
+                                                <% ['a','b','c','d','e','f','g','h','i','j','k','l'].forEach(letter => { %>
+                                                    <td><%= (m.fromAtoL ? m.fromAtoL[letter] : m[letter]) || '' %></td>
+                                                <% }); %>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr><td colspan="14" style="text-align: center; padding: 20px;">No mapping data available.</td></tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+
+                            <div class="legend">
+                                <strong>Legend:</strong>
+                                <span><span class="legend-letter">I</span> - Introductory</span>,
+                                <span><span class="legend-letter">E</span> - Enabling</span>,
+                                <span><span class="legend-letter">D</span> - Demonstrative</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Concept Map -->
+                    <% if (locals.syl && syl.conceptMap) { %>
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">CONCEPT MAP</div>
+                        </div>
+                        <div class="course-mapping-container" style="text-align: center;">
+                            <img src="<%= syl.conceptMap %>" alt="Concept Map" style="max-width: 100%; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                        </div>
+                    </section>
+                    <% } %>
+
+                    <!-- Weekly Schedule Section -->
+                    <section class="content-panel-transparent" style="max-width: 1400px;">
+                        <div class="content-card-transparent">
+                            <div class="content-label-simple">COURSE SCHEDULE</div>
+                        </div>
+                        <div class="outcomes-table-container">
+                            <table class="schedule-editor-table">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" class="col-week">Week</th>
+                                        <th colspan="3">Outcomes</th>
+                                        <th rowspan="2" class="col-day">Day</th>
+                                        <th rowspan="2" class="col-coverage">Coverage Topic/s</th>
+                                        <th colspan="2">TA Activities</th>
+                                        <th colspan="2">Assessment Tasks</th>
+                                        <th rowspan="2" class="col-textbook">Ref.</th>
+                                        <th rowspan="2" class="col-date">Date Covered</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="col-outcomes">CO</th>
+                                        <th class="col-outcomes">MO</th>
+                                        <th class="col-outcomes">ILO</th>
+                                        <th class="col-tla-mode">Mode</th>
+                                        <th class="col-tla-activities">Activities</th>
+                                        <th class="col-at-mode">Mode</th>
+                                        <th class="col-at-task">Task</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (locals.schedules && schedules.length > 0) { %>
+                                        <% schedules.forEach(s => { %>
+                                            <tr>
+                                                <td style="text-align: center;"><%= s.week %></td>
+                                                <td style="text-align: center;"><%= s.outcomeCo %></td>
+                                                <td style="text-align: center;"><%= s.outcomeMo %></td>
+                                                <td style="text-align: center;"><%= s.outcomeIlo %></td>
+                                                <td style="text-align: center;"><%= s.coverageDay %></td>
+                                                <td><div class="editable-cell"><%- s.coverageTopic %></div></td>
+                                                <td style="text-align: center;"><%= s.tlaMode %></td>
+                                                <td><div class="editable-cell"><%- s.tlaActivities %></div></td>
+                                                <td style="text-align: center;"><%= s.assessmentTaskMode %></td>
+                                                <td><div class="editable-cell"><%- s.assessmentTaskTask %></div></td>
+                                                <td style="text-align: center;"><%= s.referenceNum %></td>
+                                                <td style="text-align: center;"><%= s.dateCovered %></td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr><td colspan="12" style="text-align: center; padding: 20px;">No schedule defined.</td></tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Course Evaluation Section -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent" style="margin-bottom: 20px;">
+                            <div class="content-label-simple">COURSE EVALUATION</div>
+                            <p style="text-align: center; font-size: 14px; color: #666; margin-bottom: 20px;">The final grade of the student is based on the following components:</p>
+                        </div>
+                        <div class="outcomes-table-container">
+                            <table class="schedule-editor-table" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">Module Code</th>
+                                        <th rowspan="2">CO</th>
+                                        <th rowspan="2">Mediating Outcomes / Laboratory Tasks</th>
+                                        <th colspan="2">Assessment Weight (%)</th>
+                                        <th rowspan="2">Modular Weight, %</th>
+                                        <th rowspan="2">Final Weight, %</th>
+                                    </tr>
+                                    <tr>
+                                        <th>LT</th>
+                                        <th>PE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (locals.evaluation && evaluation.length > 0) { %>
+                                        <% evaluation.forEach(e => { %>
+                                            <tr>
+                                                <td style="text-align: center;"><%= e.moduleCode %></td>
+                                                <td style="text-align: center;"><%= e.coNumber %></td>
+                                                <td><div class="editable-cell"><%- e.mediatingOutcomes || e.mediatingOutcome || '' %></div></td>
+                                                <td style="text-align: center;"><%= e.onlineTaskWeight %></td>
+                                                <td style="text-align: center;"><%= e.longExaminationWeight %></td>
+                                                <td style="text-align: center;"><%= e.moduleWeight %></td>
+                                                <td style="text-align: center;"><%= e.finalWeight %></td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr><td colspan="7" style="text-align: center; padding: 20px;">No evaluation data available.</td></tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Outcomes Assessment Section (from CO data) -->
+                    <section class="content-panel-transparent">
+                        <div class="content-card-transparent" style="margin-bottom: 20px;">
+                            <div class="content-label-simple">COURSE OUTCOMES ASSESSMENT</div>
+                        </div>
+                        <div class="outcomes-table-container">
+                            <table class="schedule-editor-table" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60%">COURSE OUTCOMES</th>
+                                        <th>ASSESSMENT TASKS</th>
+                                        <th>MIN. PERFORMANCE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (locals.outcomes && outcomes.length > 0) { %>
+                                        <% outcomes.forEach(co => { %>
+                                            <tr>
+                                                <td style="padding: 10px;">
+                                                    <b>CO<%= co.coNumber %>.</b> 
+                                                    <%- co.statement %>
+                                                </td>
+                                                <td style="text-align: center;"><%= co.assessmentTasks %></td>
+                                                <td style="text-align: center;"><%= co.minSatisfactoryPerf %>%</td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr><td colspan="3" style="text-align: center; padding: 20px;">No outcomes assessment defined.</td></tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="content-panel-transparent">
+                        <div class="info-item">
+                            <label>TEXTBOOK</label>
+                            <div class="course-editable-text multiline"><%= locals.syl && syl.textbook ? syl.textbook : 'None specified.' %></div>
+                        </div>
+                        <br>
+                        <div class="info-item">
+                            <label>REFERENCES</label>
+                            <div class="course-editable-text multiline"><%= locals.syl && syl.references ? syl.references : 'None specified.' %></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <button type="button" class="floating-close-btn" onclick="window.history.back()">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span>CLOSE PREVIEW</span>
+            </button>
+        </main>
+    </div>
+    <script>
+        // Ensure all contenteditable is false for safety
+        document.querySelectorAll('[contenteditable]').forEach(el => {
+            el.setAttribute('contenteditable', 'false');
+        });
+
+        // Auto-print when opened with ?print=true (for Download PDF feature)
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('print') === 'true') {
+                // Wait for the page to fully render, then trigger print
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        window.print();
+                    }, 500);
+                });
+            }
+        })();
+    </script>
+
+    <style>
+        @media print {
+            /* Hide non-content elements */
+            .syllabus-top-bar, .floating-close-btn, .preview-badge, .no-pdf {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .content-panel-transparent {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                page-break-inside: avoid;
+            }
+
+            .syllabus-banner {
+                page-break-after: avoid;
+            }
+
+            /* Ensure tables don't break badly across pages */
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+        }
+    </style>
+</body>
+</html>

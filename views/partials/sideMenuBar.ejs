@@ -1,4 +1,5 @@
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
 <style>
     /* Scope all styles to #main-sidebar to prevent leakage */
@@ -59,18 +60,18 @@
         display: flex;
         align-items: center;
         padding: 12px 20px;
-        color: var(--text-muted); 
+        color: var(--text-muted);
         text-decoration: none;
         transition: all 0.3s ease;
     }
 
     /* Scoped Active State */
     #main-sidebar .sidebar-menu li a.active {
-        background-color: var(--accent-primary); 
+        background-color: var(--accent-primary);
         color: var(--text-on-dark);
         border-left: 4px solid var(--text-on-dark);
         font-weight: 600;
-        pointer-events: none; 
+        pointer-events: none;
         cursor: default;
     }
 
@@ -170,7 +171,6 @@
             padding: 0;
         }
     }
-
 </style>
 
 <button id="hamburger-btn" aria-label="Toggle menu">
@@ -185,15 +185,14 @@
     </div>
 
     <div class="user-profile">
-        <img src="<%= (locals.user && user.avatar) ? user.avatar : '/common/img/default-avatar.jpg' %>" 
-            alt="User Profile" 
-            class="avatar">
+        <img src="<%= (locals.user && user.avatar) ? user.avatar : '/common/img/default-avatar.jpg' %>"
+            alt="User Profile" class="avatar">
         <span class="username">
             <%= (locals.user && user.firstName) ? `${user.firstName} ${user.lastName}` : 'Guest User' %>
         </span>
     </div>
 
-    <%
+    <% 
         const userRole = (locals.user && user.role) ? user.role : '';
         const isProf = userRole === 'Professor';
         const isChair = userRole === 'Program-Chair';
@@ -205,58 +204,61 @@
         const isPracticum = userRole === 'Practicum-Coordinator';
         const isTech = userRole === 'Technical';
     %>
-    <ul class="sidebar-menu">
-        <li>
-            <a href="/institution" class="<%= (locals.currentPageCategory === 'institution') ? 'active' : '' %>">
-                <span class="material-symbols-outlined">home</span>
-                <span class="menu-text">Institution</span>
-            </a>
-        </li>
-        <li>
-            <a href="/tws" class="<%= (locals.currentPageCategory === 'tws') ? 'active' : '' %>">
-                <span class="material-symbols-outlined">event_note</span>
-                <span class="menu-text">TWS</span>
-            </a>
-        </li>
-        <% if (isProf || isChair || isDean || isAdmin) { %>
-        <li>
-            <a href="/ata" class="<%= (locals.currentPageCategory === 'ata') ? 'active' : '' %>">
-                <span class="material-symbols-outlined">fact_check</span>
-                <span class="menu-text">ATA</span>
-            </a>
-        </li>
-        <% } %>
-        <% if (isProf || isChair || isDean || isAdmin) { %>
-        <li>
-            <a href="/syllabus" class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
-                <span class="material-symbols-outlined">book_4</span>
-                <span class="menu-text">Syllabus</span>
-            </a>
-        </li>
-        <% } %>
-        <% if (isProf || isChair || isAdmin || isDean || isHR || isHRMO || isTech || isVPAA || isPracticum) { %>
-        <li>
-            <a href="/tla" class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
-                <span class="material-symbols-outlined">assignment</span>
-                <span class="menu-text">TLA</span>
-            </a>
-        </li>
-        <% } %>
-    </ul>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/institution" class="<%= (locals.currentPageCategory === 'institution') ? 'active' : '' %>">
+                    <span class="material-symbols-outlined">home</span>
+                    <span class="menu-text">Institution</span>
+                </a>
+            </li>
+            <li>
+                <a href="/tws" class="<%= (locals.currentPageCategory === 'tws') ? 'active' : '' %>">
+                    <span class="material-symbols-outlined">event_note</span>
+                    <span class="menu-text">TWS</span>
+                </a>
+            </li>
+            <% if (isProf || isChair || isDean || isAdmin) { %>
+                <li>
+                    <a href="/ata" class="<%= (locals.currentPageCategory === 'ata') ? 'active' : '' %>">
+                        <span class="material-symbols-outlined">fact_check</span>
+                        <span class="menu-text">ATA</span>
+                    </a>
+                </li>
+                <% } %>
+                    <% if (isProf || isChair || isDean || isAdmin || isHR) { %>
+                        <li>
+                            <a href="<%= (locals.user && (user.role === 'Admin' || user.role === 'HR')) ? '/syllabus/hr' : (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? '/dean/syllabus' : (locals.user && (user.role === 'Program-Chair' || user.role === 'program-chair')) ? '/syllabus/prog-chair' : (locals.user && (user.role === 'Professor' || user.role === 'professor')) ? '/faculty' : '/syllabus' %>"
+                                class="<%= (locals.currentPageCategory === 'syllabus') ? 'active' : '' %>">
+                                <span class="material-symbols-outlined">book_4</span>
+                                <span class="menu-text">Syllabus</span>
+                            </a>
+                        </li>
+                        <% } %>
+                            <% if (isProf || isChair || isAdmin || isDean || isHR || isHRMO || isTech || isVPAA ||
+                                isPracticum) { %>
+                                <li>
+                                    <a href="/tla"
+                                        class="<%= (locals.currentPageCategory === 'tla') ? 'active' : '' %>">
+                                        <span class="material-symbols-outlined">assignment</span>
+                                        <span class="menu-text">TLA</span>
+                                    </a>
+                                </li>
+                                <% } %>
+        </ul>
 
-    <div class="sidebar-footer">
-        <button class="sign-out-btn" id="btn-signout">
-            <span class="material-symbols-outlined">exit_to_app</span>
-            <span class="sign-out-text">Sign out</span>
-        </button>
-    </div>
+        <div class="sidebar-footer">
+            <button class="sign-out-btn" id="btn-signout">
+                <span class="material-symbols-outlined">exit_to_app</span>
+                <span class="sign-out-text">Sign out</span>
+            </button>
+        </div>
 </nav>
 
 <script>
-    const signOutBtn   = document.getElementById('btn-signout');
+    const signOutBtn = document.getElementById('btn-signout');
     const hamburgerBtn = document.getElementById('hamburger-btn');
-    const sidebar      = document.getElementById('main-sidebar');
-    const overlay      = document.getElementById('sidebar-overlay');
+    const sidebar = document.getElementById('main-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
 
     function toggleSidebar() {
         sidebar.classList.toggle('open');

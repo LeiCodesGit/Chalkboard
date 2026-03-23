@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
+import { mainDB } from "../../database/mongo-dbconnect.js";
 
 const courseEvaluationPerCOSchema = new Schema({
   syllabusID: { type: Schema.Types.ObjectId, ref: "Syllabus", required: true },
@@ -11,5 +12,5 @@ const courseEvaluationPerCOSchema = new Schema({
   finalWeight: Number
 });
 
-const CourseEvaluationPerCO = model("CourseEvaluationPerCO", courseEvaluationPerCOSchema);
+const CourseEvaluationPerCO = mainDB.models.CourseEvaluationPerCO || mainDB.model("CourseEvaluationPerCO", courseEvaluationPerCOSchema);
 export default CourseEvaluationPerCO;

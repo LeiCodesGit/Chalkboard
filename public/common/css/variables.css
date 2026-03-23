@@ -11,6 +11,18 @@
     --grey-lines: #3d3d3d;
     --grey-hover: #333333;
 
+    /* --- FONT FAMILY --- */
+    --font-family-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    /* --- STATUS COLORS --- */
+    --status-pending: #e67e22;
+    --status-endorsed: #f1c40f;
+    --status-approved-dean: #9acd32;
+    --status-verified-hr: #27ae60;
+    --status-no-draft: #95a5a6;
+    --status-rejected: #e74c3c;
+    --status-returned: #e74c3c;
+
     /* --- DEFAULT COLORS (LIGHT MODE) --- */
     --sidebar-bg: var(--color-charcoal);
     --sidebar-line: var(--grey-lines);
@@ -60,5 +72,36 @@
 body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-family-main);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATUS BADGE STYLES — Course Overview Cards
+   ═══════════════════════════════════════════════════════════ */
+.course-status.status-pending {
+    color: var(--status-pending) !important;
+    font-weight: 700 !important;
+}
+.course-status.status-endorsed {
+    color: var(--status-endorsed) !important;
+    font-weight: 700 !important;
+}
+.course-status.status-approved {
+    color: var(--status-approved-dean) !important;
+    font-weight: 700 !important;
+}
+.course-status.status-archived,
+.course-status.status-verified {
+    color: var(--status-verified-hr) !important;
+    font-weight: 700 !important;
+}
+.course-status.status-rejected,
+.course-status.status-returned {
+    color: var(--status-rejected) !important;
+    font-weight: 700 !important;
+}
+.course-status.status-no-draft {
+    color: var(--status-no-draft) !important;
+    font-weight: 500 !important;
+    font-style: italic;
 }

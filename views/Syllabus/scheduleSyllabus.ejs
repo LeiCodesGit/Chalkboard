@@ -214,11 +214,10 @@
                                 <tr>
                                     <th rowspan="2" class="col-module-code">Module Code</th>
                                     <th rowspan="2" class="col-co-small">CO</th>
-                                    <th rowspan="2" class="col-mediating-large">Mediating Outcomes / Laboratory Tasks
-                                    </th>
-                                    <th class="col-weight">Assessment Weight (%)</th>
-                                    <th class="col-weight">Modular Weight, %</th>
-                                    <th rowspan="2" class="col-weight">Final Weight, %</th>
+                                    <th rowspan="2" class="col-mediating-large">Mediating Outcomes / Laboratory Tasks</th>
+                                    <th colspan="2" class="col-weight">Assessment Weighting, %</th>
+                                    <th rowspan="2" class="col-weight">Modular Weighting, %</th>
+                                    <th rowspan="2" class="col-weight">Final Weighting, %</th>
                                 </tr>
                                 <tr>
                                     <th class="col-sub">LT</th>
@@ -320,14 +319,23 @@
                     <span>BACK</span>
                 </button>
 
-                <button class="next-btn-rect" onclick="window.location.href='/syllabus/approval'" type="button">
-                    <span>NEXT</span>
+                <button class="next-btn-rect" onclick="submitSyllabus()" type="button">
+                    <span>SUBMIT</span>
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
             </div>
         </main>
     </div>
 
+    <script>
+        window.CURRENT_SYLLABUS_ID = "<%= locals.syllabusId || '' %>";
+        window.USER_ROLE = "<%= locals.userRole || '' %>";
+        window.USER_ID = "<%= locals.userId || '' %>";
+        window.SERVER_SYLLABUS_DATA = {
+            schedules: <%- JSON.stringify(locals.schedules || []) %>,
+            evaluation: <%- JSON.stringify(locals.evaluation || []) %>
+        };
+    </script>
     <script src="/Syllabus/js/scheduleSyllabus.js?v=<%= new Date().getTime() %>"></script>
 </body>
 

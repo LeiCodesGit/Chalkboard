@@ -126,4 +126,17 @@ adminRoutes.get(
     getAdminTLA
 );
 
+// ==========================================
+// GET /admin/syllabus  →  redirect to HR syllabus overview
+// ==========================================
+
+adminRoutes.get(
+    "/syllabus",
+    isAuthenticated,
+    authorizeRoles("Admin", "HR", "Super-Admin"),
+    (req, res) => {
+        return res.redirect("/syllabus/hr");
+    }
+);
+
 export default adminRoutes;

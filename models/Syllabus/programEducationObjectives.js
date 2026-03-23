@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
+import { mainDB } from "../../database/mongo-dbconnect.js";
 
 const programEducationalObjectivesSchema = new Schema({
   syllabusID: { type: Schema.Types.ObjectId, ref: "Syllabus", required: true },
@@ -6,5 +7,5 @@ const programEducationalObjectivesSchema = new Schema({
   rating: [String]
 });
 
-const ProgramEducationalObjectives = model("ProgramEducationalObjectives", programEducationalObjectivesSchema);
+const ProgramEducationalObjectives = mainDB.models.ProgramEducationalObjectives || mainDB.model("ProgramEducationalObjectives", programEducationalObjectivesSchema);
 export default ProgramEducationalObjectives;

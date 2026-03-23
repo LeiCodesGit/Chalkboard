@@ -80,6 +80,7 @@ syllabusApprovalRouter.get('/', async (req, res) => {
         let drafts = [];
 
         if (approvals.length > 0) {
+            const userRole = (req.session.user && req.session.user.role) ? req.session.user.role.toLowerCase() : '';
             const syllabusIds = approvals.map(a => a.syllabusID);
             let syllabuses = await Syllabus.find({ _id: { $in: syllabusIds } });
 
@@ -90,6 +91,29 @@ syllabusApprovalRouter.get('/', async (req, res) => {
             drafts = approvals.map(approval => {
                 const syl = syllabuses.find(s => s._id.toString() === approval.syllabusID.toString());
                 if (!syl) return null;
+
+                const status = approval.status || 'Not Submitted';
+                const approvedBy = approval.approvedBy || '';
+
+                if (userRole === 'dean') {
+                    // Dean's view:
+                    // 1. Items waiting for Dean (status=Endorsed, or Approved by PC in any form)
+                    const isEndorsed = status === 'Endorsed' 
+                        || (status === 'Approved' && approvedBy === 'Program Chair')
+                        || (status === 'Approved' && approvedBy === 'PC_Approved');
+                    // 2. Items finally approved by Dean
+                    const isFinalApproved = status === 'Approved' && approvedBy === 'Dean';
+                    
+                    if (!isEndorsed && !isFinalApproved) return null;
+                    
+                    // For UI filtering coherence:
+                    var displayStatus = isFinalApproved ? 'Approved' : 'Endorsed';
+                } else if (userRole.includes('prog') || userRole.includes('chair')) {
+                    var displayStatus = status;
+                } else {
+                    var displayStatus = status;
+                }
+
                 return {
                     syllabusId: syl._id.toString(),
                     courseCode: syl.courseCode || 'N/A',
@@ -100,29 +124,37 @@ syllabusApprovalRouter.get('/', async (req, res) => {
                     img: (syl.courseImage && syl.courseImage.startsWith('data:'))
                         ? syl.courseImage
                         : `https://picsum.photos/seed/${syl._id}/400/200`,
-                    status: approval.status || 'Not Submitted',
+                    status: displayStatus,
                     approvalDate: approval.approvalDate
                         ? new Date(approval.approvalDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : null,
-                    approvedBy: approval.approvedBy || null,
-                    remarks: approval.remarks || '',
+                    approvedBy: approvedBy,
+                    remarks: approval.PC_Remarks || approval.remarks || '',
                     submittedDate: approval.updatedAt
                         ? new Date(approval.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : 'N/A'
                 };
             }).filter(Boolean);
         }
+        
+        // Perspective adjustment for stats
+        const userRole = (req.session.user && req.session.user.role) ? req.session.user.role.toLowerCase() : '';
+        let pendingCount, approvedCount;
 
-        if (drafts.length === 0) drafts = DUMMY_DRAFTS;
+        if (userRole === 'dean') {
+            // For Dean: Pending means items labeled "Endorsed", Approved means items labeled "Approved" (Final Approved)
+            pendingCount = drafts.filter(d => d.status === 'Endorsed').length;
+            approvedCount = drafts.filter(d => d.status === 'Approved').length;
+        } else {
+            pendingCount = drafts.filter(d => d.status === 'Pending').length;
+            approvedCount = drafts.filter(d => d.status === 'Approved').length;
+        }
 
-        const pendingCount = drafts.filter(d => d.status === 'Pending').length;
-        const approvedCount = drafts.filter(d => d.status === 'Approved').length;
-
-        res.render('Syllabus/syllabusApproval', { drafts, pendingCount, approvedCount, returnUrl, currentPageCategory: 'syllabus' });
+        res.render('Syllabus/syllabusApproval', { drafts, pendingCount, approvedCount, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
 
     } catch (error) {
         console.error('Approval queue error:', error);
-        res.render('Syllabus/syllabusApproval', { drafts: DUMMY_DRAFTS, pendingCount: 2, approvedCount: 1, returnUrl, currentPageCategory: 'syllabus' });
+        res.render('Syllabus/syllabusApproval', { drafts: DUMMY_DRAFTS, pendingCount: 2, approvedCount: 1, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
     }
 });
 

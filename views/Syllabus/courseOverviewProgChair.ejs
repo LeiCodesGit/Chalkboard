@@ -47,7 +47,7 @@
 
                             <div class="header-right">
                                 <div class="control-group items-per-page"><label>Items per Page</label><select>
-                                        <option>25</option>
+                                        <option><%= typeof courses !== 'undefined' ? courses.length : 0 %></option>
                                     </select></div>
 
                                 <!-- Actions Dropdown -->
@@ -63,9 +63,9 @@
                                         <button class="actions-item actions-item--delete" id="enterDeleteMode">
                                             <i class="fas fa-trash"></i> Delete Course
                                         </button>
-                                        <button class="actions-item actions-item--approve" onclick="goToEndorseQueue()"
+                                        <button class="actions-item actions-item--approve" onclick="window.location.href='/syllabus/prog-chair/approve'"
                                             style="border-top: 1px solid #e2e8f0;">
-                                            <i class="fas fa-stamp"></i> Endorse Syllabus
+                                            <i class="fas fa-file-signature"></i> Endorse Syllabus
                                         </button>
                                     </div>
                                 </div>
@@ -89,7 +89,8 @@
                             <% if (typeof courses !=='undefined' && courses.length> 0) { %>
                                 <% courses.forEach(course=> { %>
                                     <div class="course-card" data-id="<%= course.id %>"
-                                        data-hasdraft="<%= course.hasDraft %>">
+                                        data-hasdraft="<%= course.hasDraft %>"
+                                        data-status="<%= course.status || 'No Syllabus Draft' %>">
                                         <div class="card-image">
                                             <img src="<%= course.img || 'https://picsum.photos/400/200?random=' + course.id %>"
                                                 alt="Course Image">
@@ -101,9 +102,27 @@
                                             <h3 class="course-title">
                                                 <%= course.title %>
                                             </h3>
-                                            <p class="course-status">
-                                                <%= course.status || 'No Syllabus Draft' %>
-                                            </p>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                                <%
+                                                    var rawStatus = course.status || 'No Syllabus Draft';
+                                                    var statusClass = 'status-no-draft';
+                                                    var statusLabel = rawStatus;
+                                                    if (rawStatus === 'Pending') { statusClass = 'status-pending'; statusLabel = 'Pending'; }
+                                                    else if (rawStatus === 'Endorsed') { statusClass = 'status-endorsed'; statusLabel = 'Endorsed'; }
+                                                    else if (rawStatus === 'Approved') { statusClass = 'status-approved'; statusLabel = 'Approved by Dean'; }
+                                                    else if (rawStatus === 'Archived') { statusClass = 'status-archived'; statusLabel = 'Verified by HR'; }
+                                                    else if (rawStatus === 'Rejected' || rawStatus === 'Returned') { statusClass = 'status-rejected'; statusLabel = rawStatus; }
+                                                    else if (rawStatus === 'Returned to PC') { statusClass = 'status-returned'; statusLabel = 'Returned to PC'; }
+                                                %>
+                                                <p class="course-status <%= statusClass %>">
+                                                    <%= statusLabel %>
+                                                    <% if (course.remarks) { %>
+                                                        <span style="display: block; font-size: 11px; color: #777; font-style: italic; margin-top: 4px; border-top: 1px dashed #eee; padding-top: 4px;">
+                                                           <i class="fas fa-comment-dots"></i> <%= course.remarks %>
+                                                        </span>
+                                                    <% } %>
+                                                </p>
+                                            </div>
                                         </div>
                                         <div class="card-footer">
                                             <span class="instructor">
@@ -199,7 +218,7 @@
             <div class="modal-header" style="justify-content: space-between;">
                 <div class="modal-title-group">
                     <div class="modal-icon"><i class="fas fa-file-alt"></i></div>
-                    <h2>Syllabus Draft</h2>
+                    <h2 id="draftModalTitle">Syllabus Draft</h2>
                 </div>
                 <span class="close-modal" onclick="closeDraftModal()">&times;</span>
             </div>

@@ -16,12 +16,11 @@
 
         <main class="main-content">
             <div class="syllabus-top-bar">
-                <button type="button" class="back-btn" onclick="window.history.back()">
+                <button type="button" class="back-btn" onclick="handleBackAction()">
                     <span class="material-symbols-outlined">arrow_back</span>
                     <span>Back</span>
                 </button>
             </div>
-
             <div class="syllabus-scroll-area">
                 <div class="syllabus-banner">
                     <span class="syllabus-banner-title">SYLLABUS FORM</span>
@@ -134,7 +133,7 @@
             </div>
 
             <div class="button-footer-outer">
-                <button class="next-btn-rect" onclick="window.location.href='/syllabus/info'" type="button">
+                <button class="next-btn-rect" onclick="saveNewToSession()" type="button">
                     <span>NEXT</span>
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
@@ -142,6 +141,13 @@
         </main>
     </div>
 
+    <script>
+        window.CURRENT_SYLLABUS_ID = "<%= locals.syllabusId || '' %>";
+        window.SERVER_SYLLABUS_DATA = {
+            peos: <%- JSON.stringify(locals.peos || null) %>,
+            sos: <%- JSON.stringify(locals.sos || null) %>
+        };
+    </script>
     <script src="/Syllabus/js/newSyllabus.js?v=<%= new Date().getTime() %>"></script>
 </body>
 

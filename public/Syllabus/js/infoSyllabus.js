@@ -1,3 +1,318 @@
+function autoSaveInfo() {
+    // Helper to get text by row and item index for the grid
+    const getGridText = (rowIdx, itemIdx) => {
+        return document.querySelectorAll('.info-row')[rowIdx]
+            ?.querySelectorAll('.course-editable-text')[itemIdx]?.innerText.trim() || "";
+    };
+
+    const infoData = {
+        // Basic Info Grid
+        courseCode: document.querySelector('.info-item.small .course-editable-text')?.innerText.trim() || "",
+        courseTitle: document.querySelector('.info-item.large .course-editable-text')?.innerText.trim() || "",
+        ayTerm: document.getElementById('ay-term-field')?.innerText.trim() || "",
+        preRequisite: getGridText(1, 0),
+        coRequisite: getGridText(1, 1),
+        creditUnits: getGridText(1, 2),
+        classSchedule: getGridText(2, 0),
+        courseDesign: getGridText(2, 1),
+
+        // Text Areas
+        courseDescription: document.querySelector('.multiline[data-placeholder*="course description"]')?.innerText.trim() || "",
+        textbook: document.querySelector('.multiline[data-placeholder*="textbook"]')?.innerText.trim() || "",
+        references: document.querySelector('.multiline[data-placeholder*="references"]')?.innerText.trim() || "",
+
+        // Course Outcomes Statement Grid (The CO1, CO2 list)
+        outcomesGrid: Array.from(document.querySelectorAll('#outcomes-container .outcomes-row')).map(row => ({
+            statement: row.querySelector('.outcomes-statement .outcomes-editable-text')?.innerText.trim() || "",
+            skills: row.querySelector('.outcomes-skills-side .outcomes-editable-text')?.innerText.trim() || ""
+        })),
+
+        // Mapping Table (I, E, D dropdowns)
+        mappingValues: Array.from(document.querySelectorAll('#mapping-body tr')).map(row => {
+            return Array.from(row.querySelectorAll('.custom-dropdown-trigger')).map(trigger => {
+                return trigger.dataset.value || ""; // Captures the internal 'I', 'E', or 'D' value
+            });
+        }),
+
+        // Editor Table (The one with the toolbar)
+        editorRows: Array.from(document.querySelectorAll('#outcomes-editor-body tr')).map(row => {
+            return Array.from(row.querySelectorAll('.editable-cell')).map(cell => cell.innerHTML);
+        }),
+
+        // Concept Map
+        conceptMap: document.getElementById('concept-map-preview')?.src || ""
+    };
+
+    const key = `syllabus_draft_info_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    sessionStorage.setItem(key, JSON.stringify(infoData));
+}
+
+
+
+function handleInfoBack() {
+    autoSaveInfo();
+    setTimeout(() => { window.history.back(); }, 100);
+}
+
+function handleInfoNext() {
+    // 1. Basic Fields Validation
+    const courseCode = document.querySelector('.info-item.small .course-editable-text')?.innerText.trim();
+    const courseTitle = document.querySelector('.info-item.large .course-editable-text')?.innerText.trim();
+    const ayTerm = document.getElementById('ay-term-field')?.innerText.trim();
+    const courseDescription = document.querySelector('.multiline[data-placeholder*="course description"]')?.innerText.trim();
+    const creditUnits = document.querySelector('.info-row:nth-child(2) .info-item:nth-child(3) .course-editable-text')?.innerText.trim();
+    const textbook = document.querySelector('.multiline[data-placeholder*="textbook"]')?.innerText.trim();
+    const references = document.querySelector('.multiline[data-placeholder*="references"]')?.innerText.trim();
+
+    if (!courseCode || !courseTitle || !ayTerm || !courseDescription || !creditUnits || !textbook || !references) {
+        alert("All fields are required.");
+        return;
+    }
+
+    // 2. Outcomes (CO) Validation
+    const coRows = document.querySelectorAll('#outcomes-container .outcomes-row');
+    if (coRows.length === 0) {
+        alert("All fields are required.");
+        return;
+    }
+    
+    for (let i = 0; i < coRows.length; i++) {
+        const statement = coRows[i].querySelector('.outcomes-statement .outcomes-editable-text')?.innerText.trim();
+        if (!statement) {
+            alert("All fields are required.");
+            coRows[i].querySelector('.outcomes-statement .outcomes-editable-text').focus();
+            return;
+        }
+    }
+
+    // 3. Mapping Validation (At least one alignment per CO) [cite: 173]
+    const mappingRows = document.querySelectorAll('#mapping-body tr');
+    for (let i = 0; i < mappingRows.length; i++) {
+        const triggers = mappingRows[i].querySelectorAll('.custom-dropdown-trigger');
+        const hasAssignment = Array.from(triggers).some(t => t.dataset.value && t.dataset.value !== 'none');
+        if (!hasAssignment) {
+            alert("All fields are required.");
+            return;
+        }
+    }
+
+    // 4. Concept Map Validation (Optional but recommended to remind)
+    const conceptMapImg = document.getElementById('concept-map-preview')?.src;
+    if (!conceptMapImg || conceptMapImg.endsWith('undefined') || conceptMapImg === window.location.href) {
+        if (!confirm("No Concept Map has been attached. Do you want to proceed anyway?")) {
+            return;
+        }
+    }
+
+    // 5. Force Save to Draft
+    saveInfoToSession();
+}
+
+function loadInfoFromSession() {
+    const key = `syllabus_draft_info_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    const savedData = sessionStorage.getItem(key);
+    if (!savedData) return;
+    const data = JSON.parse(savedData);
+
+    const setGridText = (rowIdx, itemIdx, val) => {
+        const el = document.querySelectorAll('.info-row')[rowIdx]?.querySelectorAll('.course-editable-text')[itemIdx];
+        if (el && val) el.innerText = val;
+    };
+
+    // 1. Restore Grid & Multilines
+    document.querySelector('.info-item.small .course-editable-text').innerText = data.courseCode || "";
+    document.querySelector('.info-item.large .course-editable-text').innerText = data.courseTitle || "";
+    const ayTermEl = document.getElementById('ay-term-field');
+    if (ayTermEl) ayTermEl.innerText = data.ayTerm || "";
+
+    setGridText(1, 0, data.preRequisite);
+    setGridText(1, 1, data.coRequisite);
+    setGridText(1, 2, data.creditUnits);
+    setGridText(2, 0, data.classSchedule);
+    setGridText(2, 1, data.courseDesign);
+    
+    const desc = document.querySelector('.multiline[data-placeholder*="course description"]');
+    if (desc) desc.innerText = data.courseDescription || "";
+    const txt = document.querySelector('.multiline[data-placeholder*="textbook"]');
+    if (txt) txt.innerText = data.textbook || "";
+    const ref = document.querySelector('.multiline[data-placeholder*="references"]');
+    if (ref) ref.innerText = data.references || "";
+
+    // 2. Restore Outcomes Editor & Mapping Table (Order is critical!)
+    const editorBody = document.getElementById('outcomes-editor-body');
+    if (editorBody && data.editorRows) {
+        editorBody.innerHTML = ''; // Clear default rows [cite: 94]
+        data.editorRows.forEach(rowCells => {
+            addEditorRow(); // This also triggers syncMappingRows()
+            const lastRow = editorBody.lastElementChild;
+            const targetCells = lastRow.querySelectorAll('.editable-cell');
+            rowCells.forEach((html, i) => { if(targetCells[i]) targetCells[i].innerHTML = html; });
+        });
+    }
+
+    // 3. Restore Mapping Dropdowns
+    const mappingRows = document.querySelectorAll('#mapping-body tr');
+    if (data.mappingValues) {
+        data.mappingValues.forEach((rowValues, rowIndex) => {
+            if (mappingRows[rowIndex]) {
+                const triggers = mappingRows[rowIndex].querySelectorAll('.custom-dropdown-trigger');
+                rowValues.forEach((val, colIndex) => {
+                    if (triggers[colIndex] && val && val !== 'none') {
+                        triggers[colIndex].dataset.value = val;
+                        triggers[colIndex].textContent = val;
+                    }
+                });
+            }
+        });
+    }
+
+    // 4. Restore Outcomes Grid
+    const outcomesContainer = document.getElementById('outcomes-container');
+    if (outcomesContainer && data.outcomesGrid) {
+        document.querySelectorAll('#outcomes-container .outcomes-row').forEach(r => r.remove());
+        data.outcomesGrid.forEach(item => {
+            addCoRow();
+            const lastRow = outcomesContainer.lastElementChild;
+            if (lastRow) {
+                lastRow.querySelector('.outcomes-statement .outcomes-editable-text').innerText = item.statement;
+                lastRow.querySelector('.outcomes-skills-side .outcomes-editable-text').innerText = item.skills;
+            }
+        });
+    }
+
+    // 5. Restore Concept Map
+    if (data.conceptMap && data.conceptMap !== "" && !data.conceptMap.endsWith('undefined')) {
+        const wrapper = document.getElementById('concept-map-wrapper');
+        const preview = document.getElementById('concept-map-preview');
+        if (wrapper && preview) {
+            preview.src = data.conceptMap;
+            wrapper.style.display = 'block';
+        }
+    }
+
+    // 6. Cleanup Placeholders
+    refreshPlaceholders();
+}
+
+// Force placeholders to update based on current text content
+    document.querySelectorAll('[contenteditable][data-placeholder]').forEach(el => {
+        if (el.innerText.trim() !== '') {
+            el.classList.remove('show-placeholder');
+        } else {
+            el.classList.add('show-placeholder');
+        }
+    });
+
+function loadInfoFromServer() {
+    if (!window.SERVER_SYLLABUS_DATA) return;
+    const { outcomes, mapping, syl } = window.SERVER_SYLLABUS_DATA;
+
+    // 1. Basic Info from the Syllabus document
+    if (syl) {
+        const courseCodeEl = document.querySelector('.info-item.small .course-editable-text');
+        const courseTitleEl = document.querySelector('.info-item.large .course-editable-text');
+        if (courseCodeEl && syl.courseCode && !courseCodeEl.innerText.trim()) courseCodeEl.innerText = syl.courseCode;
+        if (courseTitleEl && syl.courseTitle && !courseTitleEl.innerText.trim()) courseTitleEl.innerText = syl.courseTitle;
+
+        const ayTermEl = document.getElementById('ay-term-field');
+        if (ayTermEl && (syl.academicYear || syl.schoolYear || syl.term) && !ayTermEl.innerText.trim()) {
+            ayTermEl.innerText = `${syl.academicYear || syl.schoolYear || ''} / ${syl.term || ''}`;
+        }
+
+        // Also fill other basic info fields if available
+        const setGridText = (rowIdx, itemIdx, val) => {
+            const el = document.querySelectorAll('.info-row')[rowIdx]?.querySelectorAll('.course-editable-text')[itemIdx];
+            if (el && val && !el.innerText.trim()) el.innerText = val;
+        };
+        setGridText(1, 0, syl.preRequisite);
+        setGridText(1, 1, syl.coRequisite);
+        setGridText(1, 2, syl.creditUnits);
+        setGridText(2, 0, syl.classSchedule);
+        setGridText(2, 1, syl.courseDesign);
+
+        const desc = document.querySelector('.multiline[data-placeholder*="course description"]');
+        if (desc && syl.courseDescription && !desc.innerText.trim()) desc.innerText = syl.courseDescription;
+        const txt = document.querySelector('.multiline[data-placeholder*="textbook"]');
+        if (txt && syl.textbook && !txt.innerText.trim()) txt.innerText = syl.textbook;
+        const ref = document.querySelector('.multiline[data-placeholder*="references"]');
+        if (ref && syl.references && !ref.innerText.trim()) ref.innerText = syl.references;
+    }
+
+    refreshPlaceholders();
+
+    // 2. Course Outcomes Grid (Simple list)
+    const outcomesContainer = document.getElementById('outcomes-container');
+    if (outcomesContainer && outcomes && outcomes.length > 0) {
+        document.querySelectorAll('#outcomes-container .outcomes-row').forEach(r => r.remove());
+        outcomes.forEach((item, i) => {
+            addCoRow();
+            const lastRow = outcomesContainer.lastElementChild;
+            if (lastRow) {
+                lastRow.querySelector('.outcomes-statement .outcomes-editable-text').innerText = (item.description && item.description[0]) || "";
+                lastRow.querySelector('.outcomes-skills-side .outcomes-editable-text').innerText = (item.thinkingSkills && item.thinkingSkills[0]) || "";
+            }
+        });
+    }
+
+    // 3. Outcomes Editor Table
+    const editorBody = document.getElementById('outcomes-editor-body');
+    if (editorBody && outcomes && outcomes.length > 0) {
+        editorBody.innerHTML = '';
+        outcomes.forEach(item => {
+            addEditorRow();
+            const lastRow = editorBody.lastElementChild;
+            const cells = lastRow.querySelectorAll('.editable-cell');
+            if (cells.length >= 3) {
+                cells[0].innerText = item.coNumber || "";
+                cells[1].innerText = (item.description && item.description[0]) || "";
+                cells[2].innerText = (item.thinkingSkills && item.thinkingSkills[0]) || "";
+            }
+        });
+    }
+
+    // 4. Mapping Table
+    const mappingBody = document.getElementById('mapping-body');
+    if (mappingBody && mapping && mapping.length > 0) {
+        // mapping is an array of documents, each for one CO
+        const mappingRows = mappingBody.querySelectorAll('tr');
+        mapping.forEach((item, rowIndex) => {
+            if (mappingRows[rowIndex]) {
+                const triggers = mappingRows[rowIndex].querySelectorAll('.custom-dropdown-trigger');
+                const values = item.fromAtoL || [];
+                values.forEach((val, colIndex) => {
+                    if (triggers[colIndex] && val && val !== 'none') {
+                        triggers[colIndex].dataset.value = val;
+                        triggers[colIndex].textContent = val;
+                    }
+                });
+            }
+        });
+    }
+
+    // 5. Concept Map from server
+    if (syl && syl.conceptMap) {
+        const wrapper = document.getElementById('concept-map-wrapper');
+        const preview = document.getElementById('concept-map-preview');
+        if (wrapper && preview) {
+            preview.src = syl.conceptMap;
+            wrapper.style.display = 'block';
+        }
+    }
+
+    refreshPlaceholders();
+}
+
+function refreshPlaceholders() {
+    document.querySelectorAll('[contenteditable][data-placeholder]').forEach(el => {
+        if (el.innerText.trim() !== '') {
+            el.classList.remove('show-placeholder');
+        } else {
+            el.classList.add('show-placeholder');
+        }
+    });
+}
+
+
 /* ── Renumber all CO rows after add/delete ── */
 function renumberCoRows() {
   const container = document.getElementById('outcomes-container');
@@ -132,10 +447,13 @@ function createCustomDropdown() {
       closeDropdown(wrapper);
     }
   });
-
+  
+  
   wrapper.appendChild(trigger);
   wrapper.appendChild(panel);
   return wrapper;
+  
+  
 }
 
 function openDropdown(wrapper) {
@@ -193,15 +511,38 @@ function buildMappingRow(index, totalRows) {
 }
 
 function syncMappingRows() {
-  const editorBody = document.getElementById('outcomes-editor-body');
-  if (!editorBody) return;
-  const total = editorBody.querySelectorAll('tr').length;
+  const container = document.getElementById('outcomes-container');
+  if (!container) return;
+  const total = container.querySelectorAll('.outcomes-row').length;
+  
+  const mappingBody = document.getElementById('mapping-body');
+  if (!mappingBody) return;
+
+  // Preserve existing selections before wiping to avoid data loss
+  const existingValues = {};
+  mappingBody.querySelectorAll('tr').forEach(tr => {
+      const coIndex = tr.dataset.coIndex;
+      const triggers = tr.querySelectorAll('.custom-dropdown-trigger');
+      const rowValues = Array.from(triggers).map(t => t.dataset.value || '');
+      existingValues[coIndex] = rowValues;
+  });
 
   // Clear existing mapping rows
-  tableBody.innerHTML = '';
+  mappingBody.innerHTML = '';
 
   for (let i = 1; i <= total; i++) {
-    tableBody.appendChild(buildMappingRow(i, total));
+    const row = buildMappingRow(i, total);
+    // Restore values if they existed
+    if (existingValues[i]) {
+        const triggers = row.querySelectorAll('.custom-dropdown-trigger');
+        existingValues[i].forEach((val, colIdx) => {
+            if (triggers[colIdx] && val && val !== 'none') {
+                triggers[colIdx].dataset.value = val;
+                triggers[colIdx].textContent = val;
+            }
+        });
+    }
+    mappingBody.appendChild(row);
   }
 
   // Update the program cell rowspan if it exists
@@ -243,10 +584,18 @@ outcomesMutationObserver.observe(document.getElementById('outcomes-container'), 
 function previewConceptMap(input) {
   const file = input.files[0];
   if (!file) return;
-  const wrapper = document.getElementById('concept-map-wrapper');
-  const preview = document.getElementById('concept-map-preview');
-  preview.src = URL.createObjectURL(file);
-  wrapper.style.display = 'block';
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+      const wrapper = document.getElementById('concept-map-wrapper');
+      const preview = document.getElementById('concept-map-preview');
+      if (wrapper && preview) {
+          preview.src = e.target.result;
+          wrapper.style.display = 'block';
+          autoSaveInfo(); // Trigger auto-save immediately on upload
+      }
+  };
+  reader.readAsDataURL(file);
 }
 
 function deleteConceptMap() {
@@ -283,6 +632,21 @@ function renumberEditorRows() {
     const tds = tr.querySelectorAll('td');
     tds.forEach((td, j) => {
       td.dataset.colIndex = j.toString();
+      
+      // Ensure listeners are attached (for static/re-indexed rows)
+      if (!td.dataset.listenersInit) {
+        td.dataset.listenersInit = '1';
+        td.addEventListener('mousedown', (e) => {
+          isSelecting = true;
+          const box = document.getElementById('table-selection-box');
+          if (box) box.classList.add('dragging');
+          startCell = td;
+          updateRange(td, td);
+        });
+        td.addEventListener('mouseenter', (e) => {
+          if (isSelecting) extendSelection(td);
+        });
+      }
     });
   });
 }
@@ -304,17 +668,6 @@ function addEditorRow() {
     }
     td.appendChild(div);
     tr.appendChild(td);
-
-    td.addEventListener('mousedown', (e) => {
-      isSelecting = true;
-      const box = document.getElementById('table-selection-box');
-      if (box) box.classList.add('dragging');
-      startCell = td;
-      updateRange(td, td);
-    });
-    td.addEventListener('mouseenter', (e) => {
-      if (isSelecting) extendSelection(td);
-    });
   }
 
   body.appendChild(tr);
@@ -437,9 +790,7 @@ document.addEventListener('mouseup', () => {
 // Initial Rows
 document.addEventListener('DOMContentLoaded', () => {
   const body = document.getElementById('outcomes-editor-body');
-  if (body) {
-    addEditorRow();
-    addEditorRow();
+  if (body && body.querySelectorAll('tr').length === 0) {
     addEditorRow();
   }
 });
@@ -630,8 +981,157 @@ function toggleWrap() {
   });
 }
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-  initColorPalette();
-  updateActiveColorBar();
+
+
+window.onload = () => {
+    // 1. Load data
+    const key = `syllabus_draft_info_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    const savedSessionData = sessionStorage.getItem(key);
+    const hasServerData = window.SERVER_SYLLABUS_DATA && 
+                          window.SERVER_SYLLABUS_DATA.syl && 
+                          Object.keys(window.SERVER_SYLLABUS_DATA.syl).length > 5;
+
+    if (hasServerData && !savedSessionData) {
+        // If we have data from database and nothing in session, load from server
+        loadInfoFromServer();
+    } else if (savedSessionData) {
+        // If session draft exists, prioritize it (user's most recent unsaved work)
+        loadInfoFromSession();
+    } else {
+        // Default: Initialize with some empty rows if both are absent
+        const body = document.getElementById('outcomes-editor-body');
+        if (body && body.querySelectorAll('tr').length === 0) {
+            addEditorRow();
+        }
+    }
+
+    // 2. Re-init the placeholder observers for any new rows
+    document.querySelectorAll('[contenteditable][data-placeholder]').forEach(el => {
+        if (!el.dataset.placeholderInit) {
+            el.dataset.placeholderInit = '1';
+            initPersistentPlaceholder(el);
+        }
+    });
+};
+
+window.addEventListener('load', () => {
+    // Load server data first (course code, title, outcomes, mapping, etc.)
+    loadInfoFromServer();
+
+    // Then overlay any session draft data on top (user edits in progress)
+    loadInfoFromSession();
+
+    // Then start watching for changes anywhere on the document
+    document.addEventListener('input', (e) => {
+        if (e.target.closest('[contenteditable="true"]')) {
+            autoSaveInfo();
+        }
+    });
 });
+
+/* ── Form Submission Helper ── */
+window.saveInfoToSession = function() {
+    const key = `syllabusFormDraft_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    const payload = JSON.parse(sessionStorage.getItem(key)) || {};
+
+    try {
+        // Helper to get text by row and item index for the grid
+        const getGridText = (rowIdx, itemIdx) => {
+            return document.querySelectorAll('.info-row')[rowIdx]
+                ?.querySelectorAll('.course-editable-text')[itemIdx]?.innerText.trim() || "";
+        };
+
+        const ayTermStr = document.getElementById('ay-term-field')?.innerText.trim() || '';
+        let termStr = '';
+        let schoolYearStr = '';
+        if (ayTermStr && ayTermStr.includes('/')) {
+            const parts = ayTermStr.split('/');
+            schoolYearStr = parts[0].trim();
+            termStr = parts[1].trim();
+        } else {
+            schoolYearStr = ayTermStr;
+        }
+
+        payload.basicInfo = {
+            courseCode: document.querySelector('.info-item.small .course-editable-text')?.innerText.trim() || '',
+            courseTitle: document.querySelector('.info-item.large .course-editable-text')?.innerText.trim() || '',
+            preRequisite: getGridText(1, 0),
+            coRequisite: getGridText(1, 1),
+            units: getGridText(1, 2),
+            classSchedule: getGridText(2, 0),
+            courseDesign: getGridText(2, 1),
+            courseDescription: document.querySelector('.multiline[data-placeholder*="course description"]')?.innerText.trim() || '',
+            textbook: document.querySelector('.multiline[data-placeholder*="textbook"]')?.innerText.trim() || '',
+            references: document.querySelector('.multiline[data-placeholder*="references"]')?.innerText.trim() || '',
+            term: termStr,
+            schoolYear: schoolYearStr
+        };
+
+        // 2. Program Educational Objectives (PEOs)
+        // (Handled by newSyllabus.js previously, preserved since we parse existing draft)
+
+        // 3. Course Outcomes (COs) Main List
+        const coRows = document.querySelectorAll('.outcomes-row');
+        payload.courseOutcomesList = Array.from(coRows).map((row, index) => {
+            const text = row.querySelector('.outcomes-statement .outcomes-editable-text')?.innerText.trim() || '';
+            const skills = row.querySelector('.outcomes-skills-side .outcomes-editable-text')?.innerText.trim() || '';
+            return {
+                coNumber: `CO${index + 1}`,
+                text,
+                skills
+            };
+        });
+
+        // 4. Course Mapping Table
+        const mappingRows = document.querySelectorAll('#mapping-body tr');
+        payload.courseMapping = Array.from(mappingRows).map(row => {
+            const tds = row.querySelectorAll('td');
+            // Course mapping layout has CO # on tds[0] and then custom dropdowns
+            const coLabel = tds[0]?.innerText.trim() || '';
+            const dropdowns = row.querySelectorAll('.custom-dropdown-trigger');
+            const alignments = Array.from(dropdowns).map(d => d.dataset.value || '');
+            return {
+                coNumber: coLabel,
+                alignments
+            };
+        });
+
+        // 5. Course Outcomes Editor Table
+        const editorRows = document.querySelectorAll('#outcomes-editor-body tr');
+        payload.courseOutcomesEditor = Array.from(editorRows)
+            .filter(r => r.style.display !== 'none') // ignore hidden rows from merged cells
+            .map(row => {
+                const cells = row.querySelectorAll('.editable-cell');
+                return {
+                    coNumber: cells[0]?.innerText.trim() || '',
+                    description: cells[1]?.innerText.trim() || '',
+                    thinkingSkills: cells[2]?.innerText.trim() || '' 
+                };
+            });
+
+        // 6. Concept Map
+        const conceptMapImg = document.getElementById('concept-map-preview');
+        if (conceptMapImg && conceptMapImg.src && conceptMapImg.src.trim() !== "" && !conceptMapImg.src.endsWith('undefined')) {
+            payload.conceptMap = conceptMapImg.src;
+        }
+
+        // Include Syllabus ID
+        console.log("Saving Syllabus ID to Session:", window.CURRENT_SYLLABUS_ID);
+        if (window.CURRENT_SYLLABUS_ID) {
+            payload.syllabusId = window.CURRENT_SYLLABUS_ID;
+        } else {
+            console.error("No CURRENT_SYLLABUS_ID found on the page!");
+            alert("Warning: Course ID is missing. The draft may not save correctly.");
+        }
+
+        // Save to session
+        const saveKey = `syllabusFormDraft_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+        sessionStorage.setItem(saveKey, JSON.stringify(payload));
+        
+        // Proceed to schedule
+        window.location.href = `/syllabus/schedule/${window.CURRENT_SYLLABUS_ID}`;
+    } catch (e) {
+        console.error("Error saving syllabus step 1 data:", e);
+        alert("There was an error saving your data. Please check the console.");
+    }
+};

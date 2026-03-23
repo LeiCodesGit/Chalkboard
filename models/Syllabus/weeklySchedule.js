@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
+import { mainDB } from "../../database/mongo-dbconnect.js";
 
 const weeklyScheduleSchema = new Schema({
   syllabusID: { type: Schema.Types.ObjectId, ref: "Syllabus", required: true },
@@ -17,5 +18,5 @@ const weeklyScheduleSchema = new Schema({
   assessmentDates: String
 });
 
-const WeeklySchedule = model("WeeklySchedule", weeklyScheduleSchema);
+const WeeklySchedule = mainDB.models.WeeklySchedule || mainDB.model("WeeklySchedule", weeklyScheduleSchema);
 export default WeeklySchedule;

@@ -1,0 +1,439 @@
+    <style>
+        /* PDF Layout & Document Styles */
+        @page {
+            size: A4;
+            margin: 15mm 15mm 25mm 15mm; /* Leave space for repeating header/footer if using Puppeteer features */
+        }
+        body {
+            font-family: 'Times New Roman', serif; /* Matching .docx feel more closely */
+            font-size: 10pt;
+            line-height: 1.3;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        .no-break {
+            page-break-inside: avoid;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Section Styling - Gray background full width */
+        h2.section-title {
+            font-size: 10pt;
+            background-color: #d9d9d9;
+            padding: 3px 5px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+            border: none;
+        }
+
+        /* Tables & Text */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+        th, td {
+            border: 1px solid #000; /* Darker borders like the docx */
+            padding: 4px 6px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        /* Vision/Mission */
+        .vm-section p {
+            margin: 4px 0;
+            text-align: justify;
+        }
+
+        /* PEO/SO Mapping split columns */
+        .mapping-header {
+            text-align: center;
+            font-weight: bold;
+        }
+        .check-col {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Course Info - Colon layout instead of table */
+        .course-info-row {
+            display: flex;
+            margin: 3px 0;
+        }
+        .info-label {
+            width: 180px;
+            text-transform: uppercase;
+        }
+        .info-colon {
+            width: 20px;
+            text-align: center;
+        }
+        .info-value {
+            font-weight: bold;
+            flex-grow: 1;
+        }
+
+        /* Mapping Table with Program Column */
+        .mapping-table th, .mapping-table td {
+            text-align: center;
+            font-size: 9pt;
+        }
+        .mapping-table .co-cell {
+            text-align: left;
+        }
+
+        /* Concept Map Image */
+        .concept-map-img {
+            max-width: 90%;
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Note: Header and Footer are handled by Puppeteer in syllabusPdfController.js -->
+
+    <!-- College Title (first page only) -->
+    <h1 style="text-align: center; font-size: 14pt; font-weight: bold; margin: 10px 0 20px 0; text-transform: uppercase;">COLLEGE OF ENGINEERING AND ARCHITECTURE</h1>
+
+    <!-- Vision & Mission -->
+    <div class="vm-section">
+        <h2 class="section-title">Vision</h2>
+        <p>Mapúa Malayan Colleges Mindanao stands among the world’s leading educational institutions.</p>
+        
+        <h2 class="section-title">Mission</h2>
+        <p>A. The institute shall provide a learning environment in order for its students to acquire the attributes that will make them globally competitive & locally in-demand.</p>
+        <p>B. The institute shall engage in cutting edge and economically viable research, development and innovation that is relevant locally and beyond.</p>
+        <p>C. The institute shall provide state-of-the-art solutions to problems of industries and communities locally and beyond.</p>
+    </div>
+
+    <!-- PEO -->
+    <h2 class="section-title">Program Educational Objectives (PEO)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">Three years after graduation, graduates of the <%= syl.discipline || 'Engineering' %> Program shall:</th>
+                <th colspan="3" class="mapping-header">MISSION</th>
+            </tr>
+            <tr>
+                <th class="check-col">A</th>
+                <th class="check-col">B</th>
+                <th class="check-col">C</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (peos && peos.description && peos.description.length > 0) { %>
+                <% peos.description.forEach((desc, idx) => { 
+                    const rating = (peos.rating[idx] || '').toUpperCase();
+                %>
+                    <tr>
+                        <td><%= (idx + 1) %>. <%= desc %></td>
+                        <td class="check-col"><%= rating.includes('A') ? '✓' : '' %></td>
+                        <td class="check-col"><%= rating.includes('B') ? '✓' : '' %></td>
+                        <td class="check-col"><%= rating.includes('C') ? '✓' : '' %></td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr><td colspan="4" style="text-align: center; font-style: italic;">No PEOs defined.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <!-- SO -->
+    <h2 class="section-title">Student Outcomes (SO)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">At the end of the program, graduates of the <%= syl.discipline || 'Engineering' %> Program are expected to:</th>
+                <th colspan="3" class="mapping-header">PEO</th>
+            </tr>
+            <tr>
+                <th class="check-col">1</th>
+                <th class="check-col">2</th>
+                <th class="check-col">3</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (sos && sos.description && sos.description.length > 0) { %>
+                <% sos.description.forEach((desc, idx) => { 
+                    const rating = sos.rating[idx] || '';
+                %>
+                    <tr>
+                        <td><%= String.fromCharCode(97 + idx) %>. <%= desc %></td>
+                        <td class="check-col"><%= rating.includes('1') ? '✓' : '' %></td>
+                        <td class="check-col"><%= rating.includes('2') ? '✓' : '' %></td>
+                        <td class="check-col"><%= rating.includes('3') ? '✓' : '' %></td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr><td colspan="4" style="text-align: center; font-style: italic;">No Student Outcomes defined.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <div style="text-align: center; font-size: 14pt; font-weight: bold; margin: 25px 0 15px;">COURSE SYLLABUS</div>
+
+    <!-- Course Information - Colon Format -->
+    <div style="margin-bottom: 20px;">
+        <div class="course-info-row">
+            <div class="info-label">COURSE CODE</div>
+            <div class="info-colon">:</div>
+            <div class="info-value"><%= courseCode %></div>
+        </div>
+        <div class="course-info-row">
+            <div class="info-label">COURSE TITLE</div>
+            <div class="info-colon">:</div>
+            <div class="info-value"><%= courseTitle %></div>
+        </div>
+        <div class="course-info-row">
+            <div class="info-label">PRE-REQUISITE</div>
+            <div class="info-colon">:</div>
+            <div class="info-value"><%= syl.preRequisite || 'None' %></div>
+        </div>
+        <div class="course-info-row">
+            <div class="info-label">CO-REQUISITE</div>
+            <div class="info-colon">:</div>
+            <div class="info-value"><%= syl.coRequisite || 'None' %></div>
+        </div>
+        <div class="course-info-row">
+            <div class="info-label">CREDIT UNIT(S)</div>
+            <div class="info-colon">:</div>
+            <div class="info-value"><%= syl.units || 'N/A' %></div>
+        </div>
+        <div class="course-info-row">
+            <div class="info-label">CLASS SCHEDULE</div>
+            <div class="info-colon">:</div>
+            <div class="info-value"><%= syl.classSchedule || 'Not set' %></div>
+        </div>
+        <div class="course-info-row">
+            <div class="info-label">COURSE DESIGN</div>
+            <div class="info-colon">:</div>
+            <div class="info-value"><%= syl.courseDesign || 'Not set' %></div>
+        </div>
+    </div>
+
+    <!-- Course Description -->
+    <h2 class="section-title">Course Description</h2>
+    <div style="text-align: justify; margin-bottom: 20px;">
+        <%= syl.courseDescription || 'No description provided.' %>
+    </div>
+
+    <!-- Course Outcomes -->
+    <h2 class="section-title">Course Outcomes</h2>
+    <table style="border: 1px solid #000;">
+        <thead>
+            <tr>
+                <th></th>
+                <th style="text-align: center;">THINKING SKILLS</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (outcomes && outcomes.length > 0) { %>
+                <% outcomes.forEach((co, idx) => { %>
+                    <tr>
+                        <td>CO<%= idx + 1 %>. <%= co.statement %></td>
+                        <td style="text-align: center; width: 120px;"><%= co.thinkingSkills %></td>
+                    </tr>
+                <% }); %>
+            <% } %>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- Course Mapping -->
+    <h2 class="section-title">Course Mapping</h2>
+    <table class="mapping-table">
+        <thead>
+            <tr>
+                <th style="text-align: center;">COURSE OUTCOMES</th>
+                <th style="text-align: center;">PROGRAM</th>
+                <th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th>g</th><th>h</th><th>i</th><th>j</th><th>k</th><th>l</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (mapping && mapping.length > 0) { %>
+                <% const programName = (syl.discipline || '').includes('Program') ? syl.discipline : (syl.discipline + ' Program'); %>
+                <% mapping.forEach((m, idx) => { %>
+                    <tr>
+                        <td>CO<%= m.coNumber || m.numberOfCO %></td>
+                        <% if (idx === 0) { %>
+                        <td rowspan="<%= mapping.length %>" style="vertical-align: middle;"><%= programName || 'Engineering Program' %></td>
+                        <% } %>
+                        <% ['a','b','c','d','e','f','g','h','i','j','k','l'].forEach(letter => { %>
+                            <td><%= (m.fromAtoL ? m.fromAtoL[letter] : m[letter]) || '' %></td>
+                        <% }); %>
+                    </tr>
+                <% }); %>
+            <% } %>
+        </tbody>
+    </table>
+    <div style="font-size: 8pt; margin-bottom: 20px;">
+        <strong>*Levels:</strong> I-introductory, E-enabling, D-demonstrative
+    </div>
+
+    <% if (syl.conceptMap) { %>
+    <h2 class="section-title">Concept Map</h2>
+    <div style="text-align: center;">
+        <img src="<%= syl.conceptMap %>" class="concept-map-img">
+    </div>
+    <% } %>
+
+    <div class="page-break"></div>
+
+    <!-- Course Schedule -->
+    <h2 class="section-title">Course Schedule</h2>
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th style="width: 30px;">Wk</th>
+                <th>Topic</th>
+                <th>TLA (Mode/Activities)</th>
+                <th>Assessment (Mode/Task)</th>
+                <th style="width: 70px;">Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (schedules && schedules.length > 0) { %>
+                <% schedules.forEach(s => { %>
+                    <tr>
+                        <td style="text-align: center;"><%= s.week %></td>
+                        <td><%= s.coverageTopic || '-' %></td>
+                        <td>
+                            <strong><%= s.tlaMode || '-' %></strong><br>
+                            <%= s.tlaActivities || '-' %>
+                        </td>
+                        <td>
+                            <strong><%= s.assessmentTaskMode || '-' %></strong><br>
+                            <%= s.assessmentTaskTask || '-' %>
+                        </td>
+                        <td style="text-align: center;"><%= s.dateCovered || '-' %></td>
+                    </tr>
+                <% }); %>
+            <% } %>
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- Course Evaluation -->
+    <h2 class="section-title">Course Evaluation</h2>
+    <p style="font-size: 8pt; margin-bottom: 5px;">The final grade of the student is based on the following components:</p>
+    <table class="evaluation-table">
+        <thead>
+            <tr>
+                <th>Module</th>
+                <th>CO</th>
+                <th>Mediating Outcomes / Tasks</th>
+                <th>LT%</th>
+                <th>PE%</th>
+                <th>Mod%</th>
+                <th>Final%</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (evaluation && evaluation.length > 0) { %>
+                <% evaluation.forEach(e => { %>
+                    <tr>
+                        <td style="text-align: center;"><%= e.moduleCode %></td>
+                        <td style="text-align: center;"><%= e.coNumber %></td>
+                        <td><%= e.mediatingOutcomes || e.mediatingOutcome || '' %></td>
+                        <td style="text-align: center;"><%= e.onlineTaskWeight %></td>
+                        <td style="text-align: center;"><%= e.longExaminationWeight %></td>
+                        <td style="text-align: center;"><%= e.moduleWeight %></td>
+                        <td style="text-align: center;"><%= e.finalWeight %></td>
+                    </tr>
+                <% }); %>
+            <% } %>
+        </tbody>
+    </table>
+    <p style="font-size: 7pt; font-style: italic; margin-top: -10px;">*OT – Online Tasks/Quiz/Lab; LE – Long Examination; FP – Final Project</p>
+
+    <!-- Grading System -->
+    <h2 class="section-title">Grading System</h2>
+    <div style="display: flex; gap: 20px;">
+        <table style="flex: 1;">
+            <thead>
+                <tr>
+                    <th style="font-size: 8pt;">AVERAGE (%)</th>
+                    <th style="font-size: 8pt;">GRADE</th>
+                </tr>
+            </thead>
+            <tbody style="font-size: 8pt;">
+                <tr><td>100 - 92.75</td><td style="text-align: center;">1.00 - 1.25</td></tr>
+                <tr><td>92.74 - 86.25</td><td style="text-align: center;">1.50 - 1.75</td></tr>
+                <tr><td>86.24 - 79.75</td><td style="text-align: center;">2.00 - 2.25</td></tr>
+                <tr><td>79.74 - 73.25</td><td style="text-align: center;">2.50 - 2.75</td></tr>
+                <tr><td>73.24 - 70.00</td><td style="text-align: center;">3.00</td></tr>
+                <tr><td>Below 70</td><td style="text-align: center;">IP</td></tr>
+            </tbody>
+        </table>
+        <div style="flex: 1; font-size: 8pt;">
+            <p><strong>Passing Grade:</strong> 1.0 to 3.0 (Obtained above 70%)</p>
+            <p><strong>In-Progress (IP):</strong> Obtained below 70%</p>
+            <p><strong>Failing Grade (5.0):</strong> Violation of Academic Integrity</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- Signatures -->
+    <h2 class="section-title">Approvals</h2>
+    <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 8pt;">
+        <div style="width: 23%;">
+            <p style="margin-bottom: 25px;"><strong>PREPARED BY:</strong></p>
+            <div style="border-bottom: 1px solid #000; text-align: center; min-height: 40px;">
+                <% if (approval && approval.Faculty_Signature) { %>
+                    <img src="<%= approval.Faculty_Signature %>" style="max-height: 40px;">
+                <% } else if (syl.assignedInstructor && syl.assignedInstructor.signatureImage) { %>
+                    <img src="<%= syl.assignedInstructor.signatureImage %>" style="max-height: 40px;">
+                <% } %>
+            </div>
+            <p style="font-size: 9pt; font-weight: bold; text-align: center; margin: 3px 0;"><%= (approval && approval.Faculty_SignatoryName) ? approval.Faculty_SignatoryName.toUpperCase() : (syl.assignedInstructor ? (syl.assignedInstructor.firstName + ' ' + syl.assignedInstructor.lastName).toUpperCase() : 'FACULTY') %></p>
+            <p style="text-align: center; color: #666;">Course Coordinator</p>
+        </div>
+        <div style="width: 23%;">
+            <p style="margin-bottom: 25px;"><strong>ENDORSED BY:</strong></p>
+            <div style="border-bottom: 1px solid #000; text-align: center; min-height: 40px;">
+                <% if (approval && approval.PC_Signature) { %>
+                    <img src="<%= approval.PC_Signature %>" style="max-height: 40px;">
+                <% } %>
+            </div>
+            <p style="font-size: 9pt; font-weight: bold; text-align: center; margin: 3px 0;"><%= (approval && approval.PC_SignatoryName) ? approval.PC_SignatoryName.toUpperCase() : 'PROGRAM CHAIR' %></p>
+            <p style="text-align: center; color: #666;">Program Chair</p>
+        </div>
+        <div style="width: 23%;">
+            <p style="margin-bottom: 25px;"><strong>APPROVED BY:</strong></p>
+            <div style="border-bottom: 1px solid #000; text-align: center; min-height: 40px;">
+                <% if (approval && approval.Dean_Signature) { %>
+                    <img src="<%= approval.Dean_Signature %>" style="max-height: 40px;">
+                <% } %>
+            </div>
+            <p style="font-size: 9pt; font-weight: bold; text-align: center; margin: 3px 0;"><%= (approval && approval.Dean_SignatoryName) ? approval.Dean_SignatoryName.toUpperCase() : 'DEAN' %></p>
+            <p style="text-align: center; color: #666;">Dean</p>
+        </div>
+        <div style="width: 23%;">
+            <p style="margin-bottom: 25px;"><strong>VERIFIED BY:</strong></p>
+            <div style="border-bottom: 1px solid #000; text-align: center; min-height: 40px;">
+                <% if (approval && approval.HR_Signature) { %>
+                    <img src="<%= approval.HR_Signature %>" style="max-height: 40px;">
+                <% } %>
+            </div>
+            <p style="font-size: 9pt; font-weight: bold; text-align: center; margin: 3px 0;"><%= (approval && approval.HR_SignatoryName) ? approval.HR_SignatoryName.toUpperCase() : 'HR ADMINISTRATOR' %></p>
+            <p style="text-align: center; color: #666;">HR Administrator</p>
+        </div>
+    </div>
+
+</body>
+</html>

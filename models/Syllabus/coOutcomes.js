@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
+import { mainDB } from "../../database/mongo-dbconnect.js";
 
 const coOutcomesSchema = new Schema({
   syllabusID: { type: Schema.Types.ObjectId, ref: "Syllabus", required: true },
@@ -8,5 +9,5 @@ const coOutcomesSchema = new Schema({
   intendedLearningOutcomes: [String]
 });
 
-const COOutcomes = model("COOutcomes", coOutcomesSchema);
+const COOutcomes = mainDB.models.COOutcomes || mainDB.model("COOutcomes", coOutcomesSchema);
 export default COOutcomes;

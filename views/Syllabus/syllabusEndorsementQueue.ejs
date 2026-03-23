@@ -26,9 +26,8 @@
                                     <i class="fas fa-arrow-left"></i>
                                 </button>
                                 <div>
-                                    <h1>Syllabus Endorsement Queue</h1>
-                                    <p class="approval-subtitle">Review and endorse submitted syllabus drafts to the
-                                        Dean</p>
+                                    <h1><%= locals.queueTitle || 'Syllabus Queue' %></h1>
+                                    <p class="approval-subtitle"><%= locals.queueSubtitle || 'Review and take action on syllabus drafts.' %></p>
                                 </div>
                             </div>
                             <div class="approval-header-right">
@@ -42,21 +41,26 @@
                                     <div class="stat-pill approved">
                                         <i class="fas fa-stamp"></i>
                                         <span>
-                                            <%= endorsedCount %> Endorsed
+                                            <%= endorsedCount %> <%= locals.approvedLabel || 'Endorsed' %>
+                                        </span>
+                                    </div>
+                                    <div class="stat-pill returned" style="background: rgba(217, 48, 37, 0.1); color: #d93025;">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span>
+                                            <%= locals.rejectedCount || 0 %> Rejected
                                         </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Filter Tabs -->
                         <div class="filter-tabs">
                             <button class="tab-btn active" data-filter="all">All Drafts</button>
                             <button class="tab-btn" data-filter="Pending">Pending</button>
-                            <button class="tab-btn" data-filter="Endorsed">Endorsed</button>
+                            <button class="tab-btn" data-filter="<%= locals.approvedFilter || 'Endorsed' %>"><%= locals.approvedLabel || 'Endorsed' %></button>
+                            <button class="tab-btn" data-filter="Rejected">Rejected</button>
                         </div>
 
-                        <!-- Search Bar -->
                         <div class="approval-search-bar">
                             <i class="fas fa-search"></i>
                             <input type="text" id="endorseSearch" placeholder="Search by course title or code...">
@@ -75,7 +79,7 @@
 
                                     <% for (var i=0; i < drafts.length; i++) { %>
                                         <% var d=drafts[i]; %>
-                                            <% if (d.status==='Pending' || d.status==='Endorsed' ) { %>
+                                            <% if (d.status==='Pending' || d.status==='Endorsed' || d.status==='PC_Approved' || d.status==='Rejected') { %>
                                                 <div class="draft-row" data-status="<%= d.status %>"
                                                     data-title="<%= (d.courseTitle || '').toLowerCase() %>"
                                                     data-code="<%= (d.courseCode || '').toLowerCase() %>">
@@ -98,7 +102,7 @@
                                                             <span><i class="fas fa-calendar-alt"></i> Submitted: <%=
                                                                     d.submittedDate %></span>
                                                             <% if (d.endorsedDate) { %>
-                                                                <span><i class="fas fa-stamp"></i> Endorsed: <%=
+                                                                <span><i class="fas fa-stamp"></i> <%= d.statusDateLabel || locals.approvedLabel || 'Endorsed' %>: <%=
                                                                         d.endorsedDate %></span>
                                                                 <% } %>
                                                                     <% if (d.endorsedBy) { %>
@@ -115,20 +119,30 @@
                                                     </div>
 
                                                     <div class="draft-actions">
-                                                        <% if (d.status==='Endorsed' ) { %>
+                                                        <% if (d.status === 'Endorsed' || d.status === 'Approved' || d.status === 'PC_Approved') { %>
                                                             <span class="status-badge status-approved">
-                                                                <i class="fas fa-stamp"></i> Endorsed
+                                                                <i class="fas fa-stamp"></i> <%= locals.approvedLabel || d.status %>
                                                             </span>
-                                                            <% } else if (d.status==='Pending' ) { %>
-                                                                <span class="status-badge status-pending">
-                                                                    <i class="fas fa-hourglass-half"></i> Pending
-                                                                </span>
-                                                                <% } %>
-                                                                    <button class="review-btn"
-                                                                        data-href="/syllabus/prog-chair/endorse/<%= d.syllabusId %>"
-                                                                        onclick="window.location.href=this.dataset.href">
-                                                                        <i class="fas fa-stamp"></i> Endorse
-                                                                    </button>
+                                                        <% } else if (d.status === 'Pending') { %>
+                                                            <span class="status-badge status-pending">
+                                                                <i class="fas fa-hourglass-half"></i> Pending
+                                                            </span>
+                                                            <button class="review-btn"
+                                                                data-href="<%= locals.actionUrlPrefix %>/<%= d.syllabusId %>"
+                                                                onclick="window.location.href=this.dataset.href">
+                                                                <i class="fas fa-file-signature"></i> <%= locals.actionLabel %>
+                                                            </button>
+                                                        <% } else if (d.status === 'Rejected') { %>
+                                                            <span class="status-badge" style="background: rgba(217, 48, 37, 0.1); color: #d93025; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                                                <i class="fas fa-times-circle"></i> <%= locals.rejectedLabel || 'Rejected' %>
+                                                            </span>
+                                                        <% } %>
+
+                                                        <% if (d.remarks) { %>
+                                                            <div class="draft-remarks-mini" style="margin-top: 8px; font-size: 0.72rem; color: #666; font-style: italic; max-width: 155px; text-align: center; line-height: 1.2;">
+                                                                <i class="fas fa-comment-alt" style="opacity: 0.7;"></i> <%= d.remarks %>
+                                                            </div>
+                                                        <% } %>
                                                     </div>
                                                 </div>
                                                 <% } %>
@@ -156,10 +170,11 @@
         searchInput.addEventListener('input', filterRows);
 
         function filterRows() {
-            var activeFilter = document.querySelector('.tab-btn.active').dataset.filter;
+            var activeFilter = (document.querySelector('.tab-btn.active').dataset.filter || 'all').trim();
             var query = searchInput.value.trim().toLowerCase();
             rows.forEach(function (row) {
-                var statusMatch = (activeFilter === 'all') || (row.dataset.status === activeFilter);
+                var rowStatus = (row.dataset.status || '').trim();
+                var statusMatch = (activeFilter === 'all') || (rowStatus === activeFilter);
                 var searchMatch = !query || row.dataset.title.includes(query) || row.dataset.code.includes(query);
                 row.style.display = (statusMatch && searchMatch) ? '' : 'none';
             });

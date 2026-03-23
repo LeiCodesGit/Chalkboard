@@ -9,7 +9,7 @@ function addScheduleRow() {
 
 function addEvaluationRow() {
     const tbody = document.getElementById('evaluation-editor-body');
-    addRow(tbody, 6);
+    addRow(tbody, 7);
 }
 
 function addAssessmentRow() {
@@ -30,6 +30,51 @@ function addRow(tbody, colCount) {
         const div = document.createElement('div');
         div.className = 'editable-cell';
         div.contentEditable = 'true';
+
+        // Input Restrictions [cite: 173]
+        div.addEventListener('keydown', (e) => {
+            const tbodyId = tbody.id;
+            const colIndex = parseInt(td.dataset.colIndex);
+
+            // Allowed control keys for all restricted cells
+            const controlKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Home', 'End'];
+            if (controlKeys.includes(e.key) || (e.ctrlKey || e.metaKey)) return;
+
+            // Evaluation Table: Weights (LT, PE, Modular, Final) should only be numbers
+            if (tbodyId === 'evaluation-editor-body' && [3, 4, 5, 6].includes(colIndex)) {
+                if (!/^[0-9.]$/.test(e.key)) {
+                    e.preventDefault();
+                } else if (e.key === '.' && div.innerText.includes('.')) {
+                    e.preventDefault(); // Prevent double decimals
+                }
+            }
+
+            // Assessment Table: MSP column should allow numbers, dots, and %
+            if (tbodyId === 'assessment-editor-body' && colIndex === 2) {
+                if (!/^[0-9.%]$/.test(e.key)) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Prevention for Pasting
+        div.addEventListener('paste', (e) => {
+            const tbodyId = tbody.id;
+            const colIndex = parseInt(td.dataset.colIndex);
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+
+            if (tbodyId === 'evaluation-editor-body' && [3, 4, 5, 6].includes(colIndex)) {
+                if (!/^[0-9.]*$/.test(text) || (text.includes('.') && div.innerText.includes('.'))) {
+                    e.preventDefault();
+                }
+            }
+            if (tbodyId === 'assessment-editor-body' && colIndex === 2) {
+                if (!/^[0-9.%]*$/.test(text)) {
+                    e.preventDefault();
+                }
+            }
+        });
+
         td.appendChild(div);
         tr.appendChild(td);
 
@@ -444,19 +489,303 @@ function applyActiveColor() {
     renderSelection();
 }
 
-// Initial rows
+function autoSaveSchedule() {
+    const data = {
+        schedule: Array.from(document.querySelectorAll('#schedule-editor-body tr')).map(row => 
+            Array.from(row.querySelectorAll('.editable-cell')).map(cell => cell.innerHTML)),
+        evaluation: Array.from(document.querySelectorAll('#evaluation-editor-body tr')).map(row => 
+            Array.from(row.querySelectorAll('.editable-cell')).map(cell => cell.innerHTML)),
+        assessment: Array.from(document.querySelectorAll('#assessment-editor-body tr')).map(row => 
+            Array.from(row.querySelectorAll('.editable-cell')).map(cell => cell.innerHTML))
+    };
+    const key = `syllabus_draft_schedule_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    sessionStorage.setItem(key, JSON.stringify(data));
+}
+
+function loadSchedule() {
+    const key = `syllabus_draft_schedule_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    const saved = sessionStorage.getItem(key);
+    if (!saved) return;
+    const data = JSON.parse(saved);
+
+    const tables = [
+        { id: 'schedule-editor-body', rows: data.schedule, func: addScheduleRow },
+        { id: 'evaluation-editor-body', rows: data.evaluation, func: addEvaluationRow },
+        { id: 'assessment-editor-body', rows: data.assessment, func: addAssessmentRow }
+    ];
+
+    tables.forEach(t => {
+        const body = document.getElementById(t.id);
+        if (body && t.rows) {
+            body.innerHTML = ''; // Wipe defaults
+            t.rows.forEach(rowContent => {
+                t.func();
+                const lastRow = body.lastElementChild;
+                const cells = lastRow.querySelectorAll('.editable-cell');
+                rowContent.forEach((html, i) => { if(cells[i]) cells[i].innerHTML = html; });
+            });
+        }
+    });
+}
+
+// Wire it up
 window.addEventListener('load', () => {
     initColorPalette();
-    const scheduleBody = document.getElementById('schedule-editor-body');
-    if (scheduleBody) {
-        for (let i = 0; i < 5; i++) addScheduleRow();
+    
+    const key = `syllabus_draft_schedule_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    const savedSessionData = sessionStorage.getItem(key);
+    const hasServerData = window.SERVER_SYLLABUS_DATA && 
+                          ( (window.SERVER_SYLLABUS_DATA.schedules && window.SERVER_SYLLABUS_DATA.schedules.length > 0) || 
+                            (window.SERVER_SYLLABUS_DATA.evaluation && window.SERVER_SYLLABUS_DATA.evaluation.length > 0) );
+
+    if (hasServerData && !savedSessionData) {
+        loadFromServer();
+    } else if (savedSessionData) {
+        loadFromSession();
+    } else {
+        // Initial defaults if nothing found
+        const scheduleBody = document.getElementById('schedule-editor-body');
+        if (scheduleBody) for (let i = 0; i < 5; i++) addScheduleRow();
+        const evalBody = document.getElementById('evaluation-editor-body');
+        if (evalBody) for (let i = 0; i < 3; i++) addEvaluationRow();
+        const assessmentBody = document.getElementById('assessment-editor-body');
+        if (assessmentBody) for (let i = 0; i < 3; i++) addAssessmentRow();
     }
-    const evalBody = document.getElementById('evaluation-editor-body');
-    if (evalBody) {
-        for (let i = 0; i < 3; i++) addEvaluationRow();
-    }
-    const assessmentBody = document.getElementById('assessment-editor-body');
-    if (assessmentBody) {
-        for (let i = 0; i < 3; i++) addAssessmentRow();
-    }
+
+    document.addEventListener('input', (e) => {
+        if (e.target.closest('[contenteditable="true"]')) autoSaveSchedule();
+    });
 });
+
+/* ── Final Submission Integration ── */
+window.submitSyllabus = async function() {
+    try {
+        // 1. Get step 1 data
+        const key = `syllabusFormDraft_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+        const draftStr = sessionStorage.getItem(key);
+        if (!draftStr) {
+            alert('Missing data from Step 1. Please go back and fill out the previous form.');
+            return;
+        }
+        const payload = JSON.parse(draftStr);
+
+        if (!payload.syllabusId) {
+            alert('CRITICAL ERROR: The Syllabus ID is missing from your session data. Please return to the Courses Dashboard and start again.');
+            return;
+        }
+
+        // 2. Course Schedule Table Validation
+        const scheduleRows = document.querySelectorAll('#schedule-editor-body tr');
+        if (scheduleRows.length === 0) {
+            alert("All fields are required.");
+            return;
+        }
+        
+        let scheduleFilled = false;
+        payload.weeklySchedule = Array.from(scheduleRows)
+            .filter(r => r.style.display !== 'none') // skip hidden merged cells
+            .map(row => {
+                const cells = row.querySelectorAll('.editable-cell');
+                const rowData = {
+                    week: cells[0]?.innerText.trim() || '',
+                    coNumber: cells[1]?.innerText.trim() || '',
+                    moNumber: cells[2]?.innerText.trim() || '',
+                    iloNumber: cells[3]?.innerText.trim() || '',
+                    coverageDay: cells[4]?.innerText.trim() || '',
+                    coverageTopic: cells[5]?.innerText.trim() || '',
+                    tlaMode: cells[6]?.innerText.trim() || '',
+                    tlaActivities: cells[7]?.innerText.trim() || '',
+                    assessmentTaskMode: cells[8]?.innerText.trim() || '',
+                    assessmentTaskTask: cells[9]?.innerText.trim() || '',
+                    referenceNum: cells[10]?.innerText.trim() || '',
+                    dateCovered: cells[11]?.innerText.trim() || ''
+                };
+                if (rowData.week || rowData.coverageTopic) scheduleFilled = true;
+                return rowData;
+            });
+            
+        if (!scheduleFilled) {
+            alert("All fields are required.");
+            return;
+        }
+
+        // 3. Course Evaluation Table Validation
+        const evalRows = document.querySelectorAll('#evaluation-editor-body tr');
+        if (evalRows.length === 0) {
+            alert("All fields are required.");
+            return;
+        }
+        
+        let evalFilled = false;
+        payload.courseEvaluation = Array.from(evalRows)
+            .filter(r => r.style.display !== 'none')
+            .map(row => {
+                const cells = row.querySelectorAll('.editable-cell');
+                const rowData = {
+                    moduleCode: cells[0]?.innerText.trim() || '',
+                    coNumber: cells[1]?.innerText.trim() || '',
+                    mediatingOutcome: cells[2]?.innerText.trim() || '',
+                    assessmentWeightLT: cells[3]?.innerText.trim() || '',
+                    assessmentWeightPE: cells[4]?.innerText.trim() || '',
+                    modularWeight: cells[5]?.innerText.trim() || '',
+                    finalWeight: cells[6]?.innerText.trim() || ''
+                };
+                if (rowData.moduleCode || rowData.coNumber) evalFilled = true;
+                return rowData;
+            });
+
+        if (!evalFilled) {
+            alert("All fields are required.");
+            return;
+        }
+
+        // 4. Assessment Tasks (CO Assessment) Table Validation
+        const assessRows = document.querySelectorAll('#assessment-editor-body tr');
+        if (assessRows.length === 0) {
+            alert("All fields are required.");
+            return;
+        }
+        
+        let assessFilled = false;
+        payload.courseOutcomesAssessment = Array.from(assessRows)
+            .filter(r => r.style.display !== 'none')
+            .map(row => {
+                const cells = row.querySelectorAll('.editable-cell');
+                const rowData = {
+                    coNumber: cells[0]?.innerText.trim() || '',
+                    assessmentTasks: cells[1]?.innerText.trim() || '',
+                    minSatisfactoryPerf: cells[2]?.innerText.trim() || ''
+                };
+                if (rowData.coNumber || rowData.assessmentTasks) assessFilled = true;
+                return rowData;
+            });
+
+        if (!assessFilled) {
+            alert("All fields are required.");
+            return;
+        }
+            
+        // POST to backend
+        const fetchResponse = await fetch('/syllabus/schedule/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await fetchResponse.json();
+        
+        if (result.success) {
+            const key = `syllabusFormDraft_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+            sessionStorage.removeItem(key);
+            alert('Syllabus successfully compiled and submitted for review!');
+            
+            // Role-based redirection
+            const role = (window.USER_ROLE || '').toLowerCase();
+            if (role === 'dean') {
+                window.location.href = `/syllabus/${window.USER_ID}`;
+            } else if (role === 'professor' || role === 'faculty') {
+                window.location.href = '/faculty';
+            } else if (role === 'program-chair' || role === 'program chair') {
+                window.location.href = '/syllabus/prog-chair';
+            } else {
+                window.location.href = '/syllabus';
+            }
+        } else {
+            alert('Error saving syllabus: ' + (result.error || 'Unknown error'));
+        }
+        
+    } catch (error) {
+        console.error("Submission failed:", error);
+        alert("An error occurred during submission. Check console for details.");
+    }
+};
+
+function loadFromServer() {
+    if (!window.SERVER_SYLLABUS_DATA) return;
+    const { schedules, evaluation } = window.SERVER_SYLLABUS_DATA;
+
+    // Restore Weekly Schedule
+    const scheduleBody = document.getElementById('schedule-editor-body');
+    if (scheduleBody && schedules && schedules.length > 0) {
+        scheduleBody.innerHTML = '';
+        schedules.forEach(item => {
+            addScheduleRow();
+            const lastRow = scheduleBody.lastElementChild;
+            const cells = lastRow.querySelectorAll('.editable-cell');
+            if (cells.length >= 12) {
+                cells[0].innerText = item.week || "";
+                cells[1].innerText = item.outcomeCo || "";
+                cells[2].innerText = item.outcomeMo || "";
+                cells[3].innerText = item.outcomeIlo || "";
+                cells[4].innerText = item.coverageDay || "";
+                cells[5].innerText = item.coverageTopic || "";
+                cells[6].innerText = item.tlaMode || "";
+                cells[7].innerText = item.tlaActivities || "";
+                cells[8].innerText = item.assessmentTaskMode || "";
+                cells[9].innerText = item.assessmentTaskTask || "";
+                cells[10].innerText = item.referenceNum || "";
+                cells[11].innerText = item.dateCovered || "";
+            }
+        });
+    }
+
+    // Restore Course Evaluation
+    const evalBody = document.getElementById('evaluation-editor-body');
+    if (evalBody && evaluation && evaluation.length > 0) {
+        evalBody.innerHTML = '';
+        evaluation.forEach(item => {
+            addEvaluationRow();
+            const lastRow = evalBody.lastElementChild;
+            const cells = lastRow.querySelectorAll('.editable-cell');
+            if (cells.length >= 7) {
+                cells[0].innerText = item.moduleCode || "";
+                cells[1].innerText = item.coNumber || "";
+                cells[2].innerText = item.mediatingOutcome || "";
+                cells[3].innerText = item.onlineTaskWeight || "0";
+                cells[4].innerText = item.longExaminationWeight || "0";
+                cells[5].innerText = item.moduleWeight || "0";
+                cells[6].innerText = item.finalWeight || "0";
+            }
+        });
+    }
+}
+
+function loadFromSession() {
+    const key = `syllabus_draft_schedule_${window.CURRENT_SYLLABUS_ID || 'default'}`;
+    const savedData = sessionStorage.getItem(key);
+    if (!savedData) return;
+    const data = JSON.parse(savedData);
+
+    const scheduleBody = document.getElementById('schedule-editor-body');
+    if (scheduleBody && data.schedule) {
+        scheduleBody.innerHTML = '';
+        data.schedule.forEach(rowCells => {
+            addScheduleRow();
+            const lastRow = scheduleBody.lastElementChild;
+            const targetCells = lastRow.querySelectorAll('.editable-cell');
+            rowCells.forEach((html, i) => { if (targetCells[i]) targetCells[i].innerHTML = html; });
+        });
+    }
+
+    const evalBody = document.getElementById('evaluation-editor-body');
+    if (evalBody && data.evaluation) {
+        evalBody.innerHTML = '';
+        data.evaluation.forEach(rowCells => {
+            addEvaluationRow();
+            const lastRow = evalBody.lastElementChild;
+            const targetCells = lastRow.querySelectorAll('.editable-cell');
+            rowCells.forEach((html, i) => { if (targetCells[i]) targetCells[i].innerHTML = html; });
+        });
+    }
+
+    const assessmentBody = document.getElementById('assessment-editor-body');
+    if (assessmentBody && data.assessment) {
+        assessmentBody.innerHTML = '';
+        data.assessment.forEach(rowCells => {
+            addAssessmentRow();
+            const lastRow = assessmentBody.lastElementChild;
+            const targetCells = lastRow.querySelectorAll('.editable-cell');
+            rowCells.forEach((html, i) => { if (targetCells[i]) targetCells[i].innerHTML = html; });
+        });
+    }
+}

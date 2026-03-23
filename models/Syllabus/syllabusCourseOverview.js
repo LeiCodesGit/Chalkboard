@@ -24,6 +24,10 @@ const syllabusSchema = new Schema({
   courseImage: {
     type: String,
     default: null 
+  },
+  conceptMap: {
+    type: String,
+    default: null
   }
 }, { timestamps: true });
 

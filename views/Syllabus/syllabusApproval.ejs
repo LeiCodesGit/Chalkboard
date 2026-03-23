@@ -13,7 +13,11 @@
 
 <body>
     <div class="dashboard">
-        <%- include('../partials/sideMenuBar') %>
+        <% if (locals.user && (user.role === 'Dean' || user.role === 'dean')) { %>
+            <%- include('../MainPages/dean/partials/deanMenuBar') %>
+        <% } else { %>
+            <%- include('../partials/sideMenuBar') %>
+        <% } %>
 
             <main class="main-content" style="background:#f7f8fa !important;">
                 <section class="content-panel">
@@ -22,7 +26,7 @@
                         <!-- Header -->
                         <div class="approval-header">
                             <div class="approval-header-left">
-                                <button class="back-btn" data-href="<%= returnUrl %>"
+                                <button class="back-btn" data-href="<%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? '/dean/institution' : '/syllabus' %>"
                                     onclick="window.location.href=this.dataset.href">
                                     <i class="fas fa-arrow-left"></i>
                                 </button>
@@ -36,13 +40,13 @@
                                     <div class="stat-pill pending">
                                         <i class="fas fa-clock"></i>
                                         <span>
-                                            <%= pendingCount %> Pending
+                                            <%= pendingCount %> <%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Endorsed' : 'Pending' %>
                                         </span>
                                     </div>
                                     <div class="stat-pill approved">
                                         <i class="fas fa-check-circle"></i>
                                         <span>
-                                            <%= approvedCount %> Approved
+                                            <%= approvedCount %> <%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Final Approved' : 'Approved' %>
                                         </span>
                                     </div>
                                 </div>
@@ -52,8 +56,8 @@
                         <!-- Filter Tabs -->
                         <div class="filter-tabs">
                             <button class="tab-btn active" data-filter="all">All Drafts</button>
-                            <button class="tab-btn" data-filter="Pending">Pending</button>
-                            <button class="tab-btn" data-filter="Approved">Approved</button>
+                            <button class="tab-btn" data-filter="<%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Endorsed' : 'Pending' %>"><%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Endorsed' : 'Pending' %></button>
+                            <button class="tab-btn" data-filter="Approved"><%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Final Approved' : 'Approved' %></button>
                             <button class="tab-btn" data-filter="Not Submitted">Not Submitted</button>
                         </div>
 
@@ -117,8 +121,12 @@
                                                 <div class="draft-actions">
                                                     <% if (d.status==='Approved' ) { %>
                                                         <span class="status-badge status-approved">
-                                                            <i class="fas fa-check-circle"></i> Approved
+                                                            <i class="fas fa-check-circle"></i> <%= (locals.user && (user.role === 'Dean' || user.role === 'dean') && d.approvedBy === 'Dean') ? 'Final Approved' : 'Approved' %>
                                                         </span>
+                                                        <% } else if (d.status==='Endorsed' ) { %>
+                                                            <span class="status-badge status-pending" style="background: #e1f5fe; color: #0288d1;">
+                                                                <i class="fas fa-file-signature"></i> Endorsed
+                                                            </span>
                                                         <% } else if (d.status==='Pending' ) { %>
                                                             <span class="status-badge status-pending">
                                                                 <i class="fas fa-hourglass-half"></i> Pending
@@ -128,11 +136,13 @@
                                                                     <i class="fas fa-minus-circle"></i> Not Submitted
                                                                 </span>
                                                                 <% } %>
+                                                                <% if (d.status !== 'Approved') { %>
                                                                     <button class="review-btn"
                                                                         data-href="/syllabus/dean/approve/<%= d.syllabusId %>"
                                                                         onclick="window.location.href=this.dataset.href">
                                                                         <i class="fas fa-gavel"></i> Approve
                                                                     </button>
+                                                                <% } %>
                                                 </div>
                                             </div>
                                             <% } %>

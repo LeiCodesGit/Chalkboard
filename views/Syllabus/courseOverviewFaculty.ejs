@@ -47,7 +47,7 @@
 
                             <div class="header-right">
                                 <div class="control-group items-per-page"><label>Items per Page</label><select>
-                                        <option>25</option>
+                                        <option><%= typeof courses !== 'undefined' ? courses.length : 0 %></option>
                                     </select></div>
                             </div>
                         </div>
@@ -62,21 +62,65 @@
                             <% if (typeof courses !=='undefined' && courses.length> 0) { %>
                                 <% courses.forEach(course=> { %>
                                     <div class="course-card" data-id="<%= course.id %>"
-                                        data-hasdraft="<%= course.hasDraft %>">
+                                        data-hasdraft="<%= course.hasDraft %>"
+                                        data-status="<%= course.status || 'No Syllabus Draft' %>"
+                                        data-title="<%= course.title %>"
+                                        data-pcremarks="<%= course.pcRemarks || '' %>"
+                                        data-deanremarks="<%= course.deanRemarks || '' %>"
+                                        data-hrremarks="<%= course.hrRemarks || '' %>">
                                         <div class="card-image">
                                             <img src="<%= course.img || 'https://picsum.photos/400/200?random=' + course.id %>"
                                                 alt="Course Image">
                                         </div>
                                         <div class="card-content">
-                                            <span class="course-code">
-                                                <%= course.code %>
-                                            </span>
-                                            <h3 class="course-title">
-                                                <%= course.title %>
-                                            </h3>
-                                            <p class="course-status">
-                                                <%= course.status || 'No Syllabus Draft' %>
-                                            </p>
+                                            <span class="course-code"><%= course.code %></span>
+                                            <h3 class="course-title"><%= course.title %></h3>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                                <%
+                                                    var rawStatus = course.status || 'No Syllabus Draft';
+                                                    var statusClass = 'status-no-draft';
+                                                    var statusLabel = rawStatus;
+                                                    if (rawStatus === 'Pending') { statusClass = 'status-pending'; statusLabel = 'Pending'; }
+                                                    else if (rawStatus === 'Endorsed') { statusClass = 'status-endorsed'; statusLabel = 'Endorsed'; }
+                                                    else if (rawStatus === 'Approved') { statusClass = 'status-approved'; statusLabel = 'Approved by Dean'; }
+                                                    else if (rawStatus === 'Archived') { statusClass = 'status-archived'; statusLabel = 'Verified by HR'; }
+                                                    else if (rawStatus === 'Rejected' || rawStatus === 'Returned') { statusClass = 'status-rejected'; statusLabel = rawStatus; }
+                                                    else if (rawStatus === 'Returned to PC') { statusClass = 'status-returned'; statusLabel = 'Returned to PC'; }
+                                                %>
+                                                <p class="course-status <%= statusClass %>">
+                                                    <%= statusLabel %>
+                                                </p>
+                                            </div>
+                                            <% 
+                                                const isEndorsedOrHigher = ['Endorsed', 'Approved', 'Archived', 'Rejected'].includes(rawStatus);
+                                                const isApprovedOrHigher = ['Approved', 'Archived', 'Returned to PC', 'Returned to Dean'].includes(rawStatus);
+                                                const isArchived = rawStatus === 'Archived';
+                                            %>
+                                            <% if (isEndorsedOrHigher || isApprovedOrHigher || isArchived) { %>
+                                            <div style="margin-top: 6px; font-size: 11px; color: #555; border-top: 1px dashed #e0e0e0; padding-top: 6px;">
+                                                <% if (isEndorsedOrHigher) { %>
+                                                    <div style="margin-bottom: 3px;">
+                                                        <i class="fas fa-comment-dots" style="color: #1565c0; margin-right: 3px;"></i>
+                                                        <strong style="color: #1565c0;">Endorsed:</strong>
+                                                        <span style="font-style: italic;"><%= course.pcRemarks || 'No comments.' %></span>
+                                                    </div>
+                                                <% } %>
+                                                <% if (isApprovedOrHigher) { %>
+                                                    <div style="margin-bottom: 3px;">
+                                                        <i class="fas fa-comment-dots" style="color: #2e7d32; margin-right: 3px;"></i>
+                                                        <strong style="color: #2e7d32;">Approved:</strong>
+                                                        <span style="font-style: italic;"><%= course.deanRemarks || 'No comments.' %></span>
+                                                    </div>
+                                                <% } %>
+                                                <% if (isArchived) { %>
+                                                    <div style="margin-bottom: 3px;">
+                                                        <i class="fas fa-comment-dots" style="color: #6a1b9a; margin-right: 3px;"></i>
+                                                        <strong style="color: #6a1b9a;">Verified:</strong>
+                                                        <span style="font-style: italic;"><%= course.hrRemarks || 'No comments.' %></span>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                            <% } %>
                                         </div>
                                         <div class="card-footer">
                                             <span class="instructor">
@@ -101,7 +145,7 @@
             <div class="modal-header" style="justify-content: space-between;">
                 <div class="modal-title-group">
                     <div class="modal-icon"><i class="fas fa-file-alt"></i></div>
-                    <h2>Syllabus Draft</h2>
+                    <h2 id="draftModalTitle">Syllabus Draft</h2>
                 </div>
                 <span class="close-modal" onclick="closeDraftModal()">&times;</span>
             </div>
@@ -110,14 +154,92 @@
                 <p id="draftMessage" style="font-size: 16px; font-weight: 600; color: #444; margin: 0;"></p>
             </div>
 
-            <div class="modal-actions" style="justify-content: center;">
+            <div class="modal-actions" style="justify-content: center; flex-direction: column; gap: 8px;">
                 <button id="draftActionBtn" class="submit-btn" style="width: 100%; justify-content: center;">
+                </button>
+                <button id="draftDownloadBtn" class="submit-btn" style="width: 100%; justify-content: center; background: #2e7d32; display: none;">
+                    <i class="fas fa-download" style="margin-right: 6px;"></i> Download PDF
                 </button>
             </div>
         </div>
     </div>
 
-    <script src="/Syllabus/js/courseFaculty.js"></script>
+    <!-- =====================================================
+         FACULTY SIGNATURE MODAL — shown for verified syllabi
+    ====================================================== -->
+    <div class="modal-overlay" id="signatureModal">
+        <div class="modal-content" style="width: 560px; text-align: left;">
+            <div class="modal-header" style="justify-content: space-between;">
+                <div class="modal-title-group">
+                    <div class="modal-icon" style="background: #b30000;">
+                        <i class="fas fa-signature"></i>
+                    </div>
+                    <h2 style="font-size: 20px;">Sign Before Download</h2>
+                </div>
+                <span class="close-modal" onclick="closeSignatureModal()">&times;</span>
+            </div>
+
+            <div style="padding: 16px 4px 0; font-size: 13px; color: #666; line-height: 1.5;">
+                <p style="margin: 0 0 10px;">
+                    <i class="fas fa-info-circle" style="color: #b30000; margin-right: 4px;"></i>
+                    As the <strong>Course Coordinator / Faculty</strong>, you must sign below before downloading
+                    the final syllabus PDF. Your signature will appear in the <em>"Prepared By"</em> section.
+                </p>
+            </div>
+
+            <!-- Signature Canvas -->
+            <div style="margin-top: 10px;">
+                <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px; color: #333;">
+                    Draw your signature below
+                </div>
+                <canvas id="facultySigCanvas" style="
+                    width: 100%;
+                    height: 180px;
+                    border: 2px dashed #d1d5db;
+                    border-radius: 12px;
+                    background: #fff;
+                    cursor: crosshair;
+                    display: block;
+                "></canvas>
+
+                <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+                    <button type="button" class="submit-btn" id="sigClearBtn"
+                        style="background: #e5e7eb; color: #333; flex: 0; padding: 9px 20px; font-size: 13px;">
+                        <i class="fas fa-eraser" style="margin-right: 4px;"></i> Clear
+                    </button>
+                    <button type="button" class="submit-btn" id="sigSaveBtn"
+                        style="background: #b30000; flex: 1; justify-content: center; font-size: 13px;">
+                        <i class="fas fa-check" style="margin-right: 6px;"></i> Sign &amp; Download PDF
+                    </button>
+                </div>
+
+                <div id="sigStatusMsg" style="margin-top: 10px; font-size: 12px; min-height: 18px;"></div>
+            </div>
+
+            <!-- Already-signed preview (hidden by default) -->
+            <div id="sigAlreadySigned" style="display: none; margin-top: 10px; text-align: center;">
+                <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px; color: #333;">
+                    ✅ You have already signed this syllabus
+                </div>
+                <div style="background: #f9f9f9; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; display: inline-block;">
+                    <img id="sigPreviewImg" src="" alt="Faculty Signature"
+                        style="max-height: 80px; max-width: 100%; object-fit: contain;" />
+                </div>
+                <div style="margin-top: 14px;">
+                    <button type="button" class="submit-btn" id="sigDownloadDirectBtn"
+                        style="background: #2e7d32; width: 100%; justify-content: center; font-size: 13px;">
+                        <i class="fas fa-download" style="margin-right: 6px;"></i> Download PDF
+                    </button>
+                    <button type="button" class="submit-btn" id="sigResignBtn"
+                        style="background: #e5e7eb; color: #333; width: 100%; justify-content: center; font-size: 12px; margin-top: 6px;">
+                        <i class="fas fa-redo" style="margin-right: 4px;"></i> Re-sign
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/Syllabus/js/courseFaculty.js?v=<%= new Date().getTime() %>"></script>
 </body>
 
-</html>
+</html>

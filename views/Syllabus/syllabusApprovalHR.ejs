@@ -36,14 +36,6 @@
                     <span class="meta-item">
                         <%= locals.courseCode || '[COURSE CODE]' %>
                     </span>
-                    <span class="ad-meta-divider">|</span>
-                    <span class="meta-item">
-                        <%= locals.courseSection || '[COURSE SECTION]' %>
-                    </span>
-                    <span class="ad-meta-divider">|</span>
-                    <span class="meta-item">
-                        <%= locals.academicYear || '[ACADEMIC YEAR]' %>
-                    </span>
                 </p>
             </div>
         </header>
@@ -62,16 +54,294 @@
                 </a>
 
                 <div class="ad-file-type-badge">
-                    <%= locals.fileType || '[FILE TYPE]' %>
+                    <%= locals.courseCode || '[COURSE CODE]' %>
                 </div>
 
-                <h2 class="ad-section-title">Basic Information</h2>
+                <h2 class="ad-section-title"><%= locals.courseName || '[COURSE NAME]' %></h2>
 
                 <!-- ── Document Read-Only Preview ── -->
-                <div class="ad-document-preview">
-                    <div class="ad-no-data-placeholder">
-                        <p>[FORMS FROM THE RESPECTIVE GROUPS (EX. TLA FORMS, SYLLABUS FORMS)]</p>
+                <div class="ad-document-preview ad-doc-content">
+                    
+                    <h3 class="ad-section-heading">Course Details</h3>
+                    <table class="ad-data-table ad-data-table-wide">
+                        <tr><td style="font-weight:bold; width: 30%; background:#f9f9f9;">Course Code</td><td><%= locals.courseCode %></td></tr>
+                        <tr><td style="font-weight:bold; background:#f9f9f9;">Course Title</td><td><%= locals.courseName %></td></tr>
+                        <tr><td style="font-weight:bold; background:#f9f9f9;">AY / Term</td><td><%= locals.syl && locals.syl.schoolYear ? locals.syl.schoolYear : '' %> / <%= locals.syl && locals.syl.term ? locals.syl.term : '' %></td></tr>
+                    </table>
+
+                    <h3 class="ad-section-heading">Program Educational Objectives (PEO)</h3>
+                    <% if (locals.peos && locals.peos.length > 0 && locals.peos[0].description) { %>
+                        <table class="ad-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:10%; text-align: center;">PEO</th>
+                                    <th style="text-align: left;">Description</th>
+                                    <th style="width:20%; text-align: center;">Mission Mapping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.peos[0].description.forEach(function(desc, index) { 
+                                     const rating = locals.peos[0].rating && locals.peos[0].rating[index];
+                                %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center;"><%= index + 1 %></td>
+                                        <td><%= desc %></td>
+                                        <td style="text-align:center;">
+                                            <% if (rating && rating.length === 3) { %>
+                                                <%= (rating[0]==='1'?'A ':'') + (rating[1]==='1'?'B ':'') + (rating[2]==='1'?'C':'') || '-' %>
+                                            <% } else { %>
+                                                <%= rating || '-' %>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No program educational objectives provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Student Outcomes (SO)</h3>
+                    <% if (locals.seos && locals.seos.length > 0 && locals.seos[0].description) { %>
+                        <table class="ad-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:10%; text-align: center;">SO</th>
+                                    <th style="text-align: left;">Description</th>
+                                    <th style="width:20%; text-align: center;">PEO Mapping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.seos[0].description.forEach(function(desc, index) { 
+                                     const rating = locals.seos[0].rating && locals.seos[0].rating[index];
+                                     const letter = String.fromCharCode(97 + index);
+                                %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center;"><%= letter %></td>
+                                        <td><%= desc %></td>
+                                        <td style="text-align:center;">
+                                            <% if (rating && rating.length === 3) { %>
+                                                <%= (rating[0]==='1'?'1 ':'') + (rating[1]==='1'?'2 ':'') + (rating[2]==='1'?'3':'') || '-' %>
+                                            <% } else { %>
+                                                <%= rating || '-' %>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No student outcomes provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Outcomes (CO)</h3>
+                    <% if (locals.cos && locals.cos.length > 0) { %>
+                        <table class="ad-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:15%; text-align: center;">CO. No</th>
+                                    <th style="text-align: left;">Description</th>
+                                    <th style="width:25%; text-align: left;">Thinking Skills</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.cos.forEach(function(co) { %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center;"><%= co.coNumber %></td>
+                                        <td><%= co.description %></td>
+                                        <td><%= co.thinkingSkills %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No course outcomes provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Mapping</h3>
+                    <% if (locals.mappings && locals.mappings.length > 0) { %>
+                        <table class="ad-data-table" style="text-align: center;">
+                            <thead>
+                                <tr>
+                                    <th>CO</th>
+                                    <th>a</th>
+                                    <th>b</th>
+                                    <th>c</th>
+                                    <th>d</th>
+                                    <th>e</th>
+                                    <th>f</th>
+                                    <th>g</th>
+                                    <th>h</th>
+                                    <th>i</th>
+                                    <th>j</th>
+                                    <th>k</th>
+                                    <th>l</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.mappings.forEach(function(m) { %>
+                                    <tr>
+                                        <td style="font-weight:bold; background:#f9f9f9;">CO<%= m.numberOfCO %></td>
+                                        <% for(let i=0; i<12; i++) { %>
+                                            <td><%= m.fromAtoL && m.fromAtoL[i] ? m.fromAtoL[i] : '-' %></td>
+                                        <% } %>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No course mappings provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Concept Map</h3>
+                    <% if (locals.syl && locals.syl.conceptMap) { %>
+                        <div class="ad-concept-map">
+                            <img src="<%= locals.syl.conceptMap %>" alt="Concept Map">
+                        </div>
+                    <% } else { %>
+                        <p class="ad-no-content">No concept map image provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Schedule</h3>
+                    <% if (locals.schedules && locals.schedules.length > 0) { %>
+                        <table class="ad-data-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">Week</th>
+                                    <th style="width: 30%;">Topic</th>
+                                    <th style="width: 30%;">TLA </th>
+                                    <th style="width: 30%;">Assessment Task</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.schedules.forEach(function(s) { %>
+                                    <tr>
+                                        <td style="font-weight:bold; text-align:center; background:#f9f9f9;">Wk <%= s.week %></td>
+                                        <td><%= s.coverageTopic || '-' %></td>
+                                        <td>
+                                            <div style="margin-bottom:0.25rem;"><strong>Mode:</strong> <%= s.tlaMode || '-' %></div>
+                                            <div><strong>Activity:</strong> <%= s.tlaActivities || '-' %></div>
+                                        </td>
+                                        <td>
+                                            <div style="margin-bottom:0.25rem;"><strong>Mode:</strong> <%= s.assessmentTaskMode || '-' %></div>
+                                            <div><strong>Task:</strong> <%= s.assessmentTaskTask || '-' %></div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No schedule provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Evaluation</h3>
+                    <% if (locals.evaluations && locals.evaluations.length > 0) { %>
+                        <p style="font-size:0.85rem; color:#555; margin-bottom:10px;">The final grade of the student is based on the following components:</p>
+                        <table class="ad-data-table" style="font-size: 0.85rem; text-align:center;">
+                            <thead>
+                                <tr>
+                                    <th>Module Code</th>
+                                    <th>CO</th>
+                                    <th style="text-align:left;">Mediating Outcomes</th>
+                                    <th>LT %</th>
+                                    <th>PE %</th>
+                                    <th>Modular Weight %</th>
+                                    <th>Final Weight %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.evaluations.forEach(function(ev) { %>
+                                    <tr>
+                                        <td><%= ev.moduleCode || '-' %></td>
+                                        <td><%= ev.coNumber || '-' %></td>
+                                        <td style="text-align:left;"><%= ev.mediatingOutcome || '-' %></td>
+                                        <td><%= ev.onlineTaskWeight || '0' %></td>
+                                        <td><%= ev.longExaminationWeight || '0' %></td>
+                                        <td><%= ev.moduleWeight || '0' %></td>
+                                        <td><%= ev.finalWeight || '0' %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No course evaluation provided.</p>
+                    <% } %>
+
+                    <h3 class="ad-section-heading">Course Outcomes Assessment</h3>
+                    <% if (locals.evaluations && locals.evaluations.length > 0) { %>
+                        <p style="font-size:0.85rem; color:#555; margin-bottom:10px;">Achievement of course outcomes is based on the following:</p>
+                        <table class="ad-data-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width:25%;">Course Outcomes</th>
+                                    <th style="width:40%;">Assessment Tasks</th>
+                                    <th style="width:35%;">Min. Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% locals.evaluations.forEach(function(ev) { %>
+                                    <tr>
+                                        <td style="font-weight:bold;">CO. <%= ev.coNumber || '-' %></td>
+                                        <td><%= ev.assessmentTasks || '-' %></td>
+                                        <td><%= ev.minSatisfactoryPerf || '0%' %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <p class="ad-no-content">No course outcomes assessment provided.</p>
+                    <% } %>
+
+                    <!-- ── Signature Block for PDF Export ── -->
+                    <div id="document-signature-section" style="margin-top:2rem; padding-top:1.5rem; border-top:2px solid #e0e0e0; page-break-inside: avoid;">
+                        <!-- Row 1: Program Chair + Dean side-by-side -->
+                        <div style="display:flex; justify-content:space-evenly; gap:2rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+                            <!-- Program Chair Signature -->
+                            <div style="text-align:center; flex:1; min-width:200px;">
+                                <p style="font-weight:600; font-size:0.85rem; color:#666; margin-bottom:8px;">Endorsed by:</p>
+                                <% if (locals.pcSignature) { %>
+                                    <div style="margin-bottom:6px;">
+                                        <img src="<%= locals.pcSignature %>" alt="PC Signature" style="max-height:60px; max-width:150px;">
+                                    </div>
+                                <% } else { %>
+                                    <div style="height:60px; border-bottom:1px solid #999; width:150px; margin:0 auto 6px;"></div>
+                                <% } %>
+                                <p style="font-weight:700; font-size:0.9rem; margin:4px 0 2px;"><%= locals.pcSignatoryName || 'PROGRAM CHAIR' %></p>
+                                <p style="font-size:0.8rem; color:#888;">Program Chair</p>
+                            </div>
+                            <!-- Dean Signature -->
+                            <div style="text-align:center; flex:1; min-width:200px;">
+                                <p style="font-weight:600; font-size:0.85rem; color:#666; margin-bottom:8px;">Approved by:</p>
+                                <% if (locals.deanSignature) { %>
+                                    <div style="margin-bottom:6px;">
+                                        <img src="<%= locals.deanSignature %>" alt="Dean Signature" style="max-height:60px; max-width:150px;">
+                                    </div>
+                                <% } else { %>
+                                    <div style="height:60px; border-bottom:1px solid #999; width:150px; margin:0 auto 6px;"></div>
+                                <% } %>
+                                <p style="font-weight:700; font-size:0.9rem; margin:4px 0 2px;"><%= locals.deanSignatoryName || 'DEAN' %></p>
+                                <p style="font-size:0.8rem; color:#888;">Dean</p>
+                            </div>
+                        </div>
+                        <!-- Row 2: HR Signature below -->
+                        <div style="display:flex; justify-content:center;">
+                            <div style="text-align:center; min-width:200px;">
+                                <p style="font-weight:600; font-size:0.85rem; color:#666; margin-bottom:8px;">Archived by:</p>
+                                <% if (locals.hrSignature) { %>
+                                    <div style="margin-bottom:6px;">
+                                        <img src="<%= locals.hrSignature %>" alt="HR Signature" style="max-height:60px; max-width:150px;">
+                                    </div>
+                                <% } else { %>
+                                    <div id="preview-signature-img-container" style="margin-bottom:6px; height:60px; max-width:150px; margin:0 auto;">
+                                        <!-- HR signature image will be placed here by JS -->
+                                    </div>
+                                <% } %>
+                                <p id="preview-signatory-name" style="font-weight:700; font-size:0.9rem; margin:4px 0 2px;"><%= locals.hrSignatoryName || 'HR ADMIN' %></p>
+                                <p style="font-size:0.8rem; color:#888;">HR Administrator</p>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </section>
 
@@ -82,10 +352,9 @@
 
                 <!-- ── Approval Progress Tracker ── -->
                 <div class="ad-tracker">
-                    <% const steps=[ { role: 'Faculty' , label: 'Submitted' , status: 'approved' }, { role: 'Technical'
-                        , label: 'Reviewed' , status: 'approved' }, { role: 'Program Chair' , label: 'Endorsed' ,
+                    <% const steps=[ { role: 'Faculty' , label: 'Submitted' , status: 'approved' }, { role: 'Program Chair' , label: 'Endorsed' ,
                         status: 'approved' }, { role: 'Dean' , label: 'Approved' , status: 'approved' }, { role: 'HR' ,
-                        label: 'Final Review' , status: 'ongoing' } ]; %>
+                        label: 'Final Review' , status: locals.currentStatus === 'Archived' ? 'approved' : 'ongoing' } ]; %>
 
                         <div class="ad-tracker-steps">
                             <% steps.forEach(function(step, idx) { %>
@@ -110,10 +379,17 @@
                 <!-- ── Comments ── -->
                 <div class="ad-sidebar-section">
                     <label class="ad-sidebar-label">Comments</label>
-                    <textarea id="approval-comments" class="ad-comments-box" rows="5"
-                        placeholder="Add comments about the review..."><%= locals.existingComment || '' %></textarea>
+                    <% if (locals.currentStatus === 'Archived') { %>
+                        <div class="ad-comments-box" style="background:#f5f5f5; padding:10px; border-radius:6px; min-height:60px; color:#555; font-size:0.9rem;">
+                            <%= locals.existingComment || 'No comments.' %>
+                        </div>
+                    <% } else { %>
+                        <textarea id="approval-comments" class="ad-comments-box" rows="5"
+                            placeholder="Add comments about the review..."></textarea>
+                    <% } %>
                 </div>
 
+                <% if (locals.currentStatus !== 'Archived') { %>
                 <!-- ── Status Dropdown ── -->
                 <div class="ad-sidebar-section">
                     <label class="ad-sidebar-label">Status</label>
@@ -121,7 +397,7 @@
                         <span class="ad-status-indicator" id="status-indicator"></span>
                         <select id="approval-status" class="ad-status-select">
                             <option value="Archived" <%=locals.currentStatus==='Archived' ? 'selected' : 'selected' %>
-                                >Archived
+                                >Verified
                             </option>
                             <option value="Returned" <%=locals.currentStatus==='Returned' ? 'selected' : '' %>>Returned
                             </option>
@@ -130,19 +406,53 @@
                 </div>
 
                 <!-- ── Signature Box ── -->
-                <div class="ad-sidebar-section">
+                <div class="ad-sidebar-section" id="signature-section">
+                    <label class="ad-sidebar-label">Signatory Name</label>
+                    <input type="text" id="signatory-name-input" class="ad-comments-box" 
+                        placeholder="e.g. HR Administrator" 
+                        style="margin-bottom: 15px; padding: 10px 12px; height: 40px; box-sizing: border-box;">
+
                     <label class="ad-sidebar-label">E-Signature</label>
-                    <div class="ad-signature-wrapper">
-                        <div class="ad-signature-box" id="signature-box">
-                            <span class="ad-signature-placeholder">Click to upload signature</span>
-                            <input type="file" id="signature-upload" accept="image/*" hidden>
+
+                    <!-- Signature Tab Switcher -->
+                    <div class="ad-sig-tabs">
+                        <button type="button" class="ad-sig-tab active" data-tab="upload">Upload</button>
+                        <button type="button" class="ad-sig-tab" data-tab="draw">Draw</button>
+                    </div>
+
+                    <!-- Upload Tab -->
+                    <div class="ad-sig-tab-content" id="sig-tab-upload">
+                        <div class="ad-signature-wrapper">
+                            <div class="ad-signature-box" id="signature-box">
+                                <span class="ad-signature-placeholder">Click to upload signature</span>
+                                <input type="file" id="signature-upload" accept="image/*" hidden>
+                            </div>
+                            <button type="button" class="ad-signature-remove-btn" id="signature-remove"
+                                title="Remove signature" style="display: none;">
+                                <span class="material-symbols-outlined">cancel</span>
+                            </button>
                         </div>
-                        <button type="button" class="ad-signature-remove-btn" id="signature-remove"
-                            title="Remove signature" style="display: none;">
-                            <span class="material-symbols-outlined">cancel</span>
-                        </button>
+                    </div>
+
+                    <!-- Draw Tab -->
+                    <div class="ad-sig-tab-content" id="sig-tab-draw" style="display: none;">
+                        <canvas id="signature-canvas" class="ad-signature-canvas" width="220" height="80"></canvas>
+                        <div class="ad-sig-draw-actions">
+                            <button type="button" class="ad-sig-draw-btn ad-sig-clear-btn" id="sig-clear-canvas">Clear</button>
+                            <button type="button" class="ad-sig-draw-btn ad-sig-use-btn" id="sig-use-drawn">Use This Signature</button>
+                        </div>
                     </div>
                 </div>
+                <% } else { %>
+                <!-- ── Archived Status Badge ── -->
+                <div class="ad-sidebar-section">
+                    <label class="ad-sidebar-label">Status</label>
+                    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#e8f5e9;border-radius:6px;">
+                        <span class="material-symbols-outlined" style="color:#2e7d32;">check_circle</span>
+                        <span style="font-weight:600;color:#2e7d32;">Verified</span>
+                    </div>
+                </div>
+                <% } %>
 
                 <!-- ── Action Buttons ── -->
                 <div class="ad-sidebar-actions">
@@ -150,11 +460,13 @@
                         <span class="material-symbols-outlined">picture_as_pdf</span>
                         Download PDF
                     </button>
+                    <% if (locals.currentStatus !== 'Archived') { %>
                     <button type="button" class="ad-btn-action ad-btn-submit archive-btn"
                         data-id="<%= locals.syllabusId %>" id="btn-submit">
-                        <span class="material-symbols-outlined">archive</span>
-                        Archive
+                        <span class="material-symbols-outlined">check_circle</span>
+                        Verify
                     </button>
+                    <% } %>
                 </div>
             </aside>
 
@@ -166,7 +478,7 @@
     ═══════════════════════════════════════════════════════════ -->
     <script>
         const SYLLABUS_APPROVAL_DATA = {
-            syllabusID: '<%= locals.syllabusId || "" %>',
+            syllabusId: '<%= locals.syllabusId || "" %>',
             userRole: 'hr',
             postUrl: '/syllabus/hr/archive/<%= locals.syllabusId || "" %>',
             backUrl: '/syllabus/hr',
@@ -176,40 +488,53 @@
     <script src="/Syllabus/js/syllabusApprovalDetail.js"></script>
 
     <script>
-        // Override archive behavior to redirect to queue after success
-        document.querySelector('.archive-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const btn = e.currentTarget;
-            const syllabusId = btn.dataset.id;
-            const statusVal = document.getElementById('approval-status').value;
-            const remarks = document.getElementById('approval-comments').value;
+        // Only attach archive behavior if the button exists (not archived yet)
+        const archiveBtn = document.querySelector('.archive-btn');
+        if (archiveBtn) {
+            archiveBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const btn = e.currentTarget;
+                const syllabusId = btn.dataset.id;
+                const statusVal = document.getElementById('approval-status').value;
+                const remarks = document.getElementById('approval-comments').value;
+                const signatoryName = document.getElementById('signatory-name-input').value || 'HR Admin';
+                const signatureImg = document.querySelector('.ad-signature-img');
+                const signatureBase64 = signatureImg ? signatureImg.src : null;
 
-            if (statusVal !== 'Archived') {
-                alert('Please set Status to "Archived" to proceed.');
-                return;
-            }
-
-            if (!confirm('Archive this syllabus? It will be moved to the archived list.')) return;
-
-            try {
-                const res = await fetch(`/syllabus/hr/archive/${syllabusId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ archivedBy: 'HR Admin', remarks: remarks })
-                });
-
-                if (res.ok) {
-                    alert('Syllabus archived successfully.');
-                    window.location.href = '/syllabus/hr'; // Redirect back to queue
-                } else {
-                    const data = await res.json();
-                    alert('Failed to archive: ' + (data.message || 'Unknown error'));
+                if (statusVal === 'Archived' && !signatureBase64) {
+                    alert('Please upload your E-Signature to archive this document.');
+                    return;
                 }
-            } catch (err) {
-                console.error('Archive error:', err);
-                alert('An error occurred while archiving.');
-            }
-        });
+
+                const actionText = statusVal === 'Returned' ? 'return this syllabus to the Dean' : 'archive this syllabus';
+                if (!confirm(`Are you sure you want to ${actionText}?`)) return;
+
+                try {
+                    const res = await fetch(`/syllabus/hr/archive/${syllabusId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            archivedBy: signatoryName, 
+                            remarks: remarks,
+                            signatoryName: signatoryName,
+                            signature: signatureBase64,
+                            status: statusVal
+                        })
+                    });
+
+                    if (res.ok) {
+                        alert(statusVal === 'Returned' ? 'Returned to Dean successfully.' : 'Syllabus archived successfully.');
+                        window.location.href = '/syllabus/hr';
+                    } else {
+                        const data = await res.json();
+                        alert('Failed to process: ' + (data.message || 'Unknown error'));
+                    }
+                } catch (err) {
+                    console.error('Process error:', err);
+                    alert('An error occurred while processing.');
+                }
+            });
+        }
     </script>
 </body>
 

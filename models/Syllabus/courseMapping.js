@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+import { Schema } from "mongoose";
+import { mainDB } from "../../database/mongo-dbconnect.js";
 
 const courseMappingSchema = new Schema({
   syllabusID: { type: Schema.Types.ObjectId, ref: "Syllabus", required: true },
@@ -8,5 +9,5 @@ const courseMappingSchema = new Schema({
   fromAtoL: [String]
 });
 
-const CourseMapping = model("CourseMapping", courseMappingSchema);
+const CourseMapping = mainDB.models.CourseMapping || mainDB.model("CourseMapping", courseMappingSchema);
 export default CourseMapping;

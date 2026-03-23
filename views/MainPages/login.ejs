@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,7 @@
     <link rel="icon" type="image/x-icon" href="/common/img/chalkboardLogo.ico">
 
     <!--inside the public file, for colors-->
-    <link rel="stylesheet" href="/common/css/variables.css"> 
+    <link rel="stylesheet" href="/common/css/variables.css">
 
     <style>
         body {
@@ -55,14 +56,14 @@
             left: 0;
             font-size: 1.1rem;
             color: white;
-            pointer-events: none;   
+            pointer-events: none;
             transition: all 0.3s ease;
             font-weight: bold;
         }
 
         /* Animation Trigger:*/
-        .input-container input:focus + label,
-        .input-container input:not(:placeholder-shown) + label {
+        .input-container input:focus+label,
+        .input-container input:not(:placeholder-shown)+label {
             top: -20px;
             font-size: 0.85rem;
             color: white;
@@ -116,11 +117,12 @@
         }
 
         .error-message {
-        color: #ff4d4d;
-        font-size: 0.85rem;
-        margin-bottom: 15px;
-        text-align: center;
-        display: none; /* Hidden by default */
+            color: #ff4d4d;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+            /* Hidden by default */
         }
 
         @media (max-width: 768px) {
@@ -146,6 +148,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <section id="logo">
@@ -154,13 +157,13 @@
 
     <section id="credentials">
         <div id="error-box" class="error-message">Invalid username or password.</div>
-        
+
         <form id="loginForm">
             <div class="input-container">
                 <input type="text" id="username" name="username" placeholder=" " autocomplete="off" required>
                 <label for="username">Username</label>
             </div>
-            
+
             <div class="input-container">
                 <input type="password" id="password" name="password" placeholder=" " autocomplete="off" required>
                 <label for="password">Password</label>
@@ -198,7 +201,7 @@
                 if (response.ok) {
                     if (result.role === 'Admin' || result.role === 'Super-Admin') {
                         window.location.href = '/admin/institution';
-                    } else if (result.role === 'Professor') {
+                    } else if (result.role === 'Professor' || result.role === 'professor') {
                         window.location.href = '/institution';
                     } else if (result.role === 'Program-Chair') {
                         window.location.href = '/progChair/institution';
@@ -220,4 +223,5 @@
         });
     </script>
 </body>
+
 </html>

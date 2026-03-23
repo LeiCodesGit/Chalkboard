@@ -24,8 +24,8 @@
                             <div class="hr-header-left">
 
                                 <div>
-                                    <h1>HR Syllabus Archive</h1>
-                                    <p class="hr-subtitle">View approved syllabuses and manage archives</p>
+                                    <h1>HR Syllabus</h1>
+                                    <p class="hr-subtitle">View approved syllabuses and manage Verified Syllabuses</p>
                                 </div>
                             </div>
                             <div class="hr-header-right">
@@ -33,13 +33,13 @@
                                     <div class="stat-pill approved">
                                         <i class="fas fa-check-circle"></i>
                                         <span>
-                                            <%= approvedCount %> Approved
+                                            <%= approvedCount %> Approved by Dean
                                         </span>
                                     </div>
                                     <div class="stat-pill archived">
                                         <i class="fas fa-archive"></i>
                                         <span>
-                                            <%= archivedCount %> Archived
+                                            <%= archivedCount %> Verified by HR
                                         </span>
                                     </div>
                                 </div>
@@ -49,8 +49,8 @@
                         <!-- Filter Tabs -->
                         <div class="filter-tabs">
                             <button class="tab-btn active" data-filter="all">All</button>
-                            <button class="tab-btn" data-filter="Approved">Approved</button>
-                            <button class="tab-btn" data-filter="Archived">Archived</button>
+                            <button class="tab-btn" data-filter="Approved">Approved by Dean</button>
+                            <button class="tab-btn" data-filter="Archived">Verified by HR</button>
                         </div>
 
                         <!-- Search Bar -->
@@ -66,7 +66,7 @@
                                 <div class="empty-state">
                                     <div class="empty-icon"><i class="fas fa-archive"></i></div>
                                     <h3>No Syllabuses Found</h3>
-                                    <p>There are no approved or archived syllabuses to display.</p>
+                                    <p>There are no approved or verified syllabuses to display.</p>
                                 </div>
                                 <% } %>
 
@@ -93,7 +93,7 @@
                                                             <%= d.instructor %>
                                                         </span>
                                                         <% if (d.approvalDate) { %>
-                                                            <span><i class="fas fa-check"></i> Approved: <%=
+                                                            <span><i class="fas fa-check"></i> Approved by Dean: <%=
                                                                     d.approvalDate %></span>
                                                             <% } %>
                                                                 <% if (d.approvedBy) { %>
@@ -103,7 +103,8 @@
                                                                         <% if (d.status==='Archived' && d.archivedDate)
                                                                             { %>
                                                                             <span><i class="fas fa-archive"></i>
-                                                                                Archived: <%= d.archivedDate %></span>
+                                                                                Verified by HR: <%= d.archivedDate %>
+                                                                                    </span>
                                                                             <% } %>
                                                                                 <% if (d.status==='Archived' &&
                                                                                     d.archivedBy) { %>
@@ -111,13 +112,18 @@
                                                                                             class="fas fa-user-cog"></i>
                                                                                         By: <%= d.archivedBy %></span>
                                                                                     <% } %>
+                                                                                <% if (d.remarks) { %>
+                                                                                    <span style="display: block; width: 100%; margin-top: 6px; font-size: 0.85rem; color: #666; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                                                        <i class="fas fa-comment-alt" style="opacity: 0.7;"></i> <%= d.remarks %>
+                                                                                    </span>
+                                                                                <% } %>
                                                     </div>
                                                 </div>
 
                                                 <div class="item-actions">
                                                     <% if (d.status==='Approved' ) { %>
                                                         <span class="status-badge status-approved">
-                                                            <i class="fas fa-check-circle"></i> Approved
+                                                            <i class="fas fa-check-circle"></i> Approved by Dean
                                                         </span>
                                                         <button class="review-btn"
                                                             onclick="window.location.href='/syllabus/hr/review/<%= d.syllabusId %>'"
@@ -127,11 +133,13 @@
                                                         </button>
                                                         <% } else if (d.status==='Archived' ) { %>
                                                             <span class="status-badge status-archived">
-                                                                <i class="fas fa-box"></i> Archived
+                                                                <i class="fas fa-box"></i> Verified by HR
                                                             </span>
-                                                            <button class="unarchive-btn" data-id="<%= d.syllabusId %>"
-                                                                title="Restore this syllabus">
-                                                                <i class="fas fa-undo"></i> Unarchive
+                                                            <button class="review-btn"
+                                                                onclick="window.location.href='/syllabus/hr/review/<%= d.syllabusId %>'"
+                                                                title="View this syllabus"
+                                                                style="display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; background: #455a64; color: #fff; transition: all 0.2s ease;">
+                                                                <i class="fas fa-eye"></i> View
                                                             </button>
                                                             <% } %>
                                                 </div>

@@ -3,9 +3,25 @@ import mongoose from 'mongoose';
 import { mainDB } from '../../database/mongo-dbconnect.js';
 import Syllabus from '../../models/Syllabus/syllabus.js';
 import SyllabusApprovalStatus from '../../models/Syllabus/syllabusApprovalStatus.js';
+import ProgramEducationObjectives from '../../models/Syllabus/programEducationObjectives.js';
+import StudentEducationObjectives from '../../models/Syllabus/studentEducationalObjectives.js';
+import CourseOutcomes from '../../models/Syllabus/courseOutcomes.js';
+import CourseMapping from '../../models/Syllabus/courseMapping.js';
+import WeeklySchedule from '../../models/Syllabus/weeklySchedule.js';
 
 const adminOverviewRouter = express.Router();
 
+function getLatestRemark(a) {
+    if (!a) return "";
+    if (a.status === 'Archived') return a.HR_Remarks || a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Approved' || a.status === 'Returned to PC') return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Endorsed' || a.status === 'PC_Approved') return a.PC_Remarks || a.remarks || "";
+    if (a.status === 'Rejected') {
+        if (a.approvedBy && a.approvedBy.includes('Dean')) return a.Dean_Remarks || a.PC_Remarks || a.remarks || "";
+        return a.PC_Remarks || a.remarks || "";
+    }
+    return a.PC_Remarks || a.remarks || "";
+}
 /* -----------------------------------------------------------------------
    Dummy data for development / empty-DB fallback
    ----------------------------------------------------------------------- */
@@ -60,7 +76,7 @@ adminOverviewRouter.get('/', async (req, res) => {
 
     try {
         const approvals = await SyllabusApprovalStatus.find({
-            status: { $in: ['Approved', 'Archived'] }
+            status: { $in: ['Approved', 'Archived', 'Endorsed'] }
         });
 
         if (approvals.length > 0) {
@@ -94,6 +110,7 @@ adminOverviewRouter.get('/', async (req, res) => {
                     archivedDate: approval.archivedDate
                         ? new Date(approval.archivedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : null,
+                    remarks: getLatestRemark(approval),
                     submittedDate: approval.updatedAt
                         ? new Date(approval.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                         : 'N/A'
@@ -108,7 +125,8 @@ adminOverviewRouter.get('/', async (req, res) => {
 
         res.render('Syllabus/courseOverviewAdmin', {
             items, approvedCount, archivedCount, returnUrl,
-            currentPageCategory: 'syllabus'
+            currentPageCategory: 'syllabus',
+            user: req.session.user
         });
 
     } catch (error) {
@@ -116,7 +134,8 @@ adminOverviewRouter.get('/', async (req, res) => {
         res.render('Syllabus/courseOverviewAdmin', {
             items: DUMMY_ITEMS,
             approvedCount: 2, archivedCount: 1, returnUrl,
-            currentPageCategory: 'syllabus'
+            currentPageCategory: 'syllabus',
+            user: req.session.user
         });
     }
 });
@@ -138,14 +157,39 @@ adminOverviewRouter.get('/review/:syllabusId', async (req, res) => {
             course = await Syllabus.findById(syllabusId);
         }
 
-        // Pass dummy data if actual record missing
+        let peos = [], seos = [], cos = [], mappings = [], schedules = [];
+        if (course) {
+            peos = await ProgramEducationObjectives.find({ syllabusID: syllabusId });
+            seos = await StudentEducationObjectives.find({ syllabusID: syllabusId });
+            cos = await CourseOutcomes.find({ syllabusID: syllabusId });
+            mappings = await CourseMapping.find({ syllabusID: syllabusId });
+            schedules = await WeeklySchedule.find({ syllabusID: syllabusId }).sort({ week: 1 });
+        }
+
         let viewData = {
             syllabusId: syllabusId,
             courseName: course ? course.courseTitle : "Introduction to Demo Course",
             courseCode: course ? course.courseCode : "DEMO101",
-            courseSection: "A1",
-            academicYear: "2025-2026",
-            fileType: "Syllabus Form"
+            courseSection: course ? course.section : "A1",
+            academicYear: course ? course.academicYear : "2025-2026",
+            fileType: "Syllabus Form",
+            peos,
+            seos,
+            cos,
+            mappings,
+            schedules,
+            currentStatus: approval ? approval.status : 'Pending',
+            currentStatus: approval ? approval.status : 'Pending',
+            existingComment: approval ? (approval.HR_Remarks || '') : '',
+            deanRemarks: approval ? (approval.Dean_Remarks || '') : '',
+            pcRemarks: approval ? (approval.PC_Remarks || approval.remarks || '') : '',
+            hrSignature: approval ? (approval.HR_Signature || null) : null,
+            hrSignatoryName: approval ? (approval.HR_SignatoryName || '') : '',
+            pcSignature: approval ? (approval.PC_Signature || null) : null,
+            pcSignatoryName: approval ? (approval.PC_SignatoryName || '') : '',
+            deanSignature: approval ? (approval.Dean_Signature || null) : null,
+            deanSignatoryName: approval ? (approval.Dean_SignatoryName || '') : '',
+            syl: course
         };
 
         res.render('Syllabus/syllabusApprovalHR', viewData);
@@ -160,16 +204,26 @@ adminOverviewRouter.get('/review/:syllabusId', async (req, res) => {
    ----------------------------------------------------------------------- */
 adminOverviewRouter.post('/archive/:syllabusId', async (req, res) => {
     const { syllabusId } = req.params;
-    const { archivedBy } = req.body;
+    const { archivedBy, remarks, signature, signatoryName, status } = req.body;
 
     try {
         const record = await SyllabusApprovalStatus.findOne({ syllabusID: syllabusId });
         if (!record) return res.status(404).json({ success: false, message: 'Record not found.' });
-        if (record.status !== 'Approved') return res.status(400).json({ success: false, message: 'Only approved syllabuses can be archived.' });
+        if (record.status !== 'Approved') return res.status(400).json({ success: false, message: 'Only approved syllabuses can be processed.' });
+
+        if (status === 'Returned') {
+            record.status = 'Returned to Dean';
+            record.HR_Remarks = remarks || '';
+            await record.save();
+            return res.json({ success: true, message: 'Syllabus returned to Dean successfully.' });
+        }
 
         record.status = 'Archived';
+        record.HR_Remarks = remarks || '';
         record.archivedBy = archivedBy || 'HR Admin';
         record.archivedDate = new Date();
+        record.HR_Signature = signature || record.HR_Signature;
+        record.HR_SignatoryName = signatoryName || record.HR_SignatoryName;
         await record.save();
 
         res.json({ success: true, message: 'Syllabus archived successfully.' });
@@ -218,7 +272,7 @@ adminOverviewRouter.get('/search', async (req, res) => {
         const courseIds = courses.map(c => c._id.toString());
         const approvals = await SyllabusApprovalStatus.find({
             syllabusID: { $in: courseIds },
-            status: { $in: ['Approved', 'Archived'] }
+            status: { $in: ['Approved', 'Archived', 'Endorsed'] }
         });
 
         const formatted = courses
@@ -236,7 +290,8 @@ adminOverviewRouter.get('/search', async (req, res) => {
                     img: (c.courseImage && c.courseImage.startsWith('data:'))
                         ? c.courseImage
                         : `https://picsum.photos/seed/${c._id}/400/200`,
-                    status: record.status
+                    status: record.status,
+                    remarks: getLatestRemark(record)
                 };
             });
 
