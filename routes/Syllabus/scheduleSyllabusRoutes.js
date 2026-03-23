@@ -180,12 +180,39 @@ scheduleSyllabusRoutes.post('/submit', async (req, res) => {
             }
         }
 
-        // 7. Create Approval Status (Pending)
-        const approval = new SyllabusApprovalStatus({
-            syllabusID,
-            status: "Pending",
-            remarks: "Syllabus Initial Submission"
-        });
+        // 7. Create Approval Status — auto-skip based on submitter role
+        const userRole = req.session?.user?.role || '';
+        const userName = req.session?.user
+            ? `${req.session.user.firstName || ''} ${req.session.user.lastName || ''}`.trim()
+            : '';
+
+        let initialStatus = 'Pending';
+        let initialRemarks = 'Syllabus Initial Submission';
+        const approvalData = { syllabusID };
+
+        if (userRole === 'Program-Chair' || userRole === 'program-chair') {
+            // PC submits → auto-endorse, skip PC queue, go directly to Dean
+            initialStatus = 'Endorsed';
+            initialRemarks = 'Auto-endorsed (submitted by Program Chair)';
+            approvalData.approvedBy = 'Program Chair';
+            approvalData.approvalDate = new Date();
+            approvalData.PC_Remarks = 'Auto-endorsed by Program Chair';
+            approvalData.PC_SignatoryName = userName;
+        } else if (userRole === 'Dean' || userRole === 'dean') {
+            // Dean submits → auto-endorse + auto-approve, skip to HR
+            initialStatus = 'Approved';
+            initialRemarks = 'Auto-approved (submitted by Dean)';
+            approvalData.approvedBy = 'Dean';
+            approvalData.approvalDate = new Date();
+            approvalData.PC_Remarks = 'Auto-endorsed (submitted by Dean)';
+            approvalData.Dean_Remarks = 'Auto-approved by Dean';
+            approvalData.Dean_SignatoryName = userName;
+        }
+
+        approvalData.status = initialStatus;
+        approvalData.remarks = initialRemarks;
+
+        const approval = new SyllabusApprovalStatus(approvalData);
         await approval.save();
 
         res.json({ success: true, syllabusId: syllabusID });

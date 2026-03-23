@@ -76,7 +76,7 @@ adminOverviewRouter.get('/', async (req, res) => {
 
     try {
         const approvals = await SyllabusApprovalStatus.find({
-            status: { $in: ['Approved', 'Archived', 'Endorsed', 'Returned to PC', 'Returned to Dean'] }
+            status: { $in: ['Approved', 'Archived', 'Returned to PC', 'Returned to Dean'] }
         });
 
         if (approvals.length > 0) {
