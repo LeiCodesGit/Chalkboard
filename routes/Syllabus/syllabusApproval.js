@@ -103,11 +103,13 @@ syllabusApprovalRouter.get('/', async (req, res) => {
                         || (status === 'Approved' && approvedBy === 'PC_Approved');
                     // 2. Items finally approved by Dean
                     const isFinalApproved = status === 'Approved' && approvedBy === 'Dean';
+                    // 3. Items rejected by Dean
+                    const isRejected = status === 'Rejected' || status === 'Returned' || status === 'Returned to PC';
                     
-                    if (!isEndorsed && !isFinalApproved) return null;
+                    if (!isEndorsed && !isFinalApproved && !isRejected) return null;
                     
                     // For UI filtering coherence:
-                    var displayStatus = isFinalApproved ? 'Approved' : 'Endorsed';
+                    var displayStatus = isFinalApproved ? 'Approved' : (isRejected ? 'Rejected' : 'Endorsed');
                 } else if (userRole.includes('prog') || userRole.includes('chair')) {
                     var displayStatus = status;
                 } else {
@@ -142,19 +144,19 @@ syllabusApprovalRouter.get('/', async (req, res) => {
         let pendingCount, approvedCount;
 
         if (userRole === 'dean') {
-            // For Dean: Pending means items labeled "Endorsed", Approved means items labeled "Approved" (Final Approved)
             pendingCount = drafts.filter(d => d.status === 'Endorsed').length;
             approvedCount = drafts.filter(d => d.status === 'Approved').length;
         } else {
             pendingCount = drafts.filter(d => d.status === 'Pending').length;
             approvedCount = drafts.filter(d => d.status === 'Approved').length;
         }
+        const rejectedCount = drafts.filter(d => d.status === 'Rejected').length;
 
-        res.render('Syllabus/syllabusApproval', { drafts, pendingCount, approvedCount, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
+        res.render('Syllabus/syllabusApproval', { drafts, pendingCount, approvedCount, rejectedCount, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
 
     } catch (error) {
         console.error('Approval queue error:', error);
-        res.render('Syllabus/syllabusApproval', { drafts: DUMMY_DRAFTS, pendingCount: 2, approvedCount: 1, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
+        res.render('Syllabus/syllabusApproval', { drafts: DUMMY_DRAFTS, pendingCount: 2, approvedCount: 1, rejectedCount: 0, returnUrl, currentPageCategory: 'syllabus', user: req.session.user });
     }
 });
 

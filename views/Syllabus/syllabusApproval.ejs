@@ -49,6 +49,12 @@
                                             <%= approvedCount %> <%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Final Approved' : 'Approved' %>
                                         </span>
                                     </div>
+                                    <div class="stat-pill returned" style="background: rgba(217, 48, 37, 0.1); color: #d93025;">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span>
+                                            <%= locals.rejectedCount || 0 %> Rejected
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -58,6 +64,7 @@
                             <button class="tab-btn active" data-filter="all">All Drafts</button>
                             <button class="tab-btn" data-filter="<%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Endorsed' : 'Pending' %>"><%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Endorsed' : 'Pending' %></button>
                             <button class="tab-btn" data-filter="Approved"><%= (locals.user && (user.role === 'Dean' || user.role === 'dean')) ? 'Final Approved' : 'Approved' %></button>
+                            <button class="tab-btn" data-filter="Rejected">Rejected</button>
                             <button class="tab-btn" data-filter="Not Submitted">Not Submitted</button>
                         </div>
 
@@ -131,12 +138,16 @@
                                                             <span class="status-badge status-pending">
                                                                 <i class="fas fa-hourglass-half"></i> Pending
                                                             </span>
-                                                            <% } else { %>
-                                                                <span class="status-badge status-not-submitted">
-                                                                    <i class="fas fa-minus-circle"></i> Not Submitted
-                                                                </span>
+                                                                <% } else if (d.status==='Rejected') { %>
+                                                                    <span class="status-badge" style="background: rgba(217, 48, 37, 0.1); color: #d93025; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                                                        <i class="fas fa-times-circle"></i> Rejected
+                                                                    </span>
+                                                                <% } else { %>
+                                                                    <span class="status-badge status-not-submitted">
+                                                                        <i class="fas fa-minus-circle"></i> Not Submitted
+                                                                    </span>
                                                                 <% } %>
-                                                                <% if (d.status !== 'Approved') { %>
+                                                                <% if (d.status !== 'Approved' && d.status !== 'Rejected') { %>
                                                                     <button class="review-btn"
                                                                         data-href="/syllabus/dean/approve/<%= d.syllabusId %>"
                                                                         onclick="window.location.href=this.dataset.href">
