@@ -805,7 +805,7 @@ export const viewAtaPdf = async (req, res) => {
         };
 
         fillText('text_1tvhi', form.facultyName);
-        fillText('text_5jvwx', form.position);
+        fillText('text_5jvwx', form.position ? form.position.replace('-', ' ') : '');
         
         // 👇 THE FIX: Treat the College Dropdown exactly like a text field!
         try { 
@@ -1264,7 +1264,7 @@ export const previewAtaPdf = async (req, res) => {
         };
 
         fillText('text_1tvhi', formData.facultyName);
-        fillText('text_5jvwx', formData.position);
+        fillText('text_5jvwx', formData.position ? formData.position.replace('-', ' ') : '');
         
         // 👇 THE FIX: Treat the College Dropdown exactly like a text field!
         try { 

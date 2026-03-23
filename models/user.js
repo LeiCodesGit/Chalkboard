@@ -71,6 +71,11 @@ const userSchema = new Schema({
 		unique: true
 	},
 
+	isPracticumCoordinator: {
+    type: Boolean,
+    default: false
+  },
+
 	signatureImage: {
 		type: String,
 		default: ""
